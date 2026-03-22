@@ -7,6 +7,7 @@ BigInt.prototype.toJSON = function () {
 };
 async function bootstrap() {
     const app = await core_1.NestFactory.create(app_module_1.AppModule);
+    app.enableCors();
     const port = process.env.PORT ?? 4000;
     await app.listen(port);
     console.log(`Application is running on: http://localhost:${port}`);
