@@ -7,7 +7,16 @@ const { data: questions, pending, error } = await useFetch<Question[]>(`${config
 
 <template>
   <div class="container">
-    <h1 class="title">Question Hub</h1>
+    <div class="nav-header">
+      <NuxtLink to="/" class="back-button">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon">
+          <path d="M19 12H5M12 19l-7-7 7-7"/>
+        </svg>
+        <span>초기 화면으로..</span>
+      </NuxtLink>
+    </div>
+
+    <h1 class="title">문제 목록</h1>
     
     <div v-if="pending" class="loading">
       Loading questions...
@@ -25,6 +34,40 @@ const { data: questions, pending, error } = await useFetch<Question[]>(`${config
 </template>
 
 <style scoped>
+.nav-header {
+  margin-bottom: 1rem;
+  display: flex;
+  justify-content: flex-start;
+}
+
+.back-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.6rem 1.2rem;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #e2e8f0;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 0.9rem;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.back-button:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.2);
+  transform: translateX(-4px);
+  box-shadow: 0 10px 20px -10px rgba(0, 0, 0, 0.5);
+}
+
+.icon {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
 .container {
   max-width: 1000px;
   margin: 0 auto;
