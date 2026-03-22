@@ -1,59 +1,180 @@
 <script setup lang="ts">
-import type { Question } from '~/types';
-
-const config = useRuntimeConfig();
-const { data: questions, pending, error } = await useFetch<Question[]>(`${config.public.apiBase}/questions`);
+// Landing Page
 </script>
 
 <template>
-  <div class="container">
-    <h1 class="title">Question Hub</h1>
-    
-    <div v-if="pending" class="loading">
-      Loading questions...
+  <div class="landing-page">
+    <div class="hero">
+      <div class="glass-card">
+        <h1 class="hero-title">Welcome to <span class="gradient-text">Edu-Hub</span></h1>
+        <p class="hero-subtitle">
+          Unlock your potential with our advanced AI-powered learning platform. 
+          Analyze, practice, and excel in your studies.
+        </p>
+        <NuxtLink to="/Questions" class="cta-button">
+          Explore Questions
+          <svg viewBox="0 0 24 24" width="20" height="20" class="arrow-icon">
+            <path d="M13.172 12l-4.95-4.95 1.414-1.414L16 12l-6.364 6.364-1.414-1.414z" fill="currentColor"/>
+          </svg>
+        </NuxtLink>
+      </div>
     </div>
     
-    <div v-else-if="error" class="error">
-      Failed to load questions. Please check if the backend is running.
-      <pre>{{ error }}</pre>
-    </div>
-    
-    <div v-else>
-      <QuestionList :questions="questions || []" />
+    <div class="background-blobs">
+      <div class="blob blob-1"></div>
+      <div class="blob blob-2"></div>
+      <div class="blob blob-3"></div>
     </div>
   </div>
 </template>
 
 <style scoped>
-.container {
-  max-width: 1000px;
-  margin: 0 auto;
-  padding: 2rem 1rem;
+.landing-page {
+  position: relative;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  background: #0f172a;
+  color: #f8fafc;
 }
 
-.title {
-  font-size: 2.5rem;
-  font-weight: 800;
+.hero {
+  position: relative;
+  z-index: 10;
+  width: 100%;
+  max-width: 800px;
+  padding: 2rem;
   text-align: center;
-  margin-bottom: 3rem;
+}
+
+.glass-card {
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 32px;
+  padding: 4rem 3rem;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+  animation: fadeInDown 1s ease-out;
+}
+
+.hero-title {
+  font-size: 4rem;
+  font-weight: 800;
+  line-height: 1.1;
+  margin-bottom: 1.5rem;
+}
+
+.gradient-text {
   background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 
-.loading, .error {
-  text-align: center;
-  padding: 4rem;
-  font-size: 1.2rem;
+.hero-subtitle {
+  font-size: 1.25rem;
   color: #94a3b8;
-  background: rgba(255, 255, 255, 0.03);
-  border-radius: 16px;
-  border: 1px dashed rgba(255, 255, 255, 0.1);
+  max-width: 600px;
+  margin: 0 auto 3rem;
+  line-height: 1.6;
 }
 
-.error {
-  color: #f87171;
-  border-color: rgba(248, 113, 113, 0.2);
+.cta-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+  color: white;
+  padding: 1.25rem 2.5rem;
+  border-radius: 9999px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 10px 20px -5px rgba(99, 102, 241, 0.4);
+}
+
+.cta-button:hover {
+  transform: translateY(-3px) scale(1.02);
+  box-shadow: 0 20px 25px -5px rgba(99, 102, 241, 0.5);
+  background: linear-gradient(135deg, #4f46e5 0%, #4338ca 100%);
+}
+
+.arrow-icon {
+  transition: transform 0.3s ease;
+}
+
+.cta-button:hover .arrow-icon {
+  transform: translateX(5px);
+}
+
+/* Background Blobs */
+.background-blobs {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1;
+}
+
+.blob {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+  opacity: 0.4;
+  animation: blobFloat 20s infinite alternate;
+}
+
+.blob-1 {
+  width: 400px;
+  height: 400px;
+  background: #4f46e5;
+  top: -100px;
+  right: -50px;
+}
+
+.blob-2 {
+  width: 500px;
+  height: 500px;
+  background: #9333ea;
+  bottom: -150px;
+  left: -100px;
+  animation-delay: -5s;
+}
+
+.blob-3 {
+  width: 300px;
+  height: 300px;
+  background: #0ea5e9;
+  top: 20%;
+  left: 10%;
+  animation-delay: -10s;
+}
+
+@keyframes fadeInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes blobFloat {
+  0% { transform: translate(0, 0) scale(1); }
+  33% { transform: translate(30px, -50px) scale(1.1); }
+  66% { transform: translate(-20px, 20px) scale(0.9); }
+  100% { transform: translate(0, 0) scale(1); }
+}
+
+@media (max-width: 640px) {
+  .hero-title { font-size: 2.75rem; }
+  .hero-subtitle { font-size: 1.1rem; }
+  .glass-card { padding: 3rem 1.5rem; }
 }
 </style>
