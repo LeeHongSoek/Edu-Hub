@@ -9,8 +9,8 @@ INSERT INTO `enm_roles` (`role_id`, `role_name`, `description`) VALUES
 ('P', 'PARENT', '학부모');
 
 INSERT INTO `enm_question_types` (`type_id`, `type_name`, `description`) VALUES
-('M', 'MULTIPLE_CHOICE', '객관식'),
-('S', 'SUBJECTIVE', '주관식');
+('M', '객관식', '객관식'),
+('S', '주관식', '주관식');
 
 INSERT INTO `enm_media_types` (`type_id`, `type_name`, `description`) VALUES
 ('I', 'image', '이미지'),
