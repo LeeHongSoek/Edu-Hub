@@ -1,0 +1,326 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+// 0-1. 사용자 권한 기초 데이터
+model EnmRole {
+  role_id     String @id @db.Char(1)
+  role_name   String @db.VarChar(20)
+  description String @db.VarChar(50)
+  users       User[]
+
+  @@map("enm_roles")
+}
+
+// 0-2. 문제 유형 기초 데이터
+model EnmQuestionType {
+  type_id     String     @id @db.Char(1)
+  type_name   String     @db.VarChar(20)
+  description String     @db.VarChar(50)
+  questions   Question[]
+
+  @@map("enm_question_types")
+}
+
+// 0-3. 미디어 타입 기초 데이터
+model EnmMediaType {
+  type_id      String            @id @db.Char(1)
+  type_name    String            @db.VarChar(20)
+  description  String            @db.VarChar(50)
+  attachments  MediaAttachment[]
+
+  @@map("enm_media_types")
+}
+
+// 1. 사용자 관리
+model User {
+  user_no       BigInt      @id @default(autoincrement())
+  user_id       String      @unique @db.VarChar(10)
+  username      String      @db.VarChar(50)
+  email         String      @unique @db.VarChar(255)
+  role_id       String      @db.Char(1)
+  is_withdrawn  IsWithdrawn @default(N)
+  created_at    DateTime?   @default(now()) @db.DateTime(0)
+
+  role            EnmRole         @relation(fields: [role_id], references: [role_id])
+  taught_classes  Class[]         @relation("TeacherClasses")
+  student_classes ClassStudent[]
+  parent_links    ParentStudent[] @relation("ParentLink")
+  child_links     ParentStudent[] @relation("ChildLink")
+  created_groups  Group[]
+  created_sqs     Question[]
+  created_exams   Exam[]
+  exam_results    ExamResult[]
+  authored_cmts   UserComment[]   @relation("AuthoredComments")
+  received_cmts   UserComment[]   @relation("ReceivedComments")
+  study_logs      StudyLog[]
+  solve_results   SolveResult[]
+
+  @@map("users")
+}
+
+enum IsWithdrawn {
+  Y
+  N
+}
+
+// 2. 학급 관리
+model Class {
+  class_id   BigInt    @id @default(autoincrement())
+  teacher_no BigInt
+  class_name String    @db.VarChar(100)
+  created_at DateTime? @default(now()) @db.DateTime(0)
+
+  teacher  User           @relation("TeacherClasses", fields: [teacher_no], references: [user_no], onDelete: Cascade)
+  students ClassStudent[]
+  exams    Exam[]
+
+  @@map("classes")
+}
+
+// 3. 학급 소속 학생 매핑
+model ClassStudent {
+  class_id   BigInt
+  student_no BigInt
+
+  class   Class @relation(fields: [class_id], references: [class_id], onDelete: Cascade)
+  student User  @relation(fields: [student_no], references: [user_no], onDelete: Cascade)
+
+  @@id([class_id, student_no])
+  @@map("class_students")
+}
+
+// 4. 학부모-학생 매핑
+model ParentStudent {
+  parent_no  BigInt
+  student_no BigInt
+
+  parent  User @relation("ParentLink", fields: [parent_no], references: [user_no], onDelete: Cascade)
+  student User @relation("ChildLink", fields: [student_no], references: [user_no], onDelete: Cascade)
+
+  @@id([parent_no, student_no])
+  @@map("parent_students")
+}
+
+// 5. 그룹 관리 (계층형)
+model Group {
+  group_id        BigInt    @id @default(autoincrement())
+  creator_no      BigInt
+  parent_group_id BigInt?
+  depth           Int?      @default(1) @db.TinyInt
+  name            String    @db.VarChar(100)
+  description     String?   @db.Text
+  created_at      DateTime? @default(now()) @db.DateTime(0)
+
+  creator       User       @relation(fields: [creator_no], references: [user_no], onDelete: Cascade)
+  parent_group  Group?     @relation("GroupHierarchy", fields: [parent_group_id], references: [group_id], onDelete: Cascade)
+  child_groups  Group[]    @relation("GroupHierarchy")
+  questions     Question[]
+
+  @@map("groups")
+}
+
+// 6. 문제 본체
+model Question {
+  question_id      BigInt    @id @default(autoincrement())
+  creator_no       BigInt
+  group_id         BigInt?
+  question_type_id String    @default("M") @db.Char(1)
+  title            String    @db.VarChar(255)
+  question         String    @db.Text
+  content          String?   @db.Text
+  answer           String    @db.Text
+  explanation      String?   @db.Text
+  hint             String?   @db.Text
+  difficulty       Int?      @default(1) @db.TinyInt
+  is_public        Boolean?  @default(false)
+  is_deleted       IsDeleted @default(N)
+  time_limit       Int?      @default(0)
+  created_at       DateTime? @default(now()) @db.DateTime(0)
+
+  creator      User            @relation(fields: [creator_no], references: [user_no], onDelete: Cascade)
+  group        Group?          @relation(fields: [group_id], references: [group_id], onDelete: SetNull)
+  type         EnmQuestionType @relation(fields: [question_type_id], references: [type_id])
+  options      QuestionOption[]
+  attachments  MediaAttachment[]
+  tags         QuestionTag[]
+  exams        ExamQuestion[]
+  comments     UserComment[]
+  study_logs   StudyLog[]
+  solve_results SolveResult[]
+
+  @@map("questions")
+}
+
+enum IsDeleted {
+  Y
+  N
+  T
+}
+
+// 7. 객관식 보기
+model QuestionOption {
+  option_id     BigInt  @id @default(autoincrement())
+  question_id   BigInt
+  option_number Int     @db.TinyInt
+  content       String  @db.Text
+  is_answer     Boolean @default(false)
+
+  question Question @relation(fields: [question_id], references: [question_id], onDelete: Cascade)
+
+  @@map("question_options")
+}
+
+// 8. 미디어 리소스
+model MediaAttachment {
+  media_id      BigInt @id @default(autoincrement())
+  question_id   BigInt
+  media_type_id String @db.Char(1)
+  media_url     String @db.Text
+  sort_order    Int?   @default(0)
+
+  question Question     @relation(fields: [question_id], references: [question_id], onDelete: Cascade)
+  type     EnmMediaType @relation(fields: [media_type_id], references: [type_id])
+
+  @@map("media_attachments")
+}
+
+// 9. 해시태그
+model Tag {
+  tag_id     BigInt        @id @default(autoincrement())
+  tag_name   String        @unique @db.VarChar(50)
+  created_at DateTime?     @default(now()) @db.DateTime(0)
+  questions  QuestionTag[]
+
+  @@map("tags")
+}
+
+// 10. 문제-태그 매핑
+model QuestionTag {
+  question_id BigInt
+  tag_id      BigInt
+
+  question Question @relation(fields: [question_id], references: [question_id], onDelete: Cascade)
+  tag      Tag      @relation(fields: [tag_id], references: [tag_id], onDelete: Cascade)
+
+  @@id([question_id, tag_id])
+  @@map("question_tags")
+}
+
+// 11. 고사 관리
+model Exam {
+  exam_id       BigInt    @id @default(autoincrement())
+  creator_no    BigInt
+  class_id      BigInt?
+  exam_name     String    @db.VarChar(255)
+  start_time    DateTime  @db.DateTime(0)
+  end_time      DateTime  @db.DateTime(0)
+  location      String?   @db.VarChar(100)
+  is_auto_score Boolean?  @default(true)
+  created_at    DateTime? @default(now()) @db.DateTime(0)
+
+  creator   User           @relation(fields: [creator_no], references: [user_no], onDelete: Cascade)
+  class     Class?         @relation(fields: [class_id], references: [class_id], onDelete: SetNull)
+  questions ExamQuestion[]
+  results   ExamResult[]
+  solves    SolveResult[]
+
+  @@map("exams")
+}
+
+// 12. 고사별 문제 매핑
+model ExamQuestion {
+  exam_id        BigInt
+  question_id    BigInt
+  question_order Int
+  score          Int?   @default(10)
+
+  exam     Exam     @relation(fields: [exam_id], references: [exam_id], onDelete: Cascade)
+  question Question @relation(fields: [question_id], references: [question_id], onDelete: Cascade)
+
+  @@id([exam_id, question_id])
+  @@map("exam_questions")
+}
+
+// 13. 고사 결과 리포트
+model ExamResult {
+  result_id       BigInt    @id @default(autoincrement())
+  exam_id         BigInt
+  student_no      BigInt
+  total_score     Int?      @default(0)
+  student_rank    Int?
+  total_examinees Int?
+  grade           Grade?
+  ai_comment      String?   @db.Text
+  teacher_comment String?   @db.Text
+  submitted_at    DateTime? @default(now()) @db.DateTime(0)
+
+  exam    Exam @relation(fields: [exam_id], references: [exam_id], onDelete: Cascade)
+  student User @relation(fields: [student_no], references: [user_no], onDelete: Cascade)
+
+  @@map("exam_results")
+}
+
+enum Grade {
+  수
+  우
+  미
+  양
+  가
+}
+
+// 14. 사용자별 주석
+model UserComment {
+  comment_id     BigInt    @id @default(autoincrement())
+  author_no      BigInt
+  target_user_no BigInt?
+  question_id    BigInt
+  content        String    @db.Text
+  created_at     DateTime? @default(now()) @db.DateTime(0)
+
+  author      User     @relation("AuthoredComments", fields: [author_no], references: [user_no], onDelete: Cascade)
+  target_user User?    @relation("ReceivedComments", fields: [target_user_no], references: [user_no], onDelete: SetNull)
+  question    Question @relation(fields: [question_id], references: [question_id], onDelete: Cascade)
+
+  @@map("user_comments")
+}
+
+// 15. 학습 기록
+model StudyLog {
+  log_id         BigInt    @id @default(autoincrement())
+  user_no        BigInt
+  question_id    BigInt
+  user_memo      String?   @db.Text
+  is_correct     Boolean?  @default(false)
+  try_count      Int?      @default(0)
+  last_played_at DateTime? @default(now()) @updatedAt @db.DateTime(0)
+  next_review_at DateTime? @db.DateTime(0)
+
+  user     User     @relation(fields: [user_no], references: [user_no], onDelete: Cascade)
+  question Question @relation(fields: [question_id], references: [question_id], onDelete: Cascade)
+
+  @@map("study_logs")
+}
+
+// 16. 문제 풀이 결과
+model SolveResult {
+  result_id        BigInt    @id @default(autoincrement())
+  user_no          BigInt
+  question_id      BigInt
+  exam_id          BigInt?
+  submitted_answer String?   @db.Text
+  is_correct       Boolean
+  time_taken       Int       @default(0)
+  solved_at        DateTime? @default(now()) @db.DateTime(0)
+
+  user     User     @relation(fields: [user_no], references: [user_no], onDelete: Cascade)
+  question Question @relation(fields: [question_id], references: [question_id], onDelete: Cascade)
+  exam     Exam?    @relation(fields: [exam_id], references: [exam_id], onDelete: Cascade)
+
+  @@map("solve_results")
+}
