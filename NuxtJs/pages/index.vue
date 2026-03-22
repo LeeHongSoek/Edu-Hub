@@ -6,10 +6,10 @@
   <div class="landing-page">
     <div class="hero">
       <div class="glass-card">
-        <h1 class="hero-title">Welcome to <span class="gradient-text">Edu-Hub</span></h1>
+        <h1 class="hero-title"><span class="gradient-text">Edu-Hub</span>에 오신것을 환영합니다!</h1>
         <p class="hero-subtitle">
-          Unlock your potential with our advanced AI-powered learning platform. 
-          Analyze, practice, and excel in your studies.
+          최첨단 AI 기반 학습 플랫폼으로 여러분의 잠재력을 마음껏 발휘해 보세요. 
+          학습 내용을 분석하고, 실전 연습을 통해 학업 성취도를 높여보세요.
         </p>
         <NuxtLink to="/Questions" class="cta-button">
           Explore Questions
