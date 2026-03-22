@@ -4,10 +4,8 @@ generator client {
 
 datasource db {
   provider = "mysql"
-  url      = env("DATABASE_URL")
 }
 
-// 0-1. 사용자 권한 기초 데이터
 model EnmRole {
   role_id     String @id @db.Char(1)
   role_name   String @db.VarChar(20)
@@ -17,7 +15,6 @@ model EnmRole {
   @@map("enm_roles")
 }
 
-// 0-2. 문제 유형 기초 데이터
 model EnmQuestionType {
   type_id     String     @id @db.Char(1)
   type_name   String     @db.VarChar(20)
@@ -27,227 +24,207 @@ model EnmQuestionType {
   @@map("enm_question_types")
 }
 
-// 0-3. 미디어 타입 기초 데이터
 model EnmMediaType {
-  type_id      String            @id @db.Char(1)
-  type_name    String            @db.VarChar(20)
-  description  String            @db.VarChar(50)
-  attachments  MediaAttachment[]
+  type_id     String            @id @db.Char(1)
+  type_name   String            @db.VarChar(20)
+  description String            @db.VarChar(50)
+  attachments MediaAttachment[]
 
   @@map("enm_media_types")
 }
 
-// 1. 사용자 관리
 model User {
-  user_no       BigInt      @id @default(autoincrement())
-  user_id       String      @unique @db.VarChar(10)
-  username      String      @db.VarChar(50)
-  email         String      @unique @db.VarChar(255)
-  role_id       String      @db.Char(1)
-  is_withdrawn  IsWithdrawn @default(N)
-  created_at    DateTime?   @default(now()) @db.DateTime(0)
-
-  role            EnmRole         @relation(fields: [role_id], references: [role_id])
-  taught_classes  Class[]         @relation("TeacherClasses")
+  user_no         BigInt          @id @default(autoincrement())
+  user_id         String          @unique(map: "user_id") @db.VarChar(10)
+  username        String          @db.VarChar(50)
+  email           String          @unique(map: "email") @db.VarChar(255)
+  role_id         String          @db.Char(1)
+  is_withdrawn    IsWithdrawn?    @default(N)
+  created_at      DateTime?       @default(now()) @db.DateTime(0)
   student_classes ClassStudent[]
+  taught_classes  Class[]         @relation("TeacherClasses")
+  exam_results    ExamResult[]
+  created_exams   Exam[]
+  created_groups  Group[]
   parent_links    ParentStudent[] @relation("ParentLink")
   child_links     ParentStudent[] @relation("ChildLink")
-  created_groups  Group[]
   created_sqs     Question[]
-  created_exams   Exam[]
-  exam_results    ExamResult[]
+  solve_results   SolveResult[]
+  study_logs      StudyLog[]
   authored_cmts   UserComment[]   @relation("AuthoredComments")
   received_cmts   UserComment[]   @relation("ReceivedComments")
-  study_logs      StudyLog[]
-  solve_results   SolveResult[]
+  role            EnmRole         @relation(fields: [role_id], references: [role_id], onUpdate: Restrict, map: "fk_user_role")
 
+  @@index([role_id], map: "fk_user_role")
   @@map("users")
 }
 
-enum IsWithdrawn {
-  Y
-  N
-}
-
-// 2. 학급 관리
 model Class {
-  class_id   BigInt    @id @default(autoincrement())
+  class_id   BigInt         @id @default(autoincrement())
   teacher_no BigInt
-  class_name String    @db.VarChar(100)
-  created_at DateTime? @default(now()) @db.DateTime(0)
+  class_name String         @db.VarChar(100)
+  created_at DateTime?      @default(now()) @db.DateTime(0)
+  students   ClassStudent[]
+  teacher    User           @relation("TeacherClasses", fields: [teacher_no], references: [user_no], onDelete: Cascade, onUpdate: Restrict, map: "fk_class_teacher")
+  exams      Exam[]
 
-  teacher  User           @relation("TeacherClasses", fields: [teacher_no], references: [user_no], onDelete: Cascade)
-  students ClassStudent[]
-  exams    Exam[]
-
+  @@index([teacher_no], map: "fk_class_teacher")
   @@map("classes")
 }
 
-// 3. 학급 소속 학생 매핑
 model ClassStudent {
   class_id   BigInt
   student_no BigInt
-
-  class   Class @relation(fields: [class_id], references: [class_id], onDelete: Cascade)
-  student User  @relation(fields: [student_no], references: [user_no], onDelete: Cascade)
+  class      Class  @relation(fields: [class_id], references: [class_id], onDelete: Cascade, onUpdate: Restrict, map: "fk_cs_class")
+  student    User   @relation(fields: [student_no], references: [user_no], onDelete: Cascade, onUpdate: Restrict, map: "fk_cs_student")
 
   @@id([class_id, student_no])
+  @@index([student_no], map: "fk_cs_student")
   @@map("class_students")
 }
 
-// 4. 학부모-학생 매핑
 model ParentStudent {
   parent_no  BigInt
   student_no BigInt
-
-  parent  User @relation("ParentLink", fields: [parent_no], references: [user_no], onDelete: Cascade)
-  student User @relation("ChildLink", fields: [student_no], references: [user_no], onDelete: Cascade)
+  parent     User   @relation("ParentLink", fields: [parent_no], references: [user_no], onDelete: Cascade, onUpdate: Restrict, map: "fk_ps_parent")
+  student    User   @relation("ChildLink", fields: [student_no], references: [user_no], onDelete: Cascade, onUpdate: Restrict, map: "fk_ps_student")
 
   @@id([parent_no, student_no])
+  @@index([student_no], map: "fk_ps_student")
   @@map("parent_students")
 }
 
-// 5. 그룹 관리 (계층형)
 model Group {
-  group_id        BigInt    @id @default(autoincrement())
+  group_id        BigInt     @id @default(autoincrement())
   creator_no      BigInt
   parent_group_id BigInt?
-  depth           Int?      @default(1) @db.TinyInt
-  name            String    @db.VarChar(100)
-  description     String?   @db.Text
-  created_at      DateTime? @default(now()) @db.DateTime(0)
+  depth           Int?       @default(1) @db.TinyInt
+  name            String     @db.VarChar(100)
+  description     String?    @db.Text
+  created_at      DateTime?  @default(now()) @db.DateTime(0)
+  creator         User       @relation(fields: [creator_no], references: [user_no], onDelete: Cascade, onUpdate: Restrict, map: "fk_group_creator")
+  parent_group    Group?     @relation("GroupHierarchy", fields: [parent_group_id], references: [group_id], onDelete: Cascade, onUpdate: Restrict, map: "fk_group_parent")
+  child_groups    Group[]    @relation("GroupHierarchy")
+  questions       Question[]
 
-  creator       User       @relation(fields: [creator_no], references: [user_no], onDelete: Cascade)
-  parent_group  Group?     @relation("GroupHierarchy", fields: [parent_group_id], references: [group_id], onDelete: Cascade)
-  child_groups  Group[]    @relation("GroupHierarchy")
-  questions     Question[]
-
+  @@index([creator_no], map: "fk_group_creator")
+  @@index([parent_group_id], map: "fk_group_parent")
   @@map("groups")
 }
 
-// 6. 문제 본체
 model Question {
-  question_id      BigInt    @id @default(autoincrement())
+  question_id      BigInt            @id @default(autoincrement())
   creator_no       BigInt
   group_id         BigInt?
-  question_type_id String    @default("M") @db.Char(1)
-  title            String    @db.VarChar(255)
-  question         String    @db.Text
-  content          String?   @db.Text
-  answer           String    @db.Text
-  explanation      String?   @db.Text
-  hint             String?   @db.Text
-  difficulty       Int?      @default(1) @db.TinyInt
-  is_public        Boolean?  @default(false)
-  is_deleted       IsDeleted @default(N)
-  time_limit       Int?      @default(0)
-  created_at       DateTime? @default(now()) @db.DateTime(0)
+  question_type_id String            @default("M") @db.Char(1)
+  title            String            @db.VarChar(255)
+  question         String            @db.Text
+  content          String?           @db.Text
+  answer           String            @db.Text
+  explanation      String?           @db.Text
+  hint             String?           @db.Text
+  difficulty       Int?              @default(1) @db.TinyInt
+  is_public        Boolean?          @default(false)
+  is_deleted       IsDeleted?        @default(N)
+  time_limit       Int?              @default(0)
+  created_at       DateTime?         @default(now()) @db.DateTime(0)
+  exams            ExamQuestion[]
+  attachments      MediaAttachment[]
+  options          QuestionOption[]
+  tags             QuestionTag[]
+  creator          User              @relation(fields: [creator_no], references: [user_no], onDelete: Cascade, onUpdate: Restrict, map: "fk_question_creator")
+  group            Group?            @relation(fields: [group_id], references: [group_id], onUpdate: Restrict, map: "fk_question_group")
+  type             EnmQuestionType   @relation(fields: [question_type_id], references: [type_id], onUpdate: Restrict, map: "fk_question_type")
+  solve_results    SolveResult[]
+  study_logs       StudyLog[]
+  comments         UserComment[]
 
-  creator      User            @relation(fields: [creator_no], references: [user_no], onDelete: Cascade)
-  group        Group?          @relation(fields: [group_id], references: [group_id], onDelete: SetNull)
-  type         EnmQuestionType @relation(fields: [question_type_id], references: [type_id])
-  options      QuestionOption[]
-  attachments  MediaAttachment[]
-  tags         QuestionTag[]
-  exams        ExamQuestion[]
-  comments     UserComment[]
-  study_logs   StudyLog[]
-  solve_results SolveResult[]
-
+  @@index([creator_no], map: "fk_question_creator")
+  @@index([group_id], map: "fk_question_group")
+  @@index([question_type_id], map: "fk_question_type")
   @@map("questions")
 }
 
-enum IsDeleted {
-  Y
-  N
-  T
-}
-
-// 7. 객관식 보기
 model QuestionOption {
-  option_id     BigInt  @id @default(autoincrement())
+  option_id     BigInt   @id @default(autoincrement())
   question_id   BigInt
-  option_number Int     @db.TinyInt
-  content       String  @db.Text
-  is_answer     Boolean @default(false)
+  option_number Int      @db.TinyInt
+  content       String   @db.Text
+  is_answer     Boolean? @default(false)
+  question      Question @relation(fields: [question_id], references: [question_id], onDelete: Cascade, onUpdate: Restrict, map: "fk_option_q")
 
-  question Question @relation(fields: [question_id], references: [question_id], onDelete: Cascade)
-
+  @@index([question_id], map: "fk_option_q")
   @@map("question_options")
 }
 
-// 8. 미디어 리소스
 model MediaAttachment {
-  media_id      BigInt @id @default(autoincrement())
+  media_id      BigInt       @id @default(autoincrement())
   question_id   BigInt
-  media_type_id String @db.Char(1)
-  media_url     String @db.Text
-  sort_order    Int?   @default(0)
+  media_type_id String       @db.Char(1)
+  media_url     String       @db.Text
+  sort_order    Int?         @default(0)
+  question      Question     @relation(fields: [question_id], references: [question_id], onDelete: Cascade, onUpdate: Restrict, map: "fk_media_q")
+  type          EnmMediaType @relation(fields: [media_type_id], references: [type_id], onUpdate: Restrict, map: "fk_media_type")
 
-  question Question     @relation(fields: [question_id], references: [question_id], onDelete: Cascade)
-  type     EnmMediaType @relation(fields: [media_type_id], references: [type_id])
-
+  @@index([question_id], map: "fk_media_q")
+  @@index([media_type_id], map: "fk_media_type")
   @@map("media_attachments")
 }
 
-// 9. 해시태그
 model Tag {
   tag_id     BigInt        @id @default(autoincrement())
-  tag_name   String        @unique @db.VarChar(50)
+  tag_name   String        @unique(map: "tag_name") @db.VarChar(50)
   created_at DateTime?     @default(now()) @db.DateTime(0)
   questions  QuestionTag[]
 
   @@map("tags")
 }
 
-// 10. 문제-태그 매핑
 model QuestionTag {
   question_id BigInt
   tag_id      BigInt
-
-  question Question @relation(fields: [question_id], references: [question_id], onDelete: Cascade)
-  tag      Tag      @relation(fields: [tag_id], references: [tag_id], onDelete: Cascade)
+  question    Question @relation(fields: [question_id], references: [question_id], onDelete: Cascade, onUpdate: Restrict, map: "fk_qt_q")
+  tag         Tag      @relation(fields: [tag_id], references: [tag_id], onDelete: Cascade, onUpdate: Restrict, map: "fk_qt_t")
 
   @@id([question_id, tag_id])
+  @@index([tag_id], map: "fk_qt_t")
   @@map("question_tags")
 }
 
-// 11. 고사 관리
 model Exam {
-  exam_id       BigInt    @id @default(autoincrement())
+  exam_id       BigInt         @id @default(autoincrement())
   creator_no    BigInt
   class_id      BigInt?
-  exam_name     String    @db.VarChar(255)
-  start_time    DateTime  @db.DateTime(0)
-  end_time      DateTime  @db.DateTime(0)
-  location      String?   @db.VarChar(100)
-  is_auto_score Boolean?  @default(true)
-  created_at    DateTime? @default(now()) @db.DateTime(0)
+  exam_name     String         @db.VarChar(255)
+  start_time    DateTime       @db.DateTime(0)
+  end_time      DateTime       @db.DateTime(0)
+  location      String?        @db.VarChar(100)
+  is_auto_score Boolean?       @default(true)
+  created_at    DateTime?      @default(now()) @db.DateTime(0)
+  questions     ExamQuestion[]
+  results       ExamResult[]
+  class         Class?         @relation(fields: [class_id], references: [class_id], onUpdate: Restrict, map: "fk_exam_class")
+  creator       User           @relation(fields: [creator_no], references: [user_no], onDelete: Cascade, onUpdate: Restrict, map: "fk_exam_creator")
+  solves        SolveResult[]
 
-  creator   User           @relation(fields: [creator_no], references: [user_no], onDelete: Cascade)
-  class     Class?         @relation(fields: [class_id], references: [class_id], onDelete: SetNull)
-  questions ExamQuestion[]
-  results   ExamResult[]
-  solves    SolveResult[]
-
+  @@index([class_id], map: "fk_exam_class")
+  @@index([creator_no], map: "fk_exam_creator")
   @@map("exams")
 }
 
-// 12. 고사별 문제 매핑
 model ExamQuestion {
   exam_id        BigInt
   question_id    BigInt
   question_order Int
-  score          Int?   @default(10)
-
-  exam     Exam     @relation(fields: [exam_id], references: [exam_id], onDelete: Cascade)
-  question Question @relation(fields: [question_id], references: [question_id], onDelete: Cascade)
+  score          Int?     @default(10)
+  exam           Exam     @relation(fields: [exam_id], references: [exam_id], onDelete: Cascade, onUpdate: Restrict, map: "fk_eq_exam")
+  question       Question @relation(fields: [question_id], references: [question_id], onDelete: Cascade, onUpdate: Restrict, map: "fk_eq_question")
 
   @@id([exam_id, question_id])
+  @@index([question_id], map: "fk_eq_question")
   @@map("exam_questions")
 }
 
-// 13. 고사 결과 리포트
 model ExamResult {
   result_id       BigInt    @id @default(autoincrement())
   exam_id         BigInt
@@ -259,22 +236,14 @@ model ExamResult {
   ai_comment      String?   @db.Text
   teacher_comment String?   @db.Text
   submitted_at    DateTime? @default(now()) @db.DateTime(0)
+  exam            Exam      @relation(fields: [exam_id], references: [exam_id], onDelete: Cascade, onUpdate: Restrict, map: "fk_er_exam")
+  student         User      @relation(fields: [student_no], references: [user_no], onDelete: Cascade, onUpdate: Restrict, map: "fk_er_student")
 
-  exam    Exam @relation(fields: [exam_id], references: [exam_id], onDelete: Cascade)
-  student User @relation(fields: [student_no], references: [user_no], onDelete: Cascade)
-
+  @@index([exam_id], map: "fk_er_exam")
+  @@index([student_no], map: "fk_er_student")
   @@map("exam_results")
 }
 
-enum Grade {
-  수
-  우
-  미
-  양
-  가
-}
-
-// 14. 사용자별 주석
 model UserComment {
   comment_id     BigInt    @id @default(autoincrement())
   author_no      BigInt
@@ -282,15 +251,16 @@ model UserComment {
   question_id    BigInt
   content        String    @db.Text
   created_at     DateTime? @default(now()) @db.DateTime(0)
+  author         User      @relation("AuthoredComments", fields: [author_no], references: [user_no], onDelete: Cascade, onUpdate: Restrict, map: "fk_comment_author")
+  question       Question  @relation(fields: [question_id], references: [question_id], onDelete: Cascade, onUpdate: Restrict, map: "fk_comment_q")
+  target_user    User?     @relation("ReceivedComments", fields: [target_user_no], references: [user_no], onUpdate: Restrict, map: "fk_comment_target")
 
-  author      User     @relation("AuthoredComments", fields: [author_no], references: [user_no], onDelete: Cascade)
-  target_user User?    @relation("ReceivedComments", fields: [target_user_no], references: [user_no], onDelete: SetNull)
-  question    Question @relation(fields: [question_id], references: [question_id], onDelete: Cascade)
-
+  @@index([author_no], map: "fk_comment_author")
+  @@index([question_id], map: "fk_comment_q")
+  @@index([target_user_no], map: "fk_comment_target")
   @@map("user_comments")
 }
 
-// 15. 학습 기록
 model StudyLog {
   log_id         BigInt    @id @default(autoincrement())
   user_no        BigInt
@@ -300,14 +270,14 @@ model StudyLog {
   try_count      Int?      @default(0)
   last_played_at DateTime? @default(now()) @updatedAt @db.DateTime(0)
   next_review_at DateTime? @db.DateTime(0)
+  question       Question  @relation(fields: [question_id], references: [question_id], onDelete: Cascade, onUpdate: Restrict, map: "fk_log_q")
+  user           User      @relation(fields: [user_no], references: [user_no], onDelete: Cascade, onUpdate: Restrict, map: "fk_log_user")
 
-  user     User     @relation(fields: [user_no], references: [user_no], onDelete: Cascade)
-  question Question @relation(fields: [question_id], references: [question_id], onDelete: Cascade)
-
+  @@index([question_id], map: "fk_log_q")
+  @@index([user_no], map: "fk_log_user")
   @@map("study_logs")
 }
 
-// 16. 문제 풀이 결과
 model SolveResult {
   result_id        BigInt    @id @default(autoincrement())
   user_no          BigInt
@@ -317,10 +287,31 @@ model SolveResult {
   is_correct       Boolean
   time_taken       Int       @default(0)
   solved_at        DateTime? @default(now()) @db.DateTime(0)
+  exam             Exam?     @relation(fields: [exam_id], references: [exam_id], onDelete: Cascade, onUpdate: Restrict, map: "fk_result_exam")
+  question         Question  @relation(fields: [question_id], references: [question_id], onDelete: Cascade, onUpdate: Restrict, map: "fk_result_q")
+  user             User      @relation(fields: [user_no], references: [user_no], onDelete: Cascade, onUpdate: Restrict, map: "fk_result_user")
 
-  user     User     @relation(fields: [user_no], references: [user_no], onDelete: Cascade)
-  question Question @relation(fields: [question_id], references: [question_id], onDelete: Cascade)
-  exam     Exam?    @relation(fields: [exam_id], references: [exam_id], onDelete: Cascade)
-
+  @@index([exam_id], map: "fk_result_exam")
+  @@index([question_id], map: "fk_result_q")
+  @@index([user_no], map: "fk_result_user")
   @@map("solve_results")
+}
+
+enum IsWithdrawn {
+  Y
+  N
+}
+
+enum IsDeleted {
+  Y
+  N
+  T
+}
+
+enum Grade {
+  SU   @map("수")
+  UU   @map("우")
+  MI   @map("미")
+  YANG @map("가")
+  GA   @map("양")
 }
