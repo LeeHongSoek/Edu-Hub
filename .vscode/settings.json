@@ -1,5 +1,5 @@
 {
     "antigravity.commitMessage.language": "ko",
     "antigravity.language": "ko",
-    "antigravity.prompt.commitMessage": "커밋 메시지를 항상 한국어로 작성해줘. 형식은 <type>: <description> 으로 해줘."
+    "antigravity.prompt.commitMessage": "커밋 메시지를 항상 한국어로 작성해줘. 형식은 <type>: <description> 으로 해줘!"
 }
