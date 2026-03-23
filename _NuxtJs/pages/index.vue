@@ -100,14 +100,16 @@ const tickerQuestions = ref<any[]>([]);
 
 const fetchTickerData = async () => {
   const config = useRuntimeConfig();
+  console.log('[ticker] Starting fetch...');
   try {
     const data = await $fetch(`${config.public.apiBase}/questions`);
-    if (Array.isArray(data)) {
-      // 랜덤 5개 추출 후 최신순 정렬
-      const shuffled = [...data].sort(() => 0.5 - Math.random());
-      const selected = shuffled.slice(0, 5);
-      tickerQuestions.value = selected.sort((a, b) => Number(b.question_id) - Number(a.question_id));
+    console.log('[ticker] Data received:', Array.isArray(data) ? data.length : 'not an array');
+    if (Array.isArray(data) && data.length > 0) {
+      // 최신 5개 추출 (ID 내림차순 정렬 후 상위 5개)
+      const sorted = [...data].sort((a, b) => Number(b.question_id) - Number(a.question_id));
+      tickerQuestions.value = sorted.slice(0, 5);
       showTicker.value = true;
+      console.log('[ticker] Latest Questions selected:', tickerQuestions.value.map(q => q.question_id));
     }
   } catch (err) {
     console.error('[fetchTickerData] Error:', err);
@@ -265,8 +267,8 @@ onMounted(() => {
   setTimeout(typeLoop, 1600);
   fetchStats();
   setInterval(() => { showCursor.value = !showCursor.value; }, 530);
-  // 10초 뒤 티커 노출
-  setTimeout(fetchTickerData, 10000);
+  // 즉시 티커 노출
+  fetchTickerData();
 });
 </script>
 
@@ -336,13 +338,10 @@ onMounted(() => {
           <div class="hero-desc-container">
             <p class="hero-desc">
               문제를 풀수록 지식이 쌓이고,<br>
-              지식이 쌓일수록 세상이 보입니다.<br><br>
-              Edu-Hub는 단순한 학습 앱이 아닙니다.<br>
-              당신 안의 <strong>호모 문풀리언스</strong>를 깨우는<br>
-              지식 완성의 여정을 함께합니다.
+              지식이 쌓일수록 세상이 보입니다.
             </p>
 
-            <!-- 아래에서 위로 흐르는 티커 (증권시황판 스타일) -->
+            <!-- 즉시 흐르는 티커 -->
             <transition name="fade">
               <div v-if="showTicker && tickerQuestions.length > 0" class="ticker-box">
                 <div class="ticker-label">
@@ -353,7 +352,7 @@ onMounted(() => {
                   <div class="ticker-track">
                     <div v-for="(q, idx) in [...tickerQuestions, ...tickerQuestions]" :key="idx" class="ticker-item">
                       <span class="t-id">#{{ q.question_id }}</span>
-                      <span class="t-text">{{ q.content.length > 35 ? q.content.slice(0, 35) + '...' : q.content }}</span>
+                      <span class="t-text">{{ (q.content && q.content.trim()) ? (q.content.length > 35 ? q.content.slice(0, 35) + '...' : q.content) : '신규 지식 챌린지 💡' }}</span>
                       <span class="t-new">NEW</span>
                     </div>
                   </div>
@@ -362,8 +361,8 @@ onMounted(() => {
             </transition>
           </div>
 
-          <!-- 칩은 제거하고 통계는 유지 -->
-          <div style="height: 40px;"></div>
+          <!-- 칩은 제거하고 통계는 유지 (간격 7px 고정) -->
+          <div style="height: 7px; margin-top: -1.2rem;"></div>
 
           <div class="stats-row">
             <div class="vbar"></div>
@@ -705,7 +704,7 @@ onMounted(() => {
 /* ─── 메인 행 ─── */
 .main-row {
   display: flex;
-  align-items: center;
+  align-items: stretch;
   justify-content: center;   /* 수평 중앙 */
   gap: 4rem;
   padding: 2rem 5rem;
@@ -719,7 +718,7 @@ onMounted(() => {
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 1.8rem;
+  gap: 1.2rem;
   max-width: 640px;
 }
 
@@ -831,9 +830,13 @@ onMounted(() => {
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
   border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 24px;
-  padding: 2.2rem;
-  margin-top: 0.5rem;
+  border-radius: 4px; /* 유저가 이미 수정함 */
+  padding: 1.2rem 1.8rem;
+  margin-top: 0.2rem;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
   animation: fadeUp 0.8s ease 1.5s both;
   box-shadow: 0 10px 40px -10px rgba(0,0,0,0.3);
 }
@@ -846,12 +849,12 @@ onMounted(() => {
 }
 
 .ticker-box {
-  margin-top: 2rem;
-  padding-top: 1.5rem;
+  margin-top: 0.8rem;
+  padding-top: 0.6rem;
   border-top: 1px dashed rgba(255, 255, 255, 0.15);
   display: flex;
   flex-direction: column;
-  gap: 0.8rem;
+  gap: 0.5rem;
   overflow: hidden;
 }
 
@@ -875,7 +878,7 @@ onMounted(() => {
 }
 
 .ticker-window {
-  height: 44px;
+  height: 48px;
   overflow: hidden;
   position: relative;
 }
@@ -883,16 +886,16 @@ onMounted(() => {
 .ticker-track {
   display: flex;
   flex-direction: column;
-  animation: ticker-marquee 15s linear infinite;
+  animation: ticker-marquee 18s linear infinite;
 }
 
 .ticker-item {
-  height: 44px;
+  height: 48px;
   display: flex;
   align-items: center;
   gap: 1.2rem;
   font-family: 'JetBrains Mono', 'Menlo', monospace;
-  font-size: 0.9rem;
+  font-size: 0.95rem;
 }
 
 .t-id { color: rgba(255, 255, 255, 0.35); font-size: 0.8rem; }
