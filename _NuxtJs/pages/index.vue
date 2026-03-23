@@ -350,7 +350,10 @@ onMounted(() => {
                   <div class="ticker-track">
                     <div v-for="(q, idx) in [...tickerQuestions, ...tickerQuestions]" :key="idx" class="ticker-item">
                       <span class="t-id">#{{ q.question_id }}</span>
-                      <span class="t-text">{{ (q.content && q.content.trim()) ? (q.content.length > 35 ? q.content.slice(0, 35) + '...' : q.content) : ((q.explanation && q.explanation.length > 35) ? q.explanation.slice(0, 35) + '...' : (q.explanation || q.answer || '지식을 완성하는 문제 ✏️')) }}</span>
+                      <LatexRenderer 
+                        class="t-text" 
+                        :text="q.content?.trim() || q.explanation?.trim() || q.answer?.trim() || '지식을 완성하는 문제 ✏️'" 
+                      />
                       <span class="t-new">NEW</span>
                     </div>
                   </div>
@@ -898,7 +901,16 @@ onMounted(() => {
 }
 
 .t-id { color: rgba(255, 255, 255, 0.35); font-size: 0.8rem; }
-.t-text { color: #e0e7ff; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.t-text { 
+  color: #e0e7ff; 
+  font-weight: 500; 
+  overflow: hidden; 
+  text-overflow: ellipsis; 
+  white-space: nowrap; 
+  display: inline-block;
+  max-width: 540px;
+  vertical-align: middle;
+}
 .t-new {
   font-size: 0.6rem;
   font-weight: 700;
