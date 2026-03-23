@@ -108,6 +108,64 @@ const handleLogin = async () => {
   }
 };
 
+// 회원가입 모달
+const showRegister = ref(false);
+const regUserId = ref('');
+const regPassword = ref('');
+const regUsername = ref('');
+const regEmail = ref('');
+const regRole = ref('S'); // 기본값 S (Student)
+const isRegistering = ref(false);
+const regError = ref('');
+
+function openRegister() {
+  showRegister.value = true;
+  authError.value = '';
+  document.body.style.overflow = 'hidden';
+}
+
+function closeRegister() {
+  showRegister.value = false;
+  document.body.style.overflow = '';
+}
+
+const handleRegister = async () => {
+  if (!regUserId.value || !regPassword.value || !regUsername.value || !regEmail.value) {
+    regError.value = '모든 필드를 입력해주세요.';
+    return;
+  }
+
+  isRegistering.value = true;
+  regError.value = '';
+
+  try {
+    const config = useRuntimeConfig();
+    const { data, error } = await useFetch(`${config.public.apiBase}/auth/register`, {
+      method: 'POST',
+      body: {
+        userId: regUserId.value,
+        password: regPassword.value,
+        username: regUsername.value,
+        email: regEmail.value,
+        roleId: regRole.value,
+      },
+    });
+
+    if (error.value) {
+      regError.value = error.value.data?.message || '회원가입 중 오류가 발생했습니다.';
+      return;
+    }
+
+    alert('회원가입이 완료되었습니다. 로그인해주세요.');
+    closeRegister();
+    userIdInput.value = regUserId.value; // 가입한 아이디 채워주기
+  } catch (err) {
+    regError.value = '서버 연결에 실패했습니다.';
+  } finally {
+    isRegistering.value = false;
+  }
+};
+
 onMounted(() => {
   setTimeout(() => { isLoaded.value = true; }, 80);
   setTimeout(typeLoop, 1600);
@@ -237,7 +295,7 @@ onMounted(() => {
 
             <p class="join-text">
               계정이 없으신가요?&nbsp;
-              <a href="#" class="link-accent">무료 회원가입 →</a>
+              <a href="#" class="link-accent" @click.prevent="openRegister">무료 회원가입 →</a>
             </p>
 
             <div class="badge-row">
@@ -316,6 +374,64 @@ onMounted(() => {
             <p class="modal-slogan">AI Edu-Hub와 함께라면 공부가 더 이상 숙제가 아닌 <strong>즐거운 경험</strong>이 됩니다! 🌟</p>
           </div>
 
+        </div>
+      </div>
+    </Transition>
+
+    <!-- ══════════════════════════════════════
+         회원가입 모달
+    ══════════════════════════════════════ -->
+    <Transition name="modal">
+      <div v-if="showRegister" class="modal-backdrop" @click.self="closeRegister">
+        <div class="modal-box reg-modal" role="dialog" aria-modal="true" aria-label="회원가입">
+          <button class="modal-close" @click="closeRegister" aria-label="닫기">
+            <svg viewBox="0 0 24 24" width="20" height="20"><path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
+          </button>
+
+          <div class="modal-header">
+            <span class="modal-badge">✨ 환영합니다</span>
+            <h2 class="modal-title">EduHub 회원가입</h2>
+            <p class="modal-lead">쉽고 빠른 가입으로 스마트한 학습을 시작하세요.</p>
+          </div>
+
+          <form @submit.prevent="handleRegister" class="reg-form">
+            <div class="reg-grid">
+              <div class="field">
+                <label>아이디</label>
+                <input v-model="regUserId" type="text" placeholder="10자 이내" required />
+              </div>
+              <div class="field">
+                <label>이름</label>
+                <input v-model="regUsername" type="text" placeholder="성함 입력" required />
+              </div>
+              <div class="field">
+                <label>이메일</label>
+                <input v-model="regEmail" type="email" placeholder="example@mail.com" required />
+              </div>
+              <div class="field">
+                <label>비밀번호</label>
+                <input v-model="regPassword" type="password" placeholder="안전한 비밀번호" required />
+              </div>
+              <div class="field full-width">
+                <label>가입 유형</label>
+                <div class="role-selector">
+                  <label><input type="radio" v-model="regRole" value="S" /> 학생</label>
+                  <label><input type="radio" v-model="regRole" value="T" /> 선생님</label>
+                  <label><input type="radio" v-model="regRole" value="P" /> 학부모</label>
+                </div>
+              </div>
+            </div>
+
+            <div v-if="regError" class="auth-error-msg reg-err">{{ regError }}</div>
+
+            <button class="btn-login btn-reg" :disabled="isRegistering">
+              {{ isRegistering ? '처리 중...' : '회원가입 완료' }}
+            </button>
+          </form>
+
+          <p class="modal-footer-text">
+            이미 계정이 있으신가요? <a href="#" @click.prevent="closeRegister">로그인으로 돌아가기</a>
+          </p>
         </div>
       </div>
     </Transition>
@@ -784,6 +900,68 @@ onMounted(() => {
 .btn-login:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+/* ─── 회원가입 모달 전용 ─── */
+.reg-modal {
+  max-width: 500px;
+  padding: 3rem 2.5rem 2.5rem;
+}
+.reg-form {
+  margin-top: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+}
+.reg-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+.reg-grid .full-width {
+  grid-column: span 2;
+}
+.role-selector {
+  display: flex;
+  gap: 1.5rem;
+  margin-top: 0.5rem;
+  background: rgba(255,255,255,0.04);
+  padding: 0.8rem;
+  border-radius: 10px;
+  border: 1px solid rgba(255,255,255,0.08);
+}
+.role-selector label {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: #f1f5f9;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+}
+.role-selector input {
+  accent-color: #818cf8;
+}
+.reg-err {
+  margin: 0;
+  text-align: center;
+}
+.btn-reg {
+  margin-top: 1rem;
+}
+.modal-footer-text {
+  text-align: center;
+  margin-top: 1.5rem;
+  font-size: 0.85rem;
+  color: #64748b;
+}
+.modal-footer-text a {
+  color: #818cf8;
+  font-weight: 700;
+  text-decoration: none;
+}
+.modal-footer-text a:hover {
+  text-decoration: underline;
 }
 
 .join-text {
