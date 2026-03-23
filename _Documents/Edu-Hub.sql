@@ -27,6 +27,7 @@ CREATE TABLE `enm_media_types` (
 CREATE TABLE `users` (
     `user_no`       BIGINT        PRIMARY KEY AUTO_INCREMENT COMMENT '사용자 고유 식별번호 (PK)',
     `user_id`       VARCHAR(10)   UNIQUE NOT NULL            COMMENT '일반 접속용 로그인 아이디',
+    `user_pw`       VARCHAR(10)   NOT NULL                   COMMENT '일반 접속용 로그인 암호',
     `username`      VARCHAR(50)   NOT NULL                   COMMENT '사용자 이름',
     `email`         VARCHAR(255)  UNIQUE NOT NULL            COMMENT '이메일 주소',
     `role_id`       CHAR(1)       NOT NULL                   COMMENT '사용자 권한 코드 (enm_roles 참조)',

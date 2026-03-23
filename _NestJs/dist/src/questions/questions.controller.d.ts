@@ -3,23 +3,6 @@ export declare class QuestionsController {
     private readonly questionsService;
     constructor(questionsService: QuestionsService);
     findAll(): Promise<({
-        options: {
-            question_id: bigint;
-            content: string;
-            option_number: number;
-            option_id: bigint;
-            is_answer: boolean | null;
-        }[];
-        tags: ({
-            tag: {
-                created_at: Date | null;
-                tag_id: bigint;
-                tag_name: string;
-            };
-        } & {
-            question_id: bigint;
-            tag_id: bigint;
-        })[];
         group: ({
             parent_group: ({
                 parent_group: {
@@ -49,6 +32,23 @@ export declare class QuestionsController {
             depth: number | null;
             description: string | null;
         }) | null;
+        options: {
+            question_id: bigint;
+            content: string;
+            option_number: number;
+            option_id: bigint;
+            is_answer: boolean | null;
+        }[];
+        tags: ({
+            tag: {
+                created_at: Date | null;
+                tag_id: bigint;
+                tag_name: string;
+            };
+        } & {
+            question_id: bigint;
+            tag_id: bigint;
+        })[];
         type: {
             description: string;
             type_id: string;
