@@ -32,7 +32,7 @@
 
 ## 3. 💾 핵심 DB 모델링 초안 (MySql)
 
-![AI Edu-Hub](./Documents/Edu-Hub.png)
+![AI Edu-Hub](./Documents/_Edu-Hub.png)
 
 ![Edu-Hub.sql](./Documents/Edu-Hub.sql)
  

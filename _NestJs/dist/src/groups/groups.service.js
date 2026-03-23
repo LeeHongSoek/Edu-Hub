@@ -19,15 +19,15 @@ let GroupsService = class GroupsService {
     }
     async findAll() {
         return this.prisma.group.findMany({
+            where: {
+                parent_group_id: null,
+            },
             include: {
                 child_groups: {
                     include: {
                         child_groups: true,
                     },
                 },
-            },
-            where: {
-                parent_group_id: null,
             },
         });
     }

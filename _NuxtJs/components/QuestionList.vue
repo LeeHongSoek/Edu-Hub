@@ -13,10 +13,11 @@ const selectedQuestionForSolve = ref<Question | null>(null);
 // 선택된 그룹과 그 하위 그룹들의 모든 ID를 가져오는 함수
 const getDescendantIds = (groupId: string | number, allGroups: Group[]): (string | number)[] => {
   const ids: (string | number)[] = [];
+  const targetIdStr = String(groupId);
   
   const traverse = (groups: Group[], targetFound = false) => {
     for (const g of groups) {
-      const isTarget = g.group_id === groupId || targetFound;
+      const isTarget = String(g.group_id) === targetIdStr || targetFound;
       if (isTarget) {
         ids.push(g.group_id);
       }
@@ -34,8 +35,12 @@ const getDescendantIds = (groupId: string | number, allGroups: Group[]): (string
 const filteredQuestions = computed(() => {
   if (!selectedGroupId.value) return props.questions;
   
-  const targetIds = getDescendantIds(selectedGroupId.value, groups.value);
-  return props.questions.filter(q => q.group_id && targetIds.includes(q.group_id));
+  // 모든 비교를 문자열로 수행하여 BigInt/String/Number 타입 불일치 방지
+  const targetIds = getDescendantIds(selectedGroupId.value, groups.value).map(String);
+  return props.questions.filter(q => {
+    if (!q.group_id) return false;
+    return targetIds.includes(String(q.group_id));
+  });
 });
 
 const handleSelectGroup = (groupId: string | number | null) => {

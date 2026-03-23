@@ -21,8 +21,11 @@ let QuestionsService = class QuestionsService {
         return this.prisma.question.findMany({
             include: {
                 type: true,
-                options: true,
-                attachments: true,
+                options: {
+                    orderBy: {
+                        option_number: 'asc',
+                    },
+                },
                 group: {
                     include: {
                         parent_group: {

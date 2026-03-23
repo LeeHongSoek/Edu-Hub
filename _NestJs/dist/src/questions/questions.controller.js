@@ -17,7 +17,7 @@ let QuestionsController = class QuestionsController {
     constructor(questionsService) {
         this.questionsService = questionsService;
     }
-    async findAll() {
+    findAll() {
         return this.questionsService.findAll();
     }
 };
@@ -26,7 +26,7 @@ __decorate([
     (0, common_1.Get)(),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", []),
-    __metadata("design:returntype", Promise)
+    __metadata("design:returntype", void 0)
 ], QuestionsController.prototype, "findAll", null);
 exports.QuestionsController = QuestionsController = __decorate([
     (0, common_1.Controller)('questions'),

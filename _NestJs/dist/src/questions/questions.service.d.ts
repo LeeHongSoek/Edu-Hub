@@ -32,18 +32,11 @@ export declare class QuestionsService {
             depth: number | null;
             description: string | null;
         }) | null;
-        attachments: {
-            question_id: bigint;
-            media_id: bigint;
-            media_type_id: string;
-            media_url: string;
-            sort_order: number | null;
-        }[];
         options: {
             question_id: bigint;
             content: string;
-            option_id: bigint;
             option_number: number;
+            option_id: bigint;
             is_answer: boolean | null;
         }[];
         tags: ({

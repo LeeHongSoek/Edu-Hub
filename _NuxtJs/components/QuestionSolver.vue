@@ -16,6 +16,10 @@ const timeLeft = ref(props.question.time_limit || 0);
 const isFinished = ref(false);
 const showResult = ref(false);
 const isCorrect = ref(false);
+const showModal = ref(false);
+const modalTitle = ref('');
+const modalMessage = ref('');
+const modalType = ref<'success' | 'error' | 'warning'>('success');
 
 let timerInterval: any = null;
 
@@ -26,7 +30,7 @@ const startTimer = () => {
         timeLeft.value--;
       } else {
         clearInterval(timerInterval);
-        handleFinish();
+        handleFinish(true);
       }
     }, 1000);
   }
@@ -38,38 +42,59 @@ const formatTime = (seconds: number) => {
   return `${m}:${s < 10 ? '0' : ''}${s}`;
 };
 
-const handleFinish = () => {
+const handleFinish = (isTimeOver = false) => {
+  if (isFinished.value) return;
+  
   isFinished.value = true;
   clearInterval(timerInterval);
   
-  // 채점 로직
-  if (props.question.question_type_id === 'M') {
-    // 객관식: 선택된 보기의 is_answer 확인
-    const correctOption = props.question.options?.find(opt => opt.is_answer);
-    isCorrect.value = selectedOptionId.value === correctOption?.option_id;
+  if (isTimeOver) {
+    isCorrect.value = false;
   } else {
-    // 주관식: 입력값과 정답 비교 (공백 제거 및 대소문자 무시)
-    const cleanUserAnswer = userAnswer.value.trim().toLowerCase();
-    const cleanCorrectAnswer = props.question.answer.trim().toLowerCase();
-    isCorrect.value = cleanUserAnswer === cleanCorrectAnswer;
+    // 채점 로직
+    if (props.question.question_type_id?.toUpperCase() === 'M') {
+      const correctOption = props.question.options?.find(opt => opt.is_answer);
+      isCorrect.value = selectedOptionId.value == correctOption?.option_id;
+    } else {
+      const cleanUserAnswer = userAnswer.value.trim().toLowerCase();
+      const cleanCorrectAnswer = props.question.answer.trim().toLowerCase();
+      isCorrect.value = cleanUserAnswer === cleanCorrectAnswer;
+    }
   }
   
   showResult.value = true;
   
-  // 알림창 표시
-  if (isCorrect.value) {
-    alert('정답입니다! 🎉');
+  if (isTimeOver) {
+    modalType.value = 'warning';
+    modalTitle.value = '시간 초과! ⏰';
+    modalMessage.value = '제한 시간이 다 되어 오답 처리되었습니다.';
+  } else if (isCorrect.value) {
+    modalType.value = 'success';
+    modalTitle.value = '정답입니다! 🎉';
+    modalMessage.value = '정말 잘하셨어요! 다음 문제도 도전해 보세요.';
   } else {
-    alert(`아쉽게도 틀렸습니다. 😢\n정답: ${props.question.answer}`);
+    modalType.value = 'error';
+    modalTitle.value = '아쉽게도 틀렸습니다. 😢';
+    modalMessage.value = `정답은 "${props.question.answer || '해설 참조'}" 입니다. 해설을 확인해 보세요.`;
+  }
+  showModal.value = true;
+};
+
+const handleKeyDown = (e: KeyboardEvent) => {
+  if (e.key === 'Escape') {
+    emit('close');
   }
 };
 
 onMounted(() => {
+  console.log('Solve Screen Data:', props.question); // 데이터 검증용 로그
   startTimer();
+  window.addEventListener('keydown', handleKeyDown);
 });
 
 onUnmounted(() => {
   if (timerInterval) clearInterval(timerInterval);
+  window.removeEventListener('keydown', handleKeyDown);
 });
 
 const progressWidth = computed(() => {
@@ -104,7 +129,9 @@ const formatGroupPath = (group: any) => {
         </div>
         
         <div v-if="question.time_limit" class="timer-container">
-          <div class="timer-text">{{ formatTime(timeLeft) }}</div>
+          <div class="timer-text">
+            <span class="timer-label">제한시간:</span> {{ formatTime(timeLeft) }}
+          </div>
           <div class="progress-bar">
             <div class="progress-fill" :style="{ width: progressWidth }"></div>
           </div>
@@ -120,8 +147,11 @@ const formatGroupPath = (group: any) => {
           <LatexRenderer :text="question.content" />
         </div>
 
-        <!-- 객관식 보기 영역 -->
-        <div v-if="question.question_type_id === 'M'" class="options-list">
+        <!-- 객관식 보기 영역 (M: 객관식) -->
+        <div v-if="question.question_type_id?.toUpperCase() === 'M'" class="options-list">
+          <div v-if="!question.options || question.options.length === 0" class="no-options">
+            등록된 보기가 없습니다.
+          </div>
           <div 
             v-for="opt in question.options" 
             :key="opt.option_id"
@@ -161,13 +191,29 @@ const formatGroupPath = (group: any) => {
           v-if="!isFinished" 
           class="btn-submit" 
           :disabled="question.question_type_id === 'M' ? !selectedOptionId : !userAnswer"
-          @click="handleFinish"
+          @click="handleFinish()"
         >
           정답 확인
         </button>
         <button v-else class="btn-primary" @click="emit('close')">목록으로 돌아가기</button>
       </div>
     </div>
+
+    <!-- 커스텀 알림 모달 -->
+    <Transition name="fade">
+      <div v-if="showModal" class="modal-overlay" @click.self="showModal = false">
+        <div class="modal-content" :class="modalType">
+          <div class="modal-icon">
+            <span v-if="modalType === 'success'">✅</span>
+            <span v-else-if="modalType === 'error'">❌</span>
+            <span v-else>⏰</span>
+          </div>
+          <h3 class="modal-title">{{ modalTitle }}</h3>
+          <p class="modal-message">{{ modalMessage }}</p>
+          <button class="btn-modal-close" @click="showModal = false">확인</button>
+        </div>
+      </div>
+    </Transition>
   </div>
 </template>
 
@@ -215,10 +261,16 @@ const formatGroupPath = (group: any) => {
 }
 
 .solver-group-path {
-  font-size: 0.7rem;
-  color: #64748b;
-  font-weight: 500;
-  letter-spacing: 0.02em;
+  font-size: 0.75rem;
+  color: #94a3b8;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  background: rgba(255, 255, 255, 0.05);
+  padding: 0.3rem 0.8rem;
+  border-radius: 999px;
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  pointer-events: auto;
 }
 
 .btn-close {
@@ -232,11 +284,11 @@ const formatGroupPath = (group: any) => {
 }
 
 .solver-header {
-  padding: 2rem;
+  padding: 4rem 2rem 2rem 2rem; /* 상단 여백 확보 */
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-end; /* 아래로 정렬하여 타이머와 제목 균형 유지 */
 }
 
 .solver-title {
@@ -247,15 +299,31 @@ const formatGroupPath = (group: any) => {
 
 .timer-container {
   text-align: right;
-  min-width: 120px;
+  min-width: 200px;
 }
 
 .timer-text {
-  font-family: monospace;
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: #6366f1;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 3.3rem; /* 1.5배 확대 */
+  font-weight: 800;
+  color: #a5b4fc;
+  text-shadow: 0 0 15px rgba(99, 102, 241, 0.4);
+  line-height: 1;
   margin-bottom: 0.5rem;
+  display: flex;
+  align-items: baseline;
+  justify-content: flex-end;
+  gap: 0.8rem;
+}
+
+.timer-label {
+  font-size: 1.2rem; /* 1.5배 확대 */
+  font-weight: 700;
+  color: #818cf8;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  opacity: 0.8;
+  text-shadow: none;
 }
 
 .progress-bar {
@@ -269,6 +337,7 @@ const formatGroupPath = (group: any) => {
   height: 100%;
   background: #6366f1;
   transition: width 1s linear;
+  margin-left: auto; /* 반대 방향으로 깎이도록 우측 정렬 */
 }
 
 .solver-body {
@@ -285,14 +354,13 @@ const formatGroupPath = (group: any) => {
   margin-bottom: 2rem;
 }
 
-.question-content {
-  background: rgba(255, 255, 255, 0.03);
-  padding: 1.5rem;
+.no-options {
+  text-align: center;
+  padding: 2rem;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px dashed rgba(255, 255, 255, 0.1);
   border-radius: 12px;
-  border-left: 4px solid #6366f1;
-  color: #94a3b8;
-  margin-bottom: 2rem;
-  font-size: 1rem;
+  color: #64748b;
 }
 
 .options-list {
@@ -444,5 +512,98 @@ const formatGroupPath = (group: any) => {
   font-size: 0.7rem;
   font-weight: 600;
   text-transform: uppercase;
+}
+
+/* 커스텀 모달 스타일 */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+  padding: 2rem;
+}
+
+.modal-content {
+  background: rgba(30, 41, 59, 0.95);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 24px;
+  padding: 2.5rem;
+  width: 100%;
+  max-width: 400px;
+  text-align: center;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+  transform: translateY(0);
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.modal-icon {
+  font-size: 3.5rem;
+  margin-bottom: 1.5rem;
+  filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.2));
+}
+
+.modal-title {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: #fff;
+  margin: 0 0 0.75rem 0;
+  letter-spacing: -0.02em;
+}
+
+.modal-message {
+  font-size: 1rem;
+  color: #94a3b8;
+  margin: 0 0 2rem 0;
+  line-height: 1.6;
+}
+
+.btn-modal-close {
+  width: 100%;
+  padding: 1rem;
+  background: #6366f1;
+  color: #fff;
+  border: none;
+  border-radius: 12px;
+  font-size: 1.1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 10px 15px -3px rgba(99, 102, 241, 0.3);
+}
+
+.btn-modal-close:hover {
+  background: #4f46e5;
+  transform: translateY(-2px);
+  box-shadow: 0 15px 20px -5px rgba(99, 102, 241, 0.4);
+}
+
+/* 모달 타입별 강조 색상 */
+.modal-content.success { border-top: 5px solid #22c55e; }
+.modal-content.error { border-top: 5px solid #ef4444; }
+.modal-content.warning { border-top: 5px solid #f59e0b; }
+
+/* 애니메이션 */
+.fade-enter-active, .fade-leave-active {
+  transition: opacity 0.3s ease;
+}
+.fade-enter-from, .fade-leave-to {
+  opacity: 0;
+}
+
+.fade-enter-active .modal-content {
+  animation: modal-in 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes modal-in {
+  from { transform: translateY(30px) scale(0.9); opacity: 0; }
+  to { transform: translateY(0) scale(1); opacity: 1; }
 }
 </style>
