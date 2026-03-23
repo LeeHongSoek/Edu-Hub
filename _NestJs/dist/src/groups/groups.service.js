@@ -9,41 +9,46 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.QuestionsService = void 0;
+exports.GroupsService = void 0;
 const common_1 = require("@nestjs/common");
 const prisma_service_1 = require("../common/prisma/prisma.service");
-let QuestionsService = class QuestionsService {
+let GroupsService = class GroupsService {
     prisma;
     constructor(prisma) {
         this.prisma = prisma;
     }
     async findAll() {
-        return this.prisma.question.findMany({
+        return this.prisma.group.findMany({
             include: {
-                type: true,
-                options: true,
-                attachments: true,
-                group: {
+                child_groups: {
                     include: {
-                        parent_group: {
-                            include: {
-                                parent_group: true,
-                            },
-                        },
+                        child_groups: true,
                     },
                 },
-                tags: {
+            },
+            where: {
+                parent_group_id: null,
+            },
+        });
+    }
+    async getHierarchy() {
+        return this.prisma.group.findMany({
+            where: {
+                parent_group_id: null,
+            },
+            include: {
+                child_groups: {
                     include: {
-                        tag: true,
+                        child_groups: true,
                     },
                 },
             },
         });
     }
 };
-exports.QuestionsService = QuestionsService;
-exports.QuestionsService = QuestionsService = __decorate([
+exports.GroupsService = GroupsService;
+exports.GroupsService = GroupsService = __decorate([
     (0, common_1.Injectable)(),
     __metadata("design:paramtypes", [prisma_service_1.PrismaService])
-], QuestionsService);
-//# sourceMappingURL=questions.service.js.map
+], GroupsService);
+//# sourceMappingURL=groups.service.js.map

@@ -11,6 +11,15 @@ export class QuestionsService {
         type: true,
         options: true,
         attachments: true,
+        group: {
+          include: {
+            parent_group: {
+              include: {
+                parent_group: true,
+              },
+            },
+          },
+        },
         tags: {
           include: {
             tag: true,

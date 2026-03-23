@@ -3,6 +3,35 @@ export declare class QuestionsService {
     private prisma;
     constructor(prisma: PrismaService);
     findAll(): Promise<({
+        group: ({
+            parent_group: ({
+                parent_group: {
+                    creator_no: bigint;
+                    group_id: bigint;
+                    created_at: Date | null;
+                    name: string;
+                    parent_group_id: bigint | null;
+                    depth: number | null;
+                    description: string | null;
+                } | null;
+            } & {
+                creator_no: bigint;
+                group_id: bigint;
+                created_at: Date | null;
+                name: string;
+                parent_group_id: bigint | null;
+                depth: number | null;
+                description: string | null;
+            }) | null;
+        } & {
+            creator_no: bigint;
+            group_id: bigint;
+            created_at: Date | null;
+            name: string;
+            parent_group_id: bigint | null;
+            depth: number | null;
+            description: string | null;
+        }) | null;
         attachments: {
             question_id: bigint;
             media_id: bigint;
@@ -28,9 +57,9 @@ export declare class QuestionsService {
             tag_id: bigint;
         })[];
         type: {
+            description: string;
             type_id: string;
             type_name: string;
-            description: string;
         };
     } & {
         question: string;

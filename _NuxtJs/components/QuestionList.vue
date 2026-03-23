@@ -8,6 +8,16 @@ defineProps<{
 
 const groups = ref<Group[]>([]);
 
+const formatGroupPath = (group: Group) => {
+  const parts: string[] = [];
+  let current: Group | undefined = group;
+  while (current) {
+    parts.unshift(current.name);
+    current = current.parent_group;
+  }
+  return parts.join(' / ');
+};
+
 onMounted(async () => {
   try {
     const data = await $fetch<Group[]>('http://localhost:4000/groups');
@@ -39,6 +49,9 @@ onMounted(async () => {
         </div>
       </div>
       <div class="question-actions">
+        <div v-if="q.group" class="question-group-path">
+          {{ formatGroupPath(q.group) }}
+        </div>
         <button class="btn-solve">풀기</button>
       </div>
     </div>
@@ -171,6 +184,14 @@ onMounted(async () => {
   .btn-solve {
     width: 100%;
   }
+}
+
+.question-group-path {
+  font-size: 0.7rem;
+  color: #94a3b8;
+  margin-bottom: 0.5rem;
+  text-align: right;
+  white-space: nowrap;
 }
 
 .question-list-container {

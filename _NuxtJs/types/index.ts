@@ -21,6 +21,7 @@ export interface Question {
   time_limit: number | null;
   created_at: string | null;
   type: QuestionType;
+  group?: Group;
 }
 
 export interface Group {
@@ -30,4 +31,5 @@ export interface Group {
   parent_group_id: string | number | null;
   depth: number | null;
   child_groups?: Group[];
+  parent_group?: Group;
 }

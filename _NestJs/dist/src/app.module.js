@@ -13,12 +13,13 @@ const app_controller_1 = require("./app.controller");
 const app_service_1 = require("./app.service");
 const prisma_module_1 = require("./common/prisma/prisma.module");
 const questions_module_1 = require("./questions/questions.module");
+const groups_module_1 = require("./groups/groups.module");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
 exports.AppModule = AppModule = __decorate([
     (0, common_1.Module)({
-        imports: [config_1.ConfigModule.forRoot({ isGlobal: true }), prisma_module_1.PrismaModule, questions_module_1.QuestionsModule],
+        imports: [config_1.ConfigModule.forRoot({ isGlobal: true }), prisma_module_1.PrismaModule, questions_module_1.QuestionsModule, groups_module_1.GroupsModule],
         controllers: [app_controller_1.AppController],
         providers: [app_service_1.AppService],
     })
