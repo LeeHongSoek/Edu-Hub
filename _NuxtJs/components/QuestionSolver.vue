@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, computed } from 'vue';
-import type { Question } from '~/types';
+import type { Question, QuestionReview } from '~/types';
 
 const props = defineProps<{
   question: Question;
@@ -20,10 +20,14 @@ const showModal = ref(false);
 const modalTitle = ref('');
 const modalMessage = ref('');
 const modalType = ref<'success' | 'error' | 'warning'>('success');
-const rating = ref(0);
-const commentContent = ref('');
-const isSubmittingRating = ref(false);
-const showCommentInput = ref(false);
+
+// 리뷰 관련 상태
+const showReviewModal = ref(false);
+const reviews = ref<QuestionReview[]>([]);
+const reviewsLoading = ref(false);
+const newReviewContent = ref('');
+const newRating = ref(5);
+const isSubmittingReview = ref(false);
 
 let timerInterval: any = null;
 
@@ -115,38 +119,48 @@ const formatGroupPath = (group: any) => {
   return parts.join(' / ');
 };
 
-const handleRate = async (value: number) => {
-  rating.value = value;
-  isSubmittingRating.value = true;
+const openReviewModal = async () => {
+  showReviewModal.value = true;
+  await fetchReviews();
+};
+
+const fetchReviews = async () => {
+  reviewsLoading.value = true;
   try {
-    await $fetch(`http://localhost:4000/questions/${props.question.question_id}`, {
-      method: 'PATCH',
-      body: { rating: value }
-    });
-  } catch (error) {
-    console.error('Failed to update rating:', error);
+    const data = await $fetch<QuestionReview[]>(`http://localhost:4000/questions/${props.question.question_id}/reviews`);
+    // 백엔드의 BigInt 호환 문제 처리 (JS로 받을 때 Number형 변환 등)
+    reviews.value = data;
+  } catch (err) {
+    console.error('Failed to fetch reviews:', err);
   } finally {
-    isSubmittingRating.value = false;
+    reviewsLoading.value = false;
   }
 };
 
-const handlePostComment = async () => {
-  if (!commentContent.value.trim()) return;
+const submitReview = async () => {
+  if (!newReviewContent.value.trim()) return;
+  isSubmittingReview.value = true;
   try {
-    // Assuming a generic author_no for now
-    await $fetch('http://localhost:4000/comments', {
+    await $fetch(`http://localhost:4000/questions/${props.question.question_id}/reviews`, {
       method: 'POST',
       body: {
-        question_id: props.question.question_id,
-        content: commentContent.value,
-        author_no: 1 
+        content: newReviewContent.value,
+        rating: newRating.value,
+        user_no: 2 // 임시: 김철수(2) 아이디로 전송
       }
     });
-    commentContent.value = '';
-    showCommentInput.value = false;
-    alert('댓글이 등록되었습니다! 💬');
+    newReviewContent.value = '';
+    newRating.value = 5;
+    await fetchReviews();
+    
+    // 평균 별점 업데이트 (임시로 클라이언트 계산)
+    if (props.question && reviews.value.length > 0) {
+      props.question.rating = Math.round(reviews.value.reduce((sum, r) => sum + r.rating, 0) / reviews.value.length);
+    }
   } catch (error) {
-    console.error('Failed to post comment:', error);
+    console.error('Failed to submit review:', error);
+  } finally {
+    isSubmittingReview.value = false;
   }
 };
 </script>
@@ -218,16 +232,6 @@ const handlePostComment = async () => {
             @keyup.enter="!isFinished && handleFinish()"
           />
         </div>
-
-        <!-- 댓글 입력 패널 -->
-        <Transition name="slide-down">
-          <div v-if="showCommentInput" class="comment-panel">
-            <textarea v-model="commentContent" placeholder="이 문제에 대해 궁금한 점이나 의견을 남겨주세요." rows="3"></textarea>
-            <div class="comment-panel-footer">
-              <button class="btn-post-comment" @click="handlePostComment">등록</button>
-            </div>
-          </div>
-        </Transition>
       </div>
 
       <div class="solver-footer">
@@ -235,21 +239,20 @@ const handlePostComment = async () => {
           <div class="explanation-header">
             <div class="header-left-group">
               <h4>해설</h4>
-              <button class="btn-inline-comment" @click="showCommentInput = !showCommentInput">
-                {{ showCommentInput ? '💬 닫기' : '💬 의견 남기기' }}
-              </button>
             </div>
             <div class="rating-container">
-              <span class="rating-label">이 문제는 어땠나요?</span>
-              <div class="stars">
+              <span class="rating-label">전체 평균 평점</span>
+              <div class="stars readonly">
                 <span 
                   v-for="i in 5" 
                   :key="i" 
                   class="star" 
-                  :class="{ 'is-active': i <= rating }"
-                  @click="handleRate(i)"
+                  :class="{ 'is-active': i <= (question.rating || 0) }"
                 >★</span>
               </div>
+              <button class="btn-inline-comment" @click="openReviewModal">
+                💬 의견 남기기
+              </button>
             </div>
           </div>
           <p>{{ question.explanation || '등록된 해설이 없습니다.' }}</p>
@@ -279,6 +282,54 @@ const handlePostComment = async () => {
           <h3 class="modal-title">{{ modalTitle }}</h3>
           <p class="modal-message">{{ modalMessage }}</p>
           <button class="btn-modal-close" @click="showModal = false">확인</button>
+        </div>
+      </div>
+    </Transition>
+
+    <!-- 의견(리뷰) 모달 -->
+    <Transition name="fade">
+      <div v-if="showReviewModal" class="modal-overlay" @click.self="showReviewModal = false">
+        <div class="modal-content review-modal-content">
+          <div class="modal-header">
+            <h3 class="modal-title">문제 의견 및 평가</h3>
+            <button class="btn-close-sm" @click="showReviewModal = false">&times;</button>
+          </div>
+          
+          <div class="review-form">
+            <div class="rating-input">
+              <span class="rating-label">내 평점:</span>
+              <div class="stars">
+                <span 
+                  v-for="i in 5" 
+                  :key="i" 
+                  class="star" 
+                  :class="{'is-active': i <= newRating}" 
+                  @click="newRating = i"
+                >★</span>
+              </div>
+            </div>
+            <textarea v-model="newReviewContent" placeholder="이 문제에 대한 의견을 남겨주세요. (단축키 없음, 안전하게 드래그 가능)" rows="3"></textarea>
+            <button class="btn-primary" @click="submitReview" :disabled="isSubmittingReview">
+              {{ isSubmittingReview ? '등록 중...' : '작성하기' }}
+            </button>
+          </div>
+
+          <div class="reviews-list">
+            <div v-if="reviewsLoading" class="loading">의견을 불러오는 중...</div>
+            <div v-else-if="reviews.length === 0" class="empty-msg">아직 등록된 의견이 없어요. 첫 번째 의견을 남겨주세요!</div>
+            <div v-else class="review-items">
+              <div v-for="review in reviews" :key="review.review_id" class="review-item">
+                <div class="review-header">
+                  <span class="review-author">{{ review.user?.username || '익명' }}</span>
+                  <div class="stars readonly-small">
+                    <span v-for="i in 5" :key="i" class="star-small" :class="{'is-active': i <= review.rating}">★</span>
+                  </div>
+                  <span class="review-date">{{ new Date(review.created_at).toLocaleDateString() }}</span>
+                </div>
+                <p class="review-content">{{ review.content }}</p>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </Transition>
@@ -780,5 +831,161 @@ const handlePostComment = async () => {
 @keyframes modal-in {
   from { transform: translateY(30px) scale(0.9); opacity: 0; }
   to { transform: translateY(0) scale(1); opacity: 1; }
+}
+
+/* 의견(리뷰) 모달 스타일 */
+.review-modal-content {
+  width: 90%;
+  max-width: 600px;
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.modal-header h3 {
+  margin: 0;
+  font-size: 1.25rem;
+  color: #fff;
+}
+
+.btn-close-sm {
+  background: none;
+  border: none;
+  color: #94a3b8;
+  font-size: 1.75rem;
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+  transition: color 0.2s;
+}
+
+.btn-close-sm:hover {
+  color: #fff;
+}
+
+.review-form {
+  background: rgba(255, 255, 255, 0.03);
+  padding: 1rem;
+  border-radius: 12px;
+  margin-bottom: 1.5rem;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.rating-input {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.review-form textarea {
+  width: 100%;
+  box-sizing: border-box;
+  background: rgba(15, 23, 42, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #fff;
+  padding: 0.75rem;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  resize: vertical;
+  margin-bottom: 1rem;
+  outline: none;
+}
+
+.review-form textarea:focus {
+  border-color: #6366f1;
+}
+
+.reviews-list {
+  flex: 1;
+  overflow-y: auto;
+  padding-right: 0.5rem;
+}
+
+.reviews-list::-webkit-scrollbar {
+  width: 6px;
+}
+.reviews-list::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 3px;
+}
+.reviews-list::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 3px;
+}
+
+.review-items {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.review-item {
+  background: rgba(255, 255, 255, 0.02);
+  padding: 1rem;
+  border-radius: 8px;
+  border-left: 3px solid #6366f1;
+}
+
+.review-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.5rem;
+}
+
+.review-author {
+  font-weight: 600;
+  color: #e2e8f0;
+  font-size: 0.9rem;
+}
+
+.review-date {
+  font-size: 0.75rem;
+  color: #64748b;
+  margin-left: auto;
+}
+
+.review-content {
+  font-size: 0.9rem;
+  color: #cbd5e1;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.readonly .star, .readonly-small .star-small {
+  cursor: default;
+}
+.readonly .star:hover {
+  transform: none;
+}
+
+.star-small {
+  font-size: 1rem;
+  color: rgba(255, 255, 255, 0.1);
+}
+.star-small.is-active {
+  color: #fbbf24;
+}
+
+.empty-msg {
+  text-align: center;
+  color: #94a3b8;
+  padding: 2rem 0;
+  font-size: 0.9rem;
+}
+
+.loading {
+  text-align: center;
+  color: #818cf8;
+  padding: 2rem 0;
+  font-weight: 600;
 }
 </style>

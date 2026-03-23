@@ -100,7 +100,7 @@ let QuestionsService = class QuestionsService {
             include: {
                 user: { select: { username: true } },
             },
-            orderBy: { created_at: 'desc' },
+            orderBy: { review_id: 'desc' },
         });
     }
     async addReview(questionId, data) {

@@ -32,6 +32,7 @@ export interface Question {
   type: QuestionType; // 관계: 문제 유형
   group?: Group; // 관계: 소속 그룹
   options?: QuestionOption[]; // 관계: 보기 목록 (객관식용)
+  reviews?: QuestionReview[]; // 관계: 리뷰 목록
 }
 
 export interface Group {
@@ -42,4 +43,16 @@ export interface Group {
   depth: number | null; // 계층 깊이 (1-3)
   child_groups?: Group[]; // 관계: 하위 그룹 리스트
   parent_group?: Group; // 관계: 상위 그룹 정보
+}
+
+export interface QuestionReview {
+  review_id: string | number; // 리뷰 고유 ID
+  question_id: string | number; // 대상 문제 ID
+  user_no: string | number; // 작성자 ID
+  content: string; // 리뷰 내용
+  rating: number; // 부여한 평점 (1-5)
+  created_at: string; // 작성일시
+  user?: {
+    username: string;
+  };
 }

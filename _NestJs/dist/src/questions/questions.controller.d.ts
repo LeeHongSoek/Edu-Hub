@@ -69,6 +69,7 @@ export declare class QuestionsController {
         is_public: boolean | null;
         is_deleted: import("@prisma/client").$Enums.IsDeleted | null;
         time_limit: number | null;
+        rating: number | null;
         created_at: Date | null;
     })[]>;
     create(createQuestionDto: any): Promise<{
@@ -94,6 +95,7 @@ export declare class QuestionsController {
         is_public: boolean | null;
         is_deleted: import("@prisma/client").$Enums.IsDeleted | null;
         time_limit: number | null;
+        rating: number | null;
         created_at: Date | null;
     }>;
     update(id: string, updateQuestionDto: any): Promise<{
@@ -119,6 +121,7 @@ export declare class QuestionsController {
         is_public: boolean | null;
         is_deleted: import("@prisma/client").$Enums.IsDeleted | null;
         time_limit: number | null;
+        rating: number | null;
         created_at: Date | null;
     }>;
     remove(id: string): Promise<{
@@ -136,8 +139,27 @@ export declare class QuestionsController {
         is_public: boolean | null;
         is_deleted: import("@prisma/client").$Enums.IsDeleted | null;
         time_limit: number | null;
+        rating: number | null;
         created_at: Date | null;
     }>;
-    getReviews(id: string): Promise<any>;
-    addReview(id: string, data: any): Promise<any>;
+    getReviews(id: string): Promise<({
+        user: {
+            username: string;
+        };
+    } & {
+        question_id: bigint;
+        content: string;
+        rating: number;
+        created_at: Date | null;
+        review_id: bigint;
+        user_no: bigint;
+    })[]>;
+    addReview(id: string, data: any): Promise<{
+        question_id: bigint;
+        content: string;
+        rating: number;
+        created_at: Date | null;
+        review_id: bigint;
+        user_no: bigint;
+    }>;
 }
