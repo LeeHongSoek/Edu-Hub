@@ -267,3 +267,18 @@ CREATE TABLE `solve_results` (
     CONSTRAINT `fk_result_exam`
         FOREIGN KEY (`exam_id`) REFERENCES `exams` (`exam_id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='사용자별 문제 풀이 결과';
+
+-- 17. 문제 평점 및 리뷰 (새로운 모달-전용 피드백)
+CREATE TABLE `question_reviews` (
+    `review_id`      BIGINT        PRIMARY KEY AUTO_INCREMENT COMMENT '리뷰 고유 ID',
+    `question_id`    BIGINT        NOT NULL                   COMMENT '문제 ID',
+    `user_no`        BIGINT        NOT NULL                   COMMENT '작성자 식별번호',
+    `content`        TEXT          NOT NULL                   COMMENT '리뷰 내용',
+    `rating`         TINYINT       NOT NULL                   COMMENT '평점 (1~5)',
+    `created_at`     DATETIME      DEFAULT CURRENT_TIMESTAMP  COMMENT '작성 일시',
+
+    CONSTRAINT `fk_review_q`
+        FOREIGN KEY (`question_id`) REFERENCES `questions` (`question_id`) ON DELETE CASCADE,
+    CONSTRAINT `fk_review_u`
+        FOREIGN KEY (`user_no`) REFERENCES `users` (`user_no`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='문제에 대한 평점 및 의견 테이블';

@@ -138,4 +138,6 @@ export declare class QuestionsService {
         time_limit: number | null;
         created_at: Date | null;
     }>;
+    getReviews(questionId: string | number): Promise<any>;
+    addReview(questionId: string | number, data: any): Promise<any>;
 }

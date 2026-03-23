@@ -138,4 +138,6 @@ export declare class QuestionsController {
         time_limit: number | null;
         created_at: Date | null;
     }>;
+    getReviews(id: string): Promise<any>;
+    addReview(id: string, data: any): Promise<any>;
 }

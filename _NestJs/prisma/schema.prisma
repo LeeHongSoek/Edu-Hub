@@ -53,6 +53,7 @@ model User {
   study_logs      StudyLog[]
   authored_cmts   UserComment[]   @relation("AuthoredComments")
   received_cmts   UserComment[]   @relation("ReceivedComments")
+  reviews         QuestionReview[]
   role            EnmRole         @relation(fields: [role_id], references: [role_id], onUpdate: Restrict, map: "fk_user_role")
 
   @@index([role_id], map: "fk_user_role")
@@ -139,6 +140,7 @@ model Question {
   solve_results    SolveResult[]
   study_logs       StudyLog[]
   comments         UserComment[]
+  reviews          QuestionReview[]
 
   @@index([creator_no], map: "fk_question_creator")
   @@index([group_id], map: "fk_question_group")
@@ -292,10 +294,25 @@ model SolveResult {
   question         Question  @relation(fields: [question_id], references: [question_id], onDelete: Cascade, onUpdate: Restrict, map: "fk_result_q")
   user             User      @relation(fields: [user_no], references: [user_no], onDelete: Cascade, onUpdate: Restrict, map: "fk_result_user")
 
-  @@index([exam_id], map: "fk_result_exam")
-  @@index([question_id], map: "fk_result_q")
-  @@index([user_no], map: "fk_result_user")
+  @@index([exam_id], map: "fk_solve_exam")
+  @@index([question_id], map: "fk_solve_q")
+  @@index([user_no], map: "fk_solve_user")
   @@map("solve_results")
+}
+
+model QuestionReview {
+  review_id    BigInt    @id @default(autoincrement())
+  question_id  BigInt
+  user_no      BigInt
+  content      String    @db.Text
+  rating       Int       @db.TinyInt
+  created_at   DateTime? @default(now()) @db.DateTime(0)
+  question     Question  @relation(fields: [question_id], references: [question_id], onDelete: Cascade, onUpdate: Restrict, map: "fk_review_q")
+  user         User      @relation(fields: [user_no], references: [user_no], onDelete: Cascade, onUpdate: Restrict, map: "fk_review_u")
+
+  @@index([question_id], map: "fk_review_q")
+  @@index([user_no], map: "fk_review_u")
+  @@map("question_reviews")
 }
 
 enum IsWithdrawn {
@@ -310,9 +327,9 @@ enum IsDeleted {
 }
 
 enum exam_results_grade {
-  // 수 @map("수")
-  // 우 @map("우")
-  // 미 @map("미")
-  // 양 @map("양")
-  // 가 @map("가")
+  S @map("수")
+  A @map("우")
+  B @map("미")
+  C @map("양")
+  D @map("가")
 }

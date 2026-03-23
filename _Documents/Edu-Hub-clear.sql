@@ -17,6 +17,7 @@ DROP TABLE IF EXISTS `tags`;
 DROP TABLE IF EXISTS `media_attachments`;
 DROP TABLE IF EXISTS `question_options`;
 DROP TABLE IF EXISTS `questions`;
+DROP TABLE IF EXISTS `question_reviews`;
 DROP TABLE IF EXISTS `groups`;
 DROP TABLE IF EXISTS `parent_students`;
 DROP TABLE IF EXISTS `class_students`;

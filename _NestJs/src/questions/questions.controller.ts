@@ -28,4 +28,16 @@ export class QuestionsController {
   remove(@Param('id') id: string) {
     return this.questionsService.remove(id);
   }
+
+  // 리뷰/의견 조회
+  @Get(':id/reviews')
+  getReviews(@Param('id') id: string) {
+    return this.questionsService.getReviews(id);
+  }
+
+  // 리뷰/의견 추가
+  @Post(':id/reviews')
+  addReview(@Param('id') id: string, @Body() data: any) {
+    return this.questionsService.addReview(id, data);
+  }
 }

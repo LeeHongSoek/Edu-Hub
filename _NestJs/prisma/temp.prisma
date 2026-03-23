@@ -1,0 +1,7 @@
+datasource db {
+  provider = "mysql"
+  url      = "mysql://root:root1234@localhost:3306/Edu-Hub"
+}
+generator client {
+  provider = "prisma-client-js"
+}

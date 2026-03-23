@@ -32,6 +32,12 @@ let QuestionsController = class QuestionsController {
     remove(id) {
         return this.questionsService.remove(id);
     }
+    getReviews(id) {
+        return this.questionsService.getReviews(id);
+    }
+    addReview(id, data) {
+        return this.questionsService.addReview(id, data);
+    }
 };
 exports.QuestionsController = QuestionsController;
 __decorate([
@@ -62,6 +68,21 @@ __decorate([
     __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", void 0)
 ], QuestionsController.prototype, "remove", null);
+__decorate([
+    (0, common_1.Get)(':id/reviews'),
+    __param(0, (0, common_1.Param)('id')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", void 0)
+], QuestionsController.prototype, "getReviews", null);
+__decorate([
+    (0, common_1.Post)(':id/reviews'),
+    __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, Object]),
+    __metadata("design:returntype", void 0)
+], QuestionsController.prototype, "addReview", null);
 exports.QuestionsController = QuestionsController = __decorate([
     (0, common_1.Controller)('questions'),
     __metadata("design:paramtypes", [questions_service_1.QuestionsService])

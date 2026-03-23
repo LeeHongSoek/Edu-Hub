@@ -93,6 +93,39 @@ let QuestionsService = class QuestionsService {
             where: { question_id: questionId },
         });
     }
+    async getReviews(questionId) {
+        const qid = typeof questionId === 'string' ? BigInt(questionId) : BigInt(questionId);
+        return this.prisma.questionReview.findMany({
+            where: { question_id: qid },
+            include: {
+                user: { select: { username: true } },
+            },
+            orderBy: { created_at: 'desc' },
+        });
+    }
+    async addReview(questionId, data) {
+        const qid = typeof questionId === 'string' ? BigInt(questionId) : BigInt(questionId);
+        return this.prisma.$transaction(async (tx) => {
+            const review = await tx.questionReview.create({
+                data: {
+                    question_id: qid,
+                    user_no: data.user_no || 2,
+                    content: data.content,
+                    rating: data.rating,
+                },
+            });
+            const aggregations = await tx.questionReview.aggregate({
+                where: { question_id: qid },
+                _avg: { rating: true },
+            });
+            const avgRating = Math.round(aggregations._avg.rating || 0);
+            await tx.question.update({
+                where: { question_id: qid },
+                data: { rating: avgRating },
+            });
+            return review;
+        });
+    }
 };
 exports.QuestionsService = QuestionsService;
 exports.QuestionsService = QuestionsService = __decorate([
