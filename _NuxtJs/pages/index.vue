@@ -105,11 +105,11 @@ const fetchTickerData = async () => {
     const data = await $fetch(`${config.public.apiBase}/questions`);
     console.log('[ticker] Data received:', Array.isArray(data) ? data.length : 'not an array');
     if (Array.isArray(data) && data.length > 0) {
-      // 최신 5개 추출 (ID 내림차순 정렬 후 상위 5개)
+      // 모든 문제 최신순 노출
       const sorted = [...data].sort((a, b) => Number(b.question_id) - Number(a.question_id));
-      tickerQuestions.value = sorted.slice(0, 5);
+      tickerQuestions.value = sorted;
       showTicker.value = true;
-      console.log('[ticker] Latest Questions selected:', tickerQuestions.value.map(q => q.question_id));
+      console.log('[ticker] All Questions selected:', tickerQuestions.value.map(q => q.question_id));
     }
   } catch (err) {
     console.error('[fetchTickerData] Error:', err);
@@ -302,8 +302,6 @@ onMounted(() => {
           <span class="logo-text">Edu<em>Hub</em></span>
         </div>
         <nav class="nav-links">
-          <a href="#">문제 풀기</a>
-          <a href="#">랭킹</a>
           <a href="#" @click.prevent="openIntro">소개</a>
         </nav>
       </header>
@@ -346,13 +344,13 @@ onMounted(() => {
               <div v-if="showTicker && tickerQuestions.length > 0" class="ticker-box">
                 <div class="ticker-label">
                   <span class="ticker-dot"></span>
-                  LIVE QUESTIONS
+                  최신 문제 리스트
                 </div>
                 <div class="ticker-window">
                   <div class="ticker-track">
                     <div v-for="(q, idx) in [...tickerQuestions, ...tickerQuestions]" :key="idx" class="ticker-item">
                       <span class="t-id">#{{ q.question_id }}</span>
-                      <span class="t-text">{{ (q.content && q.content.trim()) ? (q.content.length > 35 ? q.content.slice(0, 35) + '...' : q.content) : '신규 지식 챌린지 💡' }}</span>
+                      <span class="t-text">{{ (q.content && q.content.trim()) ? (q.content.length > 35 ? q.content.slice(0, 35) + '...' : q.content) : ((q.explanation && q.explanation.length > 35) ? q.explanation.slice(0, 35) + '...' : (q.explanation || q.answer || '지식을 완성하는 문제 ✏️')) }}</span>
                       <span class="t-new">NEW</span>
                     </div>
                   </div>
@@ -366,7 +364,7 @@ onMounted(() => {
 
           <div class="stats-row">
             <div class="vbar"></div>
-            <div class="stat"><b>{{ stats.questions.toLocaleString() }}</b><small>등록 문제</small></div>
+            <div class="stat special"><b>{{ stats.questions.toLocaleString() }}</b><small>등록 문제</small></div>
             <div class="vbar"></div>
             <div class="stat"><b>{{ stats.teachers.toLocaleString() }}</b><small>선생님</small></div>
             <div class="vbar"></div>
@@ -390,7 +388,7 @@ onMounted(() => {
               </div>
               <div class="field">
                 <label for="pw">비밀번호</label>
-                <input id="pw" v-model="passwordInput" type="password" placeholder="비밀번호를 입력하세요" required />
+                <input id="pw" v-model="passwordInput" type="password" required />
               </div>
               <div v-if="authError" class="auth-error-msg">{{ authError }}</div>
               <div class="row-util">
@@ -527,7 +525,7 @@ onMounted(() => {
               </div>
               <div class="field">
                 <label>이름</label>
-                <input v-model="regUsername" type="text" placeholder="성함 입력" required />
+                <input v-model="regUsername" type="text" placeholder="이름 입력" required />
               </div>
               <div class="field">
                 <label>이메일</label>
@@ -535,11 +533,11 @@ onMounted(() => {
               </div>
               <div class="field">
                 <label>비밀번호</label>
-                <input v-model="regPassword" type="password" placeholder="안전한 비밀번호" required />
+                <input v-model="regPassword" type="password" required />
               </div>
               <div class="field">
                 <label>비밀번호 확인</label>
-                <input v-model="regPasswordConfirm" type="password" placeholder="비밀번호 재입력" required />
+                <input v-model="regPasswordConfirm" type="password" required />
               </div>
               <div class="field full-width">
                 <label>가입 유형</label>
@@ -827,16 +825,16 @@ onMounted(() => {
 
 .hero-desc-container {
   background: rgba(255, 255, 255, 0.03);
-  backdrop-filter: blur(14px);
+  backdrop-filter: blur(4px);
   -webkit-backdrop-filter: blur(14px);
   border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 4px; /* 유저가 이미 수정함 */
-  padding: 1.2rem 1.8rem;
-  margin-top: 0.2rem;
+  border-radius: 4px; 
+  padding: 1.0rem 1.1rem;
+  margin-top: 0.2rem;  
   flex: 1;
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  justify-content: flex-start;
   animation: fadeUp 0.8s ease 1.5s both;
   box-shadow: 0 10px 40px -10px rgba(0,0,0,0.3);
 }
@@ -849,13 +847,14 @@ onMounted(() => {
 }
 
 .ticker-box {
-  margin-top: 0.8rem;
+  margin-top: auto;
   padding-top: 0.6rem;
   border-top: 1px dashed rgba(255, 255, 255, 0.15);
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 0.8rem;
   overflow: hidden;
+  flex: 1;
 }
 
 .ticker-label {
@@ -878,7 +877,7 @@ onMounted(() => {
 }
 
 .ticker-window {
-  height: 48px;
+  height: 220px;
   overflow: hidden;
   position: relative;
 }
@@ -890,7 +889,7 @@ onMounted(() => {
 }
 
 .ticker-item {
-  height: 48px;
+  height: 30px;
   display: flex;
   align-items: center;
   gap: 1.2rem;
@@ -948,14 +947,22 @@ onMounted(() => {
 .stats-row {
   display: flex;
   align-items: center;
-  gap: 1.5rem;
+  gap: 0;
+  width: 100%;
+  padding-left: 2px;
   animation: fadeUp 0.8s ease 1.9s both;
 }
 .stat {
+  flex: 1;
   display: flex;
   flex-direction: column;
   gap: 0.15rem;
   align-items: flex-end;
+  padding: 0 1.2rem;
+}
+.stat.special {
+  flex: 2;
+  padding-right: 2.5rem;
 }
 .stat b {
   font-size: 1.7rem;
