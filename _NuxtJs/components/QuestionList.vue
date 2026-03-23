@@ -38,22 +38,27 @@ onMounted(async () => {
 
     <div class="question-list">
       <div v-for="q in questions" :key="q.question_id" class="question-item">
-      <div class="question-content">
-        <h3 class="question-title">{{ q.title }}</h3>
-        <LatexRenderer :text="q.question" class="question-preview" />
-        <LatexRenderer v-if="q.content" :text="q.content" class="question-secondary" />
-        <div class="question-footer">
-          <span class="badge badge-type">{{ q.type.type_name }}</span>
-          <span class="badge badge-level">Level: {{ q.difficulty || 1 }}</span>
-          <span v-if="q.time_limit" class="badge badge-time">{{ q.time_limit }}s</span>
+        <div class="question-header">
+          <h3 class="question-title">{{ q.title }}</h3>
+          <div v-if="q.group" class="question-group-path">
+            {{ formatGroupPath(q.group) }}
+          </div>
         </div>
-      </div>
-      <div class="question-actions">
-        <div v-if="q.group" class="question-group-path">
-          {{ formatGroupPath(q.group) }}
+        
+        <div class="question-main">
+          <div class="question-content">
+            <LatexRenderer :text="q.question" class="question-preview" />
+            <LatexRenderer v-if="q.content" :text="q.content" class="question-secondary" />
+            <div class="question-footer">
+              <span class="badge badge-type">{{ q.type.type_name }}</span>
+              <span class="badge badge-level">Level: {{ q.difficulty || 1 }}</span>
+              <span v-if="q.time_limit" class="badge badge-time">{{ q.time_limit }}s</span>
+            </div>
+          </div>
+          <div class="question-actions">
+            <button class="btn-solve">풀기</button>
+          </div>
         </div>
-        <button class="btn-solve">풀기</button>
-      </div>
     </div>
     </div>
   </div>
@@ -70,14 +75,34 @@ onMounted(async () => {
 
 .question-item {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
+  flex-direction: column;
   padding: 1.5rem;
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 12px;
   transition: all 0.3s ease;
   backdrop-filter: blur(10px);
+}
+
+.question-main {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.question-group-path {
+  font-size: 0.65rem;
+  color: #64748b;
+  font-weight: 500;
+  text-align: right;
+  letter-spacing: 0.02em;
+}
+
+.question-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 0.5rem;
 }
 
 .question-item:hover {
@@ -186,13 +211,6 @@ onMounted(async () => {
   }
 }
 
-.question-group-path {
-  font-size: 0.7rem;
-  color: #94a3b8;
-  margin-bottom: 0.5rem;
-  text-align: right;
-  white-space: nowrap;
-}
 
 .question-list-container {
   position: relative;
