@@ -324,6 +324,7 @@ onMounted(() => {
           <div style="height: 40px;"></div>
 
           <div class="stats-row">
+            <div class="vbar"></div>
             <div class="stat"><b>{{ stats.questions.toLocaleString() }}</b><small>등록 문제</small></div>
             <div class="vbar"></div>
             <div class="stat"><b>{{ stats.teachers.toLocaleString() }}</b><small>선생님</small></div>
@@ -331,6 +332,7 @@ onMounted(() => {
             <div class="stat"><b>{{ stats.students.toLocaleString() }}</b><small>학생</small></div>
             <div class="vbar"></div>
             <div class="stat"><b>{{ stats.parents.toLocaleString() }}</b><small>학부모</small></div>
+            <div class="vbar"></div>
           </div>
         </section>
 
@@ -812,13 +814,14 @@ onMounted(() => {
 .stats-row {
   display: flex;
   align-items: center;
-  gap: 2rem;
+  gap: 1.5rem;
   animation: fadeUp 0.8s ease 1.9s both;
 }
 .stat {
   display: flex;
   flex-direction: column;
   gap: 0.15rem;
+  align-items: flex-end;
 }
 .stat b {
   font-size: 1.7rem;
