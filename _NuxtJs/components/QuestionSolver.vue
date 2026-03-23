@@ -76,12 +76,26 @@ const progressWidth = computed(() => {
   if (!props.question.time_limit) return '100%';
   return `${(timeLeft.value / props.question.time_limit) * 100}%`;
 });
+const formatGroupPath = (group: any) => {
+  const parts: string[] = [];
+  let current = group;
+  while (current) {
+    parts.unshift(current.name);
+    current = current.parent_group;
+  }
+  return parts.join(' / ');
+};
 </script>
 
 <template>
   <div class="solver-overlay">
     <div class="solver-card">
-      <button class="btn-close" @click="emit('close')">&times;</button>
+      <div class="solver-top-actions">
+        <div v-if="question.group" class="solver-group-path">
+          {{ formatGroupPath(question.group) }}
+        </div>
+        <button class="btn-close" @click="emit('close')">&times;</button>
+      </div>
       
       <div class="solver-header">
         <div class="question-info">
@@ -187,16 +201,34 @@ const progressWidth = computed(() => {
   overflow: hidden;
 }
 
-.btn-close {
+.solver-top-actions {
   position: absolute;
   top: 1rem;
   right: 1.5rem;
+  left: 1.5rem;
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 1rem;
+  pointer-events: none;
+  z-index: 10;
+}
+
+.solver-group-path {
+  font-size: 0.7rem;
+  color: #64748b;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+}
+
+.btn-close {
   background: none;
   border: none;
   color: #94a3b8;
   font-size: 2rem;
   cursor: pointer;
-  z-index: 10;
+  pointer-events: auto;
+  line-height: 1;
 }
 
 .solver-header {
