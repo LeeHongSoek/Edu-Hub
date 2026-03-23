@@ -10,6 +10,11 @@ export class QuestionsService {
     return this.prisma.question.findMany({
       include: {
         type: true, // 문제 유형 (객관식/주관식)
+        options: {
+          orderBy: {
+            option_number: 'asc', // 보기 번호 순서대로 정렬
+          },
+        },
         group: {
           include: {
             parent_group: {

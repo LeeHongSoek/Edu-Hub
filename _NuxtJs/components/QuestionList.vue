@@ -8,6 +8,7 @@ const props = defineProps<{
 
 const groups = ref<Group[]>([]);
 const selectedGroupId = ref<string | number | null>(null);
+const selectedQuestionForSolve = ref<Question | null>(null);
 
 // 선택된 그룹과 그 하위 그룹들의 모든 ID를 가져오는 함수
 const getDescendantIds = (groupId: string | number, allGroups: Group[]): (string | number)[] => {
@@ -39,6 +40,10 @@ const filteredQuestions = computed(() => {
 
 const handleSelectGroup = (groupId: string | number | null) => {
   selectedGroupId.value = groupId;
+};
+
+const handleSolve = (question: Question) => {
+  selectedQuestionForSolve.value = question;
 };
 
 const formatGroupPath = (group: Group) => {
@@ -101,11 +106,18 @@ onMounted(async () => {
             </div>
           </div>
           <div class="question-actions">
-            <button class="btn-solve">풀기</button>
+            <button class="btn-solve" @click="handleSolve(q)">풀기</button>
           </div>
         </div>
+      </div>
     </div>
-    </div>
+
+    <!-- 문제 풀기 오버레이 -->
+    <QuestionSolver 
+      v-if="selectedQuestionForSolve" 
+      :question="selectedQuestionForSolve" 
+      @close="selectedQuestionForSolve = null" 
+    />
   </div>
 </template>
 
@@ -265,7 +277,7 @@ onMounted(async () => {
 .group-overlay {
   position: absolute;
   top: 0;
-  right: -240px;
+  left: -240px;
   width: 220px;
   background: rgba(15, 23, 42, 0.8);
   backdrop-filter: blur(12px);
@@ -321,7 +333,7 @@ onMounted(async () => {
     position: static;
     width: 100%;
     margin-bottom: 1.5rem;
-    right: auto;
+    left: auto;
   }
 }
 </style>

@@ -12,7 +12,7 @@ const emit = defineEmits<{
   (e: 'select-group', groupId: string | number | null): void;
 }>();
 
-const isExpanded = ref(true); // 기본적으로 펼쳐진 상태
+const isExpanded = ref(false); // 기본적으로 접힌 상태
 
 const toggleExpand = (event: Event) => {
   event.stopPropagation(); // 그룹 선택 이벤트와 분리
