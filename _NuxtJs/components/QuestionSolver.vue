@@ -20,6 +20,10 @@ const showModal = ref(false);
 const modalTitle = ref('');
 const modalMessage = ref('');
 const modalType = ref<'success' | 'error' | 'warning'>('success');
+const rating = ref(0);
+const commentContent = ref('');
+const isSubmittingRating = ref(false);
+const showCommentInput = ref(false);
 
 let timerInterval: any = null;
 
@@ -110,6 +114,41 @@ const formatGroupPath = (group: any) => {
   }
   return parts.join(' / ');
 };
+
+const handleRate = async (value: number) => {
+  rating.value = value;
+  isSubmittingRating.value = true;
+  try {
+    await $fetch(`http://localhost:4000/questions/${props.question.question_id}`, {
+      method: 'PATCH',
+      body: { rating: value }
+    });
+  } catch (error) {
+    console.error('Failed to update rating:', error);
+  } finally {
+    isSubmittingRating.value = false;
+  }
+};
+
+const handlePostComment = async () => {
+  if (!commentContent.value.trim()) return;
+  try {
+    // Assuming a generic author_no for now
+    await $fetch('http://localhost:4000/comments', {
+      method: 'POST',
+      body: {
+        question_id: props.question.question_id,
+        content: commentContent.value,
+        author_no: 1 
+      }
+    });
+    commentContent.value = '';
+    showCommentInput.value = false;
+    alert('댓글이 등록되었습니다! 💬');
+  } catch (error) {
+    console.error('Failed to post comment:', error);
+  }
+};
 </script>
 
 <template>
@@ -179,11 +218,40 @@ const formatGroupPath = (group: any) => {
             @keyup.enter="!isFinished && handleFinish()"
           />
         </div>
+
+        <!-- 댓글 입력 패널 -->
+        <Transition name="slide-down">
+          <div v-if="showCommentInput" class="comment-panel">
+            <textarea v-model="commentContent" placeholder="이 문제에 대해 궁금한 점이나 의견을 남겨주세요." rows="3"></textarea>
+            <div class="comment-panel-footer">
+              <button class="btn-post-comment" @click="handlePostComment">등록</button>
+            </div>
+          </div>
+        </Transition>
       </div>
 
       <div class="solver-footer">
         <div v-if="showResult" class="explanation-box">
-          <h4>해설</h4>
+          <div class="explanation-header">
+            <div class="header-left-group">
+              <h4>해설</h4>
+              <button class="btn-inline-comment" @click="showCommentInput = !showCommentInput">
+                {{ showCommentInput ? '💬 닫기' : '💬 의견 남기기' }}
+              </button>
+            </div>
+            <div class="rating-container">
+              <span class="rating-label">이 문제는 어땠나요?</span>
+              <div class="stars">
+                <span 
+                  v-for="i in 5" 
+                  :key="i" 
+                  class="star" 
+                  :class="{ 'is-active': i <= rating }"
+                  @click="handleRate(i)"
+                >★</span>
+              </div>
+            </div>
+          </div>
           <p>{{ question.explanation || '등록된 해설이 없습니다.' }}</p>
         </div>
         
@@ -460,15 +528,123 @@ const formatGroupPath = (group: any) => {
   border-radius: 12px;
 }
 
+.explanation-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.25rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.header-left-group {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.btn-inline-comment {
+  background: rgba(99, 102, 241, 0.1);
+  border: 1px solid rgba(99, 102, 241, 0.2);
+  color: #818cf8;
+  padding: 0.25rem 0.75rem;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-inline-comment:hover {
+  background: rgba(99, 102, 241, 0.2);
+  border-color: rgba(99, 102, 241, 0.4);
+  color: #fff;
+}
+
 .explanation-box h4 {
   color: #fbbf24;
-  margin: 0 0 0.5rem 0;
+  margin: 0;
+}
+
+.rating-container {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.rating-label {
+  font-size: 0.8rem;
+  color: #94a3b8;
+}
+
+.stars {
+  display: flex;
+  gap: 0.25rem;
+}
+
+.star {
+  font-size: 1.5rem;
+  color: rgba(255, 255, 255, 0.1);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.star.is-active {
+  color: #fbbf24;
+  text-shadow: 0 0 10px rgba(245, 158, 11, 0.5);
+}
+
+.star:hover {
+  transform: scale(1.2);
 }
 
 .explanation-box p {
   color: #d1d5db;
   margin: 0;
   line-height: 1.5;
+}
+
+.comment-panel {
+  margin-top: 1.5rem;
+  padding: 1rem;
+  background: rgba(15, 23, 42, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+}
+
+.comment-panel textarea {
+  width: 100%;
+  background: none;
+  border: none;
+  color: #fff;
+  font-size: 0.95rem;
+  resize: none;
+  outline: none;
+}
+
+.comment-panel-footer {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 0.5rem;
+}
+
+.btn-post-comment {
+  padding: 0.4rem 1rem;
+  background: #6366f1;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.slide-down-enter-active, .slide-down-leave-active {
+  transition: all 0.3s ease-out;
+}
+.slide-down-enter-from, .slide-down-leave-to {
+  opacity: 0;
+  transform: translateY(-10px);
 }
 
 .btn-submit, .btn-primary {

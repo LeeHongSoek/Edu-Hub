@@ -106,6 +106,7 @@ CREATE TABLE `questions` (
     `is_public`     BOOLEAN       DEFAULT FALSE               COMMENT '웹 공유 활성화 여부 (0:비공개, 1:공개)',
     `is_deleted`    ENUM('Y', 'N', 'T') DEFAULT 'N'           COMMENT '삭제 여부 (Y: 삭제, N: 디폴트, T: 휴지통)',
     `time_limit`    INT           DEFAULT 0                   COMMENT '제한 시간 설정 (초 단위, 0이면 무제한)',
+    `rating`        TINYINT       DEFAULT 0                   COMMENT '사용자 평점 (1~5 별점)',
     `created_at`    DATETIME      DEFAULT CURRENT_TIMESTAMP   COMMENT '문제 등록 일시',
 
     CONSTRAINT `fk_question_creator`

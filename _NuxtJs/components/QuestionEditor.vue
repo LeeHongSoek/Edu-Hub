@@ -21,6 +21,7 @@ const editData = ref({
   hint: props.question.hint || '',
   difficulty: props.question.difficulty || 1,
   time_limit: props.question.time_limit || 0,
+  rating: props.question.rating || 0,
   group_id: props.question.group_id,
   options: props.question.options ? JSON.parse(JSON.stringify(props.question.options)) : []
 });
@@ -136,6 +137,10 @@ const handleDelete = async () => {
             <div class="form-group flex-small">
               <label>제한 시간 (초)</label>
               <input v-model.number="editData.time_limit" type="number" min="0" class="input-small" />
+            </div>
+            <div class="form-group flex-small">
+              <label>평점 (0-5)</label>
+              <input v-model.number="editData.rating" type="number" min="0" max="5" class="input-small" />
             </div>
           </div>
 

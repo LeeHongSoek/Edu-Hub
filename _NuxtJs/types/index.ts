@@ -27,6 +27,7 @@ export interface Question {
   is_public: boolean | null; // 공개 여부
   is_deleted: string | null; // 삭제 여부 (Y/N/T)
   time_limit: number | null; // 제한 시간 (초)
+  rating: number | null; // 평점 (1-5)
   created_at: string | null; // 생성일시
   type: QuestionType; // 관계: 문제 유형
   group?: Group; // 관계: 소속 그룹
