@@ -22,3 +22,12 @@ export interface Question {
   created_at: string | null;
   type: QuestionType;
 }
+
+export interface Group {
+  group_id: string | number;
+  name: string;
+  description: string | null;
+  parent_group_id: string | number | null;
+  depth: number | null;
+  child_groups?: Group[];
+}

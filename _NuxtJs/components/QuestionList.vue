@@ -1,14 +1,33 @@
 <script setup lang="ts">
-import type { Question } from '~/types';
+import { ref, onMounted } from 'vue';
+import type { Question, Group } from '~/types';
 
 defineProps<{
   questions: Question[];
 }>();
+
+const groups = ref<Group[]>([]);
+
+onMounted(async () => {
+  try {
+    const data = await $fetch<Group[]>('http://localhost:4000/groups');
+    groups.value = data;
+  } catch (error) {
+    console.error('Failed to fetch groups:', error);
+  }
+});
 </script>
 
 <template>
-  <div class="question-list">
-    <div v-for="q in questions" :key="q.question_id" class="question-item">
+  <div class="question-list-container">
+    <!-- Hierarchical Group Display (Top Right) -->
+    <div v-if="groups.length > 0" class="group-overlay">
+      <div class="group-overlay-header">문제 그룹</div>
+      <GroupHierarchy :groups="groups" />
+    </div>
+
+    <div class="question-list">
+      <div v-for="q in questions" :key="q.question_id" class="question-item">
       <div class="question-content">
         <h3 class="question-title">{{ q.title }}</h3>
         <LatexRenderer :text="q.question" class="question-preview" />
@@ -20,8 +39,9 @@ defineProps<{
         </div>
       </div>
       <div class="question-actions">
-        <button class="btn-solve">Solve</button>
+        <button class="btn-solve">풀기</button>
       </div>
+    </div>
     </div>
   </div>
 </template>
@@ -150,6 +170,45 @@ defineProps<{
   
   .btn-solve {
     width: 100%;
+  }
+}
+
+.question-list-container {
+  position: relative;
+  width: 100%;
+}
+
+.group-overlay {
+  position: absolute;
+  top: 0;
+  right: -240px;
+  width: 220px;
+  background: rgba(15, 23, 42, 0.8);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 1rem;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  z-index: 100;
+}
+
+.group-overlay-header {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #94a3b8;
+  text-transform: uppercase;
+  margin-bottom: 0.75rem;
+  letter-spacing: 0.05em;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  padding-bottom: 0.5rem;
+}
+
+@media (max-width: 1400px) {
+  .group-overlay {
+    position: static;
+    width: 100%;
+    margin-bottom: 1.5rem;
+    right: auto;
   }
 }
 </style>
