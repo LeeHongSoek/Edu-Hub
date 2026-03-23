@@ -9,9 +9,32 @@ const props = defineProps<{
 const groups = ref<Group[]>([]);
 const selectedGroupId = ref<string | number | null>(null);
 
+// 선택된 그룹과 그 하위 그룹들의 모든 ID를 가져오는 함수
+const getDescendantIds = (groupId: string | number, allGroups: Group[]): (string | number)[] => {
+  const ids: (string | number)[] = [];
+  
+  const traverse = (groups: Group[], targetFound = false) => {
+    for (const g of groups) {
+      const isTarget = g.group_id === groupId || targetFound;
+      if (isTarget) {
+        ids.push(g.group_id);
+      }
+      if (g.child_groups && g.child_groups.length > 0) {
+        traverse(g.child_groups, isTarget);
+      }
+    }
+  };
+
+  traverse(allGroups);
+  return ids;
+};
+
+// 필터링된 문제 목록 (계층 구조 반영)
 const filteredQuestions = computed(() => {
   if (!selectedGroupId.value) return props.questions;
-  return props.questions.filter(q => q.group_id === selectedGroupId.value);
+  
+  const targetIds = getDescendantIds(selectedGroupId.value, groups.value);
+  return props.questions.filter(q => q.group_id && targetIds.includes(q.group_id));
 });
 
 const handleSelectGroup = (groupId: string | number | null) => {
