@@ -34,27 +34,28 @@ model EnmMediaType {
 }
 
 model User {
-  user_no         BigInt          @id @default(autoincrement())
-  user_id         String          @unique(map: "user_id") @db.VarChar(10)
-  username        String          @db.VarChar(50)
-  email           String          @unique(map: "email") @db.VarChar(255)
-  role_id         String          @db.Char(1)
-  is_withdrawn    IsWithdrawn?    @default(N)
-  created_at      DateTime?       @default(now()) @db.DateTime(0)
+  user_no         BigInt           @id @default(autoincrement())
+  user_id         String           @unique(map: "user_id") @db.VarChar(10)
+  user_pw         String           @db.VarChar(255)
+  username        String           @db.VarChar(50)
+  email           String           @unique(map: "email") @db.VarChar(255)
+  role_id         String           @db.Char(1)
+  is_withdrawn    IsWithdrawn?     @default(N)
+  created_at      DateTime?        @default(now()) @db.DateTime(0)
   student_classes ClassStudent[]
-  taught_classes  Class[]         @relation("TeacherClasses")
+  taught_classes  Class[]          @relation("TeacherClasses")
   exam_results    ExamResult[]
   created_exams   Exam[]
   created_groups  Group[]
-  parent_links    ParentStudent[] @relation("ParentLink")
-  child_links     ParentStudent[] @relation("ChildLink")
+  parent_links    ParentStudent[]  @relation("ParentLink")
+  child_links     ParentStudent[]  @relation("ChildLink")
+  reviews         QuestionReview[]
   created_sqs     Question[]
   solve_results   SolveResult[]
   study_logs      StudyLog[]
-  authored_cmts   UserComment[]   @relation("AuthoredComments")
-  received_cmts   UserComment[]   @relation("ReceivedComments")
-  reviews         QuestionReview[]
-  role            EnmRole         @relation(fields: [role_id], references: [role_id], onUpdate: Restrict, map: "fk_user_role")
+  authored_cmts   UserComment[]    @relation("AuthoredComments")
+  received_cmts   UserComment[]    @relation("ReceivedComments")
+  role            EnmRole          @relation(fields: [role_id], references: [role_id], onUpdate: Restrict, map: "fk_user_role")
 
   @@index([role_id], map: "fk_user_role")
   @@map("users")
@@ -97,11 +98,11 @@ model ParentStudent {
 
 model Group {
   group_id        BigInt     @id @default(autoincrement())
-  creator_no      BigInt // 생성자 번호
-  parent_group_id BigInt? // 상위 그룹 ID
-  depth           Int?       @default(1) @db.TinyInt // 계층 깊이
-  name            String     @db.VarChar(100) // 그룹명
-  description     String?    @db.Text // 설명
+  creator_no      BigInt
+  parent_group_id BigInt?
+  depth           Int?       @default(1) @db.TinyInt
+  name            String     @db.VarChar(100)
+  description     String?    @db.Text
   created_at      DateTime?  @default(now()) @db.DateTime(0)
   creator         User       @relation(fields: [creator_no], references: [user_no], onDelete: Cascade, onUpdate: Restrict, map: "fk_group_creator")
   parent_group    Group?     @relation("GroupHierarchy", fields: [parent_group_id], references: [group_id], onDelete: Cascade, onUpdate: Restrict, map: "fk_group_parent")
@@ -115,24 +116,25 @@ model Group {
 
 model Question {
   question_id      BigInt            @id @default(autoincrement())
-  creator_no       BigInt // 생성자 번호
-  group_id         BigInt? // 소속 그룹 ID
-  question_type_id String            @default("M") @db.Char(1) // 유형 (M/S)
-  title            String            @db.VarChar(255) // 제목
-  question         String            @db.Text // 지문
-  content          String?           @db.Text // 추가 지문
-  answer           String            @db.Text // 정답
-  explanation      String?           @db.Text // 해설
-  hint             String?           @db.Text // 힌트
-  difficulty       Int?              @default(1) @db.TinyInt // 난이도
-  is_public        Boolean?          @default(false) // 공개 여부
-  is_deleted       IsDeleted?        @default(N) // 삭제 여부
-  time_limit       Int?              @default(0) // 제한시간(초)
-  rating           Int?              @default(0) @db.TinyInt // 평점 (1-5)
+  creator_no       BigInt
+  group_id         BigInt?
+  question_type_id String            @default("M") @db.Char(1)
+  title            String            @db.VarChar(255)
+  question         String            @db.Text
+  content          String?           @db.Text
+  answer           String            @db.Text
+  explanation      String?           @db.Text
+  hint             String?           @db.Text
+  difficulty       Int?              @default(1) @db.TinyInt
+  is_public        Boolean?          @default(false)
+  is_deleted       IsDeleted?        @default(N)
+  time_limit       Int?              @default(0)
+  rating           Int?              @default(0) @db.TinyInt
   created_at       DateTime?         @default(now()) @db.DateTime(0)
   exams            ExamQuestion[]
   attachments      MediaAttachment[]
   options          QuestionOption[]
+  reviews          QuestionReview[]
   tags             QuestionTag[]
   creator          User              @relation(fields: [creator_no], references: [user_no], onDelete: Cascade, onUpdate: Restrict, map: "fk_question_creator")
   group            Group?            @relation(fields: [group_id], references: [group_id], onUpdate: Restrict, map: "fk_question_group")
@@ -140,7 +142,6 @@ model Question {
   solve_results    SolveResult[]
   study_logs       StudyLog[]
   comments         UserComment[]
-  reviews          QuestionReview[]
 
   @@index([creator_no], map: "fk_question_creator")
   @@index([group_id], map: "fk_question_group")
@@ -301,14 +302,14 @@ model SolveResult {
 }
 
 model QuestionReview {
-  review_id    BigInt    @id @default(autoincrement())
-  question_id  BigInt
-  user_no      BigInt
-  content      String    @db.Text
-  rating       Int       @db.TinyInt
-  created_at   DateTime? @default(now()) @db.DateTime(0)
-  question     Question  @relation(fields: [question_id], references: [question_id], onDelete: Cascade, onUpdate: Restrict, map: "fk_review_q")
-  user         User      @relation(fields: [user_no], references: [user_no], onDelete: Cascade, onUpdate: Restrict, map: "fk_review_u")
+  review_id   BigInt    @id @default(autoincrement())
+  question_id BigInt
+  user_no     BigInt
+  content     String    @db.Text
+  rating      Int       @db.TinyInt
+  created_at  DateTime? @default(now()) @db.DateTime(0)
+  question    Question  @relation(fields: [question_id], references: [question_id], onDelete: Cascade, onUpdate: Restrict, map: "fk_review_q")
+  user        User      @relation(fields: [user_no], references: [user_no], onDelete: Cascade, onUpdate: Restrict, map: "fk_review_u")
 
   @@index([question_id], map: "fk_review_q")
   @@index([user_no], map: "fk_review_u")

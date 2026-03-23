@@ -59,6 +59,55 @@ function typeLoop() {
   setTimeout(typeLoop, deleting ? 35 : 80);
 }
 
+// 로그인 상태
+const userIdInput = ref('');
+const passwordInput = ref('');
+const isLoggingIn = ref(false);
+const authError = ref('');
+
+const handleLogin = async () => {
+  if (!userIdInput.value || !passwordInput.value) {
+    authError.value = '이미일과 비밀번호를 입력해주세요.';
+    return;
+  }
+  
+  isLoggingIn.value = true;
+  authError.value = '';
+  
+  try {
+    const config = useRuntimeConfig();
+    const { data, error } = await useFetch(`${config.public.apiBase}/auth/login`, {
+      method: 'POST',
+      body: {
+        userId: userIdInput.value,
+        password: passwordInput.value,
+      },
+    });
+
+    if (error.value) {
+      authError.value = error.value.data?.message || '로그인 중 오류가 발생했습니다.';
+      return;
+    }
+
+    if (data.value) {
+      // JWT 토큰 저장
+      const token = useCookie('auth_token');
+      token.value = (data.value as any).access_token;
+      
+      const user = useCookie('user_info');
+      user.value = JSON.stringify((data.value as any).user);
+
+      alert(`${(data.value as any).user.username}님, 환영합니다!`);
+      // 필요 시 페이지 이동
+      // window.location.href = '/questions';
+    }
+  } catch (err) {
+    authError.value = '서버 연결에 실패했습니다.';
+  } finally {
+    isLoggingIn.value = false;
+  }
+};
+
 onMounted(() => {
   setTimeout(() => { isLoaded.value = true; }, 80);
   setTimeout(typeLoop, 1600);
@@ -159,22 +208,23 @@ onMounted(() => {
             <h2 class="auth-title">시작하기</h2>
             <p class="auth-sub">무료 가입 후 오늘의 문제를 풀어보세요</p>
 
-            <form @submit.prevent class="form">
+            <form @submit.prevent="handleLogin" class="form">
               <div class="field">
-                <label for="email">이메일</label>
-                <input id="email" type="email" placeholder="exam@edu-hub.kr" />
+                <label for="email">이메일/ID</label>
+                <input id="email" v-model="userIdInput" type="text" placeholder="아이디를 입력하세요" required />
               </div>
               <div class="field">
                 <label for="pw">비밀번호</label>
-                <input id="pw" type="password" placeholder="8자 이상" />
+                <input id="pw" v-model="passwordInput" type="password" placeholder="비밀번호를 입력하세요" required />
               </div>
+              <div v-if="authError" class="auth-error-msg">{{ authError }}</div>
               <div class="row-util">
                 <label class="chk"><input type="checkbox" />로그인 유지</label>
                 <a href="#" class="link-sm">비밀번호 찾기</a>
               </div>
-              <button class="btn-login">
-                로그인
-                <svg viewBox="0 0 24 24" width="16" height="16"><path d="M13.172 12l-4.95-4.95 1.414-1.414L16 12l-6.364 6.364-1.414-1.414z" fill="currentColor"/></svg>
+              <button class="btn-login" :disabled="isLoggingIn">
+                {{ isLoggingIn ? '로그인 중...' : '로그인' }}
+                <svg v-if="!isLoggingIn" viewBox="0 0 24 24" width="16" height="16"><path d="M13.172 12l-4.95-4.95 1.414-1.414L16 12l-6.364 6.364-1.414-1.414z" fill="currentColor"/></svg>
               </button>
             </form>
 
@@ -722,6 +772,18 @@ onMounted(() => {
 .btn-google:hover {
   background: rgba(255,255,255,0.09);
   border-color: rgba(255,255,255,0.22);
+}
+
+.auth-error-msg {
+  color: #ef4444;
+  font-size: 0.8rem;
+  font-weight: 500;
+  margin-top: -0.25rem;
+}
+
+.btn-login:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .join-text {
