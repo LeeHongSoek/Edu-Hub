@@ -4,12 +4,16 @@ import katex from 'katex';
 
 const props = defineProps<{
   text: string;
+  stripNewlines?: boolean;
 }>();
 
 const renderedContent = computed(() => {
   if (!props.text) return '';
   
   let content = props.text;
+  if (props.stripNewlines) {
+    content = content.replace(/\n/g, ' ');
+  }
   
   // 블록 수식: $$ ... $$
   content = content.replace(/\$\$([\s\S]+?)\$\$/g, (match, p1) => {

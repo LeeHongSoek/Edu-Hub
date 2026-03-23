@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from 'vue';
+import LatexRenderer from '~/components/LatexRenderer.vue';
 
 // 페이드인 상태
 const isLoaded = ref(false);
@@ -353,6 +354,7 @@ onMounted(() => {
                       <LatexRenderer 
                         class="t-text" 
                         :text="q.content?.trim() || q.explanation?.trim() || q.answer?.trim() || '지식을 완성하는 문제 ✏️'" 
+                        :strip-newlines="true"
                       />
                       <span class="t-new">NEW</span>
                     </div>
