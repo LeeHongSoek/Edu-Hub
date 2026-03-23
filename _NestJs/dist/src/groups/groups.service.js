@@ -45,6 +45,27 @@ let GroupsService = class GroupsService {
             },
         });
     }
+    async create(data) {
+        return this.prisma.group.create({
+            data: {
+                ...data,
+                depth: data.depth || 1,
+            },
+        });
+    }
+    async update(id, data) {
+        const groupId = typeof id === 'string' ? BigInt(id) : BigInt(id);
+        return this.prisma.group.update({
+            where: { group_id: groupId },
+            data,
+        });
+    }
+    async remove(id) {
+        const groupId = typeof id === 'string' ? BigInt(id) : BigInt(id);
+        return this.prisma.group.delete({
+            where: { group_id: groupId },
+        });
+    }
 };
 exports.GroupsService = GroupsService;
 exports.GroupsService = GroupsService = __decorate([

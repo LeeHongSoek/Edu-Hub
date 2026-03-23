@@ -1,4 +1,4 @@
-import { Controller, Get } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Delete, Body, Param } from '@nestjs/common';
 import { GroupsService } from './groups.service';
 
 @Controller('groups')
@@ -8,5 +8,20 @@ export class GroupsController {
   @Get()
   findAll() {
     return this.groupsService.getHierarchy();
+  }
+
+  @Post()
+  create(@Body() data: any) {
+    return this.groupsService.create(data);
+  }
+
+  @Patch(':id')
+  update(@Param('id') id: string, @Body() data: any) {
+    return this.groupsService.update(id, data);
+  }
+
+  @Delete(':id')
+  remove(@Param('id') id: string) {
+    return this.groupsService.remove(id);
   }
 }

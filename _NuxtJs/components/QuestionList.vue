@@ -9,6 +9,12 @@ const props = defineProps<{
 const groups = ref<Group[]>([]);
 const selectedGroupId = ref<string | number | null>(null);
 const selectedQuestionForSolve = ref<Question | null>(null);
+const selectedQuestionForEdit = ref<Question | null>(null);
+const showGroupManager = ref(false);
+
+const emit = defineEmits<{
+  (e: 'refresh'): void;
+}>();
 
 // 선택된 그룹과 그 하위 그룹들의 모든 ID를 가져오는 함수
 const getDescendantIds = (groupId: string | number, allGroups: Group[]): (string | number)[] => {
@@ -61,13 +67,17 @@ const formatGroupPath = (group: Group) => {
   return parts.join(' / ');
 };
 
-onMounted(async () => {
+const fetchGroups = async () => {
   try {
     const data = await $fetch<Group[]>('http://localhost:4000/groups');
     groups.value = data;
   } catch (error) {
     console.error('Failed to fetch groups:', error);
   }
+};
+
+onMounted(async () => {
+  await fetchGroups();
 });
 </script>
 
@@ -77,9 +87,12 @@ onMounted(async () => {
     <div v-if="groups.length > 0" class="group-overlay">
       <div class="group-overlay-header">
         <span>문제 그룹</span>
-        <button v-if="selectedGroupId" class="btn-clear-filter" @click="handleSelectGroup(null)">
-          전체 보기
-        </button>
+        <div class="header-actions">
+          <button class="btn-manage-groups" title="그룹 관리" @click="showGroupManager = true">⚙️</button>
+          <button v-if="selectedGroupId" class="btn-clear-filter" @click="handleSelectGroup(null)">
+            전체
+          </button>
+        </div>
       </div>
       <GroupHierarchy 
         :groups="groups" 
@@ -87,6 +100,13 @@ onMounted(async () => {
         @select-group="handleSelectGroup" 
       />
     </div>
+
+    <!-- 그룹 관리 오버레이 -->
+    <GroupManager
+      v-if="showGroupManager"
+      @close="showGroupManager = false"
+      @updated="fetchGroups"
+    />
 
     <div class="question-list">
       <div v-if="filteredQuestions.length === 0" class="no-results">
@@ -111,11 +131,20 @@ onMounted(async () => {
             </div>
           </div>
           <div class="question-actions">
+            <button class="btn-modify" @click="selectedQuestionForEdit = q">수정</button>
             <button class="btn-solve" @click="handleSolve(q)">풀기</button>
           </div>
         </div>
       </div>
     </div>
+
+    <!-- 문제 수정 오버레이 -->
+    <QuestionEditor
+      v-if="selectedQuestionForEdit"
+      :question="selectedQuestionForEdit"
+      @close="selectedQuestionForEdit = null"
+      @updated="emit('refresh')"
+    />
 
     <!-- 문제 풀기 오버레이 -->
     <QuestionSolver 
@@ -242,6 +271,12 @@ onMounted(async () => {
   border: 1px solid rgba(16, 185, 129, 0.3);
 }
 
+.question-actions {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+}
+
 .btn-solve {
   padding: 0.6rem 1.2rem;
   background: #6366f1;
@@ -250,11 +285,30 @@ onMounted(async () => {
   border-radius: 8px;
   font-weight: 600;
   cursor: pointer;
-  transition: background 0.2s;
+  transition: all 0.2s;
+}
+
+.btn-modify {
+  padding: 0.6rem 1.2rem;
+  background: rgba(255, 255, 255, 0.05);
+  color: #94a3b8;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
 }
 
 .btn-solve:hover {
   background: #4f46e5;
+  transform: translateY(-2px);
+}
+
+.btn-modify:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.2);
+  transform: translateY(-2px);
 }
 
 @media (max-width: 640px) {
@@ -321,6 +375,26 @@ onMounted(async () => {
 .btn-clear-filter:hover {
   background: rgba(99, 102, 241, 0.3);
   color: #fff;
+}
+
+.header-actions {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.btn-manage-groups {
+  background: none;
+  border: none;
+  font-size: 0.9rem;
+  cursor: pointer;
+  opacity: 0.6;
+  transition: opacity 0.2s;
+  padding: 2px;
+}
+
+.btn-manage-groups:hover {
+  opacity: 1;
 }
 
 .no-results {

@@ -43,6 +43,56 @@ let QuestionsService = class QuestionsService {
             },
         });
     }
+    async create(data) {
+        const { options, ...questionData } = data;
+        return this.prisma.$transaction(async (tx) => {
+            const question = await tx.question.create({
+                data: {
+                    ...questionData,
+                    options: options ? {
+                        create: options.map((opt) => ({
+                            option_number: opt.option_number,
+                            content: opt.content,
+                            is_answer: opt.is_answer,
+                        })),
+                    } : undefined,
+                },
+                include: { options: true },
+            });
+            return question;
+        });
+    }
+    async update(id, data) {
+        const { options, ...questionData } = data;
+        const questionId = typeof id === 'string' ? BigInt(id) : BigInt(id);
+        return this.prisma.$transaction(async (tx) => {
+            if (options) {
+                await tx.questionOption.deleteMany({
+                    where: { question_id: questionId },
+                });
+            }
+            return tx.question.update({
+                where: { question_id: questionId },
+                data: {
+                    ...questionData,
+                    options: options ? {
+                        create: options.map((opt) => ({
+                            option_number: opt.option_number,
+                            content: opt.content,
+                            is_answer: opt.is_answer,
+                        })),
+                    } : undefined,
+                },
+                include: { options: true },
+            });
+        });
+    }
+    async remove(id) {
+        const questionId = typeof id === 'string' ? BigInt(id) : BigInt(id);
+        return this.prisma.question.delete({
+            where: { question_id: questionId },
+        });
+    }
 };
 exports.QuestionsService = QuestionsService;
 exports.QuestionsService = QuestionsService = __decorate([

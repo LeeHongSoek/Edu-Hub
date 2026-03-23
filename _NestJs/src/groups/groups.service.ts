@@ -37,4 +37,31 @@ export class GroupsService {
       },
     });
   }
+
+  // 그룹 생성
+  async create(data: any) {
+    return this.prisma.group.create({
+      data: {
+        ...data,
+        depth: data.depth || 1,
+      },
+    });
+  }
+
+  // 그룹 수정
+  async update(id: string | number, data: any) {
+    const groupId = typeof id === 'string' ? BigInt(id) : BigInt(id);
+    return this.prisma.group.update({
+      where: { group_id: groupId },
+      data,
+    });
+  }
+
+  // 그룹 삭제
+  async remove(id: string | number) {
+    const groupId = typeof id === 'string' ? BigInt(id) : BigInt(id);
+    return this.prisma.group.delete({
+      where: { group_id: groupId },
+    });
+  }
 }

@@ -511,7 +511,6 @@ const formatGroupPath = (group: any) => {
   border-radius: 4px;
   font-size: 0.7rem;
   font-weight: 600;
-  text-transform: uppercase;
 }
 
 /* 커스텀 모달 스타일 */
