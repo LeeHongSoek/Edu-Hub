@@ -25,7 +25,12 @@ function closeIntro() {
   }
 }
 
-function onKeydown(e: KeyboardEvent) { if (e.key === 'Escape') closeIntro(); }
+function onKeydown(e: KeyboardEvent) {
+  if (e.key === 'Escape') {
+    closeIntro();
+    closeRegister();
+  }
+}
 onMounted(() => window.addEventListener('keydown', onKeydown));
 onUnmounted(() => window.removeEventListener('keydown', onKeydown));
 
@@ -64,6 +69,26 @@ const userIdInput = ref('');
 const passwordInput = ref('');
 const isLoggingIn = ref(false);
 const authError = ref('');
+
+// 통계 데이터
+const stats = ref({
+  questions: 0,
+  teachers: 0,
+  students: 0,
+  parents: 0,
+});
+
+const fetchStats = async () => {
+  try {
+    const config = useRuntimeConfig();
+    const { data } = await useFetch(`${config.public.apiBase}/stats`);
+    if (data.value) {
+      stats.value = data.value as any;
+    }
+  } catch (err) {
+    console.error('Failed to fetch stats:', err);
+  }
+};
 
 const handleLogin = async () => {
   if (!userIdInput.value || !passwordInput.value) {
@@ -112,26 +137,66 @@ const handleLogin = async () => {
 const showRegister = ref(false);
 const regUserId = ref('');
 const regPassword = ref('');
+const regPasswordConfirm = ref('');
 const regUsername = ref('');
 const regEmail = ref('');
 const regRole = ref('S'); // 기본값 S (Student)
+
+const isIdChecked = ref(false);
+const isIdAvailable = ref(false);
+const checkingId = ref(false);
+
 const isRegistering = ref(false);
 const regError = ref('');
 
 function openRegister() {
   showRegister.value = true;
   authError.value = '';
+  isIdChecked.value = false;
+  isIdAvailable.value = false;
   document.body.style.overflow = 'hidden';
 }
 
-function closeRegister() {
-  showRegister.value = false;
-  document.body.style.overflow = '';
-}
+const checkId = async () => {
+  if (!regUserId.value) {
+    regError.value = '아이디를 입력해주세요.';
+    return;
+  }
+  
+  checkingId.value = true;
+  regError.value = '';
+  
+  try {
+    const config = useRuntimeConfig();
+    const { data } = await useFetch(`${config.public.apiBase}/auth/check-id/${regUserId.value}`);
+    
+    if (data.value) {
+      isIdAvailable.value = (data.value as any).isAvailable;
+      isIdChecked.value = true;
+      if (!isIdAvailable.value) {
+        regError.value = '이미 사용 중인 아이디입니다.';
+      }
+    }
+  } catch (err) {
+    regError.value = '중복 확인 실패';
+  } finally {
+    checkingId.value = false;
+  }
+};
 
 const handleRegister = async () => {
   if (!regUserId.value || !regPassword.value || !regUsername.value || !regEmail.value) {
     regError.value = '모든 필드를 입력해주세요.';
+    return;
+  }
+
+  if (!isIdChecked.value || !isIdAvailable.value) {
+    regError.value = '아이디 중복 확인을 해주세요.';
+    return;
+  }
+
+  if (regPassword.value !== regPasswordConfirm.value) {
+    regError.value = '비밀번호가 일치하지 않습니다.';
     return;
   }
 
@@ -166,9 +231,15 @@ const handleRegister = async () => {
   }
 };
 
+function closeRegister() {
+  showRegister.value = false;
+  document.body.style.overflow = '';
+}
+
 onMounted(() => {
   setTimeout(() => { isLoaded.value = true; }, 80);
   setTimeout(typeLoop, 1600);
+  fetchStats();
   setInterval(() => { showCursor.value = !showCursor.value; }, 530);
 });
 </script>
@@ -244,19 +315,17 @@ onMounted(() => {
             지식 완성의 여정을 함께합니다.
           </p>
 
-          <div class="feature-chips">
-            <span>⚡ AI 맞춤 추천</span>
-            <span>📊 성취 대시보드</span>
-            <span>🏆 전국 랭킹</span>
-            <span>🔔 오늘의 도전</span>
-          </div>
+          <!-- 칩은 제거하고 통계는 유지 -->
+          <div style="height: 40px;"></div>
 
           <div class="stats-row">
-            <div class="stat"><b>12,400<sup>+</sup></b><small>등록 문제</small></div>
+            <div class="stat"><b>{{ stats.questions.toLocaleString() }}</b><small>등록 문제</small></div>
             <div class="vbar"></div>
-            <div class="stat"><b>38,000<sup>+</sup></b><small>학습자</small></div>
+            <div class="stat"><b>{{ stats.teachers.toLocaleString() }}</b><small>선생님</small></div>
             <div class="vbar"></div>
-            <div class="stat"><b>97%</b><small>만족도</small></div>
+            <div class="stat"><b>{{ stats.students.toLocaleString() }}</b><small>학생</small></div>
+            <div class="vbar"></div>
+            <div class="stat"><b>{{ stats.parents.toLocaleString() }}</b><small>학부모</small></div>
           </div>
         </section>
 
@@ -396,9 +465,17 @@ onMounted(() => {
 
           <form @submit.prevent="handleRegister" class="reg-form">
             <div class="reg-grid">
-              <div class="field">
+              <div class="field full-width id-field">
                 <label>아이디</label>
-                <input v-model="regUserId" type="text" placeholder="10자 이내" required />
+                <div class="input-with-btn">
+                  <input v-model="regUserId" type="text" placeholder="10자 이내" required @input="isIdChecked = false" />
+                  <button type="button" class="btn-check" @click="checkId" :disabled="checkingId">
+                    {{ checkingId ? '...' : '중복확인' }}
+                  </button>
+                </div>
+                <p v-if="isIdChecked" :class="['id-status', isIdAvailable ? 'success' : 'fail']">
+                  {{ isIdAvailable ? '사용 가능한 아이디입니다.' : '이미 사용 중인 아이디입니다.' }}
+                </p>
               </div>
               <div class="field">
                 <label>이름</label>
@@ -411,6 +488,10 @@ onMounted(() => {
               <div class="field">
                 <label>비밀번호</label>
                 <input v-model="regPassword" type="password" placeholder="안전한 비밀번호" required />
+              </div>
+              <div class="field">
+                <label>비밀번호 확인</label>
+                <input v-model="regPasswordConfirm" type="password" placeholder="비밀번호 재입력" required />
               </div>
               <div class="field full-width">
                 <label>가입 유형</label>
@@ -804,8 +885,15 @@ onMounted(() => {
 .field input::placeholder { color: #1e293b; }
 .field input:focus {
   border-color: rgba(129,140,248,0.55);
-  background: rgba(255,255,255,0.1);
+  background: rgba(255,255,255,1);
   box-shadow: 0 0 0 3px rgba(129,140,248,0.18);
+  color: #000;
+}
+
+/* 비밀번호 폰트 크기 확대 */
+input[type="password"] {
+  font-size: 1.5rem !important;
+  letter-spacing: 0.1em;
 }
 
 .row-util {
@@ -949,6 +1037,39 @@ onMounted(() => {
 .btn-reg {
   margin-top: 1rem;
 }
+
+/* 아이디 중복확인 관련 */
+.input-with-btn {
+  display: flex;
+  gap: 0.5rem;
+}
+.input-with-btn input {
+  flex: 1;
+}
+.btn-check {
+  padding: 0 1rem;
+  border-radius: 10px;
+  border: 1px solid rgba(129,140,248,0.3);
+  background: rgba(129,140,248,0.1);
+  color: #a5b4fc;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s;
+}
+.btn-check:hover:not(:disabled) {
+  background: rgba(129,140,248,0.2);
+  border-color: rgba(129,140,248,0.5);
+}
+.id-status {
+  font-size: 0.75rem;
+  margin-top: 0.25rem;
+  padding-left: 0.25rem;
+}
+.id-status.success { color: #10b981; }
+.id-status.fail { color: #ef4444; }
+
 .modal-footer-text {
   text-align: center;
   margin-top: 1.5rem;
