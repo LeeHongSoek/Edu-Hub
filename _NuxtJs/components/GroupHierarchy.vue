@@ -4,23 +4,26 @@ import { computed } from 'vue';
 
 const props = defineProps<{
   groups: Group[];
+  selectedGroupId?: string | number | null;
 }>();
 
-// Transform recursive tree into flat list of full paths (up to 3 levels)
+const emit = defineEmits<{
+  (e: 'select-group', groupId: string | number | null): void;
+}>();
+
+// 계층형 그룹 트리를 플랫한 리스트 맵으로 변환 (최대 3단계)
 const flattenedPaths = computed(() => {
-  const paths: string[] = [];
+  const paths: { path: string; groupId: string | number }[] = [];
   
   const traverse = (groups: Group[], currentPath: string = '') => {
     for (const group of groups) {
       const newPath = currentPath ? `${currentPath} / ${group.name}` : group.name;
       
-      // We only show the full path if it's a leaf node or if we want to show all possible paths.
-      // Usually, showing all "paths" is clearer when the user wants "A / B / C".
       if (!group.child_groups || group.child_groups.length === 0) {
-        paths.push(newPath);
+        paths.push({ path: newPath, groupId: group.group_id });
       } else {
-        // Option 1: Also show intermediate paths (uncomment if needed)
-        // paths.push(newPath);
+        // 중간 계층 그룹도 선택 가능하도록 추가
+        paths.push({ path: newPath, groupId: group.group_id });
         traverse(group.child_groups, newPath);
       }
     }
@@ -33,9 +36,15 @@ const flattenedPaths = computed(() => {
 
 <template>
   <div class="group-hierarchy">
-    <div v-for="(path, index) in flattenedPaths" :key="index" class="group-path">
+    <div 
+      v-for="(item, index) in flattenedPaths" 
+      :key="item.groupId" 
+      class="group-path"
+      :class="{ 'is-selected': item.groupId === selectedGroupId }"
+      @click="emit('select-group', item.groupId)"
+    >
       <span class="group-bullet">•</span>
-      <span class="path-text">{{ path }}</span>
+      <span class="path-text">{{ item.path }}</span>
     </div>
     <div v-if="flattenedPaths.length === 0" class="no-groups">
       그룹 정보 없음
@@ -58,10 +67,23 @@ const flattenedPaths = computed(() => {
   border-radius: 6px;
   background: rgba(255, 255, 255, 0.03);
   transition: all 0.2s;
+  cursor: pointer;
+  border: 1px solid transparent;
 }
 
 .group-path:hover {
   background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(99, 102, 241, 0.3);
+}
+
+.group-path.is-selected {
+  background: rgba(99, 102, 241, 0.15);
+  border-color: #6366f1;
+}
+
+.group-path.is-selected .path-text {
+  color: #fff;
+  font-weight: 600;
 }
 
 .group-bullet {

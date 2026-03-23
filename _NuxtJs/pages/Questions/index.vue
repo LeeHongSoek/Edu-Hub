@@ -19,11 +19,11 @@ const { data: questions, pending, error } = await useFetch<Question[]>(`${config
     <h1 class="title">문제 목록</h1>
     
     <div v-if="pending" class="loading">
-      Loading questions...
+      문제를 불러오는 중...
     </div>
     
     <div v-else-if="error" class="error">
-      Failed to load questions. Please check if the backend is running.
+      문제를 불러오지 못했습니다. 백엔드 서버가 실행 중인지 확인해 주세요.
       <pre>{{ error }}</pre>
     </div>
     

@@ -11,7 +11,7 @@ const renderedContent = computed(() => {
   
   let content = props.text;
   
-  // Block math: $$ ... $$
+  // 블록 수식: $$ ... $$
   content = content.replace(/\$\$([\s\S]+?)\$\$/g, (match, p1) => {
     try {
       return katex.renderToString(p1, { displayMode: true, throwOnError: false });
@@ -21,7 +21,7 @@ const renderedContent = computed(() => {
     }
   });
   
-  // Inline math: $ ... $
+  // 인라인 수식: $ ... $
   content = content.replace(/\$([^\$]+)\$/g, (match, p1) => {
     try {
       return katex.renderToString(p1, { displayMode: false, throwOnError: false });

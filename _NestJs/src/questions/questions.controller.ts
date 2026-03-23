@@ -5,8 +5,9 @@ import { QuestionsService } from './questions.service';
 export class QuestionsController {
   constructor(private readonly questionsService: QuestionsService) {}
 
+  // 모든 문제 목록 조회 API
   @Get()
-  async findAll() {
+  findAll() {
     return this.questionsService.findAll();
   }
 }

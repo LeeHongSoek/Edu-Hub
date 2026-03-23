@@ -5,17 +5,18 @@ import { PrismaService } from '../common/prisma/prisma.service';
 export class GroupsService {
   constructor(private prisma: PrismaService) {}
 
+  // 최상위 그룹(depth 1)을 기준으로 하위 그룹들을 포함하여 조회
   async findAll() {
     return this.prisma.group.findMany({
+      where: {
+        parent_group_id: null,
+      },
       include: {
         child_groups: {
           include: {
-            child_groups: true,
+            child_groups: true, // 3단계까지 포함
           },
         },
-      },
-      where: {
-        parent_group_id: null,
       },
     });
   }

@@ -5,17 +5,16 @@ import { PrismaService } from '../common/prisma/prisma.service';
 export class QuestionsService {
   constructor(private prisma: PrismaService) {}
 
+  // DB에서 모든 문제 정보를 조회 (유형 및 그룹 정보 포함)
   async findAll() {
     return this.prisma.question.findMany({
       include: {
-        type: true,
-        options: true,
-        attachments: true,
+        type: true, // 문제 유형 (객관식/주관식)
         group: {
           include: {
             parent_group: {
               include: {
-                parent_group: true,
+                parent_group: true, // 최대 3단계 계층 구조 포함
               },
             },
           },

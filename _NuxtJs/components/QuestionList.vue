@@ -1,12 +1,22 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed } from 'vue';
 import type { Question, Group } from '~/types';
 
-defineProps<{
+const props = defineProps<{
   questions: Question[];
 }>();
 
 const groups = ref<Group[]>([]);
+const selectedGroupId = ref<string | number | null>(null);
+
+const filteredQuestions = computed(() => {
+  if (!selectedGroupId.value) return props.questions;
+  return props.questions.filter(q => q.group_id === selectedGroupId.value);
+});
+
+const handleSelectGroup = (groupId: string | number | null) => {
+  selectedGroupId.value = groupId;
+};
 
 const formatGroupPath = (group: Group) => {
   const parts: string[] = [];
@@ -30,14 +40,26 @@ onMounted(async () => {
 
 <template>
   <div class="question-list-container">
-    <!-- Hierarchical Group Display (Top Right) -->
+    <!-- 계층형 그룹 표시 (우측 상단 오버레이) -->
     <div v-if="groups.length > 0" class="group-overlay">
-      <div class="group-overlay-header">문제 그룹</div>
-      <GroupHierarchy :groups="groups" />
+      <div class="group-overlay-header">
+        <span>문제 그룹</span>
+        <button v-if="selectedGroupId" class="btn-clear-filter" @click="handleSelectGroup(null)">
+          전체 보기
+        </button>
+      </div>
+      <GroupHierarchy 
+        :groups="groups" 
+        :selected-group-id="selectedGroupId"
+        @select-group="handleSelectGroup" 
+      />
     </div>
 
     <div class="question-list">
-      <div v-for="q in questions" :key="q.question_id" class="question-item">
+      <div v-if="filteredQuestions.length === 0" class="no-results">
+        해당 그룹에 등록된 문제가 없습니다.
+      </div>
+      <div v-for="q in filteredQuestions" :key="q.question_id" class="question-item">
         <div class="question-header">
           <h3 class="question-title">{{ q.title }}</h3>
           <div v-if="q.group" class="question-group-path">
@@ -232,6 +254,9 @@ onMounted(async () => {
 }
 
 .group-overlay-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   font-size: 0.75rem;
   font-weight: 700;
   color: #94a3b8;
@@ -240,6 +265,32 @@ onMounted(async () => {
   letter-spacing: 0.05em;
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
   padding-bottom: 0.5rem;
+}
+
+.btn-clear-filter {
+  background: rgba(99, 102, 241, 0.2);
+  border: 1px solid rgba(99, 102, 241, 0.4);
+  color: #a5b4fc;
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.65rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-clear-filter:hover {
+  background: rgba(99, 102, 241, 0.3);
+  color: #fff;
+}
+
+.no-results {
+  text-align: center;
+  padding: 3rem;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px dashed rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  color: #64748b;
+  font-size: 1rem;
 }
 
 @media (max-width: 1400px) {
