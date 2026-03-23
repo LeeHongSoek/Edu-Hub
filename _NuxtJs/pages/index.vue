@@ -79,20 +79,25 @@ const stats = ref({
 });
 
 const fetchStats = async () => {
+  const config = useRuntimeConfig();
+  const url = `${config.public.apiBase}/stats`;
+  console.log('[fetchStats] Fetching from:', url);
   try {
-    const config = useRuntimeConfig();
-    const { data } = await useFetch(`${config.public.apiBase}/stats`);
-    if (data.value) {
-      stats.value = data.value as any;
+    const data = await $fetch(url);
+    console.log('[fetchStats] Success:', data);
+    if (data) {
+      stats.value = data as any;
     }
-  } catch (err) {
-    console.error('Failed to fetch stats:', err);
+  } catch (err: any) {
+    console.error('[fetchStats] Error:', err);
+    // 상세 에러 정보 출력
+    if (err.data) console.error('[fetchStats] Error data:', err.data);
   }
 };
 
 const handleLogin = async () => {
   if (!userIdInput.value || !passwordInput.value) {
-    authError.value = '이미일과 비밀번호를 입력해주세요.';
+    authError.value = '아이디와 비밀번호를 입력해주세요.';
     return;
   }
   

@@ -7,6 +7,8 @@ export class StatsController {
 
   @Get()
   async getStats() {
-    return this.statsService.getStats();
+    const stats = await this.statsService.getStats();
+    console.log('[StatsController] returning stats:', stats);
+    return stats;
   }
 }

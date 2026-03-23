@@ -5,57 +5,57 @@ export declare class GroupsController {
     findAll(): Promise<({
         child_groups: ({
             child_groups: {
+                description: string | null;
+                name: string;
                 creator_no: bigint;
                 group_id: bigint;
                 created_at: Date | null;
-                name: string;
                 parent_group_id: bigint | null;
                 depth: number | null;
-                description: string | null;
             }[];
         } & {
+            description: string | null;
+            name: string;
             creator_no: bigint;
             group_id: bigint;
             created_at: Date | null;
-            name: string;
             parent_group_id: bigint | null;
             depth: number | null;
-            description: string | null;
         })[];
     } & {
+        description: string | null;
+        name: string;
         creator_no: bigint;
         group_id: bigint;
         created_at: Date | null;
-        name: string;
         parent_group_id: bigint | null;
         depth: number | null;
-        description: string | null;
     })[]>;
     create(data: any): Promise<{
+        description: string | null;
+        name: string;
         creator_no: bigint;
         group_id: bigint;
         created_at: Date | null;
-        name: string;
         parent_group_id: bigint | null;
         depth: number | null;
-        description: string | null;
     }>;
     update(id: string, data: any): Promise<{
+        description: string | null;
+        name: string;
         creator_no: bigint;
         group_id: bigint;
         created_at: Date | null;
-        name: string;
         parent_group_id: bigint | null;
         depth: number | null;
-        description: string | null;
     }>;
     remove(id: string): Promise<{
+        description: string | null;
+        name: string;
         creator_no: bigint;
         group_id: bigint;
         created_at: Date | null;
-        name: string;
         parent_group_id: bigint | null;
         depth: number | null;
-        description: string | null;
     }>;
 }

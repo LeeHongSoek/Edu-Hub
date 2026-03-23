@@ -6,31 +6,31 @@ export declare class QuestionsService {
         group: ({
             parent_group: ({
                 parent_group: {
+                    description: string | null;
+                    name: string;
                     creator_no: bigint;
                     group_id: bigint;
                     created_at: Date | null;
-                    name: string;
                     parent_group_id: bigint | null;
                     depth: number | null;
-                    description: string | null;
                 } | null;
             } & {
+                description: string | null;
+                name: string;
                 creator_no: bigint;
                 group_id: bigint;
                 created_at: Date | null;
-                name: string;
                 parent_group_id: bigint | null;
                 depth: number | null;
-                description: string | null;
             }) | null;
         } & {
+            description: string | null;
+            name: string;
             creator_no: bigint;
             group_id: bigint;
             created_at: Date | null;
-            name: string;
             parent_group_id: bigint | null;
             depth: number | null;
-            description: string | null;
         }) | null;
         options: {
             question_id: bigint;
