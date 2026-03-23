@@ -59,12 +59,6 @@ const removeOption = (index: number) => {
   });
 };
 
-const setCorrectAnswer = (index: number) => {
-  editData.value.options.forEach((opt: any, i: number) => {
-    opt.is_answer = i === index;
-  });
-};
-
 const handleSave = async () => {
   isSaving.value = true;
   try {
@@ -187,10 +181,8 @@ const handleDelete = async () => {
               <input v-model="opt.content" type="text" placeholder="보기 내용" class="flex-1" />
               <label class="opt-correct">
                 <input 
-                  type="radio" 
-                  :name="'correct-ans-' + question.question_id" 
-                  :checked="opt.is_answer"
-                  @change="setCorrectAnswer(index as number)"
+                  type="checkbox" 
+                  v-model="opt.is_answer"
                 />
                 정답
               </label>

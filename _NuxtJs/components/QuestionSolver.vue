@@ -11,7 +11,7 @@ const emit = defineEmits<{
 }>();
 
 const userAnswer = ref('');
-const selectedOptionId = ref<string | number | null>(null);
+const selectedOptionIds = ref<(string | number)[]>([]);
 const timeLeft = ref(props.question.time_limit || 0);
 const isFinished = ref(false);
 const showResult = ref(false);
@@ -50,6 +50,16 @@ const formatTime = (seconds: number) => {
   return `${m}:${s < 10 ? '0' : ''}${s}`;
 };
 
+const toggleOption = (id: string | number) => {
+  if (isFinished.value) return;
+  const index = selectedOptionIds.value.indexOf(id);
+  if (index === -1) {
+    selectedOptionIds.value.push(id);
+  } else {
+    selectedOptionIds.value.splice(index, 1);
+  }
+};
+
 const handleFinish = (isTimeOver = false) => {
   if (isFinished.value) return;
   
@@ -61,8 +71,18 @@ const handleFinish = (isTimeOver = false) => {
   } else {
     // 채점 로직
     if (props.question.question_type_id?.toUpperCase() === 'M') {
-      const correctOption = props.question.options?.find(opt => opt.is_answer);
-      isCorrect.value = selectedOptionId.value == correctOption?.option_id;
+      const correctOptions = props.question.options?.filter(opt => opt.is_answer) || [];
+      const correctOptionIds = correctOptions.map(opt => opt.option_id);
+      
+      if (correctOptionIds.length === 0) {
+        // DB에 정답이 없는 경우 예외처리
+        isCorrect.value = selectedOptionIds.value.length === 0;
+      } else if (correctOptionIds.length === selectedOptionIds.value.length) {
+        // 개수가 같고, 선택한 모든 항목이 정답 목록에 포함되는지 확인
+        isCorrect.value = selectedOptionIds.value.every(id => correctOptionIds.includes(id as NonNullable<string | number>));
+      } else {
+        isCorrect.value = false;
+      }
     } else {
       const cleanUserAnswer = userAnswer.value.trim().toLowerCase();
       const cleanCorrectAnswer = props.question.answer.trim().toLowerCase();
@@ -210,11 +230,11 @@ const submitReview = async () => {
             :key="opt.option_id"
             class="option-item"
             :class="{ 
-              'is-selected': selectedOptionId === opt.option_id,
+              'is-selected': selectedOptionIds.includes(opt.option_id),
               'is-correct': showResult && opt.is_answer,
-              'is-wrong': showResult && selectedOptionId === opt.option_id && !opt.is_answer
+              'is-wrong': showResult && selectedOptionIds.includes(opt.option_id) && !opt.is_answer
             }"
-            @click="!isFinished && (selectedOptionId = opt.option_id)"
+            @click="toggleOption(opt.option_id)"
           >
             <span class="option-number">{{ opt.option_number }}</span>
             <span class="option-text">{{ opt.content }}</span>
@@ -261,7 +281,7 @@ const submitReview = async () => {
         <button 
           v-if="!isFinished" 
           class="btn-submit" 
-          :disabled="question.question_type_id === 'M' ? !selectedOptionId : !userAnswer"
+          :disabled="question.question_type_id === 'M' ? selectedOptionIds.length === 0 : !userAnswer"
           @click="handleFinish()"
         >
           정답 확인
@@ -465,6 +485,18 @@ const submitReview = async () => {
   flex: 1;
 }
 
+.solver-body::-webkit-scrollbar {
+  width: 6px;
+}
+.solver-body::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 3px;
+}
+.solver-body::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 3px;
+}
+
 .question-text {
   font-size: 1.5rem;
   font-weight: 700;
@@ -635,14 +667,13 @@ const submitReview = async () => {
 
 .star {
   font-size: 1.5rem;
-  color: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.03); /* 70% 어둡게 배경과 더 섞이도록 */
   cursor: pointer;
   transition: all 0.2s;
 }
 
 .star.is-active {
-  color: #fbbf24;
-  text-shadow: 0 0 10px rgba(245, 158, 11, 0.5);
+  color: rgba(251, 191, 36, 0.4); /* 너무 밝은 별색을 좀 더 톤다운 */
 }
 
 .star:hover {
@@ -969,10 +1000,10 @@ const submitReview = async () => {
 
 .star-small {
   font-size: 1rem;
-  color: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.03);
 }
 .star-small.is-active {
-  color: #fbbf24;
+  color: rgba(251, 191, 36, 0.4);
 }
 
 .empty-msg {

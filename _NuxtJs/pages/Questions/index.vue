@@ -2,7 +2,7 @@
 import type { Question } from '~/types';
 
 const config = useRuntimeConfig();
-const { data: questions, pending, error } = await useFetch<Question[]>(`${config.public.apiBase}/questions`);
+const { data: questions, pending, error, refresh } = await useFetch<Question[]>(`${config.public.apiBase}/questions`);
 </script>
 
 <template>
@@ -28,7 +28,7 @@ const { data: questions, pending, error } = await useFetch<Question[]>(`${config
     </div>
     
     <div v-else>
-      <QuestionList :questions="questions || []" />
+      <QuestionList :questions="questions || []" @refresh="refresh" />
     </div>
   </div>
 </template>
