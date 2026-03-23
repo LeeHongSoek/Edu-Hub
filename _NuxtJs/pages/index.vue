@@ -1,8 +1,33 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, onUnmounted } from 'vue';
 
 // 페이드인 상태
 const isLoaded = ref(false);
+
+// 소개 모달
+const showIntro = ref(false);
+let introTimer: any = null;
+
+function openIntro() {
+  showIntro.value = true;
+  document.body.style.overflow = 'hidden';
+  // 10초 뒤 자동 닫기
+  if (introTimer) clearTimeout(introTimer);
+  introTimer = setTimeout(closeIntro, 10000);
+}
+
+function closeIntro() {
+  showIntro.value = false;
+  document.body.style.overflow = '';
+  if (introTimer) {
+    clearTimeout(introTimer);
+    introTimer = null;
+  }
+}
+
+function onKeydown(e: KeyboardEvent) { if (e.key === 'Escape') closeIntro(); }
+onMounted(() => window.addEventListener('keydown', onKeydown));
+onUnmounted(() => window.removeEventListener('keydown', onKeydown));
 
 // 타이핑 애니메이션
 const typedText = ref('');
@@ -73,7 +98,7 @@ onMounted(() => {
         <nav class="nav-links">
           <a href="#">문제 풀기</a>
           <a href="#">랭킹</a>
-          <a href="#">소개</a>
+          <a href="#" @click.prevent="openIntro">소개</a>
         </nav>
       </header>
 
@@ -175,6 +200,76 @@ onMounted(() => {
 
       </div><!-- /main-row -->
     </div><!-- /content -->
+
+    <!-- ══════════════════════════════════════
+         소개 모달
+    ══════════════════════════════════════ -->
+    <Transition name="modal">
+      <div v-if="showIntro" class="modal-backdrop" @click.self="closeIntro">
+        <div class="modal-box" role="dialog" aria-modal="true" aria-label="AI Edu-Hub 소개">
+
+          <button class="modal-close" @click="closeIntro" aria-label="닫기">
+            <svg viewBox="0 0 24 24" width="20" height="20"><path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
+          </button>
+
+          <div class="modal-header">
+            <span class="modal-badge">📚 AI Edu-Hub 소개</span>
+            <h2 class="modal-title">사진 한 장으로 시작하는<br><em>우리 반 맞춤형 스마트 학습지</em></h2>
+            <p class="modal-lead">안녕하세요! AI Edu-Hub는 선생님의 문제 출제를 도와주고, 여러분에게는 나만의 AI 튜터를 부모님께는 학습 리포트를 제공하는 스마트 학습 플랫폼이에요!</p>
+          </div>
+
+          <div class="modal-grid">
+            <div class="modal-features">
+              <div class="feat-card">
+                <div class="feat-icon">📸</div>
+                <div class="feat-body">
+                  <h3>1초 문제 등록</h3>
+                  <p>선생님이 문제집 사진을 찍으면, AI가 읽어서 바로 디지털 문제로 바꿔줘요. 타이핑 없이 쉽게 시험지를 만들 수 있어요!</p>
+                </div>
+              </div>
+              <div class="feat-card">
+                <div class="feat-icon">🤖</div>
+                <div class="feat-body">
+                  <h3>포기 없는 학습</h3>
+                  <p>AI가 즉시 채점하고 틀린 이유를 설명해줘요. 복습까지 확실히 도와주니 성적이 쑥쑥!</p>
+                </div>
+              </div>
+              <div class="feat-card">
+                <div class="feat-icon">📧</div>
+                <div class="feat-body">
+                  <h3>부모님 안심 리포트</h3>
+                  <p>시험이 끝나면 점수와 분석 리포트가 부모님께 자동 발송되어 어떤 부분이 약한지 한눈에 보여줍니다.</p>
+                </div>
+              </div>
+            </div>
+
+            <div class="modal-steps">
+              <h3 class="steps-title">🚀 이렇게 사용해요!</h3>
+              <div class="steps-list">
+                <div class="step-item">
+                  <span class="step-num">1</span>
+                  <div><strong>선생님</strong>이 자료를 찍어 <strong>'우리 반 교실'</strong>에 올려요.</div>
+                </div>
+                <div class="step-item">
+                  <span class="step-num">2</span>
+                  <div><strong>학생</strong>은 앱으로 접속해 게임처럼 문제를 풀고 친구들과 토론해요!</div>
+                </div>
+                <div class="step-item">
+                  <span class="step-num">3</span>
+                  <div><strong>부모님</strong>은 리포트를 보고 따뜻한 격려를 건네요. 😊</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="modal-footer">
+            <p class="modal-slogan">AI Edu-Hub와 함께라면 공부가 더 이상 숙제가 아닌 <strong>즐거운 경험</strong>이 됩니다! 🌟</p>
+          </div>
+
+        </div>
+      </div>
+    </Transition>
+
   </div>
 </template>
 
@@ -712,4 +807,233 @@ onMounted(() => {
   .auth-card { padding: 2rem 1.5rem 1.5rem; }
   .hero-title { font-size: 2.8rem; }
 }
+
+/* ════════════════════════════════
+   소개 모달
+════════════════════════════════ */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  background: rgba(0, 0, 0, 0.72);
+  backdrop-filter: blur(6px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+}
+
+.modal-box {
+  position: relative;
+  background: rgba(10, 12, 28, 0.92);
+  backdrop-filter: blur(40px);
+  -webkit-backdrop-filter: blur(40px);
+  border: 1px solid rgba(165, 180, 252, 0.18);
+  border-radius: 28px;
+  padding: 2.75rem 2.5rem 2.5rem;
+  max-width: 884px; /* 1.3배 폭 증가 (680 * 1.3) */
+  width: 95%;
+  max-height: 95vh;
+  overflow-y: hidden; /* 데스크톱에서 스크롤 방지 */
+  box-shadow:
+    0 0 0 1px rgba(129, 140, 248, 0.1),
+    0 40px 100px -20px rgba(0, 0, 0, 0.9),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.modal-close {
+  position: absolute;
+  top: 1.25rem;
+  right: 1.25rem;
+  background: rgba(255,255,255,0.07);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(240,244,255,0.6);
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+.modal-close:hover { background: rgba(255,255,255,0.14); color: #f0f4ff; }
+
+.modal-grid {
+  display: flex;
+  gap: 2rem;
+  align-items: stretch;
+}
+
+.modal-features {
+  flex: 1.2;
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+}
+
+.modal-steps {
+  flex: 0.8;
+  height: fit-content;
+  background: rgba(129, 140, 248, 0.06);
+  border: 1px solid rgba(129, 140, 248, 0.15);
+  border-radius: 16px;
+  padding: 1.4rem 1.5rem;
+}
+
+@media (max-width: 850px) {
+  .modal-grid { flex-direction: column; }
+  .modal-box { overflow-y: auto; overflow-x: hidden; }
+}
+
+.modal-badge {
+  display: inline-block;
+  background: linear-gradient(135deg, rgba(79,70,229,0.3), rgba(124,58,237,0.3));
+  border: 1px solid rgba(165,180,252,0.25);
+  border-radius: 999px;
+  padding: 0.3rem 0.9rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #a5b4fc;
+  letter-spacing: 0.04em;
+  margin-bottom: 0.85rem;
+}
+
+.modal-title {
+  font-family: 'Nanum Myeongjo', '궁서', Georgia, serif;
+  font-size: clamp(1.45rem, 3vw, 1.9rem);
+  font-weight: 800;
+  color: #f8fafc;
+  line-height: 1.35;
+  margin-bottom: 0.9rem;
+  letter-spacing: -0.02em;
+}
+.modal-title em {
+  font-style: normal;
+  background: linear-gradient(135deg, #818cf8, #c084fc);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.modal-lead {
+  font-size: 0.93rem;
+  color: rgba(240,244,255,0.7);
+  line-height: 1.8;
+  margin-bottom: 0.5rem;
+}
+
+.feat-card {
+  display: flex;
+  gap: 1rem;
+  align-items: flex-start;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 16px;
+  padding: 1.1rem 1.2rem;
+  transition: background 0.2s, border-color 0.2s;
+}
+.feat-card:hover {
+  background: rgba(129,140,248,0.08);
+  border-color: rgba(165,180,252,0.2);
+}
+
+.feat-icon {
+  font-size: 2rem;
+  line-height: 1;
+  flex-shrink: 0;
+  margin-top: 0.1rem;
+}
+
+.feat-body h3 {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #e0e7ff;
+  margin-bottom: 0.35rem;
+}
+.feat-body p {
+  font-size: 0.85rem;
+  color: rgba(240,244,255,0.62);
+  line-height: 1.65;
+}
+
+.steps-title {
+  font-size: 1rem;
+  font-weight: 800;
+  color: #a5b4fc;
+  margin-bottom: 1rem;
+  letter-spacing: -0.01em;
+}
+
+.steps-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.step-item {
+  display: flex;
+  gap: 1rem;
+  align-items: flex-start;
+  font-size: 0.9rem;
+  color: rgba(240,244,255,0.75);
+  line-height: 1.6;
+}
+.step-item strong { color: #e0e7ff; }
+
+.step-num {
+  min-width: 28px;
+  height: 28px;
+  background: linear-gradient(135deg, #4f46e5, #7c3aed);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.8rem;
+  font-weight: 900;
+  color: #fff;
+  flex-shrink: 0;
+  margin-top: 0.1rem;
+  box-shadow: 0 4px 12px -4px rgba(99,102,241,0.5);
+}
+
+.modal-footer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.1rem;
+  padding-top: 0.8rem;
+  border-top: 1px solid rgba(255,255,255,0.07);
+}
+
+.modal-slogan {
+  text-align: center;
+  font-size: 0.92rem;
+  color: rgba(240,244,255,0.65);
+  line-height: 1.6;
+}
+.modal-slogan strong { color: #c084fc; }
+
+/* 모달 트랜지션 */
+.modal-enter-active,
+.modal-leave-active {
+  transition: opacity 0.3s ease;
+}
+.modal-enter-active .modal-box,
+.modal-leave-active .modal-box {
+  transition: opacity 0.3s ease, transform 0.3s cubic-bezier(0.34,1.56,0.64,1);
+}
+.modal-enter-from,
+.modal-leave-to {
+  opacity: 0;
+}
+.modal-enter-from .modal-box,
+.modal-leave-to .modal-box {
+  opacity: 0;
+  transform: scale(0.92) translateY(20px);
+}
+
 </style>
