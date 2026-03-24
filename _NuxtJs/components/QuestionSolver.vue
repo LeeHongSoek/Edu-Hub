@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, computed } from 'vue';
 import type { Question, QuestionReview } from '~/types';
+import LatexRenderer from '~/components/LatexRenderer.vue';
 
 const props = defineProps<{
   question: Question;
@@ -216,6 +217,12 @@ const submitReview = async () => {
           <LatexRenderer :text="question.question" />
         </div>
         
+        <div v-if="question.passage" class="question-passage">
+          <client-only>
+            <v-md-preview :text="question.passage.content_md"></v-md-preview>
+          </client-only>
+        </div>
+
         <div v-if="question.content" class="question-content">
           <LatexRenderer :text="question.content" />
         </div>
@@ -237,7 +244,9 @@ const submitReview = async () => {
             @click="toggleOption(opt.option_id)"
           >
             <span class="option-number">{{ opt.option_number }}</span>
-            <span class="option-text">{{ opt.content }}</span>
+            <span class="option-text">
+              <LatexRenderer :text="opt.content" />
+            </span>
           </div>
         </div>
 
@@ -503,6 +512,21 @@ const submitReview = async () => {
   color: #fff;
   line-height: 1.4;
   margin-bottom: 2rem;
+}
+
+.question-passage {
+  background: #fff;
+  color: #333;
+  border-radius: 12px;
+  padding: 1rem;
+  margin-bottom: 2rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+/* v-md-editor 기본 스타일 보완 */
+.question-passage :deep(.v-md-plugin-markdown-it) {
+  font-family: 'Noto Sans KR', sans-serif;
+  font-size: 1.05rem;
+  line-height: 1.6;
 }
 
 .no-options {

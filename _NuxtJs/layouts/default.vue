@@ -32,12 +32,31 @@ function handleLogout() {
       <nav class="nav-links">
         <template v-if="userInfo">
           <div class="nav-path-box">
-            <span class="path-home">홈</span>
+            <span class="path-home">
+              <svg class="icon-home" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                <polyline points="9 22 9 12 15 12 15 22"></polyline>
+              </svg>
+              홈
+            </span>
             <span class="path-sep">&gt;</span>
             <NuxtLink to="/Questions" class="path-current">문제 목록</NuxtLink>
           </div>
-          <a href="#" class="user-greeting" @click.prevent="showUserModal = true">{{ userInfo.username }}님</a>
-          <a href="#" class="logout-link" @click.prevent="handleLogout">로그아웃</a>
+          <a href="#" class="user-greeting" @click.prevent="showUserModal = true">
+            <svg class="icon-user" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+              <circle cx="12" cy="7" r="4"></circle>
+            </svg>
+            {{ userInfo.username }}님
+          </a>
+          <a href="#" class="logout-link" @click.prevent="handleLogout">
+            <svg class="icon-logout" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+              <polyline points="16 17 21 12 16 7"></polyline>
+              <line x1="21" y1="12" x2="9" y2="12"></line>
+            </svg>
+            로그아웃
+          </a>
         </template>
       </nav>
     </header>
@@ -112,7 +131,14 @@ function handleLogout() {
   color: #94a3b8;
 }
 .nav-path-box .path-home {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
   color: #94a3b8;
+}
+.icon-home {
+  width: 1rem;
+  height: 1rem;
 }
 .nav-path-box .path-sep {
   color: #475569;
@@ -123,6 +149,9 @@ function handleLogout() {
   font-weight: 600;
 }
 .user-greeting {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
   color: #a5b4fc !important;
   font-size: 0.95rem !important;
   font-weight: 600 !important;
@@ -137,11 +166,20 @@ function handleLogout() {
   color: #c7d2fe !important;
 }
 .logout-link {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
   color: rgba(240,244,255,0.5) !important;
   font-size: 0.85rem !important;
   font-weight: 400 !important;
+  text-decoration: none;
+  transition: color 0.2s;
 }
 .logout-link:hover {
   color: #f87171 !important;
+}
+.icon-user, .icon-logout {
+  width: 1.1rem;
+  height: 1.1rem;
 }
 </style>

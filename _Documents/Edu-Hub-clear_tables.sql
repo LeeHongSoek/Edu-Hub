@@ -6,6 +6,10 @@
 SET FOREIGN_KEY_CHECKS = 0;
 
 -- 2. 역순으로 테이블 모두 삭제 (IF EXISTS로 없는 테이블 무시)
+DROP TABLE IF EXISTS `enm_media_types`;
+DROP TABLE IF EXISTS `enm_question_types`;
+DROP TABLE IF EXISTS `enm_roles`;
+
 DROP TABLE IF EXISTS `solve_results`;
 DROP TABLE IF EXISTS `study_logs`;
 DROP TABLE IF EXISTS `user_comments`;
@@ -23,9 +27,7 @@ DROP TABLE IF EXISTS `parent_students`;
 DROP TABLE IF EXISTS `class_students`;
 DROP TABLE IF EXISTS `classes`;
 DROP TABLE IF EXISTS `users`;
-DROP TABLE IF EXISTS `enm_media_types`;
-DROP TABLE IF EXISTS `enm_question_types`;
-DROP TABLE IF EXISTS `enm_roles`;
+DROP TABLE IF EXISTS `question_passages`;
 
 -- 3. 외래키 검사 원상 복구
 SET FOREIGN_KEY_CHECKS = 1;

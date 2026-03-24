@@ -15,6 +15,7 @@ const editData = ref({
   title: props.question.title,
   question: props.question.question,
   content: props.question.content || '',
+  passage: props.question.passage?.content_md || '',
   question_type_id: props.question.question_type_id || 'M',
   answer: props.question.answer || '',
   explanation: props.question.explanation || '',
@@ -160,6 +161,12 @@ const handleDelete = async () => {
 
         <div class="form-section">
           <h3>문제 내용</h3>
+          <div class="form-group">
+            <label>지문 (Passage - 마크다운 및 이미지 지원)</label>
+            <client-only>
+              <v-md-editor v-model="editData.passage" height="400px" placeholder="독해 지문이나 긴 형식의 문제를 작성하세요"></v-md-editor>
+            </client-only>
+          </div>
           <div class="form-group">
             <label>질문 (Question)</label>
             <textarea v-model="editData.question" rows="3" placeholder="질문 내용을 입력하세요 (Markdown/LaTeX 지원)"></textarea>

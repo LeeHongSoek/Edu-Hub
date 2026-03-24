@@ -27,7 +27,7 @@ CREATE TABLE `enm_media_types` (
 CREATE TABLE `users` (
     `user_no`       BIGINT        PRIMARY KEY AUTO_INCREMENT COMMENT '사용자 고유 식별번호 (PK)',
     `user_id`       VARCHAR(10)   UNIQUE NOT NULL            COMMENT '일반 접속용 로그인 아이디',
-    `user_pw`       VARCHAR(10)   NOT NULL                   COMMENT '일반 접속용 로그인 암호',
+    `user_pw`       VARCHAR(255)  NOT NULL                   COMMENT '일반 접속용 로그인 암호',
     `username`      VARCHAR(50)   NOT NULL                   COMMENT '사용자 이름',
     `email`         VARCHAR(255)  UNIQUE NOT NULL            COMMENT '이메일 주소',
     `role_id`       CHAR(1)       NOT NULL                   COMMENT '사용자 권한 코드 (enm_roles 참조)',
@@ -283,3 +283,13 @@ CREATE TABLE `question_reviews` (
     CONSTRAINT `fk_review_u`
         FOREIGN KEY (`user_no`) REFERENCES `users` (`user_no`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='문제에 대한 평점 및 의견 테이블';
+
+-- 18. 서술형/독해용 마크다운 지문 (선택적)
+CREATE TABLE `question_passages` (
+    `passage_id`    BIGINT        PRIMARY KEY AUTO_INCREMENT  COMMENT '지문 고유 식별자 (PK)',
+    `question_id`   BIGINT        UNIQUE NOT NULL             COMMENT '연결된 문제 ID (1:1 권장)',
+    `content_md`    TEXT          NOT NULL                    COMMENT 'Markdown 및 이미지(삽화)가 포함된 긴 지문',
+    
+    CONSTRAINT `fk_passage_q`
+        FOREIGN KEY (`question_id`) REFERENCES `questions` (`question_id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='영어 독해 등 문제 상단의 긴 마크다운 지문';

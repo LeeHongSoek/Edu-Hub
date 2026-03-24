@@ -31,6 +31,7 @@ export interface Question {
   created_at: string | null; // 생성일시
   type: QuestionType; // 관계: 문제 유형
   group?: Group; // 관계: 소속 그룹
+  passage?: { content_md: string }; // 관계: 마크다운 지문 (1:1)
   options?: QuestionOption[]; // 관계: 보기 목록 (객관식용)
   reviews?: QuestionReview[]; // 관계: 리뷰 목록
 }

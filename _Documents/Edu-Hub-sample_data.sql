@@ -17,10 +17,10 @@ INSERT INTO `enm_media_types` (`type_id`, `type_name`, `description`) VALUES
 ('Y', 'youtube', '유튜브 동영상');
 
 -- 1. 사용자 데이터 추가
-INSERT INTO `users` (`user_id`, `username`, `email`, `role_id`) VALUES
-('hong123', '홍길동', 'teacher1@edu-hub.com', 'T'),
-('kim123', '김철수', 'student1@edu-hub.com', 'S'),
-('lee123', '이영희', 'parent1@edu-hub.com', 'P');
+INSERT INTO `users` (`user_id`, `user_pw`, `username`, `email`, `role_id`) VALUES
+('hong123', '', '홍길동', 'teacher1@edu-hub.com', 'T'),
+('kim123', '', '김철수', 'student1@edu-hub.com', 'S'),
+('lee123', '', '이영희', 'parent1@edu-hub.com', 'P');
 
 -- 2. 학급 관리, 학생 매핑, 학부모 매핑 데이터 추가
 INSERT INTO `classes` (`teacher_no`, `class_name`) VALUES
@@ -141,3 +141,18 @@ INSERT INTO `question_reviews` (`question_id`, `user_no`, `content`, `rating`, `
 (1, 2, '설명이 너무 좋네요! 감사합니다.', 5, '2026-03-23 10:00:00'),
 (1, 3, '아이가 이해하기 쉽게 설명되어있습니다.', 4, '2026-03-23 10:15:00'),
 (2, 2, '어려웠지만 이해가 잘 되었습니다.', 4, '2026-03-23 10:05:00');
+
+
+-- 샘플 데이터 추가: 독해용 마크다운 지문이 포함된 문제
+INSERT INTO `questions` (`creator_no`, `group_id`, `question_type_id`, `title`, `question`, `answer`, `explanation`, `difficulty`, `time_limit`) VALUES
+(2, NULL, 'M', '[영어] 수능 기출 독해', '다음 글의 요지로 가장 적절한 것은?', '3', '지문의 내용을 통해 Indigenous stewardship의 효과를 설명하고 있습니다.', 4, 120);
+
+INSERT INTO `question_passages` (`question_id`, `content_md`) VALUES
+(7, '### Reading Comprehension\n\n![Forest](https://images.unsplash.com/photo-1448375240586-882707db888b?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80)\n\nMany people believe that the best way to preserve nature is to keep humans out of it in completely pristine reserves. However, **recent studies** show that indigenous stewardship is often more effective at maintaining biodiversity.');
+
+INSERT INTO `question_options` (`question_id`, `option_number`, `content`, `is_answer`) VALUES
+(7, 1, '자연을 보존하려면 인간의 접근을 전면 차단해야 한다.', FALSE),
+(7, 2, '원주민의 삶의 터전을 새로운 구역으로 이주시켜야 한다.', FALSE),
+(7, 3, '원주민의 관리가 생물 다양성 유지에 더 효과적일 수 있다.', TRUE),
+(7, 4, '자연 보존 구역의 경제적 가치는 계속 하락하고 있다.', FALSE),
+(7, 5, '최근 연구는 전통적 방식의 한계를 지적하고 있다.', FALSE);

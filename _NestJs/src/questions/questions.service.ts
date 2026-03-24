@@ -10,6 +10,7 @@ export class QuestionsService {
     return this.prisma.question.findMany({
       include: {
         type: true,
+        passage: true,
         options: {
           orderBy: {
             option_number: 'asc',
@@ -40,6 +41,11 @@ export class QuestionsService {
       const question = await tx.question.create({
         data: {
           ...questionData,
+          passage: questionData.passage ? {
+            create: {
+              content_md: questionData.passage
+            }
+          } : undefined,
           options: options ? {
             create: options.map((opt: any) => ({
               option_number: opt.option_number,
@@ -48,7 +54,7 @@ export class QuestionsService {
             })),
           } : undefined,
         },
-        include: { options: true },
+        include: { options: true, passage: true },
       });
       return question;
     });
@@ -67,6 +73,23 @@ export class QuestionsService {
         });
       }
 
+      // 지문 처리: 만약 passage 속성이 있으면 upsert
+      if (questionData.passage !== undefined) {
+        if (questionData.passage) {
+          // 값이 있으면 upsert
+          await tx.questionPassage.upsert({
+            where: { question_id: questionId },
+            update: { content_md: questionData.passage },
+            create: { question_id: questionId, content_md: questionData.passage }
+          });
+        } else {
+          // 값이 빈 문자열이거나 null이면 삭제
+          await tx.questionPassage.deleteMany({
+            where: { question_id: questionId }
+          });
+        }
+      }
+
       return tx.question.update({
         where: { question_id: questionId },
         data: {
@@ -79,7 +102,7 @@ export class QuestionsService {
             })),
           } : undefined,
         },
-        include: { options: true },
+        include: { options: true, passage: true },
       });
     });
   }

@@ -54,6 +54,11 @@ export declare class QuestionsService {
             type_id: string;
             type_name: string;
         };
+        passage: {
+            question_id: bigint;
+            passage_id: bigint;
+            content_md: string;
+        } | null;
     } & {
         question: string;
         question_id: bigint;
@@ -80,6 +85,11 @@ export declare class QuestionsService {
             option_id: bigint;
             is_answer: boolean | null;
         }[];
+        passage: {
+            question_id: bigint;
+            passage_id: bigint;
+            content_md: string;
+        } | null;
     } & {
         question: string;
         question_id: bigint;
@@ -106,6 +116,11 @@ export declare class QuestionsService {
             option_id: bigint;
             is_answer: boolean | null;
         }[];
+        passage: {
+            question_id: bigint;
+            passage_id: bigint;
+            content_md: string;
+        } | null;
     } & {
         question: string;
         question_id: bigint;

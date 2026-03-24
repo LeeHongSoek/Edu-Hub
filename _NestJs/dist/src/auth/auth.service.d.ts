@@ -23,4 +23,15 @@ export declare class AuthService {
         is_withdrawn: import("@prisma/client").$Enums.IsWithdrawn | null;
     }>;
     isIdAvailable(userId: string): Promise<boolean>;
+    updateProfile(userNo: number, updateData: {
+        username?: string;
+        password?: string;
+    }): Promise<{
+        user: {
+            userId: string;
+            username: string;
+            role: string;
+            email: string;
+        };
+    } | null>;
 }

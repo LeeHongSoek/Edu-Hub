@@ -23,4 +23,15 @@ export declare class AuthController {
         isAvailable: boolean;
     }>;
     getProfile(req: any): any;
+    updateProfile(req: any, body: {
+        username?: string;
+        password?: string;
+    }): Promise<{
+        user: {
+            userId: string;
+            username: string;
+            role: string;
+            email: string;
+        };
+    } | null>;
 }

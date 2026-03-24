@@ -21,6 +21,7 @@ let QuestionsService = class QuestionsService {
         return this.prisma.question.findMany({
             include: {
                 type: true,
+                passage: true,
                 options: {
                     orderBy: {
                         option_number: 'asc',
@@ -49,6 +50,11 @@ let QuestionsService = class QuestionsService {
             const question = await tx.question.create({
                 data: {
                     ...questionData,
+                    passage: questionData.passage ? {
+                        create: {
+                            content_md: questionData.passage
+                        }
+                    } : undefined,
                     options: options ? {
                         create: options.map((opt) => ({
                             option_number: opt.option_number,
@@ -57,7 +63,7 @@ let QuestionsService = class QuestionsService {
                         })),
                     } : undefined,
                 },
-                include: { options: true },
+                include: { options: true, passage: true },
             });
             return question;
         });
@@ -71,6 +77,20 @@ let QuestionsService = class QuestionsService {
                     where: { question_id: questionId },
                 });
             }
+            if (questionData.passage !== undefined) {
+                if (questionData.passage) {
+                    await tx.questionPassage.upsert({
+                        where: { question_id: questionId },
+                        update: { content_md: questionData.passage },
+                        create: { question_id: questionId, content_md: questionData.passage }
+                    });
+                }
+                else {
+                    await tx.questionPassage.deleteMany({
+                        where: { question_id: questionId }
+                    });
+                }
+            }
             return tx.question.update({
                 where: { question_id: questionId },
                 data: {
@@ -83,7 +103,7 @@ let QuestionsService = class QuestionsService {
                         })),
                     } : undefined,
                 },
-                include: { options: true },
+                include: { options: true, passage: true },
             });
         });
     }
