@@ -317,7 +317,7 @@ onMounted(() => {
 
         <!-- 왼쪽: 히어로 카피 -->
         <section class="hero">
-          <p class="eyebrow">✦ &nbsp;AI 시대 지식 혁명의 플랫폼</p>
+          <p class="eyebrow">✦ &nbsp;AI 시대의 지식 혁명 플랫폼</p>
 
           <!-- 사전 표제어 스타일 타이틀 -->
           <div class="dict-entry" role="heading" aria-level="1">
@@ -350,7 +350,7 @@ onMounted(() => {
               <div v-if="showTicker && tickerQuestions.length > 0" class="ticker-box">
                 <div class="ticker-label">
                   <span class="ticker-dot"></span>
-                  최신 문제 리스트
+                  최신 등록문제 리스트
                 </div>
                 <div class="ticker-window">
                   <div class="ticker-track">
@@ -610,6 +610,13 @@ onMounted(() => {
   display: flex;
   flex-direction: column;
   color: #f0f4ff;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.page input,
+.page textarea {
+  user-select: text;
+  -webkit-user-select: text;
 }
 
 /* ─────────────────────────────────────
