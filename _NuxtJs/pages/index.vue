@@ -900,6 +900,9 @@ onMounted(() => {
   gap: 1.2rem;
   font-family: 'JetBrains Mono', 'Menlo', monospace;
   font-size: 0.95rem;
+  overflow: hidden;
+  flex-shrink: 0;
+  white-space: nowrap;
 }
 
 .t-id { color: rgba(255, 255, 255, 0.35); font-size: 0.8rem; }
@@ -912,6 +915,15 @@ onMounted(() => {
   display: inline-block;
   max-width: 540px;
   vertical-align: middle;
+  line-height: 30px;
+}
+.t-text :deep(.katex-display) {
+  display: inline;
+  margin: 0;
+  text-align: left;
+}
+.t-text :deep(.katex-display > .katex) {
+  display: inline;
 }
 .t-new {
   font-size: 0.6rem;
