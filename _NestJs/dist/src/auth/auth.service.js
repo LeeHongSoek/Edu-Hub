@@ -75,6 +75,7 @@ let AuthService = class AuthService {
             user: {
                 userId: user.user_id,
                 username: user.username,
+                email: user.email,
                 role: user.role_id
             }
         };

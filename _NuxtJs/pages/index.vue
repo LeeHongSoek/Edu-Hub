@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, computed } from 'vue';
 import LatexRenderer from '~/components/LatexRenderer.vue';
-import UserProfileModal from '~/components/UserProfileModal.vue';
+
 
 definePageMeta({ layout: false });
 
@@ -289,6 +289,13 @@ function closeRegister() {
 }
 
 onMounted(() => {
+  // 이미 로그인 상태면 문제 목록으로 리디렉트
+  const authToken = useCookie('auth_token');
+  if (authToken.value) {
+    navigateTo('/Questions');
+    return;
+  }
+
   setTimeout(() => { isLoaded.value = true; }, 80);
   setTimeout(typeLoop, 1600);
   fetchStats();
@@ -639,12 +646,7 @@ onMounted(() => {
       </div>
     </Transition>
 
-    <!-- 사용자 정보 수정 모달 -->
-    <UserProfileModal 
-      v-if="showUserModal && loggedInUser" 
-      :user="loggedInUser" 
-      @close="showUserModal = false" 
-    />
+
 
   </div>
 </template>

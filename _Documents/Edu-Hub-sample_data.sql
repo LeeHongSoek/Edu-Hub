@@ -17,10 +17,12 @@ INSERT INTO `enm_media_types` (`type_id`, `type_name`, `description`) VALUES
 ('Y', 'youtube', '유튜브 동영상');
 
 -- 1. 사용자 데이터 추가
-INSERT INTO `users` (`user_id`, `user_pw`, `username`, `email`, `role_id`) VALUES
-('hong123', '', '홍길동', 'teacher1@edu-hub.com', 'T'),
-('kim123', '', '김철수', 'student1@edu-hub.com', 'S'),
-('lee123', '', '이영희', 'parent1@edu-hub.com', 'P');
+ INSERT INTO `users` (`user_id`,`user_pw`,`username`,`email`,`role_id`,`is_withdrawn`) VALUES
+	 ('hong123','','홍길동','teacher1@edu-hub.com','T','N'),
+	 ('kim123','','김철수','student1@edu-hub.com','S','N'),
+	 ('lee123','','이영희','parent1@edu-hub.com','P','N'),
+	 ('aaa','$2b$10$8DUUwzrxVmk1ilG2akDWy.9me9C9WP9n.Y..bhBQj4aT21tNhayJ6','이홍석','aaa@aa.aaa','S','N');
+
 
 -- 2. 학급 관리, 학생 매핑, 학부모 매핑 데이터 추가
 INSERT INTO `classes` (`teacher_no`, `class_name`) VALUES

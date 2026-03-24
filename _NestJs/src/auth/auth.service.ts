@@ -8,7 +8,7 @@ export class AuthService {
   constructor(
     private prisma: PrismaService,
     private jwtService: JwtService,
-  ) {}
+  ) { }
 
   async validateUser(userId: string, pass: string): Promise<any> {
     const user = await this.prisma.user.findUnique({
@@ -23,16 +23,17 @@ export class AuthService {
   }
 
   async login(user: any) {
-    const payload = { 
-      username: user.username, 
-      sub: user.user_no.toString(), 
-      role: user.role_id 
+    const payload = {
+      username: user.username,
+      sub: user.user_no.toString(),
+      role: user.role_id
     };
     return {
       access_token: this.jwtService.sign(payload),
       user: {
         userId: user.user_id,
         username: user.username,
+        email: user.email,
         role: user.role_id
       }
     };
