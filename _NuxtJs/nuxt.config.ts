@@ -1,5 +1,11 @@
+import svgLoader from 'vite-svg-loader';
+
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
+  vite: {
+    // @ts-expect-error type mismatch between Nuxt's Vite and vite-svg-loader
+    plugins: [svgLoader()]
+  },
   devtools: {
     enabled: true,
 

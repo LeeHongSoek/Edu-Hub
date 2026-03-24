@@ -18,6 +18,7 @@
     "vue-router": "^5.0.3"
   },
   "devDependencies": {
-    "@types/katex": "^0.16.8"
+    "@types/katex": "^0.16.8",
+    "vite-svg-loader": "^5.1.1"
   }
 }

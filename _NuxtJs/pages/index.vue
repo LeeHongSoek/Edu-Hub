@@ -1,7 +1,13 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, computed } from 'vue';
 import LatexRenderer from '~/components/LatexRenderer.vue';
-
+import IconHome from '~/assets/icons/IconHome.svg?component';
+import IconUser from '~/assets/icons/IconUser.svg?component';
+import IconLogout from '~/assets/icons/IconLogout.svg?component';
+import IconEye from '~/assets/icons/IconEye.svg?component';
+import IconEyeOff from '~/assets/icons/IconEyeOff.svg?component';
+import IconArrowRight from '~/assets/icons/IconArrowRight.svg?component';
+import IconClose from '~/assets/icons/IconClose.svg?component';
 
 definePageMeta({ layout: false });
 
@@ -339,28 +345,18 @@ onMounted(() => {
           <template v-if="loggedInUser">
             <div class="nav-path-box">
               <span class="path-home">
-                <svg class="icon-home" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
-                  <polyline points="9 22 9 12 15 12 15 22"></polyline>
-                </svg>
+                <IconHome class="icon-home" />
                 홈
               </span>
               <span class="path-sep">&gt;</span>
               <NuxtLink to="/Questions" class="path-current">문제 목록</NuxtLink>
             </div>
             <a href="#" class="user-greeting" @click.prevent="showUserModal = true">
-              <svg class="icon-user" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-                <circle cx="12" cy="7" r="4"></circle>
-              </svg>
+              <IconUser class="icon-user" />
               {{ loggedInUser.username }}님
             </a>
             <a href="#" class="logout-link" @click.prevent="handleLogout">
-              <svg class="icon-logout" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
-                <polyline points="16 17 21 12 16 7"></polyline>
-                <line x1="21" y1="12" x2="9" y2="12"></line>
-              </svg>
+              <IconLogout class="icon-logout" />
               로그아웃
             </a>
           </template>
@@ -456,8 +452,8 @@ onMounted(() => {
                 <div class="pw-wrap">
                   <input id="pw" v-model="passwordInput" :type="showLoginPw ? 'text' : 'password'" required />
                   <button type="button" class="pw-toggle" @click="showLoginPw = !showLoginPw" aria-label="비밀번호 보기">
-                    <svg v-if="!showLoginPw" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg>
-                    <svg v-else viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+                    <IconEye v-if="!showLoginPw" width="18" height="18" />
+                    <IconEyeOff v-else width="18" height="18" />
                   </button>
                 </div>
               </div>
@@ -468,7 +464,7 @@ onMounted(() => {
               </div>
               <button class="btn-login" :disabled="isLoggingIn">
                 {{ isLoggingIn ? '로그인 중...' : '로그인' }}
-                <svg v-if="!isLoggingIn" viewBox="0 0 24 24" width="16" height="16"><path d="M13.172 12l-4.95-4.95 1.414-1.414L16 12l-6.364 6.364-1.414-1.414z" fill="currentColor"/></svg>
+                <IconArrowRight v-if="!isLoggingIn" width="16" height="16" />
               </button>
             </form>
 
@@ -503,7 +499,7 @@ onMounted(() => {
         <div class="modal-box" role="dialog" aria-modal="true" aria-label="AI Edu-Hub 소개">
 
           <button class="modal-close" @click="closeIntro" aria-label="닫기">
-            <svg viewBox="0 0 24 24" width="20" height="20"><path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
+            <IconClose width="20" height="20" />
           </button>
 
           <div class="modal-header">
@@ -571,7 +567,7 @@ onMounted(() => {
       <div v-if="showRegister" class="modal-backdrop" @click.self="closeRegister">
         <div class="modal-box reg-modal" role="dialog" aria-modal="true" aria-label="회원가입">
           <button class="modal-close" @click="closeRegister" aria-label="닫기">
-            <svg viewBox="0 0 24 24" width="20" height="20"><path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
+            <IconClose width="20" height="20" />
           </button>
 
           <div class="modal-header">
@@ -607,8 +603,8 @@ onMounted(() => {
                 <div class="pw-wrap">
                   <input v-model="regPassword" :type="showRegPw ? 'text' : 'password'" required />
                   <button type="button" class="pw-toggle" @click="showRegPw = !showRegPw" aria-label="비밀번호 보기">
-                    <svg v-if="!showRegPw" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg>
-                    <svg v-else viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+                    <IconEye v-if="!showRegPw" width="18" height="18" />
+                    <IconEyeOff v-else width="18" height="18" />
                   </button>
                 </div>
               </div>
@@ -617,8 +613,8 @@ onMounted(() => {
                 <div class="pw-wrap">
                   <input v-model="regPasswordConfirm" :type="showRegPwConfirm ? 'text' : 'password'" required />
                   <button type="button" class="pw-toggle" @click="showRegPwConfirm = !showRegPwConfirm" aria-label="비밀번호 보기">
-                    <svg v-if="!showRegPwConfirm" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg>
-                    <svg v-else viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+                    <IconEye v-if="!showRegPwConfirm" width="18" height="18" />
+                    <IconEyeOff v-else width="18" height="18" />
                   </button>
                 </div>
               </div>
