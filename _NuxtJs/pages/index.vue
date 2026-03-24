@@ -632,13 +632,6 @@ onMounted(() => {
   display: flex;
   flex-direction: column;
   color: #f0f4ff;
-  user-select: none;
-  -webkit-user-select: none;
-}
-.page input,
-.page textarea {
-  user-select: text;
-  -webkit-user-select: text;
 }
 
 /* ─────────────────────────────────────
