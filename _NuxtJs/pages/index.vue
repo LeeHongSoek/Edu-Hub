@@ -2,6 +2,8 @@
 import { ref, onMounted, onUnmounted } from 'vue';
 import LatexRenderer from '~/components/LatexRenderer.vue';
 
+definePageMeta({ layout: false });
+
 // 페이드인 상태
 const isLoaded = ref(false);
 
@@ -70,6 +72,23 @@ const userIdInput = ref('');
 const passwordInput = ref('');
 const isLoggingIn = ref(false);
 const authError = ref('');
+
+// 세션 사용자 정보
+const userCookie = useCookie('user_info');
+const loggedInUser = computed(() => {
+  if (!userCookie.value) return null;
+  try {
+    return typeof userCookie.value === 'string'
+      ? JSON.parse(userCookie.value)
+      : userCookie.value;
+  } catch { return null; }
+});
+
+function handleLogout() {
+  const token = useCookie('auth_token');
+  token.value = null;
+  userCookie.value = null;
+}
 
 // 비밀번호 표시 토글
 const showLoginPw = ref(false);
@@ -154,9 +173,7 @@ const handleLogin = async () => {
       const user = useCookie('user_info');
       user.value = JSON.stringify((data.value as any).user);
 
-      alert(`${(data.value as any).user.username}님, 환영합니다!`);
-      // 필요 시 페이지 이동
-      // window.location.href = '/questions';
+      navigateTo('/Questions');
     }
   } catch (err) {
     authError.value = '서버 연결에 실패했습니다.';
@@ -308,7 +325,12 @@ onMounted(() => {
           <span class="logo-text">Edu<em>Hub</em></span>
         </div>
         <nav class="nav-links">
-          <a href="#" @click.prevent="openIntro">소개</a>
+          <a v-if="!loggedInUser" href="#" @click.prevent="openIntro">소개</a>
+          <template v-if="loggedInUser">
+            <NuxtLink to="/Questions">문제 목록</NuxtLink>
+            <span class="user-greeting">{{ loggedInUser.username }}님</span>
+            <a href="#" class="logout-link" @click.prevent="handleLogout">로그아웃</a>
+          </template>
         </nav>
       </header>
 
@@ -394,7 +416,7 @@ onMounted(() => {
             <form @submit.prevent="handleLogin" class="form">
               <div class="field">
                 <label for="email">이메일/ID</label>
-                <input id="email" v-model="userIdInput" type="text" placeholder="아이디를 입력하세요" required />
+                <input id="email" v-model="userIdInput" type="text" placeholder="아이디를 입력하세요" required style="ime-mode: inactive;" inputmode="url" autocapitalize="none" />
               </div>
               <div class="field">
                 <label for="pw">비밀번호</label>
@@ -530,7 +552,7 @@ onMounted(() => {
               <div class="field full-width id-field">
                 <label>아이디</label>
                 <div class="input-with-btn">
-                  <input v-model="regUserId" type="text" placeholder="10자 이내" required @input="isIdChecked = false" />
+                  <input v-model="regUserId" type="text" placeholder="10자 이내" required @input="isIdChecked = false" style="ime-mode: inactive;" inputmode="url" autocapitalize="none" />
                   <button type="button" class="btn-check" @click="checkId" :disabled="checkingId">
                     {{ checkingId ? '...' : '중복확인' }}
                   </button>
@@ -722,7 +744,8 @@ onMounted(() => {
 }
 .nav-links {
   display: flex;
-  gap: 2.5rem;
+  align-items: center;
+  gap: 1.2rem;
 }
 .nav-links a {
   color: rgba(240,244,255,0.65);
