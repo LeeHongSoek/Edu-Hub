@@ -8,6 +8,7 @@ import IconEye from '~/assets/icons/IconEye.svg?component';
 import IconEyeOff from '~/assets/icons/IconEyeOff.svg?component';
 import IconArrowRight from '~/assets/icons/IconArrowRight.svg?component';
 import IconClose from '~/assets/icons/IconClose.svg?component';
+import IconInfo from '~/assets/icons/IconInfo.svg?component';
 
 definePageMeta({ layout: false });
 
@@ -341,13 +342,12 @@ onMounted(() => {
           <span class="logo-text">Edu<em>Hub</em></span>
         </div>
         <nav class="nav-links">
-          <a v-if="!loggedInUser" href="#" @click.prevent="openIntro">소개</a>
+          <a v-if="!loggedInUser" href="#" @click.prevent="openIntro" class="intro-link">
+            <IconInfo class="icon-info" />소개
+          </a>
           <template v-if="loggedInUser">
             <div class="nav-path-box">
-              <span class="path-home">
-                <IconHome class="icon-home" />
-                홈
-              </span>
+              <span class="path-home"><IconHome class="icon-home" />홈</span>
               <span class="path-sep">&gt;</span>
               <NuxtLink to="/Questions" class="path-current">문제 목록</NuxtLink>
             </div>
@@ -780,6 +780,16 @@ onMounted(() => {
   transition: color 0.25s;
 }
 .nav-links a:hover { color: #f0f4ff; }
+.intro-link {
+  display: flex !important;
+  align-items: center;
+  gap: 0.35rem;
+}
+.icon-info {
+  width: 17px;
+  height: 17px;
+  color: inherit;
+}
 
 /* ─── 메인 행 ─── */
 .main-row {
