@@ -71,6 +71,11 @@ const passwordInput = ref('');
 const isLoggingIn = ref(false);
 const authError = ref('');
 
+// 비밀번호 표시 토글
+const showLoginPw = ref(false);
+const showRegPw = ref(false);
+const showRegPwConfirm = ref(false);
+
 // 통계 데이터
 const stats = ref({
   questions: 0,
@@ -312,7 +317,7 @@ onMounted(() => {
 
         <!-- 왼쪽: 히어로 카피 -->
         <section class="hero">
-          <p class="eyebrow">✦ &nbsp;2026 지식 혁명의 플랫폼</p>
+          <p class="eyebrow">✦ &nbsp;AI 시대 지식 혁명의 플랫폼</p>
 
           <!-- 사전 표제어 스타일 타이틀 -->
           <div class="dict-entry" role="heading" aria-level="1">
@@ -393,9 +398,15 @@ onMounted(() => {
               </div>
               <div class="field">
                 <label for="pw">비밀번호</label>
-                <input id="pw" v-model="passwordInput" type="password" required />
+                <div class="pw-wrap">
+                  <input id="pw" v-model="passwordInput" :type="showLoginPw ? 'text' : 'password'" required />
+                  <button type="button" class="pw-toggle" @click="showLoginPw = !showLoginPw" aria-label="비밀번호 보기">
+                    <svg v-if="!showLoginPw" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg>
+                    <svg v-else viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+                  </button>
+                </div>
               </div>
-              <div v-if="authError" class="auth-error-msg">{{ authError }}</div>
+              <div class="auth-error-msg">{{ authError }}&nbsp;</div>
               <div class="row-util">
                 <label class="chk"><input type="checkbox" />로그인 유지</label>
                 <a href="#" class="link-sm">비밀번호 찾기</a>
@@ -538,11 +549,23 @@ onMounted(() => {
               </div>
               <div class="field">
                 <label>비밀번호</label>
-                <input v-model="regPassword" type="password" required />
+                <div class="pw-wrap">
+                  <input v-model="regPassword" :type="showRegPw ? 'text' : 'password'" required />
+                  <button type="button" class="pw-toggle" @click="showRegPw = !showRegPw" aria-label="비밀번호 보기">
+                    <svg v-if="!showRegPw" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg>
+                    <svg v-else viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+                  </button>
+                </div>
               </div>
               <div class="field">
                 <label>비밀번호 확인</label>
-                <input v-model="regPasswordConfirm" type="password" required />
+                <div class="pw-wrap">
+                  <input v-model="regPasswordConfirm" :type="showRegPwConfirm ? 'text' : 'password'" required />
+                  <button type="button" class="pw-toggle" @click="showRegPwConfirm = !showRegPwConfirm" aria-label="비밀번호 보기">
+                    <svg v-if="!showRegPwConfirm" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg>
+                    <svg v-else viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+                  </button>
+                </div>
               </div>
               <div class="field full-width">
                 <label>가입 유형</label>
@@ -1051,6 +1074,7 @@ onMounted(() => {
   border: 1px solid rgba(255,255,255,0.1);
   border-radius: 10px;
   padding: 0.82rem 1rem;
+  height: 3rem;
   font-size: 0.95rem;
   color: #f1f5f9;
   font-family: inherit;
@@ -1063,6 +1087,33 @@ onMounted(() => {
   background: rgba(255,255,255,1);
   box-shadow: 0 0 0 3px rgba(129,140,248,0.18);
   color: #000;
+}
+
+/* 비밀번호 입력 래퍼 */
+.pw-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+.pw-wrap input {
+  width: 100%;
+  padding-right: 2.8rem;
+}
+.pw-toggle {
+  position: absolute;
+  right: 0.6rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #64748b;
+  padding: 0.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.2s;
+}
+.pw-toggle:hover {
+  color: #a5b4fc;
 }
 
 /* 비밀번호 폰트 크기 확대 */
@@ -1158,6 +1209,8 @@ input[type="password"] {
   font-size: 0.8rem;
   font-weight: 500;
   margin-top: -0.25rem;
+  min-height: 1.4rem;
+  line-height: 1.4rem;
 }
 
 .btn-login:disabled {
