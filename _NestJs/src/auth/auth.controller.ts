@@ -1,4 +1,4 @@
-import { Controller, Post, Body, Get, UseGuards, Request, UnauthorizedException, Param } from '@nestjs/common';
+import { Controller, Post, Body, Get, Put, UseGuards, Request, UnauthorizedException, Param } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 
@@ -30,5 +30,12 @@ export class AuthController {
   @Get('profile')
   getProfile(@Request() req) {
     return req.user;
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Put('profile')
+  async updateProfile(@Request() req, @Body() body: { username?: string; password?: string }) {
+    const userNo = parseInt(req.user.sub, 10);
+    return this.authService.updateProfile(userNo, body);
   }
 }

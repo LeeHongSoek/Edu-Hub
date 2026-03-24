@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue';
+import { ref, onMounted, onUnmounted, computed } from 'vue';
 import LatexRenderer from '~/components/LatexRenderer.vue';
+import UserProfileModal from '~/components/UserProfileModal.vue';
 
 definePageMeta({ layout: false });
 
@@ -83,6 +84,8 @@ const loggedInUser = computed(() => {
       : userCookie.value;
   } catch { return null; }
 });
+
+const showUserModal = ref(false);
 
 function handleLogout() {
   const token = useCookie('auth_token');
@@ -327,8 +330,12 @@ onMounted(() => {
         <nav class="nav-links">
           <a v-if="!loggedInUser" href="#" @click.prevent="openIntro">소개</a>
           <template v-if="loggedInUser">
-            <NuxtLink to="/Questions">문제 목록</NuxtLink>
-            <span class="user-greeting">{{ loggedInUser.username }}님</span>
+            <div class="nav-path-box">
+              <span class="path-home">홈</span>
+              <span class="path-sep">&gt;</span>
+              <NuxtLink to="/Questions" class="path-current">문제 목록</NuxtLink>
+            </div>
+            <a href="#" class="user-greeting" @click.prevent="showUserModal = true">{{ loggedInUser.username }}님</a>
             <a href="#" class="logout-link" @click.prevent="handleLogout">로그아웃</a>
           </template>
         </nav>
@@ -612,6 +619,13 @@ onMounted(() => {
         </div>
       </div>
     </Transition>
+
+    <!-- 사용자 정보 수정 모달 -->
+    <UserProfileModal 
+      v-if="showUserModal && loggedInUser" 
+      :user="loggedInUser" 
+      @close="showUserModal = false" 
+    />
 
   </div>
 </template>
@@ -1225,6 +1239,60 @@ input[type="password"] {
 .btn-google:hover {
   background: rgba(255,255,255,0.09);
   border-color: rgba(255,255,255,0.22);
+}
+
+.nav-links a.router-link-active {
+  color: #f0f4ff;
+}
+.nav-path-box {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem 0.8rem;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  backdrop-filter: blur(4px);
+  font-size: 0.9rem;
+  color: #94a3b8;
+}
+.nav-path-box .path-home {
+  color: #94a3b8;
+}
+.nav-path-box .path-sep {
+  color: #475569;
+  font-size: 0.8rem;
+}
+.nav-path-box .path-current {
+  color: #e2e8f0;
+  font-weight: 600;
+  text-decoration: none;
+}
+.user-greeting {
+  color: #a5b4fc !important;
+  font-size: 0.95rem !important;
+  font-weight: 600 !important;
+  margin-left: 0.5rem;
+  text-decoration: none;
+  padding: 0.4rem 0.8rem;
+  border-radius: 8px;
+  transition: all 0.2s;
+}
+.user-greeting:hover {
+  background: rgba(99, 102, 241, 0.1);
+  color: #c7d2fe !important;
+}
+.logout-link {
+  color: #ef4444;
+  font-size: 0.8rem;
+  font-weight: 500;
+  margin-top: 0.5rem;
+  text-align: center;
+  text-decoration: none;
+  display: block;
+}
+.logout-link:hover {
+  text-decoration: underline;
 }
 
 .auth-error-msg {

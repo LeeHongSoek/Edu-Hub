@@ -1,4 +1,8 @@
 <script setup lang="ts">
+import { ref, computed } from 'vue';
+import UserProfileModal from '~/components/UserProfileModal.vue';
+
+const showUserModal = ref(false);
 const userCookie = useCookie('user_info');
 
 const userInfo = computed(() => {
@@ -27,8 +31,12 @@ function handleLogout() {
       </NuxtLink>
       <nav class="nav-links">
         <template v-if="userInfo">
-          홈 > <NuxtLink to="/Questions">문제 목록</NuxtLink>
-          <span class="user-greeting">{{ userInfo.username }}님</span>
+          <div class="nav-path-box">
+            <span class="path-home">홈</span>
+            <span class="path-sep">&gt;</span>
+            <NuxtLink to="/Questions" class="path-current">문제 목록</NuxtLink>
+          </div>
+          <a href="#" class="user-greeting" @click.prevent="showUserModal = true">{{ userInfo.username }}님</a>
           <a href="#" class="logout-link" @click.prevent="handleLogout">로그아웃</a>
         </template>
       </nav>
@@ -36,6 +44,11 @@ function handleLogout() {
     <main>
       <slot />
     </main>
+    <UserProfileModal 
+      v-if="showUserModal && userInfo" 
+      :user="userInfo" 
+      @close="showUserModal = false" 
+    />
   </div>
 </template>
 
@@ -86,11 +99,42 @@ function handleLogout() {
 .nav-links a.router-link-active {
   color: #f0f4ff;
 }
-.user-greeting {
-  color: #a5b4fc;
+.nav-path-box {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem 0.8rem;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  backdrop-filter: blur(4px);
   font-size: 0.9rem;
+  color: #94a3b8;
+}
+.nav-path-box .path-home {
+  color: #94a3b8;
+}
+.nav-path-box .path-sep {
+  color: #475569;
+  font-size: 0.8rem;
+}
+.nav-path-box .path-current {
+  color: #e2e8f0;
   font-weight: 600;
+}
+.user-greeting {
+  color: #a5b4fc !important;
+  font-size: 0.95rem !important;
+  font-weight: 600 !important;
   margin-left: 0.5rem;
+  text-decoration: none;
+  padding: 0.4rem 0.8rem;
+  border-radius: 8px;
+  transition: all 0.2s;
+}
+.user-greeting:hover {
+  background: rgba(99, 102, 241, 0.1);
+  color: #c7d2fe !important;
 }
 .logout-link {
   color: rgba(240,244,255,0.5) !important;

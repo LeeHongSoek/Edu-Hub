@@ -87,16 +87,25 @@ const toggleExpand = (event: Event) => {
 }
 
 .toggle-icon {
-  font-size: 0.6rem;
-  color: #64748b;
-  transition: transform 0.2s;
+  font-size: 0.75rem; /* 기본 0.6에서 20% 이상 확대 */
+  color: #94a3b8; /* 기존보다 살짝 밝게 */
+  transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275), color 0.2s;
   display: inline-block;
-  width: 1rem;
+  width: 1.2rem;
   text-align: center;
+}
+
+.toggle-icon:hover {
+  color: #ababc6; /* 마우스 오버 시 완전 밝게 */
+  transform: scale(1.7); /* 살짝 더 커짐 */
 }
 
 .toggle-icon.is-expanded {
   transform: rotate(90deg);
+}
+
+.toggle-icon.is-expanded:hover {
+  transform: rotate(90deg) scale(1.3);
 }
 
 .bullet {
