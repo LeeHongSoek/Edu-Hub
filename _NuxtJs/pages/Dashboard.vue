@@ -3,6 +3,7 @@ import { ref, onMounted, computed } from 'vue';
 import StudentDashboard from '~/components/dashboard/StudentDashboard.vue';
 import TeacherDashboard from '~/components/dashboard/TeacherDashboard.vue';
 import ParentDashboard from '~/components/dashboard/ParentDashboard.vue';
+import StudyLogViewer from '~/components/dashboard/StudyLogViewer.vue';
 
 const userCookie = useCookie('user_info');
 const userInfo = computed(() => {
@@ -14,7 +15,7 @@ const userInfo = computed(() => {
   } catch { return null; }
 });
 
-const activeTab = ref('stats'); // 'stats', 'relations', 'messages'
+const activeTab = ref('stats'); // 'stats', 'relations', 'messages', 'logs'
 
 onMounted(() => {
   if (!userInfo.value) {
@@ -52,6 +53,11 @@ onMounted(() => {
         :class="{ active: activeTab === 'messages' }" 
         @click="activeTab = 'messages'"
       >💬 메시지 함</button>
+      <button 
+        v-if="userInfo.role_id === 'S'"
+        :class="{ active: activeTab === 'logs' }" 
+        @click="activeTab = 'logs'"
+      >🕒 학습 활동 로그</button>
     </div>
 
     <div class="dashboard-content">
@@ -67,6 +73,10 @@ onMounted(() => {
       
       <div v-else-if="activeTab === 'messages'">
         <MessageManager />
+      </div>
+      
+      <div v-else-if="activeTab === 'logs'">
+        <StudyLogViewer />
       </div>
     </div>
   </div>

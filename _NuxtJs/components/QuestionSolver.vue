@@ -38,6 +38,24 @@ const newRating = ref(5);
 const isSubmittingReview = ref(false);
 
 let timerInterval: any = null;
+const hasStartedSolving = ref(false);
+
+const logAction = async (action: string) => {
+  const config = useRuntimeConfig();
+  const token = useCookie('auth_token');
+  try {
+    await $fetch(`${config.public.apiBase}/study-logs`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token.value}` },
+      body: {
+        question_id: props.question.question_id.toString(),
+        user_memo: action
+      }
+    });
+  } catch (err) {
+    console.warn('Failed to log action:', action, err);
+  }
+};
 
 const startTimer = () => {
   if (timeLeft.value > 0) {
@@ -60,11 +78,22 @@ const formatTime = (seconds: number) => {
 
 const toggleOption = (id: string | number) => {
   if (isFinished.value) return;
+  if (!hasStartedSolving.value) {
+    hasStartedSolving.value = true;
+    logAction('문제풀기');
+  }
   const index = selectedOptionIds.value.indexOf(id);
   if (index === -1) {
     selectedOptionIds.value.push(id);
   } else {
     selectedOptionIds.value.splice(index, 1);
+  }
+};
+
+const handleInput = () => {
+  if (!hasStartedSolving.value && userAnswer.value.trim().length > 0) {
+    hasStartedSolving.value = true;
+    logAction('문제풀기');
   }
 };
 
@@ -104,14 +133,15 @@ const handleFinish = (isTimeOver = false) => {
     modalType.value = 'warning';
     modalTitle.value = '시간 초과! ⏰';
     modalMessage.value = '제한 시간이 다 되어 오답 처리되었습니다.';
-  } else if (isCorrect.value) {
-    modalType.value = 'success';
-    modalTitle.value = '정답입니다! 🎉';
-    modalMessage.value = '정말 잘하셨어요! 다음 문제도 도전해 보세요.';
-  } else {
+    logAction('제한시간초과');
+    isCorrect.value = false;
     modalType.value = 'error';
     modalTitle.value = '아쉽게도 틀렸습니다. 😢';
+    const submitted = props.question.question_type_id?.toUpperCase() === 'M' 
+      ? selectedOptionIds.value.join(',') 
+      : userAnswer.value;
     modalMessage.value = `정답은 "${props.question.answer || '해설 참조'}" 입니다. 해설을 확인해 보세요.`;
+    logAction(`오답(${submitted}, 정답은:${props.question.answer})`);
   }
   showModal.value = true;
 };
@@ -125,6 +155,7 @@ const handleKeyDown = (e: KeyboardEvent) => {
 onMounted(() => {
   console.log('Solve Screen Data:', props.question); // 데이터 검증용 로그
   startTimer();
+  logAction('문제보기');
   window.addEventListener('keydown', handleKeyDown);
 });
 
@@ -268,6 +299,7 @@ const submitReview = async () => {
             class="answer-input"
             :disabled="isFinished"
             @keyup.enter="!isFinished && handleFinish()"
+            @input="handleInput"
           />
         </div>
       </div>
