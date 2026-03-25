@@ -22,8 +22,10 @@ let ExamsController = class ExamsController {
         this.examsService = examsService;
     }
     async findAll(req) {
-        const userNo = BigInt(req.user.user_no);
-        return this.examsService.findAll(userNo);
+        const userNoVal = req.user?.user_no || req.user?.userNo;
+        if (!userNoVal)
+            throw new common_1.UnauthorizedException();
+        return this.examsService.findAll(BigInt(userNoVal));
     }
 };
 exports.ExamsController = ExamsController;

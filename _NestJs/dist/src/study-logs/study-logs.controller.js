@@ -22,8 +22,14 @@ let StudyLogsController = class StudyLogsController {
         this.studyLogsService = studyLogsService;
     }
     async create(req, body) {
-        const userNo = BigInt(req.user.user_no);
-        return this.studyLogsService.create(userNo, BigInt(body.question_id), body.user_memo);
+        const userNoVal = req.user?.user_no || req.user?.userNo;
+        if (!userNoVal)
+            throw new common_1.UnauthorizedException('User session invalid');
+        const userNo = BigInt(userNoVal);
+        const questionId = body.question_id ? BigInt(body.question_id) : undefined;
+        if (!questionId)
+            throw new Error('Question ID missing');
+        return this.studyLogsService.create(userNo, questionId, body.user_memo);
     }
     async findMyLogs(req) {
         const userNo = BigInt(req.user.user_no);

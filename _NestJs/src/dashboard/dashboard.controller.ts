@@ -1,4 +1,4 @@
-import { Controller, Get, Query, UseGuards, Request } from '@nestjs/common';
+import { Controller, Get, Query, UseGuards, Request, UnauthorizedException } from '@nestjs/common';
 import { DashboardService } from './dashboard.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
@@ -9,20 +9,25 @@ export class DashboardController {
 
   @Get('stats')
   async getDashboardStats(@Request() req) {
-    const userNo = BigInt(req.user.user_no);
+    const userNoVal = req.user?.user_no || req.user?.userNo;
+    if (!userNoVal) throw new UnauthorizedException();
+    
+    const userNo = BigInt(userNoVal);
     const roleId = req.user.role;
     return this.dashboardService.getStats(userNo, roleId);
   }
 
   @Get('relations')
   async getRelations(@Request() req) {
-    const userNo = BigInt(req.user.user_no);
-    return this.dashboardService.getRelations(userNo);
+    const userNoVal = req.user?.user_no || req.user?.userNo;
+    if (!userNoVal) throw new UnauthorizedException();
+    return this.dashboardService.getRelations(BigInt(userNoVal));
   }
 
   @Get('messages')
   async getMessages(@Request() req) {
-    const userNo = BigInt(req.user.user_no);
-    return this.dashboardService.getMessages(userNo);
+    const userNoVal = req.user?.user_no || req.user?.userNo;
+    if (!userNoVal) throw new UnauthorizedException();
+    return this.dashboardService.getMessages(BigInt(userNoVal));
   }
 }

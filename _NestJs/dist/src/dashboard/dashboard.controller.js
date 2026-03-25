@@ -22,17 +22,24 @@ let DashboardController = class DashboardController {
         this.dashboardService = dashboardService;
     }
     async getDashboardStats(req) {
-        const userNo = BigInt(req.user.user_no);
+        const userNoVal = req.user?.user_no || req.user?.userNo;
+        if (!userNoVal)
+            throw new common_1.UnauthorizedException();
+        const userNo = BigInt(userNoVal);
         const roleId = req.user.role;
         return this.dashboardService.getStats(userNo, roleId);
     }
     async getRelations(req) {
-        const userNo = BigInt(req.user.user_no);
-        return this.dashboardService.getRelations(userNo);
+        const userNoVal = req.user?.user_no || req.user?.userNo;
+        if (!userNoVal)
+            throw new common_1.UnauthorizedException();
+        return this.dashboardService.getRelations(BigInt(userNoVal));
     }
     async getMessages(req) {
-        const userNo = BigInt(req.user.user_no);
-        return this.dashboardService.getMessages(userNo);
+        const userNoVal = req.user?.user_no || req.user?.userNo;
+        if (!userNoVal)
+            throw new common_1.UnauthorizedException();
+        return this.dashboardService.getMessages(BigInt(userNoVal));
     }
 };
 exports.DashboardController = DashboardController;
