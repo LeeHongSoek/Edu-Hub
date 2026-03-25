@@ -2,7 +2,7 @@ import { PrismaService } from '../common/prisma/prisma.service';
 export declare class QuestionsService {
     private prisma;
     constructor(prisma: PrismaService);
-    findAll(): Promise<({
+    findAll(creator_no?: bigint, group_id?: bigint): Promise<({
         group: ({
             parent_group: ({
                 parent_group: {

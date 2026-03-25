@@ -20,8 +20,8 @@ let QuestionsController = class QuestionsController {
     constructor(questionsService) {
         this.questionsService = questionsService;
     }
-    findAll() {
-        return this.questionsService.findAll();
+    findAll(creatorNo, groupId) {
+        return this.questionsService.findAll(creatorNo ? BigInt(creatorNo) : undefined, groupId ? BigInt(groupId) : undefined);
     }
     create(createQuestionDto) {
         return this.questionsService.create(createQuestionDto);
@@ -42,8 +42,10 @@ let QuestionsController = class QuestionsController {
 exports.QuestionsController = QuestionsController;
 __decorate([
     (0, common_1.Get)(),
+    __param(0, (0, common_1.Query)('creator_no')),
+    __param(1, (0, common_1.Query)('group_id')),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", []),
+    __metadata("design:paramtypes", [String, String]),
     __metadata("design:returntype", void 0)
 ], QuestionsController.prototype, "findAll", null);
 __decorate([

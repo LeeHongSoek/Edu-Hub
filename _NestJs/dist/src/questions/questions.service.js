@@ -17,8 +17,14 @@ let QuestionsService = class QuestionsService {
     constructor(prisma) {
         this.prisma = prisma;
     }
-    async findAll() {
+    async findAll(creator_no, group_id) {
+        const where = {};
+        if (creator_no !== undefined)
+            where.creator_no = creator_no;
+        if (group_id !== undefined)
+            where.group_id = group_id;
         return this.prisma.question.findMany({
+            where,
             include: {
                 type: true,
                 passage: true,

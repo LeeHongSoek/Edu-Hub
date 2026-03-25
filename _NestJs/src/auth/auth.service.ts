@@ -76,7 +76,7 @@ export class AuthService {
     return !user;
   }
 
-  async updateProfile(userNo: number, updateData: { username?: string; password?: string }) {
+  async updateProfile(userNo: bigint, updateData: { username?: string; password?: string }) {
     const data: any = {};
     if (updateData.username) {
       data.username = updateData.username;
