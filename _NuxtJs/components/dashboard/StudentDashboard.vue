@@ -46,7 +46,7 @@ const fetchStats = async () => {
   const config = useRuntimeConfig();
   const token = useCookie('auth_token');
   try {
-    const data = await $fetch(`${config.public.apiBase}/dashboard/stats`, {
+    const data: any = await $fetch(`${config.public.apiBase}/dashboard/stats`, {
       headers: { Authorization: `Bearer ${token.value}` }
     });
     console.log('Fetched info:', data);
