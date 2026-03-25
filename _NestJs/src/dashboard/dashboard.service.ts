@@ -3,7 +3,7 @@ import { PrismaService } from '../common/prisma/prisma.service';
 
 @Injectable()
 export class DashboardService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private prisma: PrismaService) { }
 
   async getStats(userNo: bigint, roleId: string) {
     if (roleId === 'S') {
@@ -28,9 +28,9 @@ export class DashboardService {
       },
     });
 
-    const totalSolved = solveResults.length;
+    const recentSolvedCount = solveResults.length;
     const correctOnes = solveResults.filter((r) => r.is_correct).length;
-    const accuracy = totalSolved > 0 ? Math.round((correctOnes / totalSolved) * 100) : 0;
+    const accuracy = recentSolvedCount > 0 ? Math.round((correctOnes / recentSolvedCount) * 100) : 0;
 
     // 일별 푼 문제 수 (최근 7일)
     const dailyStats: { date: string; count: number }[] = [];
@@ -43,10 +43,26 @@ export class DashboardService {
     }
 
     return {
-      totalSolved,
+      totalViewed: await this.prisma.studyLog.count({
+        where: {
+          user_no: userNo,
+          user_memo: '문제보기',
+        },
+      }),
+      totalSolved: await this.prisma.studyLog.count({
+        where: {
+          user_no: userNo,
+          user_memo: '문제풀기',
+        },
+      }),
       accuracy,
       dailyStats,
-      studyLogs: await this.prisma.studyLog.count({ where: { user_no: userNo } }),
+      studyLogs: await this.prisma.studyLog.count({
+        where: {
+          user_no: userNo,
+          is_correct: false,
+        },
+      }),
     };
   }
 
