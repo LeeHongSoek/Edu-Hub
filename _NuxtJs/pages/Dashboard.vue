@@ -29,7 +29,14 @@ onMounted(() => {
     <div class="dashboard-header">
       <div class="welcome-section">
         <h1 class="welcome-title">
-          안녕하세요, <span class="username">{{ userInfo.username }}</span>님! 👋
+          안녕하세요,
+          <span class="role-badge-inline" :class="'role-' + userInfo.role_id">
+            <span v-if="userInfo.role_id === 'S'">🎓</span>
+            <span v-else-if="userInfo.role_id === 'T'">👨‍🏫</span>
+            <span v-else>🏠</span>
+            {{ userInfo.role_id === 'T' ? '선생님' : userInfo.role_id === 'P' ? '학부모' : '학생' }}
+          </span>
+          <span class="username">{{ userInfo.username }}</span>님!
           <!-- 대시보드 내 네비게이션 버튼 (타이틀 바로 뒤) -->
           <div v-if="userInfo.role_id !== 'P'" class="quick-nav">
             <NuxtLink to="/Questions?mine=true" class="nav-btn">나의 문제목록</NuxtLink>
@@ -38,10 +45,6 @@ onMounted(() => {
           </div>
         </h1>
         <p class="welcome-sub">오늘도 지식을 완성하는 하루 되세요.</p>
-      </div>
-      
-      <div class="role-badge" :class="'role-' + userInfo.role_id">
-        {{ userInfo.role_id === 'T' ? '선생님' : userInfo.role_id === 'P' ? '학부모' : '학생' }}
       </div>
     </div>
 
@@ -118,7 +121,7 @@ onMounted(() => {
   display: flex !important;
   flex-direction: row !important;
   align-items: center !important;
-  gap: 2rem !important;
+  gap: 0.4rem !important; /* Reduced from 2rem */
   white-space: nowrap;
 }
 
@@ -158,16 +161,25 @@ onMounted(() => {
   transform: translateY(-2px);
 }
 
-.role-badge {
-  padding: 0.5rem 1rem;
-  border-radius: 10px;
-  font-weight: 700;
-  font-size: 0.9rem;
+.role-badge-inline {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.2rem 0.5rem;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+  backdrop-filter: blur(4px);
+  font-weight: 600;
+  font-size: 0.8rem;
+  margin: 0 0.2rem; /* Reduced from 0.5rem */
+  transition: all 0.2s;
+  cursor: default;
 }
 
-.role-S { background: rgba(34, 197, 94, 0.1); color: #4ade80; border: 1px solid rgba(34, 197, 94, 0.2); }
-.role-T { background: rgba(99, 102, 241, 0.1); color: #818cf8; border: 1px solid rgba(99, 102, 241, 0.2); }
-.role-P { background: rgba(245, 158, 11, 0.1); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.2); }
+.role-S { color: #4ade80 !important; border-color: rgba(34, 197, 94, 0.3) !important; background: rgba(34, 197, 94, 0.05) !important; }
+.role-T { color: #818cf8 !important; border-color: rgba(99, 102, 241, 0.3) !important; background: rgba(99, 102, 241, 0.05) !important; }
+.role-P { color: #fbbf24 !important; border-color: rgba(245, 158, 11, 0.3) !important; background: rgba(245, 158, 11, 0.05) !important; }
 
 .dashboard-tabs {
   display: flex;

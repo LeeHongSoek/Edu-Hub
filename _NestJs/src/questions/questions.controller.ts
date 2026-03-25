@@ -7,8 +7,14 @@ export class QuestionsController {
 
   // 모든 문제 목록 조회 API
   @Get()
-  findAll(@Query('creator_no') creatorNo?: string) {
-    return this.questionsService.findAll(creatorNo ? BigInt(creatorNo) : undefined);
+  findAll(
+    @Query('creator_no') creatorNo?: string,
+    @Query('group_id') groupId?: string,
+  ) {
+    return this.questionsService.findAll(
+      creatorNo ? BigInt(creatorNo) : undefined,
+      groupId ? BigInt(groupId) : undefined,
+    );
   }
 
   // 문제 생성

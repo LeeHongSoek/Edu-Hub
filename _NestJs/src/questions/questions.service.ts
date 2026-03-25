@@ -5,9 +5,14 @@ import { PrismaService } from '../common/prisma/prisma.service';
 export class QuestionsService {
   constructor(private prisma: PrismaService) {}
 
-  // 모든 문제 목록 조회 API
-  async findAll() {
+  // 모든 문제 목록 조회 API (필터링 지원)
+  async findAll(creator_no?: bigint, group_id?: bigint) {
+    const where: any = {};
+    if (creator_no !== undefined) where.creator_no = creator_no;
+    if (group_id !== undefined) where.group_id = group_id;
+
     return this.prisma.question.findMany({
+      where,
       include: {
         type: true,
         passage: true,

@@ -25,7 +25,7 @@ watch(() => route.query.mine, () => refresh());
 <template>
   <div class="container">
 
-    <h1 class="title">문제 목록</h1>
+    <h1 class="title">나의 문제목록</h1>
     
     <div v-if="pending" class="loading">
       문제를 불러오는 중...
