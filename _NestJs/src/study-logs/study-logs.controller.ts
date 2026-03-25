@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Param, UseGuards, Request } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, UseGuards, Request, UnauthorizedException } from '@nestjs/common';
 import { StudyLogsService } from './study-logs.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
@@ -9,8 +9,14 @@ export class StudyLogsController {
 
   @Post()
   async create(@Request() req, @Body() body: { question_id: string; user_memo: string }) {
-    const userNo = BigInt(req.user.user_no);
-    return this.studyLogsService.create(userNo, BigInt(body.question_id), body.user_memo);
+    const userNoVal = req.user?.user_no || req.user?.userNo;
+    if (!userNoVal) throw new UnauthorizedException('User session invalid');
+    
+    const userNo = BigInt(userNoVal);
+    const questionId = body.question_id ? BigInt(body.question_id) : undefined;
+    if (!questionId) throw new Error('Question ID missing');
+    
+    return this.studyLogsService.create(userNo, questionId, body.user_memo);
   }
 
   @Get('my')

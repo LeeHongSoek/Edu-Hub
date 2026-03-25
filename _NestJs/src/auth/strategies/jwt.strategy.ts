@@ -13,8 +13,10 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   }
 
   async validate(payload: any) {
+    // sub claim represents the user_no (BigInt) as a string
     return { 
-      user_no: payload.sub, 
+      user_no: payload.sub,
+      userNo: payload.sub, // for compatibility
       username: payload.username, 
       role: payload.role 
     };

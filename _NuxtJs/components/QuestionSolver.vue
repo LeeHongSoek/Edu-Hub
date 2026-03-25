@@ -125,23 +125,26 @@ const handleFinish = (isTimeOver = false) => {
       const cleanCorrectAnswer = props.question.answer.trim().toLowerCase();
       isCorrect.value = cleanUserAnswer === cleanCorrectAnswer;
     }
+    if (isCorrect.value) {
+      modalType.value = 'success';
+      modalTitle.value = '정답입니다! 🎉';
+      modalMessage.value = '정말 잘하셨어요! 다음 문제도 도전해 보세요.';
+      logAction('정답확인:정답');
+    } else {
+      modalType.value = 'error';
+      modalTitle.value = '아쉽게도 틀렸습니다. 😢';
+      modalMessage.value = `정답은 "${props.question.answer || '해설 참조'}" 입니다. 해설을 확인해 보세요.`;
+      logAction('정답확인:오답');
+    }
   }
   
   showResult.value = true;
   
   if (isTimeOver) {
-    modalType.value = 'warning';
-    modalTitle.value = '시간 초과! ⏰';
-    modalMessage.value = '제한 시간이 다 되어 오답 처리되었습니다.';
-    logAction('제한시간초과');
-    isCorrect.value = false;
     modalType.value = 'error';
-    modalTitle.value = '아쉽게도 틀렸습니다. 😢';
-    const submitted = props.question.question_type_id?.toUpperCase() === 'M' 
-      ? selectedOptionIds.value.join(',') 
-      : userAnswer.value;
-    modalMessage.value = `정답은 "${props.question.answer || '해설 참조'}" 입니다. 해설을 확인해 보세요.`;
-    logAction(`오답(${submitted}, 정답은:${props.question.answer})`);
+    modalTitle.value = '시간 초과! ⏰';
+    modalMessage.value = '제한 시간이 다 되어 오답 처리되었습니다. 해설을 확인해 보세요.';
+    logAction('정답확인:시간초과');
   }
   showModal.value = true;
 };
@@ -531,8 +534,8 @@ const submitReview = async () => {
 
 .solver-title {
   margin: 0;
-  font-size: 1.3rem;
-  color: #fff;
+  font-size: 1.0rem;
+  color: #cbd5e1;
   line-height: 1.4;
   word-break: keep-all;
 }
@@ -583,17 +586,23 @@ const submitReview = async () => {
   font-weight: 600;
   color: #fff;
   line-height: 1.5;
-  margin-bottom: auto; /* Pushes the rest of the content to the bottom */
+  margin-bottom: 1.5rem;
 }
 
 .question-passage {
-  margin-top: 1.5rem; /* Ensure spacing if question text is very short */
   background: #fff;
   color: #333;
   border-radius: 10px;
-  padding: 1rem;
-  margin-bottom: 2rem;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+}
+
+.question-content {
+  margin-bottom: 1.5rem;
+  font-size: 1.05rem;
+  color: #cbd5e1;
+  line-height: 1.6;
 }
 /* v-md-editor 기본 스타일 보완 */
 .question-passage :deep(.v-md-plugin-markdown-it) {
@@ -612,6 +621,7 @@ const submitReview = async () => {
 }
 
 .options-list {
+  margin-top: auto;
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 0.5rem;
@@ -620,8 +630,8 @@ const submitReview = async () => {
 .option-item {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
-  padding: 0.75rem 1rem;
+  gap: 0.5rem;
+  padding: 0.2rem 0.9rem;
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 10px;
@@ -680,7 +690,7 @@ const submitReview = async () => {
 }
 
 .answer-input-container {
-  margin-top: 1rem;
+  margin-top: auto;
 }
 
 .answer-input {
