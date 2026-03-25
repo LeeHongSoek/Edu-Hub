@@ -67,7 +67,7 @@ onMounted(fetchStats);
 .stat-card {
   background: rgba(99, 102, 241, 0.05);
   border: 1px solid rgba(129, 140, 248, 0.2);
-  border-radius: 15px;
+  border-radius: 10px;
   padding: 2rem;
   display: flex;
   flex-direction: column;

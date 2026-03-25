@@ -10,9 +10,10 @@ import { StatsModule } from './stats/stats.module';
 import { DashboardModule } from './dashboard/dashboard.module';
 import { OmbudsmanModule } from './ombudsman/ombudsman.module';
 import { StudyLogsModule } from './study-logs/study-logs.module';
+import { QuestionBooksModule } from './question-books/question-books.module';
 
 @Module({
-  imports: [ConfigModule.forRoot({ isGlobal: true }), PrismaModule, QuestionsModule, GroupsModule, AuthModule, StatsModule, DashboardModule, OmbudsmanModule, StudyLogsModule],
+  imports: [ConfigModule.forRoot({ isGlobal: true }), PrismaModule, QuestionsModule, GroupsModule, AuthModule, StatsModule, DashboardModule, OmbudsmanModule, StudyLogsModule, QuestionBooksModule],
   controllers: [AppController],
   providers: [AppService],
 })

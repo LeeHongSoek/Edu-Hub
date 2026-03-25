@@ -15,7 +15,7 @@ const userInfo = computed(() => {
   } catch { return null; }
 });
 
-const activeTab = ref('stats'); // 'stats', 'relations', 'messages', 'logs'
+const activeTab = ref('stats'); // 'stats', 'relations', 'messages', 'logs', 'question-books', 'exams'
 
 onMounted(() => {
   if (!userInfo.value) {
@@ -32,6 +32,13 @@ onMounted(() => {
           안녕하세요, <span class="username">{{ userInfo.username }}</span>님! 👋
         </h1>
         <p class="welcome-sub">오늘도 지식을 완성하는 하루 되세요.</p>
+        
+        <!-- 대시보드 내 네비게이션 버튼 -->
+        <div v-if="userInfo.role_id !== 'P'" class="quick-nav">
+          <NuxtLink to="/Questions" class="nav-btn">나의 문제목록</NuxtLink>
+          <button class="nav-btn" @click="activeTab = 'question-books'">나의 문제집목록</button>
+          <button class="nav-btn" @click="activeTab = 'exams'">나의 고사집목록</button>
+        </div>
       </div>
       
       <div class="role-badge" :class="'role-' + userInfo.role_id">
@@ -78,6 +85,14 @@ onMounted(() => {
       <div v-else-if="activeTab === 'logs'">
         <StudyLogViewer />
       </div>
+
+      <div v-else-if="activeTab === 'question-books'">
+        <QuestionBookManager />
+      </div>
+
+      <div v-else-if="activeTab === 'exams'">
+        <ExamListManager />
+      </div>
     </div>
   </div>
 </template>
@@ -110,11 +125,35 @@ onMounted(() => {
 .welcome-sub {
   color: #94a3b8;
   font-size: 1.1rem;
+  margin-bottom: 1.5rem;
+}
+
+.quick-nav {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.nav-btn {
+  background: rgba(129, 140, 248, 0.1);
+  border: 1px solid rgba(129, 140, 248, 0.2);
+  color: #818cf8;
+  padding: 0.6rem 1.2rem;
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.nav-btn:hover {
+  background: rgba(129, 140, 248, 0.2);
+  transform: translateY(-2px);
 }
 
 .role-badge {
   padding: 0.5rem 1rem;
-  border-radius: 999px;
+  border-radius: 10px;
   font-weight: 700;
   font-size: 0.9rem;
 }
@@ -155,7 +194,7 @@ onMounted(() => {
 
 .dashboard-content {
   background: rgba(30, 41, 59, 0.5);
-  border-radius: 20px;
+  border-radius: 10px;
   border: 1px solid rgba(255, 255, 255, 0.05);
   padding: 2rem;
   min-height: 400px;

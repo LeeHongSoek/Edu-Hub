@@ -175,7 +175,7 @@ onMounted(fetchMyReports);
   background: #1e293b;
   width: 90%;
   max-width: 600px;
-  border-radius: 20px;
+  border-radius: 10px;
   border: 1px solid rgba(255, 255, 255, 0.1);
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
   display: flex;
@@ -226,7 +226,7 @@ onMounted(fetchMyReports);
 .report-item {
   background: rgba(255, 255, 255, 0.03);
   border: 1px solid rgba(255, 255, 255, 0.05);
-  border-radius: 12px;
+  border-radius: 10px;
   padding: 1rem;
   display: flex;
   justify-content: space-between;

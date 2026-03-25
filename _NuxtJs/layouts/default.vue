@@ -193,7 +193,7 @@ function handleLogout() {
 }
 
 .ombudsman-link {
-  margin-left: 1.2rem;
+  margin-left: 0.8rem;
   display: flex;
   align-items: center;
   gap: 0.4rem;

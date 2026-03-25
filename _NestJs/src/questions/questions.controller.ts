@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Patch, Delete, Body, Param } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Delete, Body, Param, Query } from '@nestjs/common';
 import { QuestionsService } from './questions.service';
 
 @Controller('questions')
@@ -7,8 +7,8 @@ export class QuestionsController {
 
   // 모든 문제 목록 조회 API
   @Get()
-  findAll() {
-    return this.questionsService.findAll();
+  findAll(@Query('creator_no') creatorNo?: string) {
+    return this.questionsService.findAll(creatorNo ? BigInt(creatorNo) : undefined);
   }
 
   // 문제 생성

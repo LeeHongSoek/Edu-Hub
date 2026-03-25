@@ -122,7 +122,7 @@ const chartOptions = {
 .stat-card {
   background: rgba(255, 255, 255, 0.03);
   border: 1px solid rgba(255, 255, 255, 0.05);
-  border-radius: 15px;
+  border-radius: 10px;
   padding: 1.5rem;
   display: flex;
   align-items: center;
@@ -152,7 +152,7 @@ const chartOptions = {
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 12px;
+  border-radius: 10px;
 }
 
 .stat-info {

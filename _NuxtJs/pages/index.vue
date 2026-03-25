@@ -1049,7 +1049,7 @@ onMounted(() => {
   background: rgba(255,255,255,0.08);
   backdrop-filter: blur(8px);
   border: 1px solid rgba(255,255,255,0.14);
-  border-radius: 999px;
+  border-radius: 10px;
   padding: 0.4rem 1rem;
   font-size: 0.82rem;
   font-weight: 600;
@@ -1616,7 +1616,7 @@ input[type="password"] {
   display: inline-block;
   background: linear-gradient(135deg, rgba(79,70,229,0.3), rgba(124,58,237,0.3));
   border: 1px solid rgba(165,180,252,0.25);
-  border-radius: 999px;
+  border-radius: 10px;
   padding: 0.3rem 0.9rem;
   font-size: 0.78rem;
   font-weight: 700;

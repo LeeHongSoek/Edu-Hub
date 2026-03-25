@@ -2,7 +2,24 @@
 import type { Question } from '~/types';
 
 const config = useRuntimeConfig();
-const { data: questions, pending, error, refresh } = await useFetch<Question[]>(`${config.public.apiBase}/questions`);
+const route = useRoute();
+const userCookie = useCookie('user_info');
+const userInfo = computed(() => {
+  if (!userCookie.value) return null;
+  return typeof userCookie.value === 'string' ? JSON.parse(userCookie.value) : userCookie.value;
+});
+
+const fetchUrl = computed(() => {
+  let url = `${config.public.apiBase}/questions`;
+  if (route.query.mine === 'true' && userInfo.value) {
+    url += `?creator_no=${userInfo.value.user_no}`;
+  }
+  return url;
+});
+
+const { data: questions, pending, error, refresh } = await useFetch<Question[]>(fetchUrl);
+
+watch(() => route.query.mine, () => refresh());
 </script>
 
 <template>
@@ -37,7 +54,7 @@ const { data: questions, pending, error, refresh } = await useFetch<Question[]>(
   align-items: center;
   gap: 0.5rem;
   padding: 0.6rem 1.2rem;
-  border-radius: 12px;
+  border-radius: 10px;
   background: rgba(255, 255, 255, 0.05);
   backdrop-filter: blur(8px);
   border: 1px solid rgba(255, 255, 255, 0.1);
@@ -83,7 +100,7 @@ const { data: questions, pending, error, refresh } = await useFetch<Question[]>(
   font-size: 1.2rem;
   color: #94a3b8;
   background: rgba(255, 255, 255, 0.03);
-  border-radius: 16px;
+  border-radius: 10px;
   border: 1px dashed rgba(255, 255, 255, 0.1);
 }
 

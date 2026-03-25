@@ -62,7 +62,7 @@ onMounted(fetchStats);
 .child-card {
   background: rgba(245, 158, 11, 0.05);
   border: 1px solid rgba(245, 158, 11, 0.1);
-  border-radius: 15px;
+  border-radius: 10px;
   padding: 1.5rem;
   display: flex;
   flex-direction: column;

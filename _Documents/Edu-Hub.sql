@@ -353,3 +353,25 @@ CREATE TABLE `ombudsman_reports` (
     CONSTRAINT `fk_ombudsman_user`
         FOREIGN KEY (`user_no`) REFERENCES `users` (`user_no`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='사용자 요구사항 및 피드백 테이블';
+
+-- 20. 나의 문제집 (북마크/컬렉션)
+CREATE TABLE `user_question_books` (
+    `book_id`     BIGINT        PRIMARY KEY AUTO_INCREMENT COMMENT '문제집 ID',
+    `user_no`     BIGINT        NOT NULL                   COMMENT '소유자 식별번호',
+    `book_name`   VARCHAR(255)  NOT NULL                   COMMENT '문제집 제목',
+    `description` TEXT                                     COMMENT '문제집 설명',
+    `created_at`  DATETIME      DEFAULT CURRENT_TIMESTAMP  COMMENT '생성 일시',
+
+    CONSTRAINT `fk_uqb_user`
+        FOREIGN KEY (`user_no`) REFERENCES `users` (`user_no`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='사용자별 개인 문제집(북마크)';
+
+CREATE TABLE `user_question_book_items` (
+    `book_id`     BIGINT        NOT NULL,
+    `question_id` BIGINT        NOT NULL,
+    PRIMARY KEY (`book_id`, `question_id`),
+    CONSTRAINT `fk_uqbi_book`
+        FOREIGN KEY (`book_id`) REFERENCES `user_question_books` (`book_id`) ON DELETE CASCADE,
+    CONSTRAINT `fk_uqbi_q`
+        FOREIGN KEY (`question_id`) REFERENCES `questions` (`question_id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='문제집에 포함된 문제 매핑';

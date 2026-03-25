@@ -61,6 +61,7 @@ model User {
   solve_results     SolveResult[]
   study_logs        StudyLog[]
   authored_cmts     UserComment[]    @relation("AuthoredComments")
+  question_books    UserQuestionBook[]
   sent_messages     UserMessage[]    @relation("SentMessages")
   received_messages UserMessage[]    @relation("ReceivedMessages")
   relations_as_1    UserRelation[]   @relation("User1Relations")
@@ -177,6 +178,7 @@ model Question {
   type             EnmQuestionType   @relation(fields: [question_type_id], references: [type_id], onUpdate: Restrict, map: "fk_question_type")
   solve_results    SolveResult[]
   study_logs       StudyLog[]
+  book_items        UserQuestionBookItem[]
   comments         UserComment[]
   passage          QuestionPassage?
 
@@ -406,4 +408,28 @@ enum Ombudsman_category {
 enum Ombudsman_status {
   PENDING
   PROCESSED
+}
+
+model UserQuestionBook {
+  book_id     BigInt                 @id @default(autoincrement())
+  user_no     BigInt
+  book_name   String                 @db.VarChar(255)
+  description String?                @db.Text
+  created_at  DateTime?              @default(now()) @db.DateTime(0)
+  items       UserQuestionBookItem[]
+  user        User                   @relation(fields: [user_no], references: [user_no], onDelete: Cascade, onUpdate: Restrict, map: "fk_uqb_user")
+
+  @@index([user_no], map: "fk_uqb_user")
+  @@map("user_question_books")
+}
+
+model UserQuestionBookItem {
+  book_id     BigInt
+  question_id BigInt
+  book        UserQuestionBook @relation(fields: [book_id], references: [book_id], onDelete: Cascade, onUpdate: Restrict, map: "fk_uqbi_book")
+  question    Question         @relation(fields: [question_id], references: [question_id], onDelete: Cascade, onUpdate: Restrict, map: "fk_uqbi_q")
+
+  @@id([book_id, question_id])
+  @@index([question_id], map: "fk_uqbi_q")
+  @@map("user_question_book_items")
 }
