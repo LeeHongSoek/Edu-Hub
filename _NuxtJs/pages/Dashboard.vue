@@ -4,6 +4,10 @@ import StudentDashboard from '~/components/dashboard/StudentDashboard.vue';
 import TeacherDashboard from '~/components/dashboard/TeacherDashboard.vue';
 import ParentDashboard from '~/components/dashboard/ParentDashboard.vue';
 import StudyLogViewer from '~/components/dashboard/StudyLogViewer.vue';
+import RelationManager from '~/components/dashboard/RelationManager.vue';
+import MessageManager from '~/components/dashboard/MessageManager.vue';
+import QuestionBookManager from '~/components/dashboard/QuestionBookManager.vue';
+import ExamListManager from '~/components/dashboard/ExamListManager.vue';
 
 const userCookie = useCookie('user_info');
 const userInfo = computed(() => {
