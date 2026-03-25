@@ -2,20 +2,6 @@
  Edu-Hub DB 샘플 데이터 (Edu-Hub-sample-data.sql)
 */
 
--- 0. 기초 데이터 (ENUM 대체) 추가
-INSERT INTO `enm_roles` (`role_id`, `role_name`, `description`) VALUES
-('T', 'TEACHER', '교사'),
-('S', 'STUDENT', '학생'),
-('P', 'PARENT', '학부모');
-
-INSERT INTO `enm_question_types` (`type_id`, `type_name`, `description`) VALUES
-('M', '객관식', '객관식'),
-('S', '주관식', '주관식');
-
-INSERT INTO `enm_media_types` (`type_id`, `type_name`, `description`) VALUES
-('I', 'image', '이미지'),
-('Y', 'youtube', '유튜브 동영상');
-
 -- 1. 사용자 데이터 추가
  INSERT INTO `users` (`user_id`,`user_pw`,`username`,`email`,`role_id`,`is_withdrawn`) VALUES
 	 ('hong123','','홍길동','teacher1@edu-hub.com','T','N'),

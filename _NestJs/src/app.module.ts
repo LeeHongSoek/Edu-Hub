@@ -7,9 +7,10 @@ import { QuestionsModule } from './questions/questions.module';
 import { GroupsModule } from './groups/groups.module';
 import { AuthModule } from './auth/auth.module';
 import { StatsModule } from './stats/stats.module';
+import { DashboardModule } from './dashboard/dashboard.module';
 
 @Module({
-  imports: [ConfigModule.forRoot({ isGlobal: true }), PrismaModule, QuestionsModule, GroupsModule, AuthModule, StatsModule],
+  imports: [ConfigModule.forRoot({ isGlobal: true }), PrismaModule, QuestionsModule, GroupsModule, AuthModule, StatsModule, DashboardModule],
   controllers: [AppController],
   providers: [AppService],
 })

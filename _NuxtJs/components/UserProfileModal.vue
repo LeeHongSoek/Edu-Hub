@@ -119,7 +119,7 @@ const handleUpdate = async () => {
 .modal-content {
   background: rgba(30, 41, 59, 1);
   border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 16px;
+  border-radius: 10px;
   width: 90%;
   max-width: 400px;
   padding: 2rem;
@@ -147,7 +147,7 @@ const handleUpdate = async () => {
 .field { display: flex; flex-direction: column; gap: 0.5rem; }
 .field label { font-size: 0.85rem; color: #cbd5e1; font-weight: 500;}
 .field input {
-  padding: 0.75rem; border-radius: 8px;
+  padding: 0.75rem; border-radius: 10px;
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid rgba(255, 255, 255, 0.1);
   color: #fff;
@@ -162,7 +162,7 @@ const handleUpdate = async () => {
 .success-msg { color: #34d399; font-size: 0.85rem; font-weight: 500; }
 .actions { display: flex; gap: 1rem; margin-top: 1rem; }
 .btn-cancel, .btn-submit {
-  flex: 1; padding: 0.75rem; border-radius: 8px;
+  flex: 1; padding: 0.75rem; border-radius: 10px;
   font-weight: 600; cursor: pointer; border: none; transition: all 0.2s;
   font-size: 0.95rem;
 }

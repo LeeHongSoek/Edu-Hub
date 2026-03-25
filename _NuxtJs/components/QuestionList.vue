@@ -205,7 +205,7 @@ onMounted(async () => {
   padding: 1.5rem;
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 12px;
+  border-radius: 10px;
   transition: all 0.3s ease;
   backdrop-filter: blur(10px);
 }
@@ -317,7 +317,7 @@ onMounted(async () => {
   background: #6366f1;
   color: white;
   border: none;
-  border-radius: 8px;
+  border-radius: 10px;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s;
@@ -328,7 +328,7 @@ onMounted(async () => {
   background: rgba(255, 255, 255, 0.05);
   color: #94a3b8;
   border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 8px;
+  border-radius: 10px;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s;
@@ -376,7 +376,7 @@ onMounted(async () => {
   background: rgba(15, 23, 42, 0.8);
   backdrop-filter: blur(12px);
   border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 12px;
+  border-radius: 10px;
   padding: 1rem;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
   z-index: 100;
@@ -437,7 +437,7 @@ onMounted(async () => {
   padding: 3rem;
   background: rgba(255, 255, 255, 0.02);
   border: 1px dashed rgba(255, 255, 255, 0.1);
-  border-radius: 12px;
+  border-radius: 10px;
   color: #64748b;
   font-size: 1rem;
 }

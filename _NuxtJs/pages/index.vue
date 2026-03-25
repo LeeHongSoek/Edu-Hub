@@ -183,7 +183,7 @@ const handleLogin = async () => {
       const user = useCookie('user_info');
       user.value = JSON.stringify((data.value as any).user);
 
-      navigateTo('/Questions');
+      navigateTo('/Dashboard');
     }
   } catch (err) {
     authError.value = '서버 연결에 실패했습니다.';
@@ -299,7 +299,7 @@ onMounted(() => {
   // 이미 로그인 상태면 문제 목록으로 리디렉트
   const authToken = useCookie('auth_token');
   if (authToken.value) {
-    navigateTo('/Questions');
+    navigateTo('/Dashboard');
     return;
   }
 
@@ -1103,7 +1103,7 @@ onMounted(() => {
   backdrop-filter: blur(36px);
   -webkit-backdrop-filter: blur(36px);
   border: 1px solid rgba(255,255,255,0.1);
-  border-radius: 28px;
+  border-radius: 10px;
   padding: 2.75rem 2.5rem 2rem;
   box-shadow:
     0 0 0 1px rgba(129,140,248,0.08),
@@ -1207,7 +1207,7 @@ input[type="password"] {
 .btn-login {
   width: 100%;
   padding: 0.9rem;
-  border-radius: 11px;
+  border-radius: 10px;
   border: none;
   background: linear-gradient(135deg, #4f46e5, #7c3aed);
   color: #fff;
@@ -1249,7 +1249,7 @@ input[type="password"] {
 .btn-google {
   width: 100%;
   padding: 0.8rem;
-  border-radius: 11px;
+  border-radius: 10px;
   border: 1px solid rgba(255,255,255,0.12);
   background: rgba(255,255,255,0.04);
   color: #e2e8f0;
@@ -1278,7 +1278,7 @@ input[type="password"] {
   padding: 0.4rem 0.8rem;
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 8px;
+  border-radius: 10px;
   backdrop-filter: blur(4px);
   font-size: 0.9rem;
   color: #94a3b8;
@@ -1312,7 +1312,7 @@ input[type="password"] {
   margin-left: 0.5rem;
   text-decoration: none;
   padding: 0.4rem 0.8rem;
-  border-radius: 8px;
+  border-radius: 10px;
   transition: all 0.2s;
 }
 .user-greeting:hover {
@@ -1552,7 +1552,7 @@ input[type="password"] {
   backdrop-filter: blur(40px);
   -webkit-backdrop-filter: blur(40px);
   border: 1px solid rgba(165, 180, 252, 0.18);
-  border-radius: 28px;
+  border-radius: 10px;
   padding: 2.75rem 2.5rem 2.5rem;
   max-width: 884px; /* 1.3배 폭 증가 (680 * 1.3) */
   width: 95%;
@@ -1603,7 +1603,7 @@ input[type="password"] {
   height: fit-content;
   background: rgba(129, 140, 248, 0.06);
   border: 1px solid rgba(129, 140, 248, 0.15);
-  border-radius: 16px;
+  border-radius: 10px;
   padding: 1.4rem 1.5rem;
 }
 
@@ -1655,7 +1655,7 @@ input[type="password"] {
   align-items: flex-start;
   background: rgba(255,255,255,0.04);
   border: 1px solid rgba(255,255,255,0.08);
-  border-radius: 16px;
+  border-radius: 10px;
   padding: 1.1rem 1.2rem;
   transition: background 0.2s, border-color 0.2s;
 }

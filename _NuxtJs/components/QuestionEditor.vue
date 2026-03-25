@@ -252,7 +252,7 @@ const handleDelete = async () => {
   width: 100%;
   max-width: 900px;
   max-height: 90vh;
-  border-radius: 20px;
+  border-radius: 10px;
   border: 1px solid rgba(255, 255, 255, 0.1);
   display: flex;
   flex-direction: column;
@@ -367,7 +367,7 @@ textarea {
   padding: 0.75rem 1rem;
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 8px;
+  border-radius: 10px;
   color: #fff;
   font-size: 1rem;
   outline: none;
@@ -422,7 +422,7 @@ input:focus, select:focus, textarea:focus {
   background: rgba(99, 102, 241, 0.1);
   color: #818cf8;
   border: 1px solid rgba(99, 102, 241, 0.3);
-  border-radius: 6px;
+  border-radius: 10px;
   cursor: pointer;
   font-size: 0.85rem;
 }
@@ -453,7 +453,7 @@ input:focus, select:focus, textarea:focus {
   background: #6366f1;
   color: #fff;
   border: none;
-  border-radius: 8px;
+  border-radius: 10px;
   font-weight: 600;
   cursor: pointer;
 }
@@ -463,7 +463,7 @@ input:focus, select:focus, textarea:focus {
   background: rgba(255, 255, 255, 0.05);
   color: #94a3b8;
   border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 8px;
+  border-radius: 10px;
   cursor: pointer;
 }
 
@@ -472,7 +472,7 @@ input:focus, select:focus, textarea:focus {
   background: rgba(239, 68, 68, 0.1);
   color: #ef4444;
   border: 1px solid rgba(239, 68, 68, 0.2);
-  border-radius: 8px;
+  border-radius: 10px;
   cursor: pointer;
 }
 

@@ -16,12 +16,13 @@ const questions_module_1 = require("./questions/questions.module");
 const groups_module_1 = require("./groups/groups.module");
 const auth_module_1 = require("./auth/auth.module");
 const stats_module_1 = require("./stats/stats.module");
+const dashboard_module_1 = require("./dashboard/dashboard.module");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
 exports.AppModule = AppModule = __decorate([
     (0, common_1.Module)({
-        imports: [config_1.ConfigModule.forRoot({ isGlobal: true }), prisma_module_1.PrismaModule, questions_module_1.QuestionsModule, groups_module_1.GroupsModule, auth_module_1.AuthModule, stats_module_1.StatsModule],
+        imports: [config_1.ConfigModule.forRoot({ isGlobal: true }), prisma_module_1.PrismaModule, questions_module_1.QuestionsModule, groups_module_1.GroupsModule, auth_module_1.AuthModule, stats_module_1.StatsModule, dashboard_module_1.DashboardModule],
         controllers: [app_controller_1.AppController],
         providers: [app_service_1.AppService],
     })

@@ -23,6 +23,33 @@ CREATE TABLE `enm_media_types` (
     `description`   VARCHAR(50)   NOT NULL    COMMENT '지원 미디어 포맷 (이미지, 유튜브 동영상)'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='미디어 타입 기초 데이터';
 
+-- 0-4. 공통 기초 데이터 (ENUM 대체용): 사용자 관계 유형
+CREATE TABLE `enm_relation_types` (
+    `relation_type_id` VARCHAR(20) PRIMARY KEY COMMENT '관계 유형 코드 (FRIEND, TEACHER_PUPIL, etc.)',
+    `description`      VARCHAR(50) NOT NULL    COMMENT '관계 설명'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='사용자 간 관계 유형 기초 데이터';
+
+-- 기초 데이터 (ENUM 대체) 추가
+INSERT INTO `enm_roles` (`role_id`, `role_name`, `description`) VALUES
+('T', 'TEACHER', '교사'),
+('S', 'STUDENT', '학생'),
+('P', 'PARENT', '학부모');
+
+INSERT INTO `enm_question_types` (`type_id`, `type_name`, `description`) VALUES
+('M', '객관식', '객관식'),
+('S', '주관식', '주관식');
+
+INSERT INTO `enm_media_types` (`type_id`, `type_name`, `description`) VALUES
+('I', 'image', '이미지'),
+('Y', 'youtube', '유튜브 동영상');
+
+INSERT INTO `enm_relation_types` VALUES 
+('FRIEND', '친구 (학생-학생)'),
+('TEACHER_PUPIL', '사제 (선생-학생)'),
+('PUPIL_TEACHER', '사제 (학생-선생)'),
+('PARENT_CHILD', '부자 (부모-학생)'),
+('CHILD_PARENT', '부자 (학생-부모)');
+
 -- 1. 사용자 관리
 CREATE TABLE `users` (
     `user_no`       BIGINT        PRIMARY KEY AUTO_INCREMENT COMMENT '사용자 고유 식별번호 (PK)',
@@ -62,18 +89,36 @@ CREATE TABLE `class_students` (
         FOREIGN KEY (`student_no`) REFERENCES `users` (`user_no`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='학급별 학생 매핑 테이블';
 
--- 4. 학부모-학생 매핑 (다자녀 지원)
-CREATE TABLE `parent_students` (
-    `parent_no`     BIGINT        NOT NULL                   COMMENT '학부모 식별번호',
-    `student_no`    BIGINT        NOT NULL                   COMMENT '자녀(학생) 식별번호',
+-- 4. 사용자 간 관계 매핑 (친구, 사제, 부자 등 통합 관리)
+CREATE TABLE `user_relations` (
+    `relation_id`      BIGINT        PRIMARY KEY AUTO_INCREMENT COMMENT '관계 고유 ID',
+    `user_no_1`        BIGINT        NOT NULL                   COMMENT '사용자 1 (주체)',
+    `user_no_2`        BIGINT        NOT NULL                   COMMENT '사용자 2 (대상)',
+    `relation_type_id` VARCHAR(20)   NOT NULL                   COMMENT '관계 유형 (enm_relation_types 참조)',
+    `created_at`       DATETIME      DEFAULT CURRENT_TIMESTAMP  COMMENT '관계 생성 일시',
 
-    PRIMARY KEY (`parent_no`, `student_no`),
+    CONSTRAINT `fk_rel_user1`
+        FOREIGN KEY (`user_no_1`) REFERENCES `users` (`user_no`) ON DELETE CASCADE,
+    CONSTRAINT `fk_rel_user2`
+        FOREIGN KEY (`user_no_2`) REFERENCES `users` (`user_no`) ON DELETE CASCADE,
+    CONSTRAINT `fk_rel_type`
+        FOREIGN KEY (`relation_type_id`) REFERENCES `enm_relation_types` (`relation_type_id`) ON DELETE RESTRICT
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='사용자 간 관계 매핑 테이블';
 
-    CONSTRAINT `fk_ps_parent`
-        FOREIGN KEY (`parent_no`) REFERENCES `users` (`user_no`) ON DELETE CASCADE,
-    CONSTRAINT `fk_ps_student`
-        FOREIGN KEY (`student_no`) REFERENCES `users` (`user_no`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='학부모와 자녀 매핑 테이블';
+-- 4-1. 사용자 간 쪽지/메시지 관리
+CREATE TABLE `user_messages` (
+    `message_id`       BIGINT        PRIMARY KEY AUTO_INCREMENT COMMENT '메시지 고유 ID',
+    `sender_no`        BIGINT        NOT NULL                   COMMENT '발신자 식별번호',
+    `receiver_no`      BIGINT        NOT NULL                   COMMENT '수신자 식별번호',
+    `content`          TEXT          NOT NULL                   COMMENT '메시지 내용',
+    `is_read`          ENUM('Y', 'N') DEFAULT 'N'               COMMENT '읽음 여부 (Y: 읽음, N: 안읽음)',
+    `created_at`       DATETIME      DEFAULT CURRENT_TIMESTAMP  COMMENT '발신 일시',
+
+    CONSTRAINT `fk_msg_sender`
+        FOREIGN KEY (`sender_no`) REFERENCES `users` (`user_no`) ON DELETE CASCADE,
+    CONSTRAINT `fk_msg_receiver`
+        FOREIGN KEY (`receiver_no`) REFERENCES `users` (`user_no`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='사용자 간 다이렉트 메시지 테이블';
 
 -- 5. 그룹 관리: 문제의 카테고리(과목, 프로젝트 등)를 분류
 CREATE TABLE `groups` (
@@ -293,3 +338,18 @@ CREATE TABLE `question_passages` (
     CONSTRAINT `fk_passage_q`
         FOREIGN KEY (`question_id`) REFERENCES `questions` (`question_id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='영어 독해 등 문제 상단의 긴 마크다운 지문';
+
+-- 19. 옴브즈먼 (사이트 피드백/민원 관리)
+CREATE TABLE `ombudsman_reports` (
+    `report_id`     BIGINT        PRIMARY KEY AUTO_INCREMENT COMMENT '민원 고유 ID',
+    `user_no`       BIGINT        NOT NULL                   COMMENT '작성자 식별번호',
+    `category`      ENUM('OPINION', 'IMPROVEMENT', 'COMPLAINT') NOT NULL DEFAULT 'OPINION' COMMENT '민원 분류',
+    `title`         VARCHAR(255)  NOT NULL                   COMMENT '민원 제목',
+    `content`       TEXT          NOT NULL                   COMMENT '민원 상세 내용',
+    `status`        ENUM('PENDING', 'PROCESSED') DEFAULT 'PENDING' COMMENT '처리 상태',
+    `created_at`    DATETIME      DEFAULT CURRENT_TIMESTAMP  COMMENT '작성 일시',
+    `updated_at`    DATETIME      DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '수정 일시',
+
+    CONSTRAINT `fk_ombudsman_user`
+        FOREIGN KEY (`user_no`) REFERENCES `users` (`user_no`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='사용자 요구사항 및 피드백 테이블';

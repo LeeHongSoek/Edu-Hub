@@ -35,10 +35,10 @@ function handleLogout() {
       <nav class="nav-links">
         <template v-if="userInfo">
           <div class="nav-path-box">
-            <span class="path-home">
+            <NuxtLink to="/Dashboard" class="path-home">
               <IconHome class="icon-home" />
-              홈
-            </span>
+              홈(대시보드)
+            </NuxtLink>
             <span class="path-sep">&gt;</span>
             <NuxtLink to="/Questions" class="path-current">문제 목록</NuxtLink>
           </div>

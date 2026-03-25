@@ -182,7 +182,7 @@ const handleDelete = async (group: Group) => {
   width: 100%;
   max-width: 600px;
   max-height: 80vh;
-  border-radius: 16px;
+  border-radius: 10px;
   border: 1px solid rgba(255, 255, 255, 0.1);
   display: flex;
   flex-direction: column;
@@ -230,7 +230,7 @@ const handleDelete = async (group: Group) => {
   border: 1px solid rgba(255, 255, 255, 0.1);
   color: #fff;
   padding: 0.5rem;
-  border-radius: 6px;
+  border-radius: 10px;
   font-size: 0.9rem;
 }
 
@@ -242,7 +242,7 @@ const handleDelete = async (group: Group) => {
   background: #6366f1;
   color: #fff;
   border: none;
-  border-radius: 6px;
+  border-radius: 10px;
   cursor: pointer;
 }
 
@@ -258,7 +258,7 @@ const handleDelete = async (group: Group) => {
   gap: 0.75rem;
   padding: 0.6rem 1rem;
   background: rgba(255, 255, 255, 0.03);
-  border-radius: 8px;
+  border-radius: 10px;
   margin-bottom: 0.25rem;
 }
 

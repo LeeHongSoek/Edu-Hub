@@ -33,6 +33,14 @@ model EnmMediaType {
   @@map("enm_media_types")
 }
 
+model EnmRelationType {
+  relation_type_id String         @id @db.VarChar(20)
+  description      String         @db.VarChar(50)
+  relations        UserRelation[]
+
+  @@map("enm_relation_types")
+}
+
 model User {
   user_no         BigInt           @id @default(autoincrement())
   user_id         String           @unique(map: "user_id") @db.VarChar(10)
@@ -47,15 +55,18 @@ model User {
   exam_results    ExamResult[]
   created_exams   Exam[]
   created_groups  Group[]
-  parent_links    ParentStudent[]  @relation("ParentLink")
-  child_links     ParentStudent[]  @relation("ChildLink")
-  reviews         QuestionReview[]
-  created_sqs     Question[]
-  solve_results   SolveResult[]
-  study_logs      StudyLog[]
-  authored_cmts   UserComment[]    @relation("AuthoredComments")
-  received_cmts   UserComment[]    @relation("ReceivedComments")
-  role            EnmRole          @relation(fields: [role_id], references: [role_id], onUpdate: Restrict, map: "fk_user_role")
+  received_cmts     UserComment[]    @relation("ReceivedComments")
+  reviews           QuestionReview[]
+  created_sqs       Question[]
+  solve_results     SolveResult[]
+  study_logs        StudyLog[]
+  authored_cmts     UserComment[]    @relation("AuthoredComments")
+  sent_messages     UserMessage[]    @relation("SentMessages")
+  received_messages UserMessage[]    @relation("ReceivedMessages")
+  relations_as_1    UserRelation[]   @relation("User1Relations")
+  relations_as_2    UserRelation[]   @relation("User2Relations")
+  ombudsman_reports OmbudsmanReport[]
+  role              EnmRole          @relation(fields: [role_id], references: [role_id], onUpdate: Restrict, map: "fk_user_role")
 
   @@index([role_id], map: "fk_user_role")
   @@map("users")
@@ -85,15 +96,40 @@ model ClassStudent {
   @@map("class_students")
 }
 
-model ParentStudent {
-  parent_no  BigInt
-  student_no BigInt
-  parent     User   @relation("ParentLink", fields: [parent_no], references: [user_no], onDelete: Cascade, onUpdate: Restrict, map: "fk_ps_parent")
-  student    User   @relation("ChildLink", fields: [student_no], references: [user_no], onDelete: Cascade, onUpdate: Restrict, map: "fk_ps_student")
+model UserRelation {
+  relation_id      BigInt          @id @default(autoincrement())
+  user_no_1        BigInt
+  user_no_2        BigInt
+  relation_type_id String          @db.VarChar(20)
+  created_at       DateTime?       @default(now()) @db.DateTime(0)
+  relation_type    EnmRelationType @relation(fields: [relation_type_id], references: [relation_type_id], onUpdate: Restrict, map: "fk_rel_type")
+  user1            User            @relation("User1Relations", fields: [user_no_1], references: [user_no], onDelete: Cascade, onUpdate: Restrict, map: "fk_rel_user1")
+  user2            User            @relation("User2Relations", fields: [user_no_2], references: [user_no], onDelete: Cascade, onUpdate: Restrict, map: "fk_rel_user2")
 
-  @@id([parent_no, student_no])
-  @@index([student_no], map: "fk_ps_student")
-  @@map("parent_students")
+  @@index([relation_type_id], map: "fk_rel_type")
+  @@index([user_no_1], map: "fk_rel_user1")
+  @@index([user_no_2], map: "fk_rel_user2")
+  @@map("user_relations")
+}
+
+model UserMessage {
+  message_id  BigInt       @id @default(autoincrement())
+  sender_no   BigInt
+  receiver_no BigInt
+  content     String       @db.Text
+  is_read     UserMessage_is_read? @default(N)
+  created_at  DateTime?    @default(now()) @db.DateTime(0)
+  sender      User         @relation("SentMessages", fields: [sender_no], references: [user_no], onDelete: Cascade, onUpdate: Restrict, map: "fk_msg_sender")
+  receiver    User         @relation("ReceivedMessages", fields: [receiver_no], references: [user_no], onDelete: Cascade, onUpdate: Restrict, map: "fk_msg_receiver")
+
+  @@index([sender_no], map: "fk_msg_sender")
+  @@index([receiver_no], map: "fk_msg_receiver")
+  @@map("user_messages")
+}
+
+enum UserMessage_is_read {
+  Y
+  N
 }
 
 model Group {
@@ -344,4 +380,30 @@ enum exam_results_grade {
   B @map("미")
   C @map("양")
   D @map("가")
+}
+
+model OmbudsmanReport {
+  report_id  BigInt             @id @default(autoincrement())
+  user_no    BigInt
+  category   Ombudsman_category @default(OPINION)
+  title      String             @db.VarChar(255)
+  content    String             @db.Text
+  status     Ombudsman_status?  @default(PENDING)
+  created_at DateTime?          @default(now()) @db.DateTime(0)
+  updated_at DateTime?          @default(now()) @updatedAt @db.DateTime(0)
+  user       User               @relation(fields: [user_no], references: [user_no], onDelete: Cascade, onUpdate: Restrict, map: "fk_ombudsman_user")
+
+  @@index([user_no], map: "fk_ombudsman_user")
+  @@map("ombudsman_reports")
+}
+
+enum Ombudsman_category {
+  OPINION
+  IMPROVEMENT
+  COMPLAINT
+}
+
+enum Ombudsman_status {
+  PENDING
+  PROCESSED
 }

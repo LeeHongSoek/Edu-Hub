@@ -63,7 +63,7 @@ const toggleExpand = (event: Event) => {
   align-items: center;
   gap: 0.5rem;
   padding: 0.25rem 0.5rem;
-  border-radius: 6px;
+  border-radius: 10px;
   background: rgba(255, 255, 255, 0.03);
   transition: all 0.2s;
   cursor: pointer;

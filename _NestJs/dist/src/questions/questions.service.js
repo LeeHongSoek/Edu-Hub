@@ -69,7 +69,7 @@ let QuestionsService = class QuestionsService {
         });
     }
     async update(id, data) {
-        const { options, ...questionData } = data;
+        const { options, passage, ...questionData } = data;
         const questionId = typeof id === 'string' ? BigInt(id) : BigInt(id);
         return this.prisma.$transaction(async (tx) => {
             if (options) {
@@ -77,12 +77,12 @@ let QuestionsService = class QuestionsService {
                     where: { question_id: questionId },
                 });
             }
-            if (questionData.passage !== undefined) {
-                if (questionData.passage) {
+            if (passage !== undefined) {
+                if (passage) {
                     await tx.questionPassage.upsert({
                         where: { question_id: questionId },
-                        update: { content_md: questionData.passage },
-                        create: { question_id: questionId, content_md: questionData.passage }
+                        update: { content_md: passage },
+                        create: { question_id: questionId, content_md: passage }
                     });
                 }
                 else {

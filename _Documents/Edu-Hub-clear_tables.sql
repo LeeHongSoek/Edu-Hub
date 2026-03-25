@@ -13,6 +13,7 @@ DROP TABLE IF EXISTS `enm_roles`;
 DROP TABLE IF EXISTS `solve_results`;
 DROP TABLE IF EXISTS `study_logs`;
 DROP TABLE IF EXISTS `user_comments`;
+DROP TABLE IF EXISTS `enm_relation_types`;
 DROP TABLE IF EXISTS `exam_results`;
 DROP TABLE IF EXISTS `exam_questions`;
 DROP TABLE IF EXISTS `exams`;
