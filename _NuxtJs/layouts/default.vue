@@ -4,7 +4,10 @@ import UserProfileModal from '~/components/UserProfileModal.vue';
 import IconHome from '~/assets/icons/IconHome.svg?component';
 import IconUser from '~/assets/icons/IconUser.svg?component';
 import IconLogout from '~/assets/icons/IconLogout.svg?component';
+import IconFeedback from '~/assets/icons/IconFeedback.svg?component';
+import OmbudsmanModal from '~/components/OmbudsmanModal.vue';
 
+const showOmbudsmanModal = ref(false);
 const showUserModal = ref(false);
 const userCookie = useCookie('user_info');
 
@@ -32,6 +35,10 @@ function handleLogout() {
         <span class="logo-icon">📘</span>
         <span class="logo-text">Edu<em>Hub</em></span>
       </NuxtLink>
+      <a v-if="userInfo" href="#" class="ombudsman-link" @click.prevent="showOmbudsmanModal = true">
+        <IconFeedback class="icon-feedback" />
+        옴브즈먼
+      </a>
       <nav class="nav-links">
         <template v-if="userInfo">
           <div class="nav-path-box">
@@ -39,13 +46,18 @@ function handleLogout() {
               <IconHome class="icon-home" />
               홈(대시보드)
             </NuxtLink>
-            <span class="path-sep">&gt;</span>
-            <NuxtLink to="/Questions" class="path-current">문제 목록</NuxtLink>
           </div>
           <a href="#" class="user-greeting" @click.prevent="showUserModal = true">
             <IconUser class="icon-user" />
             {{ userInfo.username }}님
           </a>
+          <NuxtLink 
+            v-if="userInfo.role_id === 'S' || userInfo.role_id === 'T'" 
+            to="/Questions" 
+            class="my-questions-link"
+          >
+            나의 문제목록
+          </NuxtLink>
           <a href="#" class="logout-link" @click.prevent="handleLogout">
             <IconLogout class="icon-logout" />
             로그아웃
@@ -60,6 +72,10 @@ function handleLogout() {
       v-if="showUserModal && userInfo" 
       :user="userInfo" 
       @close="showUserModal = false" 
+    />
+    <OmbudsmanModal
+      v-if="showOmbudsmanModal && userInfo"
+      @close="showOmbudsmanModal = false"
     />
   </div>
 </template>
@@ -171,8 +187,41 @@ function handleLogout() {
 .logout-link:hover {
   color: #f87171 !important;
 }
-.icon-user, .icon-logout {
+.icon-user, .icon-logout, .icon-feedback {
   width: 1.1rem;
   height: 1.1rem;
+}
+
+.ombudsman-link {
+  margin-left: 1.2rem;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: rgba(240, 244, 255, 0.5) !important;
+  font-size: 0.85rem !important;
+  font-weight: 500 !important;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.ombudsman-link:hover {
+  color: #818cf8 !important;
+}
+
+.my-questions-link {
+  color: #e2e8f0 !important;
+  font-weight: 600 !important;
+  font-size: 0.95rem !important;
+  margin-left: 0.5rem;
+  padding: 0.4rem 0.8rem;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  transition: all 0.2s;
+}
+
+.my-questions-link:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.2);
 }
 </style>
