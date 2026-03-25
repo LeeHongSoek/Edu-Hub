@@ -115,10 +115,11 @@ onMounted(() => {
   font-weight: 800;
   color: #f8fafc;
   margin-bottom: 0.5rem;
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 1.5rem;
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  gap: 2rem !important;
+  white-space: nowrap;
 }
 
 .welcome-title .username {
@@ -128,13 +129,15 @@ onMounted(() => {
 .welcome-sub {
   color: #94a3b8;
   font-size: 1.1rem;
-  margin-bottom: 1.5rem;
+  margin-bottom: 0;
 }
 
 .quick-nav {
-  display: flex;
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
   gap: 0.75rem;
-  margin-left: 0.5rem;
+  margin-left: 1rem;
 }
 
 .nav-btn {

@@ -86,23 +86,35 @@ function handleLogout() {
 @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800;900&display=swap');
 
 .top-bar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 1.2rem 5rem;
-  position: relative;
-  z-index: 100;
-  font-family: 'Noto Sans KR', 'Apple SD Gothic Neo', sans-serif;
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  padding: 1rem 2.5rem;
+  background: rgba(15, 23, 42, 0.85);
+  backdrop-filter: blur(16px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  position: sticky;
+  top: 0;
+  z-index: 1000;
 }
+
+.header-left {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  gap: 1.5rem !important;
+}
+
 .logo {
-  display: flex;
-  align-items: center;
+  display: flex !important;
+  align-items: center !important;
   gap: 0.5rem;
   font-size: 1.5rem;
   font-weight: 900;
   letter-spacing: -0.03em;
   text-decoration: none;
   color: #f0f4ff;
+  white-space: nowrap;
 }
 .logo-icon { font-size: 1.6rem; }
 .logo-text em {
