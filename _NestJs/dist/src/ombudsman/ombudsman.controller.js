@@ -22,19 +22,19 @@ let OmbudsmanController = class OmbudsmanController {
         this.ombudsmanService = ombudsmanService;
     }
     async create(req, body) {
-        const userNo = BigInt(req.user.userNo);
+        const userNo = BigInt(req.user.user_no);
         return this.ombudsmanService.create(userNo, body);
     }
     async findMyReports(req) {
-        const userNo = BigInt(req.user.userNo);
+        const userNo = BigInt(req.user.user_no);
         return this.ombudsmanService.findByUser(userNo);
     }
     async update(req, id, body) {
-        const userNo = BigInt(req.user.userNo);
+        const userNo = BigInt(req.user.user_no);
         return this.ombudsmanService.update(BigInt(id), userNo, body);
     }
     async remove(req, id) {
-        const userNo = BigInt(req.user.userNo);
+        const userNo = BigInt(req.user.user_no);
         return this.ombudsmanService.remove(BigInt(id), userNo);
     }
 };

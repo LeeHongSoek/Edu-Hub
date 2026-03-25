@@ -9,25 +9,25 @@ export class OmbudsmanController {
 
   @Post()
   async create(@Request() req, @Body() body: any) {
-    const userNo = BigInt(req.user.userNo);
+    const userNo = BigInt(req.user.user_no);
     return this.ombudsmanService.create(userNo, body);
   }
 
   @Get('my')
   async findMyReports(@Request() req) {
-    const userNo = BigInt(req.user.userNo);
+    const userNo = BigInt(req.user.user_no);
     return this.ombudsmanService.findByUser(userNo);
   }
 
   @Patch(':id')
   async update(@Request() req, @Param('id') id: string, @Body() body: any) {
-    const userNo = BigInt(req.user.userNo);
+    const userNo = BigInt(req.user.user_no);
     return this.ombudsmanService.update(BigInt(id), userNo, body);
   }
 
   @Delete(':id')
   async remove(@Request() req, @Param('id') id: string) {
-    const userNo = BigInt(req.user.userNo);
+    const userNo = BigInt(req.user.user_no);
     return this.ombudsmanService.remove(BigInt(id), userNo);
   }
 }

@@ -22,7 +22,7 @@ let ExamsController = class ExamsController {
         this.examsService = examsService;
     }
     async findAll(req) {
-        const userNo = BigInt(req.user.userNo);
+        const userNo = BigInt(req.user.user_no);
         return this.examsService.findAll(userNo);
     }
 };

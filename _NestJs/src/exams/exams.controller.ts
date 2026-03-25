@@ -9,7 +9,7 @@ export class ExamsController {
 
   @Get()
   async findAll(@Request() req: any) {
-    const userNo = BigInt(req.user.userNo);
+    const userNo = BigInt(req.user.user_no);
     return this.examsService.findAll(userNo);
   }
 }

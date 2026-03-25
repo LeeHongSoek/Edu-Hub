@@ -22,15 +22,15 @@ let StudyLogsController = class StudyLogsController {
         this.studyLogsService = studyLogsService;
     }
     async create(req, body) {
-        const userNo = BigInt(req.user.userNo);
+        const userNo = BigInt(req.user.user_no);
         return this.studyLogsService.create(userNo, BigInt(body.question_id), body.user_memo);
     }
     async findMyLogs(req) {
-        const userNo = BigInt(req.user.userNo);
+        const userNo = BigInt(req.user.user_no);
         return this.studyLogsService.findByUser(userNo);
     }
     async findByQuestion(req, id) {
-        const userNo = BigInt(req.user.userNo);
+        const userNo = BigInt(req.user.user_no);
         return this.studyLogsService.findByQuestion(userNo, BigInt(id));
     }
 };

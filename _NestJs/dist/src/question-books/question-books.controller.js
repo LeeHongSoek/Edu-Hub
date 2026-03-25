@@ -22,27 +22,27 @@ let QuestionBooksController = class QuestionBooksController {
         this.questionBooksService = questionBooksService;
     }
     async create(req, body) {
-        const userNo = BigInt(req.user.userNo);
+        const userNo = BigInt(req.user.user_no);
         return this.questionBooksService.create(userNo, body);
     }
     async findMyBooks(req) {
-        const userNo = BigInt(req.user.userNo);
+        const userNo = BigInt(req.user.user_no);
         return this.questionBooksService.findByUser(userNo);
     }
     async update(req, id, body) {
-        const userNo = BigInt(req.user.userNo);
+        const userNo = BigInt(req.user.user_no);
         return this.questionBooksService.update(BigInt(id), userNo, body);
     }
     async remove(req, id) {
-        const userNo = BigInt(req.user.userNo);
+        const userNo = BigInt(req.user.user_no);
         return this.questionBooksService.remove(BigInt(id), userNo);
     }
     async addItem(req, id, questionId) {
-        const userNo = BigInt(req.user.userNo);
+        const userNo = BigInt(req.user.user_no);
         return this.questionBooksService.addItem(BigInt(id), userNo, BigInt(questionId));
     }
     async removeItem(req, id, qId) {
-        const userNo = BigInt(req.user.userNo);
+        const userNo = BigInt(req.user.user_no);
         return this.questionBooksService.removeItem(BigInt(id), userNo, BigInt(qId));
     }
 };

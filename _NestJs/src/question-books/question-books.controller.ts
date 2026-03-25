@@ -9,37 +9,37 @@ export class QuestionBooksController {
 
   @Post()
   async create(@Request() req, @Body() body: any) {
-    const userNo = BigInt(req.user.userNo);
+    const userNo = BigInt(req.user.user_no);
     return this.questionBooksService.create(userNo, body);
   }
 
   @Get('my')
   async findMyBooks(@Request() req) {
-    const userNo = BigInt(req.user.userNo);
+    const userNo = BigInt(req.user.user_no);
     return this.questionBooksService.findByUser(userNo);
   }
 
   @Patch(':id')
   async update(@Request() req, @Param('id') id: string, @Body() body: any) {
-    const userNo = BigInt(req.user.userNo);
+    const userNo = BigInt(req.user.user_no);
     return this.questionBooksService.update(BigInt(id), userNo, body);
   }
 
   @Delete(':id')
   async remove(@Request() req, @Param('id') id: string) {
-    const userNo = BigInt(req.user.userNo);
+    const userNo = BigInt(req.user.user_no);
     return this.questionBooksService.remove(BigInt(id), userNo);
   }
 
   @Post(':id/items')
   async addItem(@Request() req, @Param('id') id: string, @Body('question_id') questionId: string) {
-    const userNo = BigInt(req.user.userNo);
+    const userNo = BigInt(req.user.user_no);
     return this.questionBooksService.addItem(BigInt(id), userNo, BigInt(questionId));
   }
 
   @Delete(':id/items/:qId')
   async removeItem(@Request() req, @Param('id') id: string, @Param('qId') qId: string) {
-    const userNo = BigInt(req.user.userNo);
+    const userNo = BigInt(req.user.user_no);
     return this.questionBooksService.removeItem(BigInt(id), userNo, BigInt(qId));
   }
 }

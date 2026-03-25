@@ -9,20 +9,20 @@ export class DashboardController {
 
   @Get('stats')
   async getDashboardStats(@Request() req) {
-    const userNo = BigInt(req.user.userNo);
-    const roleId = req.user.roleId;
+    const userNo = BigInt(req.user.user_no);
+    const roleId = req.user.role;
     return this.dashboardService.getStats(userNo, roleId);
   }
 
   @Get('relations')
   async getRelations(@Request() req) {
-    const userNo = BigInt(req.user.userNo);
+    const userNo = BigInt(req.user.user_no);
     return this.dashboardService.getRelations(userNo);
   }
 
   @Get('messages')
   async getMessages(@Request() req) {
-    const userNo = BigInt(req.user.userNo);
+    const userNo = BigInt(req.user.user_no);
     return this.dashboardService.getMessages(userNo);
   }
 }

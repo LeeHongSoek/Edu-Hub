@@ -22,16 +22,16 @@ let DashboardController = class DashboardController {
         this.dashboardService = dashboardService;
     }
     async getDashboardStats(req) {
-        const userNo = BigInt(req.user.userNo);
-        const roleId = req.user.roleId;
+        const userNo = BigInt(req.user.user_no);
+        const roleId = req.user.role;
         return this.dashboardService.getStats(userNo, roleId);
     }
     async getRelations(req) {
-        const userNo = BigInt(req.user.userNo);
+        const userNo = BigInt(req.user.user_no);
         return this.dashboardService.getRelations(userNo);
     }
     async getMessages(req) {
-        const userNo = BigInt(req.user.userNo);
+        const userNo = BigInt(req.user.user_no);
         return this.dashboardService.getMessages(userNo);
     }
 };
