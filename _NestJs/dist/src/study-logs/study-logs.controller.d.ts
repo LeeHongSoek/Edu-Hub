@@ -8,9 +8,9 @@ export declare class StudyLogsController {
     }): Promise<{
         question_id: bigint;
         user_no: bigint;
+        user_memo: string | null;
         is_correct: boolean | null;
         log_id: bigint;
-        user_memo: string | null;
         try_count: number | null;
         last_played_at: Date | null;
         next_review_at: Date | null;
@@ -22,9 +22,9 @@ export declare class StudyLogsController {
     } & {
         question_id: bigint;
         user_no: bigint;
+        user_memo: string | null;
         is_correct: boolean | null;
         log_id: bigint;
-        user_memo: string | null;
         try_count: number | null;
         last_played_at: Date | null;
         next_review_at: Date | null;
@@ -32,9 +32,9 @@ export declare class StudyLogsController {
     findByQuestion(req: any, id: string): Promise<{
         question_id: bigint;
         user_no: bigint;
+        user_memo: string | null;
         is_correct: boolean | null;
         log_id: bigint;
-        user_memo: string | null;
         try_count: number | null;
         last_played_at: Date | null;
         next_review_at: Date | null;

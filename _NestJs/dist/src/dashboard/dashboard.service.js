@@ -38,9 +38,9 @@ let DashboardService = class DashboardService {
                 solved_at: { gte: ago7d },
             },
         });
-        const totalSolved = solveResults.length;
+        const recentSolvedCount = solveResults.length;
         const correctOnes = solveResults.filter((r) => r.is_correct).length;
-        const accuracy = totalSolved > 0 ? Math.round((correctOnes / totalSolved) * 100) : 0;
+        const accuracy = recentSolvedCount > 0 ? Math.round((correctOnes / recentSolvedCount) * 100) : 0;
         const dailyStats = [];
         for (let i = 6; i >= 0; i--) {
             const d = new Date(now);
@@ -50,10 +50,26 @@ let DashboardService = class DashboardService {
             dailyStats.push({ date: dateStr, count });
         }
         return {
-            totalSolved,
+            totalViewed: await this.prisma.studyLog.count({
+                where: {
+                    user_no: userNo,
+                    user_memo: '문제보기',
+                },
+            }),
+            totalSolved: await this.prisma.studyLog.count({
+                where: {
+                    user_no: userNo,
+                    user_memo: '문제풀기',
+                },
+            }),
             accuracy,
             dailyStats,
-            studyLogs: await this.prisma.studyLog.count({ where: { user_no: userNo } }),
+            studyLogs: await this.prisma.studyLog.count({
+                where: {
+                    user_no: userNo,
+                    is_correct: false,
+                },
+            }),
         };
     }
     async getTeacherStats(userNo) {

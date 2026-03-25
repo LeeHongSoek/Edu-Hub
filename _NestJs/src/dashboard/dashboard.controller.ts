@@ -5,13 +5,13 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 @Controller('dashboard')
 @UseGuards(JwtAuthGuard)
 export class DashboardController {
-  constructor(private readonly dashboardService: DashboardService) {}
+  constructor(private readonly dashboardService: DashboardService) { }
 
   @Get('stats')
   async getDashboardStats(@Request() req) {
     const userNoVal = req.user?.user_no || req.user?.userNo;
     if (!userNoVal) throw new UnauthorizedException();
-    
+
     const userNo = BigInt(userNoVal);
     const roleId = req.user.role;
     return this.dashboardService.getStats(userNo, roleId);

@@ -13,6 +13,8 @@ export default defineNuxtConfig({
       enabled: true
     }
   },
+  // If you are specifically trying to enable detailed debugging: 디버깅
+  debug: true,
   devServer: {
     port: 3000
   },

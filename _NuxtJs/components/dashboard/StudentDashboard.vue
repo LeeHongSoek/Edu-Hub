@@ -29,6 +29,19 @@ ChartJS.register(
 const stats = ref<any>(null);
 const loading = ref(true);
 
+const getDefaultDailyStats = () => {
+  const dates = [];
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date();
+    d.setDate(d.getDate() - i);
+    dates.push({
+      date: d.toISOString().split('T')[0],
+      count: 0
+    });
+  }
+  return dates;
+};
+
 const fetchStats = async () => {
   const config = useRuntimeConfig();
   const token = useCookie('auth_token');
@@ -36,9 +49,27 @@ const fetchStats = async () => {
     const data = await $fetch(`${config.public.apiBase}/dashboard/stats`, {
       headers: { Authorization: `Bearer ${token.value}` }
     });
-    stats.value = data;
+    console.log('Fetched info:', data);
+    
+    // 만약 data가 없거나 속성들이 비어있다면 0을 기본값으로 사용
+    stats.value = {
+      accuracy: data?.accuracy || 0,
+      totalSolved: data?.totalSolved || 0,
+      totalViewed: data?.totalViewed || 0,
+      studyLogs: data?.studyLogs || 0,
+      // 데이터가 없으면 7일치 0개 배열을 추가
+      dailyStats: data?.dailyStats && data.dailyStats.length > 0 ? data.dailyStats : getDefaultDailyStats()
+    };
   } catch (err) {
     console.error('Failed to fetch stats:', err);
+    // 에러 시에도 기본값을 넣어서 그래프와 숫자가 0으로 보이게 처리
+    stats.value = {
+      accuracy: 0,
+      totalSolved: 0,
+      totalViewed: 0,
+      studyLogs: 0,
+      dailyStats: getDefaultDailyStats()
+    };
   } finally {
     loading.value = false;
   }
