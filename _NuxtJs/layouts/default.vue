@@ -31,14 +31,16 @@ function handleLogout() {
 <template>
   <div>
     <header class="top-bar">
-      <NuxtLink to="/" class="logo">
-        <span class="logo-icon">📘</span>
-        <span class="logo-text">Edu<em>Hub</em></span>
-      </NuxtLink>
-      <a v-if="userInfo" href="#" class="ombudsman-link" @click.prevent="showOmbudsmanModal = true">
-        <IconFeedback class="icon-feedback" />
-        옴브즈먼
-      </a>
+      <div class="header-left">
+        <NuxtLink to="/" class="logo">
+          <span class="logo-icon">📘</span>
+          <span class="logo-text">Edu<em>Hub</em></span>
+        </NuxtLink>
+        <a v-if="userInfo" href="#" class="ombudsman-link" @click.prevent="showOmbudsmanModal = true">
+          <IconFeedback class="icon-feedback" />
+          옴브즈먼
+        </a>
+      </div>
       <nav class="nav-links">
         <template v-if="userInfo">
           <div class="nav-path-box">

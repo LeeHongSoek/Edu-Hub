@@ -30,15 +30,14 @@ onMounted(() => {
       <div class="welcome-section">
         <h1 class="welcome-title">
           안녕하세요, <span class="username">{{ userInfo.username }}</span>님! 👋
+          <!-- 대시보드 내 네비게이션 버튼 (타이틀 바로 뒤) -->
+          <div v-if="userInfo.role_id !== 'P'" class="quick-nav">
+            <NuxtLink to="/Questions?mine=true" class="nav-btn">나의 문제목록</NuxtLink>
+            <NuxtLink to="/QuestionBooks" class="nav-btn">나의 문제집목록</NuxtLink>
+            <NuxtLink to="/Exams" class="nav-btn">나의 고사집목록</NuxtLink>
+          </div>
         </h1>
         <p class="welcome-sub">오늘도 지식을 완성하는 하루 되세요.</p>
-        
-        <!-- 대시보드 내 네비게이션 버튼 -->
-        <div v-if="userInfo.role_id !== 'P'" class="quick-nav">
-          <NuxtLink to="/Questions" class="nav-btn">나의 문제목록</NuxtLink>
-          <button class="nav-btn" @click="activeTab = 'question-books'">나의 문제집목록</button>
-          <button class="nav-btn" @click="activeTab = 'exams'">나의 고사집목록</button>
-        </div>
       </div>
       
       <div class="role-badge" :class="'role-' + userInfo.role_id">
@@ -116,6 +115,10 @@ onMounted(() => {
   font-weight: 800;
   color: #f8fafc;
   margin-bottom: 0.5rem;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1.5rem;
 }
 
 .welcome-title .username {
@@ -131,6 +134,7 @@ onMounted(() => {
 .quick-nav {
   display: flex;
   gap: 0.75rem;
+  margin-left: 0.5rem;
 }
 
 .nav-btn {
