@@ -62,7 +62,7 @@ export class QuestionsService {
 
   // 문제 수정
   async update(id: string | number, data: any) {
-    const { options, ...questionData } = data;
+    const { options, passage, ...questionData } = data;
     const questionId = typeof id === 'string' ? BigInt(id) : BigInt(id);
 
     return this.prisma.$transaction(async (tx) => {
@@ -74,13 +74,13 @@ export class QuestionsService {
       }
 
       // 지문 처리: 만약 passage 속성이 있으면 upsert
-      if (questionData.passage !== undefined) {
-        if (questionData.passage) {
+      if (passage !== undefined) {
+        if (passage) {
           // 값이 있으면 upsert
           await tx.questionPassage.upsert({
             where: { question_id: questionId },
-            update: { content_md: questionData.passage },
-            create: { question_id: questionId, content_md: questionData.passage }
+            update: { content_md: passage },
+            create: { question_id: questionId, content_md: passage }
           });
         } else {
           // 값이 빈 문자열이거나 null이면 삭제

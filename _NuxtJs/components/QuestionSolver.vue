@@ -2,11 +2,14 @@
 import { ref, onMounted, onUnmounted, computed } from 'vue';
 import type { Question, QuestionReview } from '~/types';
 import LatexRenderer from '~/components/LatexRenderer.vue';
+import IconClock from '~/assets/icons/IconClock.svg?component';
 
 const props = defineProps<{
   question: Question;
   hasPrev?: boolean;
   hasNext?: boolean;
+  currentIndex?: number;
+  totalQuestions?: number;
 }>();
 
 const emit = defineEmits<{
@@ -202,17 +205,20 @@ const submitReview = async () => {
             <div v-if="question.group" class="solver-group-path">
               {{ formatGroupPath(question.group) }}
             </div>
-            <div v-if="question.time_limit" class="compact-timer">
-              <span class="timer-label">제한시간:</span>
-              <span class="timer-val">{{ formatTime(timeLeft) }}</span>
+            <div v-if="question.time_limit" class="timer-wrapper">
+              <div class="compact-timer">
+                <IconClock class="icon-clock" />
+                <span class="timer-label">제한시간:</span>
+                <span class="timer-val">{{ formatTime(timeLeft) }}</span>
+              </div>
+              <div class="progress-bar compact-progress">
+                <div class="progress-fill" :style="{ width: progressWidth }"></div>
+              </div>
             </div>
             <button class="btn-close" @click="emit('close')">&times;</button>
           </div>
         </div>
         <h2 class="solver-title">{{ question.title }}</h2>
-        <div v-if="question.time_limit" class="progress-bar">
-          <div class="progress-fill" :style="{ width: progressWidth }"></div>
-        </div>
       </div>
 
       <div class="solver-body">
@@ -304,6 +310,9 @@ const submitReview = async () => {
           </button>
           <button class="btn-primary" @click="emit('close')">
             목록으로 돌아가기
+            <span v-if="currentIndex !== undefined && totalQuestions !== undefined" class="nav-count">
+              ({{ currentIndex + 1 }}/{{ totalQuestions }})
+            </span>
           </button>
           <button class="btn-nav" :disabled="!hasNext" @click="emit('next')">
             다음문제
@@ -398,8 +407,8 @@ const submitReview = async () => {
   background: #1e293b;
   width: 100%;
   max-width: 800px;
-  max-height: 90vh;
-  border-radius: 20px;
+  height: 90vh; /* Fixed to 90vh */
+  border-radius: 10px;
   border: 1px solid rgba(255, 255, 255, 0.1);
   display: flex;
   flex-direction: column;
@@ -428,12 +437,26 @@ const submitReview = async () => {
   gap: 1rem;
 }
 
+.timer-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.1rem;
+}
+
 .compact-timer {
   display: flex;
   align-items: baseline;
   gap: 0.4rem;
   font-family: 'JetBrains Mono', monospace;
   color: #a5b4fc;
+}
+
+.icon-clock {
+  width: 15px;
+  height: 15px;
+  color: #818cf8;
+  transform: translateY(2px);
 }
 
 .timer-label {
@@ -490,6 +513,12 @@ const submitReview = async () => {
   margin-top: 0.5rem;
 }
 
+.compact-progress {
+  width: 100%;
+  margin-top: 0;
+  height: 3px;
+}
+
 .progress-fill {
   height: 100%;
   background: #6366f1;
@@ -501,6 +530,8 @@ const submitReview = async () => {
   padding: 2rem;
   overflow-y: auto;
   flex: 1;
+  display: flex;
+  flex-direction: column;
 }
 
 .solver-body::-webkit-scrollbar {
@@ -516,17 +547,18 @@ const submitReview = async () => {
 }
 
 .question-text {
-  font-size: 1.5rem;
-  font-weight: 700;
+  font-size: 1.25rem;
+  font-weight: 600;
   color: #fff;
-  line-height: 1.4;
-  margin-bottom: 2rem;
+  line-height: 1.5;
+  margin-bottom: auto; /* Pushes the rest of the content to the bottom */
 }
 
 .question-passage {
+  margin-top: 1.5rem; /* Ensure spacing if question text is very short */
   background: #fff;
   color: #333;
-  border-radius: 12px;
+  border-radius: 10px;
   padding: 1rem;
   margin-bottom: 2rem;
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
@@ -543,26 +575,27 @@ const submitReview = async () => {
   padding: 2rem;
   background: rgba(255, 255, 255, 0.02);
   border: 1px dashed rgba(255, 255, 255, 0.1);
-  border-radius: 12px;
+  border-radius: 10px;
   color: #64748b;
 }
 
 .options-list {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.5rem;
 }
 
 .option-item {
   display: flex;
   align-items: center;
-  gap: 1rem;
-  padding: 1rem;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 12px;
+  border-radius: 10px;
   cursor: pointer;
   transition: all 0.2s;
+  min-height: 52px;
 }
 
 .option-item:hover {
@@ -604,8 +637,14 @@ const submitReview = async () => {
 }
 
 .option-text {
-  font-size: 1.1rem;
+  font-size: 1rem;
   color: #cbd5e1;
+}
+
+@media (max-width: 640px) {
+  .options-list {
+    grid-template-columns: 1fr;
+  }
 }
 
 .answer-input-container {
@@ -617,7 +656,7 @@ const submitReview = async () => {
   padding: 1rem 1.5rem;
   background: rgba(255, 255, 255, 0.05);
   border: 2px solid rgba(255, 255, 255, 0.1);
-  border-radius: 12px;
+  border-radius: 10px;
   color: #fff;
   font-size: 1.1rem;
   outline: none;
@@ -641,7 +680,7 @@ const submitReview = async () => {
   background: rgba(245, 158, 11, 0.1);
   border: 1px solid rgba(245, 158, 11, 0.2);
   padding: 1rem 1.25rem;
-  border-radius: 12px;
+  border-radius: 10px;
 }
 
 .explanation-header {
@@ -664,7 +703,7 @@ const submitReview = async () => {
   border: 1px solid rgba(99, 102, 241, 0.2);
   color: #818cf8;
   padding: 0.25rem 0.75rem;
-  border-radius: 6px;
+  border-radius: 10px;
   font-size: 0.8rem;
   font-weight: 600;
   cursor: pointer;
@@ -724,7 +763,7 @@ const submitReview = async () => {
   padding: 1rem;
   background: rgba(15, 23, 42, 0.5);
   border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 12px;
+  border-radius: 10px;
 }
 
 .comment-panel textarea {
@@ -748,7 +787,7 @@ const submitReview = async () => {
   background: #6366f1;
   color: #fff;
   border: none;
-  border-radius: 6px;
+  border-radius: 10px;
   font-size: 0.85rem;
   font-weight: 600;
   cursor: pointer;
@@ -766,7 +805,7 @@ const submitReview = async () => {
   width: 100%;
   padding: 1rem;
   border: none;
-  border-radius: 12px;
+  border-radius: 10px;
   font-size: 1.1rem;
   font-weight: 700;
   cursor: pointer;
@@ -795,7 +834,7 @@ const submitReview = async () => {
   background: rgba(255, 255, 255, 0.05);
   color: #a5b4fc;
   border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 8px;
+  border-radius: 10px;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s;
@@ -818,6 +857,13 @@ const submitReview = async () => {
   flex: 1;
 }
 
+.nav-count {
+  font-size: 0.85em;
+  opacity: 0.8;
+  margin-left: 0.3rem;
+  font-weight: 500;
+}
+
 .btn-submit:disabled {
   opacity: 0.5;
   cursor: not-allowed;
@@ -834,7 +880,7 @@ const submitReview = async () => {
   background: rgba(99, 102, 241, 0.1);
   color: #818cf8;
   border: 1px solid rgba(99, 102, 241, 0.3);
-  border-radius: 4px;
+  border-radius: 10px;
   font-size: 0.7rem;
   font-weight: 600;
 }
@@ -859,7 +905,7 @@ const submitReview = async () => {
   background: rgba(30, 41, 59, 0.95);
   backdrop-filter: blur(16px);
   border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 24px;
+  border-radius: 10px;
   padding: 2.5rem;
   width: 100%;
   max-width: 400px;
@@ -896,7 +942,7 @@ const submitReview = async () => {
   background: #6366f1;
   color: #fff;
   border: none;
-  border-radius: 12px;
+  border-radius: 10px;
   font-size: 1.1rem;
   font-weight: 700;
   cursor: pointer;
@@ -972,7 +1018,7 @@ const submitReview = async () => {
 .review-form {
   background: rgba(255, 255, 255, 0.03);
   padding: 1rem;
-  border-radius: 12px;
+  border-radius: 10px;
   margin-bottom: 1.5rem;
   border: 1px solid rgba(255, 255, 255, 0.05);
 }
@@ -991,7 +1037,7 @@ const submitReview = async () => {
   border: 1px solid rgba(255, 255, 255, 0.1);
   color: #fff;
   padding: 0.75rem;
-  border-radius: 8px;
+  border-radius: 10px;
   font-size: 0.95rem;
   resize: vertical;
   margin-bottom: 1rem;
@@ -1029,7 +1075,7 @@ const submitReview = async () => {
 .review-item {
   background: rgba(255, 255, 255, 0.02);
   padding: 1rem;
-  border-radius: 8px;
+  border-radius: 10px;
   border-left: 3px solid #6366f1;
 }
 

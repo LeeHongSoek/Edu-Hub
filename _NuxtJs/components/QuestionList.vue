@@ -181,6 +181,8 @@ onMounted(async () => {
       :question="selectedQuestionForSolve"
       :has-prev="getPrevQuestion() !== null"
       :has-next="getNextQuestion() !== null"
+      :current-index="currentQuestionIndex"
+      :total-questions="filteredQuestions.length"
       @close="selectedQuestionForSolve = null"
       @prev="handlePrev"
       @next="handleNext"
