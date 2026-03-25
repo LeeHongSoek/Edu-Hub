@@ -12,8 +12,8 @@ export class QuestionsController {
     @Query('group_id') groupId?: string,
   ) {
     return this.questionsService.findAll(
-      creatorNo ? BigInt(creatorNo) : undefined,
-      groupId ? BigInt(groupId) : undefined,
+      (creatorNo && creatorNo !== 'undefined') ? BigInt(creatorNo) : undefined,
+      (groupId && groupId !== 'undefined') ? BigInt(groupId) : undefined,
     );
   }
 

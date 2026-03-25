@@ -39,7 +39,7 @@ let AuthController = class AuthController {
         return req.user;
     }
     async updateProfile(req, body) {
-        const userNo = BigInt(req.user.userNo);
+        const userNo = BigInt(req.user.user_no);
         return this.authService.updateProfile(userNo, body);
     }
 };

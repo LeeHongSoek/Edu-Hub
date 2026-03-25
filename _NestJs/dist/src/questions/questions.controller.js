@@ -21,7 +21,7 @@ let QuestionsController = class QuestionsController {
         this.questionsService = questionsService;
     }
     findAll(creatorNo, groupId) {
-        return this.questionsService.findAll(creatorNo ? BigInt(creatorNo) : undefined, groupId ? BigInt(groupId) : undefined);
+        return this.questionsService.findAll((creatorNo && creatorNo !== 'undefined') ? BigInt(creatorNo) : undefined, (groupId && groupId !== 'undefined') ? BigInt(groupId) : undefined);
     }
     create(createQuestionDto) {
         return this.questionsService.create(createQuestionDto);

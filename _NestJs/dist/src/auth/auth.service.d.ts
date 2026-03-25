@@ -8,6 +8,7 @@ export declare class AuthService {
     login(user: any): Promise<{
         access_token: string;
         user: {
+            user_no: any;
             userId: any;
             username: any;
             email: any;
@@ -29,6 +30,7 @@ export declare class AuthService {
         password?: string;
     }): Promise<{
         user: {
+            user_no: string;
             userId: string;
             username: string;
             role: string;
