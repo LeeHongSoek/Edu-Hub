@@ -57,6 +57,34 @@ const handleSolve = (question: Question) => {
   selectedQuestionForSolve.value = question;
 };
 
+// 이전/다음 문제 탐색용 로직
+const currentQuestionIndex = computed(() => {
+  if (!selectedQuestionForSolve.value) return -1;
+  return filteredQuestions.value.findIndex(q => q.question_id === selectedQuestionForSolve.value?.question_id);
+});
+
+const getPrevQuestion = () => {
+  const idx = currentQuestionIndex.value;
+  if (idx > 0) return filteredQuestions.value[idx - 1];
+  return null;
+};
+
+const getNextQuestion = () => {
+  const idx = currentQuestionIndex.value;
+  if (idx !== -1 && idx < filteredQuestions.value.length - 1) return filteredQuestions.value[idx + 1];
+  return null;
+};
+
+const handlePrev = () => {
+  const prev = getPrevQuestion();
+  if (prev) selectedQuestionForSolve.value = prev;
+};
+
+const handleNext = () => {
+  const next = getNextQuestion();
+  if (next) selectedQuestionForSolve.value = next;
+};
+
 const formatGroupPath = (group: Group) => {
   const parts: string[] = [];
   let current: Group | undefined = group;
@@ -149,8 +177,13 @@ onMounted(async () => {
     <!-- 문제 풀기 오버레이 -->
     <QuestionSolver 
       v-if="selectedQuestionForSolve" 
-      :question="selectedQuestionForSolve" 
-      @close="selectedQuestionForSolve = null" 
+      :key="selectedQuestionForSolve.question_id"
+      :question="selectedQuestionForSolve"
+      :has-prev="getPrevQuestion() !== null"
+      :has-next="getNextQuestion() !== null"
+      @close="selectedQuestionForSolve = null"
+      @prev="handlePrev"
+      @next="handleNext"
     />
   </div>
 </template>

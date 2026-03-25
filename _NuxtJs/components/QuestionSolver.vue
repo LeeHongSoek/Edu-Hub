@@ -5,10 +5,14 @@ import LatexRenderer from '~/components/LatexRenderer.vue';
 
 const props = defineProps<{
   question: Question;
+  hasPrev?: boolean;
+  hasNext?: boolean;
 }>();
 
 const emit = defineEmits<{
   (e: 'close'): void;
+  (e: 'prev'): void;
+  (e: 'next'): void;
 }>();
 
 const userAnswer = ref('');
@@ -189,26 +193,25 @@ const submitReview = async () => {
 <template>
   <div class="solver-overlay">
     <div class="solver-card">
-      <div class="solver-top-actions">
-        <div v-if="question.group" class="solver-group-path">
-          {{ formatGroupPath(question.group) }}
-        </div>
-        <button class="btn-close" @click="emit('close')">&times;</button>
-      </div>
-      
-      <div class="solver-header">
-        <div class="question-info">
-          <span class="badge-type">{{ question.type.type_name }}</span>
-          <h2 class="solver-title">{{ question.title }}</h2>
-        </div>
-        
-        <div v-if="question.time_limit" class="timer-container">
-          <div class="timer-text">
-            <span class="timer-label">제한시간:</span> {{ formatTime(timeLeft) }}
+      <div class="solver-header-compact">
+        <div class="compact-top">
+          <div class="compact-top-left">
+            <span class="badge-type">{{ question.type.type_name }}</span>
           </div>
-          <div class="progress-bar">
-            <div class="progress-fill" :style="{ width: progressWidth }"></div>
+          <div class="compact-top-right">
+            <div v-if="question.group" class="solver-group-path">
+              {{ formatGroupPath(question.group) }}
+            </div>
+            <div v-if="question.time_limit" class="compact-timer">
+              <span class="timer-label">제한시간:</span>
+              <span class="timer-val">{{ formatTime(timeLeft) }}</span>
+            </div>
+            <button class="btn-close" @click="emit('close')">&times;</button>
           </div>
+        </div>
+        <h2 class="solver-title">{{ question.title }}</h2>
+        <div v-if="question.time_limit" class="progress-bar">
+          <div class="progress-fill" :style="{ width: progressWidth }"></div>
         </div>
       </div>
 
@@ -295,7 +298,17 @@ const submitReview = async () => {
         >
           정답 확인
         </button>
-        <button v-else class="btn-primary" @click="emit('close')">목록으로 돌아가기</button>
+        <div v-else class="footer-nav-buttons">
+          <button class="btn-nav" :disabled="!hasPrev" @click="emit('prev')">
+            이전문제
+          </button>
+          <button class="btn-primary" @click="emit('close')">
+            목록으로 돌아가기
+          </button>
+          <button class="btn-nav" :disabled="!hasNext" @click="emit('next')">
+            다음문제
+          </button>
+        </div>
       </div>
     </div>
 
@@ -395,17 +408,44 @@ const submitReview = async () => {
   overflow: hidden;
 }
 
-.solver-top-actions {
-  position: absolute;
-  top: 1rem;
-  right: 1.5rem;
-  left: 1.5rem;
+.solver-header-compact {
+  padding: 1.5rem 2rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
   display: flex;
-  justify-content: flex-end;
+  flex-direction: column;
+  gap: 0.8rem;
+}
+
+.compact-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.compact-top-right {
+  display: flex;
   align-items: center;
   gap: 1rem;
-  pointer-events: none;
-  z-index: 10;
+}
+
+.compact-timer {
+  display: flex;
+  align-items: baseline;
+  gap: 0.4rem;
+  font-family: 'JetBrains Mono', monospace;
+  color: #a5b4fc;
+}
+
+.timer-label {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #818cf8;
+}
+
+.timer-val {
+  font-size: 1.25rem;
+  font-weight: 800;
+  letter-spacing: 0.5px;
 }
 
 .solver-group-path {
@@ -418,7 +458,6 @@ const submitReview = async () => {
   border-radius: 999px;
   backdrop-filter: blur(8px);
   border: 1px solid rgba(255, 255, 255, 0.1);
-  pointer-events: auto;
 }
 
 .btn-close {
@@ -427,51 +466,20 @@ const submitReview = async () => {
   color: #94a3b8;
   font-size: 2rem;
   cursor: pointer;
-  pointer-events: auto;
   line-height: 1;
+  padding: 0;
 }
 
-.solver-header {
-  padding: 4rem 2rem 2rem 2rem; /* 상단 여백 확보 */
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-end; /* 아래로 정렬하여 타이머와 제목 균형 유지 */
-}
-
-.solver-title {
-  margin: 0.5rem 0 0 0;
-  font-size: 1.25rem;
+.btn-close:hover {
   color: #fff;
 }
 
-.timer-container {
-  text-align: right;
-  min-width: 200px;
-}
-
-.timer-text {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 3.3rem; /* 1.5배 확대 */
-  font-weight: 800;
-  color: #a5b4fc;
-  text-shadow: 0 0 15px rgba(99, 102, 241, 0.4);
-  line-height: 1;
-  margin-bottom: 0.5rem;
-  display: flex;
-  align-items: baseline;
-  justify-content: flex-end;
-  gap: 0.8rem;
-}
-
-.timer-label {
-  font-size: 1.2rem; /* 1.5배 확대 */
-  font-weight: 700;
-  color: #818cf8;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  opacity: 0.8;
-  text-shadow: none;
+.solver-title {
+  margin: 0;
+  font-size: 1.3rem;
+  color: #fff;
+  line-height: 1.4;
+  word-break: keep-all;
 }
 
 .progress-bar {
@@ -479,13 +487,14 @@ const submitReview = async () => {
   background: rgba(255, 255, 255, 0.1);
   border-radius: 2px;
   overflow: hidden;
+  margin-top: 0.5rem;
 }
 
 .progress-fill {
   height: 100%;
   background: #6366f1;
   transition: width 1s linear;
-  margin-left: auto; /* 반대 방향으로 깎이도록 우측 정렬 */
+  margin-left: auto;
 }
 
 .solver-body {
@@ -621,17 +630,17 @@ const submitReview = async () => {
 }
 
 .solver-footer {
-  padding: 2rem;
+  padding: 1.5rem 2rem;
   border-top: 1px solid rgba(255, 255, 255, 0.1);
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
+  gap: 1rem;
 }
 
 .explanation-box {
   background: rgba(245, 158, 11, 0.1);
   border: 1px solid rgba(245, 158, 11, 0.2);
-  padding: 1.5rem;
+  padding: 1rem 1.25rem;
   border-radius: 12px;
 }
 
@@ -639,8 +648,8 @@ const submitReview = async () => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 1.25rem;
-  padding-bottom: 0.75rem;
+  margin-bottom: 0.75rem;
+  padding-bottom: 0.5rem;
   border-bottom: 1px solid rgba(255, 255, 255, 0.05);
 }
 
@@ -772,6 +781,41 @@ const submitReview = async () => {
 .btn-submit:hover:not(:disabled) {
   background: #4f46e5;
   transform: translateY(-2px);
+}
+
+.footer-nav-buttons {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+}
+
+.btn-nav {
+  padding: 1rem 1.5rem;
+  background: rgba(255, 255, 255, 0.05);
+  color: #a5b4fc;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  flex: 0 0 auto;
+}
+
+.btn-nav:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.2);
+  transform: translateY(-2px);
+}
+
+.btn-nav:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.footer-nav-buttons .btn-primary {
+  flex: 1;
 }
 
 .btn-submit:disabled {
