@@ -142,7 +142,7 @@ const handleInput = () => {
   }
 };
 
-const handleFinish = (isTimeOver = false) => {
+const handleFinish = async (isTimeOver = false) => {
   if (isFinished.value) return;
   
   isFinished.value = true;
