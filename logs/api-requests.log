@@ -12,3 +12,23 @@
 {"timestamp":"2026-03-26T13:28:25.860Z","type":"API_REQUEST","method":"GET","url":"/questions","statusCode":304,"duration":"29ms"}
 {"timestamp":"2026-03-26T13:28:32.815Z","type":"API_REQUEST","method":"POST","url":"/auth/login","statusCode":201,"duration":"112ms"}
 {"timestamp":"2026-03-26T13:28:32.868Z","type":"API_REQUEST","method":"GET","url":"/dashboard/stats","statusCode":304,"duration":"13ms"}
+{"timestamp":"2026-03-26T13:38:09.843Z","type":"LOGGER_INIT","message":"Nest API request logger initialized"}
+{"timestamp":"2026-03-26T13:38:10.857Z","type":"API_REQUEST","method":"GET","url":"/stats","statusCode":304,"duration":"56ms"}
+{"timestamp":"2026-03-26T13:38:10.863Z","type":"API_REQUEST","method":"GET","url":"/questions","statusCode":304,"duration":"22ms"}
+{"timestamp":"2026-03-26T13:38:25.315Z","type":"API_REQUEST","method":"POST","url":"/auth/login","statusCode":201,"duration":"113ms"}
+{"timestamp":"2026-03-26T13:38:25.359Z","type":"API_REQUEST","method":"GET","url":"/dashboard/stats","statusCode":200,"duration":"5ms"}
+{"timestamp":"2026-03-26T13:38:49.165Z","type":"LOGGER_INIT","message":"Nest API request logger initialized"}
+{"timestamp":"2026-03-26T13:38:54.202Z","type":"API_REQUEST","method":"GET","url":"/stats","statusCode":304,"duration":"63ms"}
+{"timestamp":"2026-03-26T13:38:54.207Z","type":"API_REQUEST","method":"GET","url":"/questions","statusCode":304,"duration":"28ms"}
+{"timestamp":"2026-03-26T13:39:02.845Z","type":"API_REQUEST","method":"POST","url":"/auth/login","statusCode":201,"duration":"107ms"}
+{"timestamp":"2026-03-26T13:39:02.892Z","type":"API_REQUEST","method":"GET","url":"/dashboard/stats","statusCode":304,"duration":"8ms"}
+{"timestamp":"2026-03-26T13:39:53.334Z","type":"LOGGER_INIT","message":"Nest API request logger initialized"}
+{"timestamp":"2026-03-26T13:39:55.314Z","type":"API_REQUEST","method":"GET","url":"/stats","statusCode":304,"duration":"65ms"}
+{"timestamp":"2026-03-26T13:39:55.319Z","type":"API_REQUEST","method":"GET","url":"/questions","statusCode":304,"duration":"22ms"}
+{"timestamp":"2026-03-26T13:40:03.793Z","type":"API_REQUEST","method":"POST","url":"/auth/login","statusCode":201,"duration":"93ms"}
+{"timestamp":"2026-03-26T13:40:03.841Z","type":"API_REQUEST","method":"GET","url":"/dashboard/stats","statusCode":304,"duration":"8ms"}
+{"timestamp":"2026-03-26T13:41:36.045Z","type":"LOGGER_INIT","message":"Nest API request logger initialized"}
+{"timestamp":"2026-03-26T13:41:38.053Z","type":"API_REQUEST","method":"GET","url":"/stats","statusCode":304,"duration":"50ms"}
+{"timestamp":"2026-03-26T13:41:38.057Z","type":"API_REQUEST","method":"GET","url":"/questions","statusCode":304,"duration":"16ms"}
+{"timestamp":"2026-03-26T13:41:47.269Z","type":"API_REQUEST","method":"POST","url":"/auth/login","statusCode":201,"duration":"114ms"}
+{"timestamp":"2026-03-26T13:41:47.306Z","type":"API_REQUEST","method":"GET","url":"/dashboard/stats","statusCode":304,"duration":"10ms"}

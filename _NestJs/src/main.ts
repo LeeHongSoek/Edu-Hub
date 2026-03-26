@@ -69,7 +69,7 @@ async function bootstrap() {
         }
 
         console.log(
-          `[API] ${logEntry.method} ${logEntry.url} (${logEntry.statusCode}) ${logEntry.duration}`,
+          `[백엔드:maind.ts:API통신] ${logEntry.method} ${logEntry.url} (${logEntry.statusCode}) ${logEntry.duration}`,
         );
       });
 

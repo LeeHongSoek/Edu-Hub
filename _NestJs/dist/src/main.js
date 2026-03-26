@@ -49,7 +49,7 @@ async function bootstrap() {
                 }
                 catch {
                 }
-                console.log(`[API] ${logEntry.method} ${logEntry.url} (${logEntry.statusCode}) ${logEntry.duration}`);
+                console.log(`[API통신] ${logEntry.method} ${logEntry.url} (${logEntry.statusCode}) ${logEntry.duration}`);
             });
             next();
         });

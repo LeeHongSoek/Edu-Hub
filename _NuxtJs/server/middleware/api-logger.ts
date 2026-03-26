@@ -1,78 +1,39 @@
-import { appendFileSync } from 'fs';
+import { appendFile, mkdir } from 'fs/promises';
 import { resolve } from 'path';
-import { mkdirSync } from 'fs';
+import { existsSync } from 'fs';
 
-let initialized = false;
+// 로그 경로 설정
+const logsDir = resolve('logs');
+const logPath = resolve('logs/api-requests.log');
 
-if (!initialized && process.dev) {
-  const logsDir = resolve('logs');
-  const logPath = resolve('logs/api-requests.log');
-  
-  try {
-    mkdirSync(logsDir, { recursive: true });
-  } catch (err) {
-    console.error('[API-Logger] Failed to create logs directory:', err);
-  }
-  
-  const initLog = {
-    timestamp: new Date().toISOString(),
-    type: 'MIDDLEWARE_INIT',
-    message: 'API Logger middleware initialized'
-  };
-  
-  try {
-    appendFileSync(logPath, JSON.stringify(initLog) + '\n');
-    console.log('✅ [API-Logger] Log file created at:', logPath);
-  } catch (err) {
-    console.error('[API-Logger] Failed to write init log:', err);
-  }
-  
-  initialized = true;
+// 서버 시작 시 디렉토리 생성 (비동기 권장)
+if (process.dev && !existsSync(logsDir)) {
+  mkdir(logsDir, { recursive: true }).catch(console.error);
 }
 
 export default defineEventHandler(async (event) => {
-  if (process.dev && event.node.req.url?.startsWith('/api/')) {
-    const logsDir = resolve('logs');
-    const logPath = resolve('logs/api-requests.log');
-    const startTime = Date.now();
-    let responseData: any = null;
-    
-    // 응답이 완료될 때 호출되는 핸들러
-    const originalEnd = event.node.res.end;
-    let isResponseLogged = false;
-    
-    event.node.res.end = function (chunk?: any, ...args: any[]) {
-      if (!isResponseLogged) {
-        isResponseLogged = true;
-        
-        // chunk에서 응답 데이터 추출
-        if (chunk) {
-          try {
-            const str = typeof chunk === 'string' ? chunk : chunk.toString();
-            responseData = JSON.parse(str);
-          } catch {
-            responseData = chunk;
-          }
-        }
-        
-        const logEntry = {
-          timestamp: new Date().toISOString(),
-          type: 'API_REQUEST',
-          method: event.node.req.method,
-          url: event.node.req.url,
-          statusCode: event.node.res.statusCode,
-          duration: `${Date.now() - startTime}ms`,
-          response: responseData
-        };
-        
-        try {
-          appendFileSync(logPath, JSON.stringify(logEntry) + '\n');
-        } catch (err) {
-          console.error('[API-Logger] Failed to write log:', err);
-        }
-      }
-      
-      return originalEnd.call(this, chunk, ...args);
+  // API 요청이 아니면 무시
+  if (!process.dev || !event.path.startsWith('/api/')) return;
+
+  const startTime = Date.now();
+
+  // Nitro의 'close' 훅을 사용하여 응답이 끝난 후 로그 기록
+  event.node.res.on('finish', async () => {
+    const duration = Date.now() - startTime;
+
+    const logEntry = {
+      timestamp: new Date().toISOString(),
+      method: event.method,
+      url: event.path,
+      statusCode: event.node.res.statusCode,
+      duration: `${duration}ms`,
     };
-  }
+
+    try {
+      // appendFile (비동기)를 사용하여 성능 저하 방지
+      await appendFile(logPath, JSON.stringify(logEntry) + '\n');
+    } catch (err) {
+      console.error('[API-Logger] Write Error:', err);
+    }
+  });
 });
