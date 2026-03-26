@@ -3,18 +3,16 @@ import { AppModule } from './app.module';
 import { appendFileSync, mkdirSync } from 'fs';
 import { resolve } from 'path';
 import type { NextFunction, Request, Response } from 'express';
-import * as express from 'express'; // 요청 바디 파싱을 위해 필요
 
 (BigInt.prototype as any).toJSON = function () {
   return this.toString();
 };
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
-
-  // [중요] 미들웨어보다 먼저 실행되어야 req.body를 읽을 수 있습니다.
-  app.use(express.json());
-  app.use(express.urlencoded({ extended: true }));
+  // [변경] NestJS 자체 바디 파서를 명시적으로 활성화 (기본값이지만 확실하게 함)
+  const app = await NestFactory.create(AppModule, {
+    bodyParser: true,
+  });
 
   app.enableCors();
 
@@ -29,11 +27,8 @@ async function bootstrap() {
 
     app.use((req: Request, res: Response, next: NextFunction) => {
       const startTime = Date.now();
-
-      // 응답 바디를 캡처하기 위한 버퍼 배열
       const chunks: Buffer[] = [];
 
-      // res.write와 res.end를 가로채서 응답 데이터를 수집합니다.
       const originalWrite = res.write;
       const originalEnd = res.end;
 
@@ -51,7 +46,6 @@ async function bootstrap() {
         const url = req.originalUrl ?? req.url ?? '';
         if (url.includes('favicon.ico') || url.includes('sockjs-node')) return;
 
-        // 수집된 응답 데이터를 JSON으로 변환 시도
         let responseBody: any = null;
         try {
           const resBodyStr = Buffer.concat(chunks).toString('utf8');
@@ -62,27 +56,41 @@ async function bootstrap() {
 
         const logEntry = {
           timestamp: new Date().toISOString(),
-          type: 'API_REQUEST',
           method: req.method,
           url,
           statusCode: res.statusCode,
           duration: `${Date.now() - startTime}ms`,
           payload: {
-            request: req.body,    // 클라이언트가 보낸 데이터
-            response: responseBody // 서버가 보낸 실제 데이터
+            // [포인트] finish 이벤트 시점에는 req.body가 확실히 채워져 있습니다.
+            request: req.body || {},
+            response: responseBody
           }
         };
 
-        try {
-          // 파일에는 한 줄로 저장 (용량 절약 및 분석용)
-          appendFileSync(logPath, '[API통신] ' + logEntry.method + url + '(' + logEntry.statusCode + ') - ' + logEntry.duration + '\n');
-          appendFileSync(logPath, '[API통신_데이터]\n' + JSON.stringify(logEntry.payload, null, 2) + '\n');
+        // 요청 데이터(Body)가 존재하는지 확인 (빈 객체 {} 가 아닐 때)
+        const hasRequest = logEntry.payload.request && Object.keys(logEntry.payload.request).length > 0;
 
+        const tabSize = 8;
+        try {
+          const logHeader = `[API통신_헤더] ${logEntry.method} ${url} (${logEntry.statusCode}) - ${logEntry.duration}\n`;
+
+          // 요청 데이터가 있을 때만 요청 로그 생성, 없으면 빈 문자열
+          const logReqData = hasRequest ? `[API통신_데이터_요청]\n${JSON.stringify(logEntry.payload.request, null, tabSize)}\n` : '';
+
+          const logResData = `[API통신_데이터_응답]\n${JSON.stringify(logEntry.payload.response, null, tabSize)}\n`;
+
+          appendFileSync(logPath, logHeader + logReqData + logResData);
         } catch { }
 
-        // 터미널 콘솔 출력 (가독성을 위해 2칸 들여쓰기)
-        console.log(`\n[API통신] ${logEntry.method} ${url} (${logEntry.statusCode}) - ${logEntry.duration}`);
-        console.log(`[API통신_데이터]\n${JSON.stringify(logEntry.payload, null, 2)}`);
+        // 콘솔 출력
+        console.log(`\n[API통신_헤더] ${logEntry.method} ${url} (${logEntry.statusCode}) - ${logEntry.duration}`);
+
+        // 요청 데이터가 있을 때만 콘솔에 출력
+        if (hasRequest) {
+          console.log(`[API통신_데이터_요청]\n${JSON.stringify(logEntry.payload.request, null, tabSize)}`);
+        }
+
+        console.log(`[API통신_데이터_응답]\n${JSON.stringify(logEntry.payload.response, null, tabSize)}`);
         console.log('-'.repeat(60));
       });
 
