@@ -9,7 +9,7 @@ import type { NextFunction, Request, Response } from 'express';
 };
 
 async function bootstrap() {
-  // [변경] NestJS 자체 바디 파서를 명시적으로 활성화 (기본값이지만 확실하게 함)
+
   const app = await NestFactory.create(AppModule, {
     bodyParser: true,
   });
@@ -66,6 +66,24 @@ async function bootstrap() {
             response: responseBody
           }
         };
+
+        /**
+         * ---------------------------------------------------------
+         *           ✨🌟✨  긴급 해결 마법 ✨🌟✨
+         * 
+         *           데이터가 제대로 안 찍히는 그 순간...
+         * 
+         *   🔥 개발자 도구 (F12) 를 열고
+         *   📡 Network 탭으로 이동한 뒤
+         *   💾 "캐시 사용 안함" 체크박스를 ON!
+         * 
+         *   → 새로고침 (Ctrl + F5) 하면
+         *      모든 데이터가 화려하게 부활합니다! ✨
+         * 
+         *     캐시여, 물러가라! 데이터여, 나타나라! 
+         * 
+         */
+
 
         // 요청 데이터(Body)가 존재하는지 확인 (빈 객체 {} 가 아닐 때)
         const hasRequest = logEntry.payload.request && Object.keys(logEntry.payload.request).length > 0;
