@@ -4,16 +4,16 @@ import { ref, onMounted } from 'vue';
 const stats = ref<any>(null);
 const loading = ref(true);
 
+const { apiBase, token, getAuthHeader } = useApi();
+
 const fetchStats = async () => {
-  const config = useRuntimeConfig();
-  const token = useCookie('auth_token');
   try {
-    const data = await $fetch(`${config.public.apiBase}/dashboard/stats`, {
-      headers: { Authorization: `Bearer ${token.value}` }
+    const data = await $fetch(`${apiBase.value}/dashboard/stats`, {
+      headers: getAuthHeader()
     });
     stats.value = data;
   } catch (err) {
-    console.error('Failed to fetch stats:', err);
+    console.error('서버 통신 오류(fetch) stats:', err);
   } finally {
     loading.value = false;
   }

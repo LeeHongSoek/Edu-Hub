@@ -4,16 +4,16 @@ import { ref, onMounted } from 'vue';
 const messages = ref<any[]>([]);
 const loading = ref(true);
 
+const { apiBase, token, getAuthHeader } = useApi();
+
 const fetchMessages = async () => {
-  const config = useRuntimeConfig();
-  const token = useCookie('auth_token');
   try {
-    const data = await $fetch(`${config.public.apiBase}/dashboard/messages`, {
-      headers: { Authorization: `Bearer ${token.value}` }
+    const data = await $fetch(`${apiBase.value}/dashboard/messages`, {
+      headers: getAuthHeader()
     });
     messages.value = data as any[];
   } catch (err) {
-    console.error('Failed to fetch messages:', err);
+    console.error('서버 통신 오류(fetch) messages:', err);
   } finally {
     loading.value = false;
   }

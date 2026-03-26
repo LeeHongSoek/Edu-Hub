@@ -6,28 +6,26 @@ const loading = ref(true);
 const showCreateModal = ref(false);
 const newBook = ref({ book_name: '', description: '' });
 
+const { apiBase, token, getAuthHeader } = useApi();
+
 const fetchBooks = async () => {
-  const config = useRuntimeConfig();
-  const token = useCookie('auth_token');
   try {
-    const data = await $fetch(`${config.public.apiBase}/question-books/my`, {
-      headers: { Authorization: `Bearer ${token.value}` }
+    const data = await $fetch(`${apiBase.value}/question-books/my`, {
+      headers: getAuthHeader()
     });
     books.value = data as any[];
   } catch (err) {
-    console.error('Failed to fetch books:', err);
+    console.error('서버 통신 오류(fetch) books:', err);
   } finally {
     loading.value = false;
   }
 };
 
 const createBook = async () => {
-  const config = useRuntimeConfig();
-  const token = useCookie('auth_token');
   try {
-    await $fetch(`${config.public.apiBase}/question-books`, {
+    await $fetch(`${apiBase.value}/question-books`, {
       method: 'POST',
-      headers: { Authorization: `Bearer ${token.value}` },
+      headers: getAuthHeader(),
       body: newBook.value
     });
     showCreateModal.value = false;

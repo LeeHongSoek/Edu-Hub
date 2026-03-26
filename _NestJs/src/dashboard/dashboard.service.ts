@@ -17,7 +17,7 @@ export class DashboardService {
     }
 
     // 리턴하기 직전에 콘솔 출력
-    console.log('[여기:dashboard.service.ts] returning stats:', stats);
+    console.log('[백엔드:dashboard.service.ts] returning stats:', stats);
 
     return stats;
   }

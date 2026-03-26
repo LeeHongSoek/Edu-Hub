@@ -4,7 +4,12 @@ import svgLoader from 'vite-svg-loader';
 export default defineNuxtConfig({
   vite: {
     // @ts-expect-error type mismatch between Nuxt's Vite and vite-svg-loader
-    plugins: [svgLoader()]
+    plugins: [svgLoader()],
+    server: {
+      allowedHosts: [
+        '.trycloudflare.com' // 또는 모든 trycloudflare 서브도메인 허용
+      ]
+    }
   },
   devtools: {
     enabled: true,
@@ -32,6 +37,12 @@ export default defineNuxtConfig({
   runtimeConfig: {
     public: {
       apiBase: process.env.API_BASE || 'http://localhost:4000'
+    }
+  },
+  ssr: false,
+  hooks: {
+    'nitro:init': (nitro) => {
+      // SSR이 false이므로 클라이언트 사이드에서만 실행됨
     }
   }
 })

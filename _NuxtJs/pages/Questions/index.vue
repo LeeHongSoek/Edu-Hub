@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import type { Question } from '~/types';
 
-const config = useRuntimeConfig();
+const { apiBase } = useApi();
+
 const route = useRoute();
 const userCookie = useCookie('user_info');
 const userInfo = computed(() => {
@@ -10,7 +11,7 @@ const userInfo = computed(() => {
 });
 
 const fetchUrl = computed(() => {
-  let url = `${config.public.apiBase}/questions`;
+  let url = `${apiBase.value}/questions`;
   if (route.query.mine === 'true' && userInfo.value) {
     url += `?creator_no=${userInfo.value.user_no}`;
   }

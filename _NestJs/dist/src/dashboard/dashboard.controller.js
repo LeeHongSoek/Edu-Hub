@@ -27,7 +27,7 @@ let DashboardController = class DashboardController {
             throw new common_1.UnauthorizedException();
         const userNo = BigInt(userNoVal);
         const roleId = req.user.role;
-        console.log('dashboard.controller.ts  // ', '사용자번호=', userNoVal, '역활부호=', roleId);
+        console.log('[백엔드:dashboard.controller.ts  // ', '사용자번호=', userNoVal, '역활부호=', roleId);
         return this.dashboardService.getStats(userNo, roleId);
     }
     async getRelations(req) {

@@ -28,7 +28,7 @@ let DashboardService = class DashboardService {
         else if (roleId === 'P') {
             stats = await this.getParentStats(userNo);
         }
-        console.log('[여기:dashboard.service.ts] returning stats:', stats);
+        console.log('[백엔드:dashboard.service.ts] returning stats:', stats);
         return stats;
     }
     async getStudentStats(userNo) {

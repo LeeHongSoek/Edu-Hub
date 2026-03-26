@@ -11,6 +11,9 @@ const emit = defineEmits<{
   (e: 'updated'): void;
 }>();
 
+// API 설정 통합
+const { apiBase } = useApi();
+
 const editData = ref({
   title: props.question.title,
   question: props.question.question,
@@ -32,10 +35,10 @@ const isSaving = ref(false);
 
 const fetchGroups = async () => {
   try {
-    const data = await $fetch<Group[]>('http://localhost:4000/groups');
+    const data = await $fetch<Group[]>(`${apiBase.value}/groups`);
     groups.value = data;
   } catch (error) {
-    console.error('Failed to fetch groups:', error);
+    console.error('서버 통신 오류(fetch) groups:', error);
   }
 };
 
@@ -63,7 +66,7 @@ const removeOption = (index: number) => {
 const handleSave = async () => {
   isSaving.value = true;
   try {
-    await $fetch(`http://localhost:4000/questions/${props.question.question_id}`, {
+    await $fetch(`${apiBase.value}/questions/${props.question.question_id}`, {
       method: 'PATCH',
       body: editData.value
     });
@@ -71,7 +74,7 @@ const handleSave = async () => {
     emit('updated');
     emit('close');
   } catch (error) {
-    console.error('Failed to save question:', error);
+    console.error('서버 통신 오류(save) question:', error);
     alert('저장 중 오류가 발생했습니다. 😢');
   } finally {
     isSaving.value = false;
@@ -83,14 +86,14 @@ const handleDelete = async () => {
   
   isSaving.value = true;
   try {
-    await $fetch(`http://localhost:4000/questions/${props.question.question_id}`, {
+    await $fetch(`${apiBase.value}/questions/${props.question.question_id}`, {
       method: 'DELETE'
     });
     alert('삭제되었습니다.');
     emit('updated');
     emit('close');
   } catch (error) {
-    console.error('Failed to delete question:', error);
+    console.error('서버 통신 오류(delete) question:', error);
     alert('삭제 중 오류가 발생했습니다.');
   } finally {
     isSaving.value = false;

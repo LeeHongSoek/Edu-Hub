@@ -15,6 +15,9 @@ const emit = defineEmits<{
   (e: 'updated', newUsername: string): void;
 }>();
 
+// API 설정 통합
+const { apiBase, getAuthHeader } = useApi();
+
 const editUsername = ref(props.user.username);
 const editPassword = ref('');
 const isUpdating = ref(false);
@@ -33,14 +36,11 @@ const handleUpdate = async () => {
       body.password = editPassword.value;
     }
 
-    const config = useRuntimeConfig();
-    const apiUrl = config.public.apiBase ? `${config.public.apiBase}/auth/profile` : 'http://localhost:4000/auth/profile';
+    const apiUrl = `${apiBase.value}/auth/profile`;
 
     const { data, error } = await useFetch(apiUrl, {
       method: 'PUT',
-      headers: {
-        Authorization: `Bearer ${token}`
-      },
+      headers: getAuthHeader(),
       body
     });
 

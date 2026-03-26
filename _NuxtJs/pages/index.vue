@@ -10,6 +10,8 @@ import IconArrowRight from '~/assets/icons/IconArrowRight.svg?component';
 import IconClose from '~/assets/icons/IconClose.svg?component';
 import IconInfo from '~/assets/icons/IconInfo.svg?component';
 
+const { apiBase } = useApi();
+
 definePageMeta({ layout: false });
 
 // 페이드인 상태
@@ -113,9 +115,9 @@ const stats = ref({
   parents: 0,
 });
 
+
 const fetchStats = async () => {
-  const config = useRuntimeConfig();
-  const url = `${config.public.apiBase}/stats`;
+  const url = `${apiBase.value}/stats`;
   console.log('[fetchStats] Fetching from:', url);
   try {
     const data = await $fetch(url);
@@ -134,10 +136,9 @@ const showTicker = ref(false);
 const tickerQuestions = ref<any[]>([]);
 
 const fetchTickerData = async () => {
-  const config = useRuntimeConfig();
   console.log('[ticker] Starting fetch...');
   try {
-    const data = await $fetch(`${config.public.apiBase}/questions`);
+    const data = await $fetch(`${apiBase.value}/questions`);
     console.log('[ticker] Data received:', Array.isArray(data) ? data.length : 'not an array');
     if (Array.isArray(data) && data.length > 0) {
       // 모든 문제 최신순 노출
@@ -161,9 +162,8 @@ const handleLogin = async () => {
   authError.value = '';
   
   try {
-    const config = useRuntimeConfig();
     // 클라이언트 : [POST] /auth/login 
-    const { data, error } = await useFetch(`${config.public.apiBase}/auth/login`, {
+    const { data, error } = await useFetch(`${apiBase.value}/auth/login`, {
       method: 'POST',
       body: {
         userId: userIdInput.value,
@@ -227,8 +227,7 @@ const checkId = async () => {
   regError.value = '';
   
   try {
-    const config = useRuntimeConfig();
-    const { data } = await useFetch(`${config.public.apiBase}/auth/check-id/${regUserId.value}`);
+    const { data } = await useFetch(`${apiBase.value}/auth/check-id/${regUserId.value}`);
     
     if (data.value) {
       isIdAvailable.value = (data.value as any).isAvailable;
@@ -264,8 +263,7 @@ const handleRegister = async () => {
   regError.value = '';
 
   try {
-    const config = useRuntimeConfig();
-    const { data, error } = await useFetch(`${config.public.apiBase}/auth/register`, {
+    const { data, error } = await useFetch(`${apiBase.value}/auth/register`, {
       method: 'POST',
       body: {
         userId: regUserId.value,

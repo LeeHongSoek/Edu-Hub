@@ -5,13 +5,15 @@ import { resolve } from 'path';
 import type { NextFunction, Request, Response } from 'express';
 
 // BigInt 타입을 JSON으로 직렬화할 때 문자열로 변환하는 설정
-(BigInt.prototype as any).toJSON = function () {
+(BigInt.prototype as unknown as { toJSON: () => string }).toJSON = function (
+  this: bigint,
+) {
   return this.toString();
 };
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-  
+
   // CORS 활성화
   app.enableCors();
 
@@ -28,6 +30,19 @@ async function bootstrap() {
       mkdirSync(logsDir, { recursive: true });
     } catch (err) {
       console.error('[API-REQUEST-LOGGER] Failed to create logs dir:', err);
+    }
+
+    try {
+      appendFileSync(
+        logPath,
+        JSON.stringify({
+          timestamp: new Date().toISOString(),
+          type: 'LOGGER_INIT',
+          message: 'Nest API request logger initialized',
+        }) + '\n',
+      );
+    } catch {
+      // 초기 로그 기록 실패해도 요청 로그는 계속 시도
     }
 
     app.use((req: Request, res: Response, next: NextFunction) => {
@@ -49,20 +64,26 @@ async function bootstrap() {
 
         try {
           appendFileSync(logPath, JSON.stringify(logEntry) + '\n');
-        } catch (err) {
+        } catch {
           // 파일 기록이 실패해도 요청 흐름은 유지
         }
 
-        console.log(`[API] ${logEntry.method} ${logEntry.url} (${logEntry.statusCode}) ${logEntry.duration}`);
+        console.log(
+          `[API] ${logEntry.method} ${logEntry.url} (${logEntry.statusCode}) ${logEntry.duration}`,
+        );
       });
 
       next();
     });
   }
-  
+
   // 환경변수에서 포트를 가져오거나 기본값 4000 사용
   const port = process.env.PORT ?? 4000;
   await app.listen(port);
   console.log(`Application is running on: http://localhost:${port}`);
 }
-bootstrap();
+bootstrap().catch((err) => {
+  // 부트스트랩 자체가 실패하면 즉시 종료
+  console.error('Fatal bootstrap error:', err);
+  process.exit(1);
+});

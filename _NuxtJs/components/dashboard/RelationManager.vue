@@ -4,16 +4,16 @@ import { ref, onMounted } from 'vue';
 const relations = ref<any[]>([]);
 const loading = ref(true);
 
+const { apiBase, token, getAuthHeader } = useApi();
+
 const fetchRelations = async () => {
-  const config = useRuntimeConfig();
-  const token = useCookie('auth_token');
   try {
-    const data = await $fetch(`${config.public.apiBase}/dashboard/relations`, {
-      headers: { Authorization: `Bearer ${token.value}` }
+    const data = await $fetch(`${apiBase.value}/dashboard/relations`, {
+      headers: getAuthHeader()
     });
     relations.value = data as any[];
   } catch (err) {
-    console.error('Failed to fetch relations:', err);
+    console.error('서버 통신 오류(fetch) relations:', err);
   } finally {
     loading.value = false;
   }

@@ -29,6 +29,8 @@ ChartJS.register(
 const stats = ref<any>(null);
 const loading = ref(true);
 
+const { apiBase, token, getAuthHeader } = useApi();
+  
 const getDefaultDailyStats = () => {
   const dates = [];
   for (let i = 6; i >= 0; i--) {
@@ -42,16 +44,14 @@ const getDefaultDailyStats = () => {
   return dates;
 };
 
+
 const fetchStats = async () => {
-  
-  const config = useRuntimeConfig();
-  const token = useCookie('auth_token');
   try {
     console.log('토큰값=', token.value);
-    const data: any = await $fetch(`${config.public.apiBase}/dashboard/stats`, {
-      headers: { Authorization: `Bearer ${token.value}` }
+    const data: any = await $fetch(`${apiBase.value}/dashboard/stats`, {
+      headers: getAuthHeader()
     });
-    console.log('패치된 정보:', data);
+    console.log('[프런트엔드:StudentDashboard.vue] 패치된 정보:', data);
     
     // 만약 data가 없거나 속성들이 비어있다면 0을 기본값으로 사용
     stats.value = {
@@ -64,7 +64,7 @@ const fetchStats = async () => {
       dailyStats: data?.dailyStats && data.dailyStats.length > 0 ? data.dailyStats : getDefaultDailyStats()
     };
   } catch (err) {
-    console.error('Failed to fetch stats:', err);
+    console.error('서버 통신 오류(fetch) stats:', err);
     // 에러 시에도 기본값을 넣어서 그래프와 숫자가 0으로 보이게 처리
     stats.value = {
       accuracy: 0,

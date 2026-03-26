@@ -10,15 +10,25 @@ BigInt.prototype.toJSON = function () {
 async function bootstrap() {
     const app = await core_1.NestFactory.create(app_module_1.AppModule);
     app.enableCors();
-    if (process.env.NODE_ENV !== 'production') {
-        const projectRoot = (0, path_1.resolve)(process.cwd(), '..');
-        const logsDir = (0, path_1.resolve)(projectRoot, 'logs');
+    const loggerEnabled = process.env.API_REQUEST_LOGGER !== 'false';
+    if (loggerEnabled) {
+        const workspaceRoot = (0, path_1.resolve)(__dirname, '..', '..', '..');
+        const logsDir = (0, path_1.resolve)(workspaceRoot, 'logs');
         const logPath = (0, path_1.resolve)(logsDir, 'api-requests.log');
         try {
             (0, fs_1.mkdirSync)(logsDir, { recursive: true });
         }
         catch (err) {
             console.error('[API-REQUEST-LOGGER] Failed to create logs dir:', err);
+        }
+        try {
+            (0, fs_1.appendFileSync)(logPath, JSON.stringify({
+                timestamp: new Date().toISOString(),
+                type: 'LOGGER_INIT',
+                message: 'Nest API request logger initialized',
+            }) + '\n');
+        }
+        catch {
         }
         app.use((req, res, next) => {
             const startTime = Date.now();
@@ -37,7 +47,7 @@ async function bootstrap() {
                 try {
                     (0, fs_1.appendFileSync)(logPath, JSON.stringify(logEntry) + '\n');
                 }
-                catch (err) {
+                catch {
                 }
                 console.log(`[API] ${logEntry.method} ${logEntry.url} (${logEntry.statusCode}) ${logEntry.duration}`);
             });
@@ -48,5 +58,8 @@ async function bootstrap() {
     await app.listen(port);
     console.log(`Application is running on: http://localhost:${port}`);
 }
-bootstrap();
+bootstrap().catch((err) => {
+    console.error('Fatal bootstrap error:', err);
+    process.exit(1);
+});
 //# sourceMappingURL=main.js.map

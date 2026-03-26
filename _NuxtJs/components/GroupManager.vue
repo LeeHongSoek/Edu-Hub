@@ -2,6 +2,8 @@
 import { ref, onMounted } from 'vue';
 import type { Group } from '~/types';
 
+const { apiBase, token, getAuthHeader } = useApi();
+
 const emit = defineEmits<{
   (e: 'close'): void;
   (e: 'updated'): void;
@@ -14,9 +16,9 @@ const selectedParentId = ref<string | number | null>(null);
 
 const fetchGroups = async () => {
   try {
-    groups.value = await $fetch<Group[]>('http://localhost:4000/groups');
+    groups.value = await $fetch<Group[]>(`${apiBase.value}/groups`);
   } catch (error) {
-    console.error('Failed to fetch groups:', error);
+    console.error('서버 통신 오류(fetch) groups:', error);
   }
 };
 
@@ -49,7 +51,7 @@ const handleAddGroup = async () => {
       return;
     }
 
-    await $fetch('http://localhost:4000/groups', {
+    await $fetch(`${apiBase.value}/groups`, {
       method: 'POST',
       body: {
         name: newGroupName.value,
@@ -62,7 +64,7 @@ const handleAddGroup = async () => {
     await fetchGroups();
     emit('updated');
   } catch (error) {
-    console.error('Failed to add group:', error);
+    console.error('서버 통신 오류(add) group:', error);
   } finally {
     isSaving.value = false;
   }
@@ -73,14 +75,14 @@ const handleRename = async (group: Group) => {
   if (!newName || newName === group.name) return;
 
   try {
-    await $fetch(`http://localhost:4000/groups/${group.group_id}`, {
+    await $fetch(`${apiBase.value}/groups/${group.group_id}`, {
       method: 'PATCH',
       body: { name: newName }
     });
     await fetchGroups();
     emit('updated');
   } catch (error) {
-    console.error('Failed to rename group:', error);
+    console.error('서버 통신 오류(rename) group:', error);
   }
 };
 
@@ -88,13 +90,13 @@ const handleDelete = async (group: Group) => {
   if (!confirm(`'${group.name}' 그룹을 삭제하시겠습니까? 하위 그룹과 소속 문제들도 모두 삭제될 수 있습니다.`)) return;
 
   try {
-    await $fetch(`http://localhost:4000/groups/${group.group_id}`, {
+    await $fetch(`${apiBase.value}/groups/${group.group_id}`, {
       method: 'DELETE'
     });
     await fetchGroups();
     emit('updated');
   } catch (error) {
-    console.error('Failed to delete group:', error);
+    console.error('서버 통신 오류(delete) group:', error);
   }
 };
 </script>

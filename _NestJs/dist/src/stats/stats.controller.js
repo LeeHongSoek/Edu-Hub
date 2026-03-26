@@ -19,7 +19,7 @@ let StatsController = class StatsController {
     }
     async getStats() {
         const stats = await this.statsService.getStats();
-        console.log('[여기:stats.controller.ts] returning stats:', stats);
+        console.log('[백엔드:stats.controller.ts] returning stats:', stats);
         return stats;
     }
 };

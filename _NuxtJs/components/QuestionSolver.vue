@@ -4,6 +4,8 @@ import type { Question, QuestionReview } from '~/types';
 import LatexRenderer from '~/components/LatexRenderer.vue';
 import IconClock from '~/assets/icons/IconClock.svg?component';
 
+const { apiBase, token, getAuthHeader } = useApi();
+
 const props = defineProps<{
   question: Question;
   hasPrev?: boolean;
@@ -42,27 +44,22 @@ const hasStartedSolving = ref(false);
 
 // 학습 로그 기록 : POST /study-logs
 const logAction = async (action: string) => {
-  const config = useRuntimeConfig();
-  const token = useCookie('auth_token');
   try {
-    await $fetch(`${config.public.apiBase}/study-logs`, {
+    await $fetch(`${apiBase.value}/study-logs`, {
       method: 'POST',
-      headers: { Authorization: `Bearer ${token.value}` },
+      headers: getAuthHeader(),
       body: {
         question_id: props.question.question_id.toString(),
         user_memo: action
       }
     });
   } catch (err) {
-    console.warn('Failed to log action:', action, err);
+    console.warn('서버 통신 오류(save) study-logs:', action, err);
   }
 };
 
 // 풀이 결과 저장 : POST /solve-results
 const saveSolveResult = async (isTimeOver: boolean) => {
-  const config = useRuntimeConfig();
-  const token = useCookie('auth_token');
-  
   try {
     // 사용자 답변 준비
     let submittedAnswer = '';
@@ -85,9 +82,9 @@ const saveSolveResult = async (isTimeOver: boolean) => {
     // 사용한 시간 계산 (총 시간 - 남은 시간)
     const timeTaken = props.question.time_limit ? props.question.time_limit - timeLeft.value : 0;
 
-    await $fetch(`${config.public.apiBase}/solve-results`, {
+    await $fetch(`${apiBase.value}/solve-results`, {
       method: 'POST',
-      headers: { Authorization: `Bearer ${token.value}` },
+      headers: getAuthHeader(),
       body: {
         question_id: props.question.question_id.toString(),
         correct_answer: props.question.answer,
@@ -97,7 +94,7 @@ const saveSolveResult = async (isTimeOver: boolean) => {
       }
     });
   } catch (err) {
-    console.error('Failed to save solve result:', err);
+    console.error('서버 통신 오류(save) review):', err);
   }
 };
 
@@ -238,11 +235,11 @@ const openReviewModal = async () => {
 const fetchReviews = async () => {
   reviewsLoading.value = true;
   try {
-    const data = await $fetch<QuestionReview[]>(`http://localhost:4000/questions/${props.question.question_id}/reviews`);
+    const data = await $fetch<QuestionReview[]>(`${apiBase.value}/questions/${props.question.question_id}/reviews`);
     // 백엔드의 BigInt 호환 문제 처리 (JS로 받을 때 Number형 변환 등)
     reviews.value = data;
   } catch (err) {
-    console.error('Failed to fetch reviews:', err);
+    console.error('서버 통신 오류(fetch) reviews:', err);
   } finally {
     reviewsLoading.value = false;
   }
@@ -252,7 +249,7 @@ const submitReview = async () => {
   if (!newReviewContent.value.trim()) return;
   isSubmittingReview.value = true;
   try {
-    await $fetch(`http://localhost:4000/questions/${props.question.question_id}/reviews`, {
+    await $fetch(`${apiBase.value}/questions/${props.question.question_id}/reviews`, {
       method: 'POST',
       body: {
         content: newReviewContent.value,
@@ -269,7 +266,7 @@ const submitReview = async () => {
       props.question.rating = Math.round(reviews.value.reduce((sum, r) => sum + r.rating, 0) / reviews.value.length);
     }
   } catch (error) {
-    console.error('Failed to submit review:', error);
+    console.error('서버 통신 오류(submit) review:', error);
   } finally {
     isSubmittingReview.value = false;
   }

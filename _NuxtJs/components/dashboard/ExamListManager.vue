@@ -4,16 +4,16 @@ import { ref, onMounted } from 'vue';
 const exams = ref<any[]>([]);
 const loading = ref(true);
 
+const { apiBase, token, getAuthHeader } = useApi();
+
 const fetchExams = async () => {
-  const config = useRuntimeConfig();
-  const token = useCookie('auth_token');
   try {
-    const data = await $fetch(`${config.public.apiBase}/exams`, {
-      headers: { Authorization: `Bearer ${token.value}` }
+    const data = await $fetch(`${apiBase.value}/exams`, {
+      headers: getAuthHeader()
     });
     exams.value = data as any[];
   } catch (err) {
-    console.error('Failed to fetch exams:', err);
+    console.error('서버 통신 오류(fetch) exams:', err);
   } finally {
     loading.value = false;
   }

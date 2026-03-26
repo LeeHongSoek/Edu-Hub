@@ -8,6 +8,8 @@ const loading = ref(true);
 const showForm = ref(false);
 const editingReport = ref<any>(null);
 
+const { apiBase, token, getAuthHeader } = useApi();
+
 const form = ref({
   category: 'OPINION',
   title: '',
@@ -20,35 +22,32 @@ const categories = [
   { value: 'COMPLAINT', label: '불만/오류 제보' }
 ];
 
+
 const fetchMyReports = async () => {
-  const config = useRuntimeConfig();
-  const token = useCookie('auth_token');
   try {
-    const data = await $fetch(`${config.public.apiBase}/ombudsman/my`, {
-      headers: { Authorization: `Bearer ${token.value}` }
+    const data = await $fetch(`${apiBase.value}/ombudsman/my`, {
+      headers: getAuthHeader()
     });
     reports.value = data as any[];
   } catch (err) {
-    console.error('Failed to fetch reports:', err);
+    console.error('서버 통신 오류(fetch) reports:', err);
   } finally {
     loading.value = false;
   }
 };
 
 const submitReport = async () => {
-  const config = useRuntimeConfig();
-  const token = useCookie('auth_token');
   try {
     if (editingReport.value) {
-      await $fetch(`${config.public.apiBase}/ombudsman/${editingReport.value.report_id}`, {
+      await $fetch(`${apiBase.value}/ombudsman/${editingReport.value.report_id}`, {
         method: 'PATCH',
-        headers: { Authorization: `Bearer ${token.value}` },
+        headers: getAuthHeader(),
         body: form.value
       });
     } else {
-      await $fetch(`${config.public.apiBase}/ombudsman`, {
+      await $fetch(`${apiBase.value}/ombudsman`, {
         method: 'POST',
-        headers: { Authorization: `Bearer ${token.value}` },
+        headers: getAuthHeader(),
         body: form.value
       });
     }
@@ -71,12 +70,10 @@ const editReport = (report: any) => {
 
 const deleteReport = async (id: string) => {
   if (!confirm('정말 삭제하시겠습니까?')) return;
-  const config = useRuntimeConfig();
-  const token = useCookie('auth_token');
   try {
-    await $fetch(`${config.public.apiBase}/ombudsman/${id}`, {
+    await $fetch(`${apiBase.value}/ombudsman/${id}`, {
       method: 'DELETE',
-      headers: { Authorization: `Bearer ${token.value}` }
+      headers: getAuthHeader()
     });
     await fetchMyReports();
   } catch (err) {

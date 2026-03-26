@@ -6,6 +6,9 @@ const props = defineProps<{
   questions: Question[];
 }>();
 
+// API 설정 통합
+const { apiBase } = useApi();
+
 const groups = ref<Group[]>([]);
 const selectedGroupId = ref<string | number | null>(null);
 const selectedQuestionForSolve = ref<Question | null>(null);
@@ -97,10 +100,10 @@ const formatGroupPath = (group: Group) => {
 
 const fetchGroups = async () => {
   try {
-    const data = await $fetch<Group[]>('http://localhost:4000/groups');
+    const data = await $fetch<Group[]>(`${apiBase.value}/groups`);
     groups.value = data;
   } catch (error) {
-    console.error('Failed to fetch groups:', error);
+    console.error('서버 통신 오류(fetch) groups:', error);
   }
 };
 
