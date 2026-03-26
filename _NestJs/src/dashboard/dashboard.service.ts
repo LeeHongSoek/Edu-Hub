@@ -35,7 +35,9 @@ export class DashboardService {
     });
 
     const recentSolvedCount = solveResults.length;
-    const correctOnes = solveResults.filter((r) => r.is_correct).length;
+    // `solve_results.is_correct`는 DB에서 1/0/-1(Int)로 들어올 수 있고,
+    // (일부 빌드/클라이언트에서는) boolean(true/false)로 섞일 가능성도 있어 숫자로 정규화합니다.
+    const correctOnes = solveResults.filter((r) => Number(r.is_correct) === 1).length;
     const accuracy = recentSolvedCount > 0 ? Math.round((correctOnes / recentSolvedCount) * 100) : 0; // 정답률 : 정답 / 푼 문제
 
     // 일별 푼 문제 수 (최근 7일)

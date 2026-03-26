@@ -163,7 +163,8 @@ model Question {
   explanation      String?           @db.Text
   hint             String?           @db.Text
   difficulty       Int?              @default(1) @db.TinyInt
-  is_public        Boolean?          @default(false)
+  // SQL 기본값은 TRUE 입니다. (서버 DDL: `is_public` BOOLEAN DEFAULT TRUE)
+  is_public        Boolean?          @default(true)
   is_deleted       IsDeleted?        @default(N)
   time_limit       Int?              @default(0)
   rating           Int?              @default(0) @db.TinyInt
@@ -326,8 +327,10 @@ model SolveResult {
   user_no          BigInt
   question_id      BigInt
   exam_id          BigInt?
+  correct_answer   String    @db.Text
   submitted_answer String?   @db.Text
-  is_correct       Boolean
+  // MySQL 저장값 의미: 1(정답) / 0(오답) / -1(시간초과)
+  is_correct       Int       @db.TinyInt
   time_taken       Int       @default(0)
   solved_at        DateTime? @default(now()) @db.DateTime(0)
   exam             Exam?     @relation(fields: [exam_id], references: [exam_id], onDelete: Cascade, onUpdate: Restrict, map: "fk_result_exam")

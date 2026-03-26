@@ -303,7 +303,8 @@ CREATE TABLE `solve_results` (
     `question_id`      BIGINT     NOT NULL                   COMMENT '문제 ID',
     `exam_id`          BIGINT     NULL                       COMMENT '소속 고사 ID (일반 풀이 시 NULL)',
     `submitted_answer` TEXT                                  COMMENT '제출한 답안 (오답 포함)',
-    `is_correct`       BOOLEAN    NOT NULL                   COMMENT '정답 여부 (TRUE: 정답, FALSE: 오답)',
+    `correct_answer`   TEXT       NOT NULL                   COMMENT '모범 답안',
+    `is_correct`       BOOLEAN    NOT NULL                   COMMENT '정답 여부 (1: 정답, 0: 오답, -1:시간초과)',
     `time_taken`       INT        NOT NULL DEFAULT 0         COMMENT '경과 시간 (초 단위)',
     `solved_at`        DATETIME   DEFAULT CURRENT_TIMESTAMP  COMMENT '문제를 푼 시간',
 

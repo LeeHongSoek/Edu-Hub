@@ -51,7 +51,7 @@ function handleLogout() {
           </div>
           <a href="#" class="user-greeting" @click.prevent="showUserModal = true">
             <IconUser class="icon-user" />
-            {{ userInfo.username }}님
+            {{ userInfo.username }} <{{userInfo.user_no}}>님
           </a>
           <NuxtLink 
             v-if="userInfo.role_id === 'S' || userInfo.role_id === 'T'" 

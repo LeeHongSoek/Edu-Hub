@@ -162,6 +162,7 @@ const handleLogin = async () => {
   
   try {
     const config = useRuntimeConfig();
+    // 클라이언트 : [POST] /auth/login 
     const { data, error } = await useFetch(`${config.public.apiBase}/auth/login`, {
       method: 'POST',
       body: {
