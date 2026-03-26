@@ -58,6 +58,50 @@ const logAction = async (action: string) => {
   }
 };
 
+// 풀이 결과 저장 : POST /solve-results
+const saveSolveResult = async (isTimeOver: boolean) => {
+  const config = useRuntimeConfig();
+  const token = useCookie('auth_token');
+  
+  try {
+    // 사용자 답변 준비
+    let submittedAnswer = '';
+    if (props.question.question_type_id?.toUpperCase() === 'M') {
+      // 객관식: 선택한 옵션 IDs를 쉼표로 구분된 문자열로 변환
+      submittedAnswer = selectedOptionIds.value.join(',');
+    } else {
+      // 주관식: 입력한 답변
+      submittedAnswer = userAnswer.value.trim();
+    }
+
+    // is_correct 값 결정 (1=정답, 0=오답, -1=시간초과)
+    let correctStatus = 0;
+    if (isTimeOver) {
+      correctStatus = -1;
+    } else if (isCorrect.value) {
+      correctStatus = 1;
+    }
+
+    // 사용한 시간 계산 (총 시간 - 남은 시간)
+    const timeTaken = props.question.time_limit ? props.question.time_limit - timeLeft.value : 0;
+
+    await $fetch(`${config.public.apiBase}/solve-results`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token.value}` },
+      body: {
+        question_id: props.question.question_id.toString(),
+        correct_answer: props.question.answer,
+        submitted_answer: submittedAnswer,
+        is_correct: correctStatus,
+        time_taken: timeTaken
+      }
+    });
+  } catch (err) {
+    console.error('Failed to save solve result:', err);
+  }
+};
+
+
 const startTimer = () => {
   if (timeLeft.value > 0) {
     timerInterval = setInterval(() => {
@@ -137,6 +181,10 @@ const handleFinish = (isTimeOver = false) => {
       modalMessage.value = `정답은 "${props.question.answer || '해설 참조'}" 입니다. 해설을 확인해 보세요.`;
       logAction('정답확인:오답');
     }
+    
+    // solve_results에 결과 저장
+    await saveSolveResult(isTimeOver);
+    
   }
   
   showResult.value = true;
@@ -692,6 +740,7 @@ const submitReview = async () => {
 
 .answer-input-container {
   margin-top: auto;
+  width: 100%;
 }
 
 .answer-input {
@@ -704,6 +753,7 @@ const submitReview = async () => {
   font-size: 1.1rem;
   outline: none;
   transition: all 0.2s;
+  box-sizing: border-box;
 }
 
 .answer-input:focus {
