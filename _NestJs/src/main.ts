@@ -3,55 +3,62 @@ import { AppModule } from './app.module';
 import { appendFileSync, mkdirSync } from 'fs';
 import { resolve } from 'path';
 import type { NextFunction, Request, Response } from 'express';
+import * as express from 'express'; // 요청 바디 파싱을 위해 필요
 
-// BigInt 타입을 JSON으로 직렬화할 때 문자열로 변환하는 설정
-(BigInt.prototype as unknown as { toJSON: () => string }).toJSON = function (
-  this: bigint,
-) {
+(BigInt.prototype as any).toJSON = function () {
   return this.toString();
 };
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
-  // CORS 활성화
+  // [중요] 미들웨어보다 먼저 실행되어야 req.body를 읽을 수 있습니다.
+  app.use(express.json());
+  app.use(express.urlencoded({ extended: true }));
+
   app.enableCors();
 
-  // 디버깅용: 요청(HTTP incoming) 들어올 때마다 1줄 로그를 파일에 기록
-  // - Nuxt가 아닌 Nest 백엔드로 들어오는 요청도 잡히도록 구성
-  // - `tail -f logs/api-requests.log` 기준(프로젝트 루트)과 경로를 일치시킴
   const loggerEnabled = process.env.API_REQUEST_LOGGER !== 'false';
+
   if (loggerEnabled) {
-    const workspaceRoot = resolve(__dirname, '..', '..', '..'); // _NestJs/src(or dist/src) -> workspace root
+    const workspaceRoot = resolve(__dirname, '..', '..', '..');
     const logsDir = resolve(workspaceRoot, 'logs');
     const logPath = resolve(logsDir, 'api-requests.log');
 
-    try {
-      mkdirSync(logsDir, { recursive: true });
-    } catch (err) {
-      console.error('[API-REQUEST-LOGGER] Failed to create logs dir:', err);
-    }
-
-    try {
-      appendFileSync(
-        logPath,
-        JSON.stringify({
-          timestamp: new Date().toISOString(),
-          type: 'LOGGER_INIT',
-          message: 'Nest API request logger initialized',
-        }) + '\n',
-      );
-    } catch {
-      // 초기 로그 기록 실패해도 요청 로그는 계속 시도
-    }
+    try { mkdirSync(logsDir, { recursive: true }); } catch (err) { }
 
     app.use((req: Request, res: Response, next: NextFunction) => {
       const startTime = Date.now();
 
+      // 응답 바디를 캡처하기 위한 버퍼 배열
+      const chunks: Buffer[] = [];
+
+      // res.write와 res.end를 가로채서 응답 데이터를 수집합니다.
+      const originalWrite = res.write;
+      const originalEnd = res.end;
+
+      res.write = function (chunk: any, ...args: any[]) {
+        if (chunk) chunks.push(Buffer.from(chunk));
+        return originalWrite.apply(res, [chunk, ...args]);
+      };
+
+      res.end = function (chunk: any, ...args: any[]) {
+        if (chunk) chunks.push(Buffer.from(chunk));
+        return originalEnd.apply(res, [chunk, ...args]);
+      };
+
       res.on('finish', () => {
-        // 정적/소켓 등 불필요 로그 줄이기(원하면 범위 확대 가능)
         const url = req.originalUrl ?? req.url ?? '';
         if (url.includes('favicon.ico') || url.includes('sockjs-node')) return;
+
+        // 수집된 응답 데이터를 JSON으로 변환 시도
+        let responseBody: any = null;
+        try {
+          const resBodyStr = Buffer.concat(chunks).toString('utf8');
+          responseBody = resBodyStr ? JSON.parse(resBodyStr) : null;
+        } catch {
+          responseBody = '[Non-JSON Data]';
+        }
 
         const logEntry = {
           timestamp: new Date().toISOString(),
@@ -60,30 +67,35 @@ async function bootstrap() {
           url,
           statusCode: res.statusCode,
           duration: `${Date.now() - startTime}ms`,
+          payload: {
+            request: req.body,    // 클라이언트가 보낸 데이터
+            response: responseBody // 서버가 보낸 실제 데이터
+          }
         };
 
         try {
-          appendFileSync(logPath, JSON.stringify(logEntry) + '\n');
-        } catch {
-          // 파일 기록이 실패해도 요청 흐름은 유지
-        }
+          // 파일에는 한 줄로 저장 (용량 절약 및 분석용)
+          appendFileSync(logPath, '[API통신] ' + logEntry.method + url + '(' + logEntry.statusCode + ') - ' + logEntry.duration + '\n');
+          appendFileSync(logPath, '[API통신_데이터]\n' + JSON.stringify(logEntry.payload, null, 2) + '\n');
 
-        console.log(
-          `[백엔드:maind.ts:API통신] ${logEntry.method} ${logEntry.url} (${logEntry.statusCode}) ${logEntry.duration}`,
-        );
+        } catch { }
+
+        // 터미널 콘솔 출력 (가독성을 위해 2칸 들여쓰기)
+        console.log(`\n[API통신] ${logEntry.method} ${url} (${logEntry.statusCode}) - ${logEntry.duration}`);
+        console.log(`[API통신_데이터]\n${JSON.stringify(logEntry.payload, null, 2)}`);
+        console.log('-'.repeat(60));
       });
 
       next();
     });
   }
 
-  // 환경변수에서 포트를 가져오거나 기본값 4000 사용
   const port = process.env.PORT ?? 4000;
   await app.listen(port);
-  console.log(`Application is running on: http://localhost:${port}`);
+  console.log(`🚀 애플리케이션 실행 중: http://localhost:${port} 🚀`);
 }
+
 bootstrap().catch((err) => {
-  // 부트스트랩 자체가 실패하면 즉시 종료
-  console.error('Fatal bootstrap error:', err);
+  console.error('서버 부트스트랩 중 치명적 오류 발생:', err);
   process.exit(1);
 });

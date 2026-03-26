@@ -1,34 +1,696 @@
-{"timestamp":"2026-03-26T13:24:21.533Z","type":"API_REQUEST","method":"GET","url":"/stats","statusCode":304,"duration":"5ms"}
-{"timestamp":"2026-03-26T13:24:21.546Z","type":"API_REQUEST","method":"GET","url":"/questions","statusCode":304,"duration":"15ms"}
-{"timestamp":"2026-03-26T13:24:29.417Z","type":"API_REQUEST","method":"POST","url":"/auth/login","statusCode":201,"duration":"102ms"}
-{"timestamp":"2026-03-26T13:24:29.475Z","type":"API_REQUEST","method":"GET","url":"/dashboard/stats","statusCode":200,"duration":"12ms"}
-{"timestamp":"2026-03-26T13:27:35.436Z","type":"LOGGER_INIT","message":"Nest API request logger initialized"}
-{"timestamp":"2026-03-26T13:27:39.092Z","type":"API_REQUEST","method":"GET","url":"/stats","statusCode":304,"duration":"54ms"}
-{"timestamp":"2026-03-26T13:27:39.097Z","type":"API_REQUEST","method":"GET","url":"/questions","statusCode":304,"duration":"18ms"}
-{"timestamp":"2026-03-26T13:27:45.789Z","type":"API_REQUEST","method":"POST","url":"/auth/login","statusCode":201,"duration":"115ms"}
-{"timestamp":"2026-03-26T13:27:45.858Z","type":"API_REQUEST","method":"GET","url":"/dashboard/stats","statusCode":304,"duration":"16ms"}
-{"timestamp":"2026-03-26T13:28:24.663Z","type":"LOGGER_INIT","message":"Nest API request logger initialized"}
-{"timestamp":"2026-03-26T13:28:25.854Z","type":"API_REQUEST","method":"GET","url":"/stats","statusCode":304,"duration":"66ms"}
-{"timestamp":"2026-03-26T13:28:25.860Z","type":"API_REQUEST","method":"GET","url":"/questions","statusCode":304,"duration":"29ms"}
-{"timestamp":"2026-03-26T13:28:32.815Z","type":"API_REQUEST","method":"POST","url":"/auth/login","statusCode":201,"duration":"112ms"}
-{"timestamp":"2026-03-26T13:28:32.868Z","type":"API_REQUEST","method":"GET","url":"/dashboard/stats","statusCode":304,"duration":"13ms"}
-{"timestamp":"2026-03-26T13:38:09.843Z","type":"LOGGER_INIT","message":"Nest API request logger initialized"}
-{"timestamp":"2026-03-26T13:38:10.857Z","type":"API_REQUEST","method":"GET","url":"/stats","statusCode":304,"duration":"56ms"}
-{"timestamp":"2026-03-26T13:38:10.863Z","type":"API_REQUEST","method":"GET","url":"/questions","statusCode":304,"duration":"22ms"}
-{"timestamp":"2026-03-26T13:38:25.315Z","type":"API_REQUEST","method":"POST","url":"/auth/login","statusCode":201,"duration":"113ms"}
-{"timestamp":"2026-03-26T13:38:25.359Z","type":"API_REQUEST","method":"GET","url":"/dashboard/stats","statusCode":200,"duration":"5ms"}
-{"timestamp":"2026-03-26T13:38:49.165Z","type":"LOGGER_INIT","message":"Nest API request logger initialized"}
-{"timestamp":"2026-03-26T13:38:54.202Z","type":"API_REQUEST","method":"GET","url":"/stats","statusCode":304,"duration":"63ms"}
-{"timestamp":"2026-03-26T13:38:54.207Z","type":"API_REQUEST","method":"GET","url":"/questions","statusCode":304,"duration":"28ms"}
-{"timestamp":"2026-03-26T13:39:02.845Z","type":"API_REQUEST","method":"POST","url":"/auth/login","statusCode":201,"duration":"107ms"}
-{"timestamp":"2026-03-26T13:39:02.892Z","type":"API_REQUEST","method":"GET","url":"/dashboard/stats","statusCode":304,"duration":"8ms"}
-{"timestamp":"2026-03-26T13:39:53.334Z","type":"LOGGER_INIT","message":"Nest API request logger initialized"}
-{"timestamp":"2026-03-26T13:39:55.314Z","type":"API_REQUEST","method":"GET","url":"/stats","statusCode":304,"duration":"65ms"}
-{"timestamp":"2026-03-26T13:39:55.319Z","type":"API_REQUEST","method":"GET","url":"/questions","statusCode":304,"duration":"22ms"}
-{"timestamp":"2026-03-26T13:40:03.793Z","type":"API_REQUEST","method":"POST","url":"/auth/login","statusCode":201,"duration":"93ms"}
-{"timestamp":"2026-03-26T13:40:03.841Z","type":"API_REQUEST","method":"GET","url":"/dashboard/stats","statusCode":304,"duration":"8ms"}
-{"timestamp":"2026-03-26T13:41:36.045Z","type":"LOGGER_INIT","message":"Nest API request logger initialized"}
-{"timestamp":"2026-03-26T13:41:38.053Z","type":"API_REQUEST","method":"GET","url":"/stats","statusCode":304,"duration":"50ms"}
-{"timestamp":"2026-03-26T13:41:38.057Z","type":"API_REQUEST","method":"GET","url":"/questions","statusCode":304,"duration":"16ms"}
-{"timestamp":"2026-03-26T13:41:47.269Z","type":"API_REQUEST","method":"POST","url":"/auth/login","statusCode":201,"duration":"114ms"}
-{"timestamp":"2026-03-26T13:41:47.306Z","type":"API_REQUEST","method":"GET","url":"/dashboard/stats","statusCode":304,"duration":"10ms"}
+[API통신] ${logEntry.method} ${url} (${logEntry.statusCode}) - ${logEntry.duration} 
+[API통신_데이터]
+${JSON.stringify(logEntry.payload, null, 2)} 
+[API통신] ${logEntry.method} ${url} (${logEntry.statusCode}) - ${logEntry.duration} 
+[API통신_데이터]
+${JSON.stringify(logEntry.payload, null, 2)} 
+[API통신] ${logEntry.method} ${url} (${logEntry.statusCode}) - ${logEntry.duration} 
+[API통신_데이터]
+${JSON.stringify(logEntry.payload, null, 2)} 
+[API통신] GET/stats(200) - 86ms
+[API통신_데이터]
+{
+  "response": {
+    "questions": 7,
+    "teachers": 1,
+    "students": 2,
+    "parents": 1,
+    "totalUsers": 4
+  }
+}
+[API통신] GET/questions(200) - 23ms
+[API통신_데이터]
+{
+  "response": [
+    {
+      "question_id": "1",
+      "creator_no": "1",
+      "group_id": "3",
+      "question_type_id": "M",
+      "title": "Test",
+      "question": "OSI 7계층 중 종단 간(End-to-End) 신뢰성 있는 정보 전송을 담당하는 계층은?",
+      "content": null,
+      "answer": "",
+      "explanation": "전송 계층(Transport Layer)은 TCP와 UDP 프로토콜이 대표적이며 오류 복구와 흐름 제어 등을 담당합니다.",
+      "hint": "TCP/UDP가 속한 계층",
+      "difficulty": 3,
+      "is_public": true,
+      "is_deleted": "N",
+      "time_limit": 60,
+      "rating": 0,
+      "created_at": "2026-03-24T19:28:51.000Z",
+      "type": {
+        "type_id": "M",
+        "type_name": "객관식",
+        "description": "객관식"
+      },
+      "passage": null,
+      "options": [
+        {
+          "option_id": "1",
+          "question_id": "1",
+          "option_number": 1,
+          "content": "물리 계층",
+          "is_answer": false
+        },
+        {
+          "option_id": "2",
+          "question_id": "1",
+          "option_number": 2,
+          "content": "데이터 링크 계층",
+          "is_answer": false
+        },
+        {
+          "option_id": "3",
+          "question_id": "1",
+          "option_number": 3,
+          "content": "네트워크 계층",
+          "is_answer": false
+        },
+        {
+          "option_id": "4",
+          "question_id": "1",
+          "option_number": 4,
+          "content": "전송 계층",
+          "is_answer": true
+        }
+      ],
+      "group": {
+        "group_id": "3",
+        "creator_no": "1",
+        "parent_group_id": "2",
+        "depth": 3,
+        "name": "정보처리기사 실기",
+        "description": "2026 기출",
+        "created_at": "2026-03-24T19:28:51.000Z",
+        "parent_group": {
+          "group_id": "2",
+          "creator_no": "1",
+          "parent_group_id": "1",
+          "depth": 2,
+          "name": "IT 자격증",
+          "description": "IT 자격증",
+          "created_at": "2026-03-24T19:28:51.000Z",
+          "parent_group": {
+            "group_id": "1",
+            "creator_no": "1",
+            "parent_group_id": null,
+            "depth": 1,
+            "name": "컴퓨터 공학",
+            "description": "컴공 자료",
+            "created_at": "2026-03-24T19:28:51.000Z"
+          }
+        }
+      },
+      "tags": [
+        {
+          "question_id": "1",
+          "tag_id": "1",
+          "tag": {
+            "tag_id": "1",
+            "tag_name": "네트워크",
+            "created_at": "2026-03-24T19:28:51.000Z"
+          }
+        }
+      ]
+    },
+    {
+      "question_id": "2",
+      "creator_no": "1",
+      "group_id": "3",
+      "question_type_id": "M",
+      "title": "디자인 패턴 - 생성 (5지선다)",
+      "question": "다음 중 소프트웨어 객체 지향 디자인 패턴의 생성(Creational) 패턴이 아닌 것은?",
+      "content": null,
+      "answer": "",
+      "explanation": "Observer 패턴은 행위(Behavioral) 패턴에 속합니다.",
+      "hint": "상태 변화를 관찰하는 패턴은 생성과 무관합니다.",
+      "difficulty": 4,
+      "is_public": true,
+      "is_deleted": "N",
+      "time_limit": 120,
+      "rating": 0,
+      "created_at": "2026-03-24T19:28:51.000Z",
+      "type": {
+        "type_id": "M",
+        "type_name": "객관식",
+        "description": "객관식"
+      },
+      "passage": null,
+      "options": [
+        {
+          "option_id": "5",
+          "question_id": "2",
+          "option_number": 1,
+          "content": "Singleton",
+          "is_answer": false
+        },
+        {
+          "option_id": "6",
+          "question_id": "2",
+          "option_number": 2,
+          "content": "Factory Method",
+          "is_answer": false
+        },
+        {
+          "option_id": "7",
+          "question_id": "2",
+          "option_number": 3,
+          "content": "Abstract Factory",
+          "is_answer": false
+        },
+        {
+          "option_id": "8",
+          "question_id": "2",
+          "option_number": 4,
+          "content": "Builder",
+          "is_answer": false
+        },
+        {
+          "option_id": "9",
+          "question_id": "2",
+          "option_number": 5,
+          "content": "Observer",
+          "is_answer": true
+        }
+      ],
+      "group": {
+        "group_id": "3",
+        "creator_no": "1",
+        "parent_group_id": "2",
+        "depth": 3,
+        "name": "정보처리기사 실기",
+        "description": "2026 기출",
+        "created_at": "2026-03-24T19:28:51.000Z",
+        "parent_group": {
+          "group_id": "2",
+          "creator_no": "1",
+          "parent_group_id": "1",
+          "depth": 2,
+          "name": "IT 자격증",
+          "description": "IT 자격증",
+          "created_at": "2026-03-24T19:28:51.000Z",
+          "parent_group": {
+            "group_id": "1",
+            "creator_no": "1",
+            "parent_group_id": null,
+            "depth": 1,
+            "name": "컴퓨터 공학",
+            "description": "컴공 자료",
+            "created_at": "2026-03-24T19:28:51.000Z"
+          }
+        }
+      },
+      "tags": [
+        {
+          "question_id": "2",
+          "tag_id": "2",
+          "tag": {
+            "tag_id": "2",
+            "tag_name": "디자인패턴",
+            "created_at": "2026-03-24T19:28:51.000Z"
+          }
+        }
+      ]
+    },
+    {
+      "question_id": "3",
+      "creator_no": "3",
+      "group_id": "9",
+      "question_type_id": "M",
+      "title": "영어 단어 - Abandon (4지선다)",
+      "question": "다음 중 영어 단어 'Abandon'의 뜻으로 가장 알맞은 것은?",
+      "content": null,
+      "answer": "",
+      "explanation": "어원은 프랑스어 abandonner (넘겨주다)에서 유래했으며, give up과 유사한 의미를 가집니다.",
+      "hint": "give up과 비슷한 뜻",
+      "difficulty": 1,
+      "is_public": true,
+      "is_deleted": "N",
+      "time_limit": 30,
+      "rating": 0,
+      "created_at": "2026-03-24T19:28:51.000Z",
+      "type": {
+        "type_id": "M",
+        "type_name": "객관식",
+        "description": "객관식"
+      },
+      "passage": null,
+      "options": [
+        {
+          "option_id": "10",
+          "question_id": "3",
+          "option_number": 1,
+          "content": "성취하다",
+          "is_answer": false
+        },
+        {
+          "option_id": "11",
+          "question_id": "3",
+          "option_number": 2,
+          "content": "버리다, 포기하다",
+          "is_answer": true
+        },
+        {
+          "option_id": "12",
+          "question_id": "3",
+          "option_number": 3,
+          "content": "획득하다",
+          "is_answer": false
+        },
+        {
+          "option_id": "13",
+          "question_id": "3",
+          "option_number": 4,
+          "content": "유지하다",
+          "is_answer": false
+        }
+      ],
+      "group": {
+        "group_id": "9",
+        "creator_no": "3",
+        "parent_group_id": "8",
+        "depth": 3,
+        "name": "중등 필수 영단어",
+        "description": "알아야 할 단어들",
+        "created_at": "2026-03-24T19:28:51.000Z",
+        "parent_group": {
+          "group_id": "8",
+          "creator_no": "3",
+          "parent_group_id": "7",
+          "depth": 2,
+          "name": "영어 단어장",
+          "description": "영단어 모음",
+          "created_at": "2026-03-24T19:28:51.000Z",
+          "parent_group": {
+            "group_id": "7",
+            "creator_no": "3",
+            "parent_group_id": null,
+            "depth": 1,
+            "name": "아이 학습 관리",
+            "description": "부모 정리 문제",
+            "created_at": "2026-03-24T19:28:51.000Z"
+          }
+        }
+      },
+      "tags": [
+        {
+          "question_id": "3",
+          "tag_id": "3",
+          "tag": {
+            "tag_id": "3",
+            "tag_name": "영단어",
+            "created_at": "2026-03-24T19:28:51.000Z"
+          }
+        },
+        {
+          "question_id": "3",
+          "tag_id": "5",
+          "tag": {
+            "tag_id": "5",
+            "tag_name": "기초",
+            "created_at": "2026-03-24T19:28:51.000Z"
+          }
+        }
+      ]
+    },
+    {
+      "question_id": "4",
+      "creator_no": "2",
+      "group_id": "6",
+      "question_type_id": "S",
+      "title": "파이썬 - 리스트 기초 (주관식)",
+      "question": "파이썬에서 비어있는 리스트를 생성하는 코드를 두 가지 작성하시오.",
+      "content": null,
+      "answer": "[] 또는 list()",
+      "explanation": "대괄호를 사용하거나 내장 함수 list()를 사용하여 빈 리스트를 만들 수 있습니다.",
+      "hint": "대괄호 사용",
+      "difficulty": 2,
+      "is_public": true,
+      "is_deleted": "N",
+      "time_limit": 180,
+      "rating": 0,
+      "created_at": "2026-03-24T19:28:51.000Z",
+      "type": {
+        "type_id": "S",
+        "type_name": "주관식",
+        "description": "주관식"
+      },
+      "passage": null,
+      "options": [],
+      "group": {
+        "group_id": "6",
+        "creator_no": "2",
+        "parent_group_id": "5",
+        "depth": 3,
+        "name": "파이썬 기초",
+        "description": "파이썬 복습",
+        "created_at": "2026-03-24T19:28:51.000Z",
+        "parent_group": {
+          "group_id": "5",
+          "creator_no": "2",
+          "parent_group_id": "4",
+          "depth": 2,
+          "name": "오답 노트",
+          "description": "틀린 문제들만",
+          "created_at": "2026-03-24T19:28:51.000Z",
+          "parent_group": {
+            "group_id": "4",
+            "creator_no": "2",
+            "parent_group_id": null,
+            "depth": 1,
+            "name": "내 공부장",
+            "description": "개인 자율 복습",
+            "created_at": "2026-03-24T19:28:51.000Z"
+          }
+        }
+      },
+      "tags": [
+        {
+          "question_id": "4",
+          "tag_id": "4",
+          "tag": {
+            "tag_id": "4",
+            "tag_name": "파이썬",
+            "created_at": "2026-03-24T19:28:51.000Z"
+          }
+        },
+        {
+          "question_id": "4",
+          "tag_id": "5",
+          "tag": {
+            "tag_id": "5",
+            "tag_name": "기초",
+            "created_at": "2026-03-24T19:28:51.000Z"
+          }
+        }
+      ]
+    },
+    {
+      "question_id": "5",
+      "creator_no": "1",
+      "group_id": "11",
+      "question_type_id": "M",
+      "title": "물리 - 뉴턴 제2법칙 (긴 지문형)",
+      "question": "수식과 내용에 따르면, 질량 $m$이 2배로 증가할 때 가속도 $a$는 어떻게 변하는가?",
+      "content": "다음 지문을 읽고 물음에 답하시오.\n\n> \"물체의 가속도는 작용한 힘에 비례하고 질량에 반비례한다.\"\n\n이를 뉴턴의 제2법칙이라 부르며, 수식으로는 다음과 같이 나타낼 수 있다.\n\n$$ F = m \\cdot a $$\n\n여기서 힘 $F$가 $\\underline{\\text{일정}}$하게 유지될 때, 다음 물음에 답하라.",
+      "answer": "",
+      "explanation": "수식 $a = \\frac{F}{m}$ 에 대입하여 관계를 파악하세요.",
+      "hint": "마크다운과 수식을 렌더링하는 테스트입니다.",
+      "difficulty": 4,
+      "is_public": true,
+      "is_deleted": "N",
+      "time_limit": 300,
+      "rating": 0,
+      "created_at": "2026-03-24T19:28:51.000Z",
+      "type": {
+        "type_id": "M",
+        "type_name": "객관식",
+        "description": "객관식"
+      },
+      "passage": null,
+      "options": [
+        {
+          "option_id": "14",
+          "question_id": "5",
+          "option_number": 1,
+          "content": "변화 없음",
+          "is_answer": false
+        },
+        {
+          "option_id": "15",
+          "question_id": "5",
+          "option_number": 2,
+          "content": "절반(1/2)으로 감소한다",
+          "is_answer": true
+        },
+        {
+          "option_id": "16",
+          "question_id": "5",
+          "option_number": 3,
+          "content": "2배로 증가한다",
+          "is_answer": false
+        },
+        {
+          "option_id": "17",
+          "question_id": "5",
+          "option_number": 4,
+          "content": "제곱에 비례하여 증가한다",
+          "is_answer": false
+        },
+        {
+          "option_id": "18",
+          "question_id": "5",
+          "option_number": 5,
+          "content": "알 수 없다",
+          "is_answer": false
+        }
+      ],
+      "group": {
+        "group_id": "11",
+        "creator_no": "1",
+        "parent_group_id": "10",
+        "depth": 2,
+        "name": "물리",
+        "description": "물리 기초",
+        "created_at": "2026-03-24T19:28:51.000Z",
+        "parent_group": {
+          "group_id": "10",
+          "creator_no": "1",
+          "parent_group_id": null,
+          "depth": 1,
+          "name": "고등 과학",
+          "description": "과학 탐구",
+          "created_at": "2026-03-24T19:28:51.000Z",
+          "parent_group": null
+        }
+      },
+      "tags": []
+    },
+    {
+      "question_id": "6",
+      "creator_no": "1",
+      "group_id": "13",
+      "question_type_id": "M",
+      "title": "고등 수학 - 정적분 (라텍스 수식형)",
+      "question": "다음 주어지는 미적분 문제의 정적분 수행 결과값으로 알맞은 것은?",
+      "content": "함수 $f(x) = x \\sin(x)$ 일 때, 정적분 $\\int_{0}^{\\frac{\\pi}{2}} f(x) dx$ 의 값을 구하시오.\n\n(참고: 필요하다면 부분적분법 $\\int u v' dx = uv - \\int u' v dx$ 을 활용하시오.)",
+      "answer": "",
+      "explanation": "부분적분 $u=x, v'=\\sin(x)$로 치환하면 $u'=1, v=-\\cos(x)$이므로, $[-x\\cos(x)]_{0}^{\\frac{\\pi}{2}} + \\int_{0}^{\\frac{\\pi}{2}} \\cos(x)dx$ = $0 + [\\sin(x)]_{0}^{\\frac{\\pi}{2}}$ = $1$이 됩니다.",
+      "hint": "부분적분법을 활용",
+      "difficulty": 5,
+      "is_public": true,
+      "is_deleted": "N",
+      "time_limit": 600,
+      "rating": 0,
+      "created_at": "2026-03-24T19:28:51.000Z",
+      "type": {
+        "type_id": "M",
+        "type_name": "객관식",
+        "description": "객관식"
+      },
+      "passage": null,
+      "options": [
+        {
+          "option_id": "19",
+          "question_id": "6",
+          "option_number": 1,
+          "content": "1",
+          "is_answer": true
+        },
+        {
+          "option_id": "20",
+          "question_id": "6",
+          "option_number": 2,
+          "content": "$\\frac{\\pi}{2}$",
+          "is_answer": false
+        },
+        {
+          "option_id": "21",
+          "question_id": "6",
+          "option_number": 3,
+          "content": "$\\pi$",
+          "is_answer": false
+        },
+        {
+          "option_id": "22",
+          "question_id": "6",
+          "option_number": 4,
+          "content": "0",
+          "is_answer": false
+        },
+        {
+          "option_id": "23",
+          "question_id": "6",
+          "option_number": 5,
+          "content": "$-1$",
+          "is_answer": false
+        }
+      ],
+      "group": {
+        "group_id": "13",
+        "creator_no": "1",
+        "parent_group_id": "12",
+        "depth": 2,
+        "name": "미적분",
+        "description": "미분과 적분",
+        "created_at": "2026-03-24T19:28:51.000Z",
+        "parent_group": {
+          "group_id": "12",
+          "creator_no": "1",
+          "parent_group_id": null,
+          "depth": 1,
+          "name": "고등 수학",
+          "description": "수학 기초",
+          "created_at": "2026-03-24T19:28:51.000Z",
+          "parent_group": null
+        }
+      },
+      "tags": [
+        {
+          "question_id": "6",
+          "tag_id": "6",
+          "tag": {
+            "tag_id": "6",
+            "tag_name": "고등수학",
+            "created_at": "2026-03-24T19:28:51.000Z"
+          }
+        },
+        {
+          "question_id": "6",
+          "tag_id": "7",
+          "tag": {
+            "tag_id": "7",
+            "tag_name": "미적분",
+            "created_at": "2026-03-24T19:28:51.000Z"
+          }
+        }
+      ]
+    },
+    {
+      "question_id": "7",
+      "creator_no": "2",
+      "group_id": null,
+      "question_type_id": "M",
+      "title": "[영어] 수능 기출 독해",
+      "question": "다음 글의 요지로 가장 적절한 것은?",
+      "content": null,
+      "answer": "3",
+      "explanation": "지문의 내용을 통해 Indigenous stewardship의 효과를 설명하고 있습니다.",
+      "hint": null,
+      "difficulty": 4,
+      "is_public": true,
+      "is_deleted": "N",
+      "time_limit": 120,
+      "rating": 0,
+      "created_at": "2026-03-24T19:28:51.000Z",
+      "type": {
+        "type_id": "M",
+        "type_name": "객관식",
+        "description": "객관식"
+      },
+      "passage": {
+        "passage_id": "1",
+        "question_id": "7",
+        "content_md": "### Reading Comprehension\n\n![Forest](https://images.unsplash.com/photo-1448375240586-882707db888b?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80)\n\nMany people believe that the best way to preserve nature is to keep humans out of it in completely pristine reserves. However, **recent studies** show that indigenous stewardship is often more effective at maintaining biodiversity."
+      },
+      "options": [
+        {
+          "option_id": "24",
+          "question_id": "7",
+          "option_number": 1,
+          "content": "자연을 보존하려면 인간의 접근을 전면 차단해야 한다.",
+          "is_answer": false
+        },
+        {
+          "option_id": "25",
+          "question_id": "7",
+          "option_number": 2,
+          "content": "원주민의 삶의 터전을 새로운 구역으로 이주시켜야 한다.",
+          "is_answer": false
+        },
+        {
+          "option_id": "26",
+          "question_id": "7",
+          "option_number": 3,
+          "content": "원주민의 관리가 생물 다양성 유지에 더 효과적일 수 있다.",
+          "is_answer": true
+        },
+        {
+          "option_id": "27",
+          "question_id": "7",
+          "option_number": 4,
+          "content": "자연 보존 구역의 경제적 가치는 계속 하락하고 있다.",
+          "is_answer": false
+        },
+        {
+          "option_id": "28",
+          "question_id": "7",
+          "option_number": 5,
+          "content": "최근 연구는 전통적 방식의 한계를 지적하고 있다.",
+          "is_answer": false
+        }
+      ],
+      "group": null,
+      "tags": []
+    }
+  ]
+}
+[API통신] POST/auth/login(201) - 83ms
+[API통신_데이터]
+{
+  "request": {
+    "userId": "s",
+    "password": "aaa"
+  },
+  "response": {
+    "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6Iuq5gOyyoOyImFtTXSIsInN1YiI6IjIiLCJyb2xlIjoiUyIsImlhdCI6MTc3NDUzNTg5NiwiZXhwIjoxNzc0NjIyMjk2fQ.bT5mDNeaDPQkvzBs4gEDyTOwwcXOklJBe3Hw3vI45zM",
+    "user": {
+      "user_no": "2",
+      "userId": "s",
+      "username": "김철수[S]",
+      "email": "student1@edu-hub.com",
+      "role": "S"
+    }
+  }
+}
+[API통신] GET/dashboard/stats(200) - 19ms
+[API통신_데이터]
+{
+  "response": {
+    "totalViewed": 10,
+    "totalSolved": 5,
+    "accuracy": 25,
+    "dailyStats": [
+      {
+        "date": "2026-03-20",
+        "count": 0
+      },
+      {
+        "date": "2026-03-21",
+        "count": 0
+      },
+      {
+        "date": "2026-03-22",
+        "count": 3
+      },
+      {
+        "date": "2026-03-23",
+        "count": 0
+      },
+      {
+        "date": "2026-03-24",
+        "count": 0
+      },
+      {
+        "date": "2026-03-25",
+        "count": 0
+      },
+      {
+        "date": "2026-03-26",
+        "count": 1
+      }
+    ],
+    "studyLogs": 21
+  }
+}
