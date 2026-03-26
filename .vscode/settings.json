@@ -1,5 +1,40 @@
 {
     "antigravity.commitMessage.language": "ko",
     "antigravity.language": "ko",
-    "antigravity.prompt.commitMessage": "커밋 메시지를 항상 한국어로 작성해줘. 형식은 <type>: <description> 으로 해줘!"
+    "antigravity.prompt.commitMessage": "커밋 메시지를 항상 한국어로 작성해줘. 형식은 <type>: <description> 으로 해줘!",
+    "prisma.pinToPrisma6": false,
+
+    "sqltools.connections": [
+        {
+            "mysqlOptions": {
+                "authProtocol": "default",
+                "enableSsl": "Disabled"
+            },
+            "ssh": "Disabled",
+            "previewLimit": 50,
+            "server": "localhost",
+            "port": 3306,
+            "driver": "MariaDB",
+            "name": "localhost_lee__1_81!",
+            "database": "Edu-Hub",
+            "username": "root",
+            "password": "leehs1181!"
+        }
+        ,{
+            "name": "TiDB",
+            "driver": "MySQL",
+            "server": "gateway01.ap-northeast-1.prod.aws.tidbcloud.com",
+            "port": 4000,
+            "database": "mywork",
+            "username": "3wbry7cn6Aae17E.root",
+            "password": "eIPOu2TbTbOXtNw8",
+            "previewLimit": 50,
+            "mysqlOptions": {
+              "authProtocol": "default",
+              "ssl": {
+                "rejectUnauthorized": false
+              }
+            }
+          }
+    ]
 }

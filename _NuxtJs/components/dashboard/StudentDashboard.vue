@@ -43,13 +43,15 @@ const getDefaultDailyStats = () => {
 };
 
 const fetchStats = async () => {
+  
   const config = useRuntimeConfig();
   const token = useCookie('auth_token');
   try {
+    console.log('토큰값=', token.value);
     const data: any = await $fetch(`${config.public.apiBase}/dashboard/stats`, {
       headers: { Authorization: `Bearer ${token.value}` }
     });
-    console.log('Fetched info:', data);
+    console.log('패치된 정보:', data);
     
     // 만약 data가 없거나 속성들이 비어있다면 0을 기본값으로 사용
     stats.value = {
@@ -57,6 +59,7 @@ const fetchStats = async () => {
       totalSolved: data?.totalSolved || 0,
       totalViewed: data?.totalViewed || 0,
       studyLogs: data?.studyLogs || 0,
+      totalQuestions: data?.totalQuestions || 0,
       // 데이터가 없으면 7일치 0개 배열을 추가
       dailyStats: data?.dailyStats && data.dailyStats.length > 0 ? data.dailyStats : getDefaultDailyStats()
     };
@@ -67,6 +70,7 @@ const fetchStats = async () => {
       accuracy: 0,
       totalSolved: 0,
       totalViewed: 0,
+      totalQuestions: 0,
       studyLogs: 0,
       dailyStats: getDefaultDailyStats()
     };
@@ -120,7 +124,7 @@ const chartOptions = {
     <div class="stat-card">
       <div class="stat-icon">🎯</div>
       <div class="stat-info">
-        <span class="label">평균 정답률</span>
+        <span class="label">평균 정답률 (정답 / 푼 문제)</span>
         <span class="value">{{ stats.accuracy }}%</span>
       </div>
     </div>

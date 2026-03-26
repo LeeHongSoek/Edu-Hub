@@ -6,14 +6,20 @@ export class DashboardService {
   constructor(private prisma: PrismaService) { }
 
   async getStats(userNo: bigint, roleId: string) {
+    let stats = {}; // 리턴할 값을 담을 변수
+
     if (roleId === 'S') {
-      return this.getStudentStats(userNo);
+      stats = await this.getStudentStats(userNo);
     } else if (roleId === 'T') {
-      return this.getTeacherStats(userNo);
+      stats = await this.getTeacherStats(userNo);
     } else if (roleId === 'P') {
-      return this.getParentStats(userNo);
+      stats = await this.getParentStats(userNo);
     }
-    return {};
+
+    // 리턴하기 직전에 콘솔 출력
+    console.log('[여기:dashboard.service.ts] returning stats:', stats);
+
+    return stats;
   }
 
   private async getStudentStats(userNo: bigint) {
@@ -30,7 +36,7 @@ export class DashboardService {
 
     const recentSolvedCount = solveResults.length;
     const correctOnes = solveResults.filter((r) => r.is_correct).length;
-    const accuracy = recentSolvedCount > 0 ? Math.round((correctOnes / recentSolvedCount) * 100) : 0;
+    const accuracy = recentSolvedCount > 0 ? Math.round((correctOnes / recentSolvedCount) * 100) : 0; // 정답률 : 정답 / 푼 문제
 
     // 일별 푼 문제 수 (최근 7일)
     const dailyStats: { date: string; count: number }[] = [];

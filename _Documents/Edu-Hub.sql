@@ -1,3 +1,4 @@
+-- Active: 1774182835335@@127.0.0.1@3306@Edu-Hub
 /*
  Edu-Hub DB 설계 (Edu-Hub.sql)
 */

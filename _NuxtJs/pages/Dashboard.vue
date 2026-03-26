@@ -34,11 +34,11 @@ onMounted(() => {
       <div class="welcome-section">
         <h1 class="welcome-title">
           안녕하세요,
-          <span class="role-badge-inline" :class="'role-' + userInfo.role_id">
-            <span v-if="userInfo.role_id === 'S'">🎓</span>
-            <span v-else-if="userInfo.role_id === 'T'">👨‍🏫</span>
+          <span class="role-badge-inline" :class="'role-' + userInfo.role">
+            <span v-if="userInfo.role === 'S'">🎓</span>
+            <span v-else-if="userInfo.role === 'T'">👨‍🏫</span>
             <span v-else>🏠</span>
-            {{ userInfo.role_id === 'T' ? '선생님' : userInfo.role_id === 'P' ? '학부모' : '학생' }}
+            {{ userInfo.role === 'T' ? '선생님' : userInfo.role === 'P' ? '학부모' : '학생' }}
           </span>
           <span class="username">{{ userInfo.username }}</span>님!
           <!-- 대시보드 내 네비게이션 버튼 (타이틀 바로 뒤) -->

@@ -18,16 +18,18 @@ let DashboardService = class DashboardService {
         this.prisma = prisma;
     }
     async getStats(userNo, roleId) {
+        let stats = {};
         if (roleId === 'S') {
-            return this.getStudentStats(userNo);
+            stats = await this.getStudentStats(userNo);
         }
         else if (roleId === 'T') {
-            return this.getTeacherStats(userNo);
+            stats = await this.getTeacherStats(userNo);
         }
         else if (roleId === 'P') {
-            return this.getParentStats(userNo);
+            stats = await this.getParentStats(userNo);
         }
-        return {};
+        console.log('[여기:dashboard.service.ts] returning stats:', stats);
+        return stats;
     }
     async getStudentStats(userNo) {
         const now = new Date();

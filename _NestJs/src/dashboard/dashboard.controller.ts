@@ -14,6 +14,8 @@ export class DashboardController {
 
     const userNo = BigInt(userNoVal);
     const roleId = req.user.role;
+    console.log('dashboard.controller.ts  // ', '사용자번호=', userNoVal, '역활부호=', roleId);
+
     return this.dashboardService.getStats(userNo, roleId);
   }
 

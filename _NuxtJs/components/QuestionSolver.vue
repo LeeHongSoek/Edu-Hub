@@ -40,6 +40,7 @@ const isSubmittingReview = ref(false);
 let timerInterval: any = null;
 const hasStartedSolving = ref(false);
 
+// 학습 로그 기록 : POST /study-logs
 const logAction = async (action: string) => {
   const config = useRuntimeConfig();
   const token = useCookie('auth_token');
