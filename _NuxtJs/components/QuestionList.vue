@@ -60,17 +60,29 @@ const handleSelectGroup = (groupId: string | number | null) => {
   emit('change-group', groupId);
 };
 
+const clearAllFilters = () => {
+  searchField.value = 'title';
+  searchInput.value = '';
+  emit('change-group', null);
+  emit('reset-search');
+};
+
 const applySearch = () => {
+  const keyword = searchInput.value.trim();
+
+  if (!keyword) {
+    clearAllFilters();
+    return;
+  }
+
   emit('search', {
     field: searchField.value,
-    keyword: searchInput.value.trim(),
+    keyword,
   });
 };
 
 const resetSearch = () => {
-  searchField.value = 'title';
-  searchInput.value = '';
-  emit('reset-search');
+  clearAllFilters();
 };
 
 const handleSolve = (question: Question) => {
@@ -162,7 +174,7 @@ watch(() => props.appliedSearchKeyword, (value) => {
         <span>문제 그룹</span>
         <div class="header-actions">
           <button class="btn-manage-groups" title="그룹 관리" @click="showGroupManager = true">⚙️</button>
-          <button v-if="props.selectedGroupId" class="btn-clear-filter" @click="handleSelectGroup(null)">
+          <button v-if="props.selectedGroupId || props.appliedSearchKeyword" class="btn-clear-filter" @click="clearAllFilters">
             전체
           </button>
         </div>
