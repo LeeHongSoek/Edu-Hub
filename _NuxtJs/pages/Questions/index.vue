@@ -89,11 +89,7 @@ const handlePageChange = (page: number) => {
 
     <h1 class="title">나의 문제목록</h1>
     
-    <div v-if="pending && !hasResolvedOnce" class="loading">
-      문제를 불러오는 중...
-    </div>
-
-    <div v-else-if="error && !questionResponse" class="error">
+    <div v-if="error && !questionResponse && !pending" class="error">
       문제를 불러오지 못했습니다. 백엔드 서버가 실행 중인지 확인해 주세요.
       <pre>{{ error }}</pre>
     </div>
@@ -116,9 +112,9 @@ const handlePageChange = (page: number) => {
           @change-page="handlePageChange"
         />
 
-        <div v-if="pending && hasResolvedOnce" class="loading-overlay">
+        <!-- <div v-if="pending" class="loading-overlay">
           문제를 불러오는 중...
-        </div>
+        </div> -->
       </div>
 
       <div v-if="error && questionResponse" class="inline-error">
