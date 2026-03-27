@@ -7,15 +7,9 @@ export default defineNuxtPlugin(() => {
 
     console.log(''); console.log(''); console.log('');
 
-    // localhost 또는 127.0.0.1인 경우
-    if (hostname === 'localhost' || hostname === '127.0.0.1' || hostname.startsWith('192.168')) {
-      config.public.apiBase = 'http://localhost:4000';
-      console.log(`[ API 로컬서버 ] Hostname: ${hostname}, API Base: ${config.public.apiBase}`);
-    } else {
-      // 원격 환경
-      config.public.apiBase = 'https://transcripts-moment-youth-education.trycloudflare.com';
-      console.log(`[ API 클라우드페어서버 ] Hostname: ${hostname}, API Base: ${config.public.apiBase}`);
-    }
+    // 모든 환경에서 통합된 /api 경로를 사용합니다.
+    config.public.apiBase = '/api';
+    console.log(`[ API Unified ] API Base: ${config.public.apiBase}`);
 
     console.log(''); console.log(''); console.log(''); console.log('');
   }

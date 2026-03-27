@@ -65,13 +65,13 @@ const testBackendApis = async () => {
 
     // 테스트 1: 대시보드 통계
     try {
-      console.log('📡 Test 1: GET /dashboard/stats');
-      const res1 = await $fetch('/dashboard/stats', { 
-        baseURL: 'http://localhost:4000'
-      });
+      console.log('📡 Test 1: GET /api/dashboard/stats');
+      const res1 = await $fetch('/api/dashboard/stats');
+
       testResults.value.push({
         method: 'GET',
-        url: '/dashboard/stats',
+        url: '/api/dashboard/stats',
+
         status: 200,
         size: JSON.stringify(res1).length,
         data: res1
@@ -83,13 +83,13 @@ const testBackendApis = async () => {
 
     // 테스트 2: 사용자 정보
     try {
-      console.log('📡 Test 2: GET /users');
-      const res2 = await $fetch('/users', { 
-        baseURL: 'http://localhost:4000'
-      });
+      console.log('📡 Test 2: GET /api/users');
+      const res2 = await $fetch('/api/users');
+
       testResults.value.push({
         method: 'GET',
-        url: '/users',
+        url: '/api/users',
+
         status: 200,
         size: JSON.stringify(res2).length,
         data: res2
@@ -101,13 +101,13 @@ const testBackendApis = async () => {
 
     // 테스트 3: 질문 목록
     try {
-      console.log('📡 Test 3: GET /questions');
-      const res3 = await $fetch('/questions', { 
-        baseURL: 'http://localhost:4000'
-      });
+      console.log('📡 Test 3: GET /api/questions');
+      const res3 = await $fetch('/api/questions');
+
       testResults.value.push({
         method: 'GET',
-        url: '/questions',
+        url: '/api/questions',
+
         status: 200,
         size: JSON.stringify(res3).length,
         data: res3

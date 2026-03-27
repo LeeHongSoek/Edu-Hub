@@ -36,11 +36,21 @@ export default defineNuxtConfig({
   },
   runtimeConfig: {
     public: {
-      apiBase: process.env.API_BASE || 'http://localhost:4000'
+      apiBase: process.env.API_BASE || '/api'
+
     }
   },
   ssr: false,
+  nitro: {
+    devProxy: {
+      '/api': {
+        target: 'http://localhost:4000',
+        changeOrigin: true,
+      }
+    }
+  },
   hooks: {
+
     'nitro:init': (nitro) => {
       // SSR이 false이므로 클라이언트 사이드에서만 실행됨
     }

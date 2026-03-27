@@ -9,6 +9,8 @@ import IconEyeOff from '~/assets/icons/IconEyeOff.svg?component';
 import IconArrowRight from '~/assets/icons/IconArrowRight.svg?component';
 import IconClose from '~/assets/icons/IconClose.svg?component';
 import IconInfo from '~/assets/icons/IconInfo.svg?component';
+import NumberAnimation from 'vue-number-animation';
+
 
 const { apiBase } = useApi();
 
@@ -114,6 +116,17 @@ const stats = ref({
   students: 0,
   parents: 0,
 });
+const statsVisible = ref(false);
+
+const animatedStats = computed(() => {
+  return {
+    questions: statsVisible.value ? stats.value.questions : 0,
+    teachers: statsVisible.value ? stats.value.teachers : 0,
+    students: statsVisible.value ? stats.value.students : 0,
+    parents: statsVisible.value ? stats.value.parents : 0,
+  };
+});
+
 
 
 const fetchStats = async () => {
@@ -130,6 +143,9 @@ const fetchStats = async () => {
     if (err.data) console.error('[fetchStats] Error data:', err.data);
   }
 };
+
+const formatStats = (val: number) => Math.floor(val).toLocaleString();
+
 
 // 티커 데이터
 const showTicker = ref(false);
@@ -302,7 +318,14 @@ onMounted(() => {
     return;
   }
 
-  setTimeout(() => { isLoaded.value = true; }, 80);
+  setTimeout(() => { 
+    isLoaded.value = true; 
+    // 커튼이 사라지는 연출(2.8s)과 어느 정도 맞춰서 숫자 애니메이션 시작
+    setTimeout(() => {
+      statsVisible.value = true;
+    }, 1200);
+  }, 80);
+
   setTimeout(typeLoop, 1600);
   fetchStats();
   setInterval(() => { showCursor.value = !showCursor.value; }, 530);
@@ -424,15 +447,44 @@ onMounted(() => {
 
           <div class="stats-row">
             <div class="vbar"></div>
-            <div class="stat special"><b>{{ stats.questions.toLocaleString() }}</b><small>등록 문제</small></div>
+            <div class="stat special">
+              <b>
+                <ClientOnly>
+                  <NumberAnimation :from="0" :to="animatedStats.questions" :duration="1.5" :format="formatStats" easing="linear"/>
+                </ClientOnly>
+              </b>
+              <small>등록 문제</small>
+            </div>
             <div class="vbar"></div>
-            <div class="stat"><b>{{ stats.teachers.toLocaleString() }}</b><small>선생님</small></div>
+            <div class="stat">
+              <b>
+                <ClientOnly>
+                  <NumberAnimation :from="0" :to="animatedStats.teachers" :duration="1.5" :format="formatStats" easing="linear" />
+                </ClientOnly>
+              </b>
+              <small>선생님</small>
+            </div>
             <div class="vbar"></div>
-            <div class="stat"><b>{{ stats.students.toLocaleString() }}</b><small>학생</small></div>
+            <div class="stat">
+              <b>
+                <ClientOnly>
+                  <NumberAnimation :from="0" :to="animatedStats.students" :duration="1.5" :format="formatStats" easing="linear" />
+                </ClientOnly>
+              </b>
+              <small>학생</small>
+            </div>
             <div class="vbar"></div>
-            <div class="stat"><b>{{ stats.parents.toLocaleString() }}</b><small>학부모</small></div>
+            <div class="stat">
+              <b>
+                <ClientOnly>
+                  <NumberAnimation :from="0" :to="animatedStats.parents" :duration="1.5" :format="formatStats" easing="linear" />
+                </ClientOnly>
+              </b>
+              <small>학부모</small>
+            </div>
             <div class="vbar"></div>
           </div>
+
         </section>
 
         <!-- 오른쪽: 로그인 카드 -->
