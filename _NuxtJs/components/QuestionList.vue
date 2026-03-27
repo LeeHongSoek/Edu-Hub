@@ -32,11 +32,15 @@ let debounceTimer: any = null;
 const handleSliderInput = (e: Event) => {
   const value = parseInt((e.target as HTMLInputElement).value);
   sliderValue.value = value;
-  
-  if (debounceTimer) clearTimeout(debounceTimer);
-  debounceTimer = setTimeout(() => {
-    goToPage(value);
-  }, 100);
+};
+
+const commitSliderValue = () => {
+  if (debounceTimer) {
+    clearTimeout(debounceTimer);
+    debounceTimer = null;
+  }
+
+  goToPage(sliderValue.value);
 };
 
 const sliderPercentage = computed(() => {
@@ -216,6 +220,7 @@ watch(() => props.appliedSearchKeyword, (value) => {
                  :value="sliderValue"
                  class="page-slider"
                  @input="handleSliderInput"
+                 @change="commitSliderValue"
                />
                <div class="slider-fill" :style="{ width: sliderPercentage + '%' }"></div>
                <div class="slider-tooltip" :style="{ left: sliderPercentage + '%' }">
@@ -562,6 +567,7 @@ watch(() => props.appliedSearchKeyword, (value) => {
   cursor: pointer;
   z-index: 2;
   position: relative;
+  touch-action: none;
 }
 
 .page-slider::-webkit-slider-thumb {
@@ -606,7 +612,6 @@ watch(() => props.appliedSearchKeyword, (value) => {
   pointer-events: none;
   white-space: nowrap;
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-  transition: left 0.1s ease-out;
 }
 
 .slider-tooltip::after {
