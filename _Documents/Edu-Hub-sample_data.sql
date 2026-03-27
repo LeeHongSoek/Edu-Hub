@@ -187,7 +187,7 @@ INSERT INTO `exam_questions` (`exam_id`, `question_id`, `question_order`, `score
 -- 12. 고사 결과 리포트
 INSERT INTO `exam_results` (`exam_id`, `student_no`, `total_score`, `student_rank`, `total_examinees`, `grade`, `ai_comment`, `teacher_comment`) VALUES
 (1, 2, 50, 15, 30, '미', '[AI 분석] 네트워크 계층은 훌륭하나 디자인 패턴 복습 요망.', '철수 학생, 디자인 패턴을 다시 봅시다.'),
-(2, 4, 2, 100, 1, 1, '수', '[AI 분석] 파이썬 자율 모의고사를 모두 맞췄습니다.', NULL);
+(2, 4, 100, 1, 1, '수', '[AI 분석] 파이썬 자율 모의고사를 모두 맞췄습니다.', NULL);
 
 -- 13. 학습 기록 (Study Logs)
 INSERT INTO `study_logs` (`user_no`, `question_id`, `user_memo`, `is_correct`, `try_count`) VALUES
@@ -201,3 +201,302 @@ INSERT INTO `ombudsman_reports` (`report_id`, `user_no`, `category`, `title`, `c
 (1, 1, 'OPINION', '사이트가 너무 예뻐요!', '디자인이 정말 깔끔하고 마음에 듭니다. 특히 다크모드가 인상적이네요.', 'PROCESSED'),
 (2, 1, 'IMPROVEMENT', '퀴즈 풀이 시 효과음 추가 제안', '문제를 맞혔을 때나 틀렸을 때 간단한 효과음이 나오면 더 재미있을 것 같습니다.', 'PENDING'),
 (3, 1, 'COMPLAINT', '모바일에서 버튼이 조금 작아요', '아이폰 SE 같은 작은 화면에서는 몇몇 버튼을 누르기가 조금 힘듭니다.', 'PENDING');
+
+-- 15. 빈 테이블 보강용 관계/메시지/주석/풀이/리뷰/문제집 샘플
+INSERT INTO `user_relations` (`relation_id`, `user_no_1`, `user_no_2`, `relation_type_id`) VALUES
+(1, 1, 2, 'TEACHER_PUPIL'),
+(2, 2, 1, 'PUPIL_TEACHER'),
+(3, 3, 2, 'PARENT_CHILD'),
+(4, 2, 3, 'CHILD_PARENT');
+
+INSERT INTO `user_messages` (`message_id`, `sender_no`, `receiver_no`, `content`, `is_read`) VALUES
+(1, 1, 2, '이번 주는 알고리즘과 영어 독해를 함께 복습해 봅시다.', 'Y'),
+(2, 3, 2, '주말 전에 오답 노트 문제집 한 번만 더 확인해 줘.', 'N'),
+(3, 2, 1, '선생님, 자료구조 쪽 문제를 더 풀어보고 싶어요.', 'Y');
+
+INSERT INTO `user_comments` (`comment_id`, `author_no`, `target_user_no`, `question_id`, `content`) VALUES
+(1, 1, 2, 2, 'Observer 패턴과 Singleton 패턴의 분류 차이를 다시 설명해 보세요.'),
+(2, 1, 2, 6, '부분적분법 풀이 순서를 줄글로 정리해 두면 기억에 오래 남습니다.'),
+(3, 3, 2, 3, '영단어는 뜻만 말고 예문까지 같이 외우면 훨씬 좋아요.'),
+(4, 2, NULL, 4, '빈 리스트 생성 문법은 실수 없이 바로 적을 수 있어야 함.');
+
+INSERT INTO `user_question_books` (`book_id`, `user_no`, `book_name`, `description`) VALUES
+(1, 2, '김철수 3월 오답 정리', '틀린 문제만 다시 모아 둔 개인 문제집'),
+(2, 2, '김철수 자료구조 집중', '자료구조와 알고리즘 관련 문제를 따로 묶은 컬렉션'),
+(3, 3, '학부모 체크용 주말 점검', '아이와 함께 볼 핵심 문제집');
+
+-- 16. 김철수용 추가 그룹
+INSERT INTO `groups` (`group_id`, `creator_no`, `parent_group_id`, `depth`, `name`, `description`) VALUES
+(14, 2, NULL, 1, '알고리즘 훈련실', '코딩 테스트 대비 문제 분류'),
+(15, 2, 14, 2, '자료구조', '스택, 큐, 트리, 그래프 중심'),
+(16, 2, 14, 2, '정렬과 탐색', '기본 정렬, 이진 탐색, 투 포인터'),
+(17, 2, NULL, 1, '데이터 분석 기초', '통계와 데이터 해석'),
+(18, 2, 17, 2, '통계 기본기', '평균, 분산, 확률, 분포'),
+(19, 2, NULL, 1, '프론트엔드 실습장', 'HTML/CSS/JavaScript 학습용'),
+(20, 2, 19, 2, 'HTML & CSS', '레이아웃과 스타일링'),
+(21, 2, 19, 2, 'JavaScript 기초', '비동기와 DOM 제어'),
+(22, 2, 15, 3, '스택과 큐', '선형 자료구조 집중'),
+(23, 2, 18, 3, '확률 분포', '이산/연속 분포 입문');
+
+-- 17. 추가 태그 및 매핑
+INSERT INTO `tags` (`tag_id`, `tag_name`) VALUES
+(8, '알고리즘'), (9, '통계'), (10, '웹개발');
+
+-- 18. 김철수 확장 문제 50건 (question_id 58~107)
+INSERT INTO `questions` (
+  `question_id`, `creator_no`, `group_id`, `question_type_id`, `title`, `question`, `content`,
+  `answer`, `explanation`, `hint`, `difficulty`, `is_public`, `time_limit`
+)
+WITH RECURSIVE `seq` AS (
+  SELECT 58 AS `question_id`, 1 AS `n`
+  UNION ALL
+  SELECT `question_id` + 1, `n` + 1
+  FROM `seq`
+  WHERE `question_id` < 107
+)
+SELECT
+  `question_id`,
+  2,
+  CASE MOD(`n` - 1, 10)
+    WHEN 0 THEN 4
+    WHEN 1 THEN 5
+    WHEN 2 THEN 6
+    WHEN 3 THEN 15
+    WHEN 4 THEN 16
+    WHEN 5 THEN 18
+    WHEN 6 THEN 20
+    WHEN 7 THEN 21
+    WHEN 8 THEN 22
+    ELSE 23
+  END,
+  'M',
+  CONCAT(
+    '김철수 확장 문제 ',
+    LPAD(`n`, 2, '0'),
+    ' - ',
+    CASE MOD(`n` - 1, 10)
+      WHEN 0 THEN '학습 전략'
+      WHEN 1 THEN '오답 정리'
+      WHEN 2 THEN '파이썬 문법'
+      WHEN 3 THEN '자료구조'
+      WHEN 4 THEN '정렬과 탐색'
+      WHEN 5 THEN '통계 기본기'
+      WHEN 6 THEN 'HTML/CSS'
+      WHEN 7 THEN 'JavaScript'
+      WHEN 8 THEN '스택과 큐'
+      ELSE '확률 분포'
+    END
+  ),
+  CASE MOD(`n` - 1, 10)
+    WHEN 0 THEN '다음 중 자기주도 학습 계획을 세울 때 가장 먼저 확인해야 할 요소는 무엇인가?'
+    WHEN 1 THEN '다음 중 오답 노트를 작성할 때 가장 효과적인 방법으로 알맞은 것은 무엇인가?'
+    WHEN 2 THEN '다음 중 파이썬 문법에 대한 설명으로 가장 알맞은 것은 무엇인가?'
+    WHEN 3 THEN '다음 중 자료구조의 특징에 대한 설명으로 가장 알맞은 것은 무엇인가?'
+    WHEN 4 THEN '다음 중 정렬 또는 탐색 알고리즘에 대한 설명으로 가장 알맞은 것은 무엇인가?'
+    WHEN 5 THEN '다음 중 기초 통계 개념에 대한 설명으로 가장 알맞은 것은 무엇인가?'
+    WHEN 6 THEN '다음 중 HTML/CSS의 역할 구분에 대한 설명으로 가장 알맞은 것은 무엇인가?'
+    WHEN 7 THEN '다음 중 JavaScript 동작 방식에 대한 설명으로 가장 알맞은 것은 무엇인가?'
+    WHEN 8 THEN '다음 중 스택과 큐의 차이에 대한 설명으로 가장 알맞은 것은 무엇인가?'
+    ELSE '다음 중 확률 분포에 대한 설명으로 가장 알맞은 것은 무엇인가?'
+  END,
+  CASE MOD(`n` - 1, 10)
+    WHEN 0 THEN '학습 루틴을 점검하고 복습 주기를 설계하는 상황을 가정한 문제입니다.'
+    WHEN 1 THEN '틀린 이유를 다시 적어 보는 방식으로 오답 노트의 밀도를 높이는 문제입니다.'
+    WHEN 2 THEN '조건문, 반복문, 자료형, 함수 사용 습관을 함께 묻는 파이썬 복습 문제입니다.'
+    WHEN 3 THEN '배열, 연결 리스트, 트리, 그래프 등 자료구조의 핵심 목적을 비교하는 문제입니다.'
+    WHEN 4 THEN '시간 복잡도와 적용 상황을 함께 생각해야 하는 알고리즘 복습 문제입니다.'
+    WHEN 5 THEN '평균, 중앙값, 분산, 표준편차, 확률 해석의 기본기를 다루는 문제입니다.'
+    WHEN 6 THEN '문서 구조와 시각 표현을 구분해 이해하는지 확인하는 프론트엔드 기초 문제입니다.'
+    WHEN 7 THEN '이벤트 루프, 비동기 처리, DOM 제어 중 핵심 개념을 묻는 문제입니다.'
+    WHEN 8 THEN '선입선출과 후입선출의 차이를 실제 예시와 연결해 판단하는 문제입니다.'
+    ELSE '분포의 개념과 기대값/확률 해석을 직관적으로 이해했는지 확인하는 문제입니다.'
+  END,
+  CASE MOD(`n` - 1, 10)
+    WHEN 0 THEN '1'
+    WHEN 1 THEN '2'
+    WHEN 2 THEN '3'
+    WHEN 3 THEN '1'
+    WHEN 4 THEN '2'
+    WHEN 5 THEN '1'
+    WHEN 6 THEN '2'
+    WHEN 7 THEN '1'
+    WHEN 8 THEN '3'
+    ELSE '1'
+  END,
+  CASE MOD(`n` - 1, 10)
+    WHEN 0 THEN '우선순위를 잘못 잡으면 계획이 길어도 학습 효율이 떨어집니다.'
+    WHEN 1 THEN '정답만 적는 오답 노트는 금방 잊히므로 틀린 이유와 교정 포인트가 필요합니다.'
+    WHEN 2 THEN '문법 자체보다 어떤 상황에서 쓰는지 떠올리면 빠르게 정답에 도달할 수 있습니다.'
+    WHEN 3 THEN '자료구조는 데이터를 저장하는 방식만이 아니라, 꺼내 쓰는 비용 차이까지 생각해야 합니다.'
+    WHEN 4 THEN '알고리즘은 무조건 빠른 것이 아니라 문제 조건에 맞게 고르는 것이 핵심입니다.'
+    WHEN 5 THEN '통계 용어는 정의를 외우는 것보다 어떤 데이터를 설명하는지 연결해야 합니다.'
+    WHEN 6 THEN 'HTML은 구조, CSS는 표현이라는 큰 축을 기억하면 흔들리지 않습니다.'
+    WHEN 7 THEN 'JavaScript는 실행 순서와 콜백 처리 흐름을 떠올리면 정리가 쉽습니다.'
+    WHEN 8 THEN '스택은 최근 작업 복귀, 큐는 순차 처리라는 대표 예시를 연결해 보세요.'
+    ELSE '확률 분포는 값 하나가 아니라 값들이 어떤 규칙으로 나타나는지 보는 개념입니다.'
+  END,
+  CASE MOD(`n` - 1, 10)
+    WHEN 0 THEN '공부 시간보다 먼저 우선순위를 떠올려 보세요.'
+    WHEN 1 THEN '틀린 이유를 다시 설명할 수 있는지를 기준으로 보세요.'
+    WHEN 2 THEN '파이썬 기본 문법의 사용 맥락을 떠올려 보세요.'
+    WHEN 3 THEN '삽입과 삭제가 자주 일어나는 상황을 상상해 보세요.'
+    WHEN 4 THEN '정렬과 탐색은 입력 크기에 따라 선택이 달라집니다.'
+    WHEN 5 THEN '대표값과 산포도의 차이를 구분해 보세요.'
+    WHEN 6 THEN '구조와 디자인을 담당하는 언어를 구분하세요.'
+    WHEN 7 THEN '비동기 작업이 바로 순차 실행되지 않는다는 점을 떠올리세요.'
+    WHEN 8 THEN '후입선출과 선입선출 용어를 먼저 떠올리세요.'
+    ELSE '하나의 값이 아니라 전체 분포 모양을 보는 개념입니다.'
+  END,
+  MOD(`n` - 1, 5) + 1,
+  1,
+  60 + MOD(`n` - 1, 5) * 30
+FROM `seq`;
+
+INSERT INTO `question_options` (`question_id`, `option_number`, `content`, `is_answer`)
+WITH RECURSIVE `seq` AS (
+  SELECT 58 AS `question_id`, 1 AS `n`
+  UNION ALL
+  SELECT `question_id` + 1, `n` + 1
+  FROM `seq`
+  WHERE `question_id` < 107
+),
+`opt` AS (
+  SELECT 1 AS `option_number`
+  UNION ALL SELECT 2
+  UNION ALL SELECT 3
+  UNION ALL SELECT 4
+)
+SELECT
+  `seq`.`question_id`,
+  `opt`.`option_number`,
+  CASE MOD(`seq`.`n` - 1, 10)
+    WHEN 0 THEN
+      CASE `opt`.`option_number`
+        WHEN 1 THEN '가장 중요한 학습 목표를 먼저 정하고 일정을 조정한다.'
+        WHEN 2 THEN '공부할 자료만 계속 모으고 시작은 미룬다.'
+        WHEN 3 THEN '좋아하는 과목만 반복하고 약점은 뒤로 미룬다.'
+        ELSE '복습 없이 매번 새 문제만 늘린다.'
+      END
+    WHEN 1 THEN
+      CASE `opt`.`option_number`
+        WHEN 1 THEN '정답만 적어 두고 다음에는 감으로 다시 푼다.'
+        WHEN 2 THEN '틀린 이유와 다시 풀 때의 기준을 함께 적어 둔다.'
+        WHEN 3 THEN '틀린 문제를 바로 지우고 새 문제로 넘어간다.'
+        ELSE '해설을 읽지 않고 답만 암기한다.'
+      END
+    WHEN 2 THEN
+      CASE `opt`.`option_number`
+        WHEN 1 THEN '파이썬의 리스트는 항상 고정 길이만 허용한다.'
+        WHEN 2 THEN '파이썬 함수는 return 없이 값을 여러 개 강제로 반환해야 한다.'
+        WHEN 3 THEN '들여쓰기는 파이썬에서 코드 블록을 구분하는 중요한 문법이다.'
+        ELSE '파이썬의 문자열은 숫자형처럼 자동 덧셈만 가능하다.'
+      END
+    WHEN 3 THEN
+      CASE `opt`.`option_number`
+        WHEN 1 THEN '연결 리스트는 중간 삽입이 자주 일어날 때 유리할 수 있다.'
+        WHEN 2 THEN '배열은 삽입과 삭제가 항상 가장 빠르다.'
+        WHEN 3 THEN '트리는 항상 선형 구조이므로 부모-자식 관계가 없다.'
+        ELSE '그래프는 정점과 간선을 표현할 수 없다.'
+      END
+    WHEN 4 THEN
+      CASE `opt`.`option_number`
+        WHEN 1 THEN '이진 탐색은 정렬되지 않은 데이터에서만 가장 잘 동작한다.'
+        WHEN 2 THEN '선택 정렬은 교환 횟수를 줄이려는 관점에서 볼 수 있다.'
+        WHEN 3 THEN '퀵 정렬은 어떤 입력에서도 항상 O(n)이다.'
+        ELSE '선형 탐색은 배열 길이와 무관하게 항상 한 번에 끝난다.'
+      END
+    WHEN 5 THEN
+      CASE `opt`.`option_number`
+        WHEN 1 THEN '평균은 데이터의 중심을 나타내는 대표값 중 하나이다.'
+        WHEN 2 THEN '분산은 항상 데이터의 최대값만 의미한다.'
+        WHEN 3 THEN '중앙값은 정렬과 전혀 관련이 없다.'
+        ELSE '표준편차가 작을수록 데이터가 더 흩어진다.'
+      END
+    WHEN 6 THEN
+      CASE `opt`.`option_number`
+        WHEN 1 THEN 'CSS는 주로 문서 구조를 정의하고 HTML은 색상을 담당한다.'
+        WHEN 2 THEN 'HTML은 콘텐츠 구조를, CSS는 표현과 배치를 담당한다.'
+        WHEN 3 THEN 'HTML과 CSS는 역할 구분 없이 완전히 같은 작업만 한다.'
+        ELSE 'CSS 없이 HTML은 어떤 구조도 만들 수 없다.'
+      END
+    WHEN 7 THEN
+      CASE `opt`.`option_number`
+        WHEN 1 THEN 'JavaScript의 비동기 작업은 콜백이나 Promise로 제어할 수 있다.'
+        WHEN 2 THEN '이벤트 루프는 브라우저에서 한 번도 사용되지 않는다.'
+        WHEN 3 THEN 'DOM 조작은 JavaScript로 전혀 불가능하다.'
+        ELSE 'setTimeout은 항상 현재 코드보다 먼저 실행된다.'
+      END
+    WHEN 8 THEN
+      CASE `opt`.`option_number`
+        WHEN 1 THEN '큐는 후입선출 구조이다.'
+        WHEN 2 THEN '스택은 먼저 들어온 데이터가 먼저 나간다.'
+        WHEN 3 THEN '스택은 최근 작업을 되돌리는 기능과 잘 어울린다.'
+        ELSE '큐와 스택은 저장 순서를 전혀 구분하지 않는다.'
+      END
+    ELSE
+      CASE `opt`.`option_number`
+        WHEN 1 THEN '확률 분포는 가능한 값과 그 값의 나타날 가능성을 함께 본다.'
+        WHEN 2 THEN '확률 분포는 오직 정답이 하나일 때만 정의된다.'
+        WHEN 3 THEN '확률 분포를 보면 값이 얼마나 자주 나오는지는 알 수 없다.'
+        ELSE '기대값은 무조건 실제 관측값 중 하나와 같아야 한다.'
+      END
+  END,
+  CASE
+    WHEN MOD(`seq`.`n` - 1, 10) = 0 AND `opt`.`option_number` = 1 THEN 1
+    WHEN MOD(`seq`.`n` - 1, 10) = 1 AND `opt`.`option_number` = 2 THEN 1
+    WHEN MOD(`seq`.`n` - 1, 10) = 2 AND `opt`.`option_number` = 3 THEN 1
+    WHEN MOD(`seq`.`n` - 1, 10) = 3 AND `opt`.`option_number` = 1 THEN 1
+    WHEN MOD(`seq`.`n` - 1, 10) = 4 AND `opt`.`option_number` = 2 THEN 1
+    WHEN MOD(`seq`.`n` - 1, 10) = 5 AND `opt`.`option_number` = 1 THEN 1
+    WHEN MOD(`seq`.`n` - 1, 10) = 6 AND `opt`.`option_number` = 2 THEN 1
+    WHEN MOD(`seq`.`n` - 1, 10) = 7 AND `opt`.`option_number` = 1 THEN 1
+    WHEN MOD(`seq`.`n` - 1, 10) = 8 AND `opt`.`option_number` = 3 THEN 1
+    WHEN MOD(`seq`.`n` - 1, 10) = 9 AND `opt`.`option_number` = 1 THEN 1
+    ELSE 0
+  END
+FROM `seq`
+JOIN `opt`;
+
+-- 19. 확장 문제 참조 데이터
+INSERT INTO `question_tags` (`question_id`, `tag_id`) VALUES
+(58, 8), (61, 8), (71, 8), (78, 9), (88, 9), (98, 10), (101, 10);
+
+INSERT INTO `user_question_book_items` (`book_id`, `question_id`) VALUES
+(1, 2), (1, 4), (1, 6), (1, 58), (1, 63),
+(2, 61), (2, 62), (2, 71), (2, 81), (2, 91),
+(3, 3), (3, 7), (3, 78), (3, 88);
+
+INSERT INTO `solve_results` (`result_id`, `user_no`, `question_id`, `exam_id`, `submitted_answer`, `correct_answer`, `is_correct`, `time_taken`) VALUES
+(1, 2, 2, 1, '4', '5', 0, 88),
+(2, 2, 4, 4, '[] 와 list()', '[] 또는 list()', 1, 75),
+(3, 2, 6, NULL, '2', '1', 0, 241),
+(4, 2, 58, NULL, '3', '1', 0, 96),
+(5, 2, 59, NULL, '2', '2', 1, 72),
+(6, 2, 61, NULL, '1', '4', 0, 103),
+(7, 2, 78, NULL, '4', '4', 1, 91),
+(8, 4, 2, 2, '5', '5', 1, 55);
+
+INSERT INTO `question_reviews` (`review_id`, `question_id`, `user_no`, `content`, `rating`) VALUES
+(1, 2, 2, '패턴 분류를 비교하면서 풀 수 있어서 좋았습니다.', 4),
+(2, 3, 2, '단어 뜻과 보기 난이도가 적절했습니다.', 5),
+(3, 6, 1, '부분적분 개념 확인용으로 수업 자료에 쓰기 좋습니다.', 4),
+(4, 58, 2, '짧지만 핵심을 묻는 문제라 복습용으로 괜찮았습니다.', 4),
+(5, 61, 2, '자료구조 개념을 헷갈릴 때 다시 보기 좋았습니다.', 5);
+
+-- 20. 추가 지문/미디어/고사 반영
+INSERT INTO `question_passages` (`question_id`, `content_md`) VALUES
+(61, '### 자료구조 빠른 정리\n\n배열은 **인덱스 접근**에 강하고, 연결 리스트는 **중간 삽입/삭제**에 유리합니다. 각 구조는 데이터 접근 패턴에 따라 선택해야 합니다.'),
+(78, '### 통계 개념 메모\n\n대표값은 데이터의 중심을 요약하고, 산포도는 데이터가 얼마나 퍼져 있는지를 설명합니다. 평균과 분산을 함께 읽는 습관이 중요합니다.'),
+(98, '### 웹 개발 기초\n\nHTML은 문서의 구조를 만들고 CSS는 그 구조를 화면에서 어떻게 보이게 할지를 결정합니다. JavaScript는 사용자와 상호작용하는 동작을 담당합니다.');
+
+INSERT INTO `media_attachments` (`question_id`, `media_type_id`, `media_url`, `sort_order`) VALUES
+(61, 'I', 'https://images.unsplash.com/photo-1515879218367-8466d910aaa4?auto=format&fit=crop&w=800&q=80', 1),
+(78, 'I', 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=800&q=80', 1),
+(98, 'Y', 'https://www.youtube.com/watch?v=PkZNo7MFNFg', 1);
+
+INSERT INTO `exam_questions` (`exam_id`, `question_id`, `question_order`, `score`) VALUES
+(4, 58, 2, 50), (4, 61, 3, 50), (4, 78, 4, 50), (5, 98, 2, 50);
+
+INSERT INTO `exam_results` (`exam_id`, `student_no`, `total_score`, `student_rank`, `total_examinees`, `grade`, `ai_comment`, `teacher_comment`) VALUES
+(4, 2, 150, 1, 1, '수', '[AI 분석] 오답 노트 기반 복습 효과가 좋아져 자료구조와 통계 문제 정답률이 크게 올랐습니다.', '철수 학생, 문제 풀이 속도보다 개념 정리가 훨씬 안정적으로 좋아졌어요.'),
+(5, 2, 50, 1, 1, '우', '[AI 분석] 웹 기초 개념은 좋지만 용어 정의를 더 정확히 구분하면 좋겠습니다.', '부모님과 함께 HTML/CSS 역할 차이를 다시 읽어 보세요.');
