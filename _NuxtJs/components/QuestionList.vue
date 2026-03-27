@@ -236,8 +236,10 @@ watch(() => props.appliedSearchKeyword, (value) => {
 
       <div v-for="q in props.questions" :key="q.question_id" class="question-item">
         <div class="question-header">
-          <!-- 문제 제목과 문제 ID를 h3 태그로 표시 -->
-          <h3 class="question-title">{{ q.title }} <{{ q.question_id }}></h3>
+          <div class="question-title-row">
+            <span class="badge badge-type question-type-badge">{{ q.type.type_name }}</span>
+            <h3 class="question-title">{{ q.title }} <{{ q.question_id }}></h3>
+          </div>
           <!-- 문제의 그룹 경로를 표시 -->
           <div v-if="q.group" class="question-group-path">
             {{ formatGroupPath(q.group) }}
@@ -250,12 +252,6 @@ watch(() => props.appliedSearchKeyword, (value) => {
             <LatexRenderer :text="q.question" class="question-preview" />
             <LatexRenderer v-if="q.content" :text="q.content" class="question-secondary" />
 
-            <!-- 문제 유형, 난이도, 제한 시간을 표시 -->
-            <div class="question-footer">
-              <span class="badge badge-type">{{ q.type.type_name }}</span>
-              <span class="badge badge-level">Level: {{ q.difficulty || 1 }}</span>
-              <span v-if="q.time_limit" class="badge badge-time">{{ q.time_limit }}s</span>
-            </div>
           </div>
 
           <div class="question-actions">
@@ -380,7 +376,7 @@ watch(() => props.appliedSearchKeyword, (value) => {
 .question-item {
   display: flex;
   flex-direction: column;
-  padding: 1.5rem;
+  padding: 1.25rem 1.5rem;
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 10px;
@@ -405,8 +401,16 @@ watch(() => props.appliedSearchKeyword, (value) => {
 .question-header {
   display: flex;
   justify-content: space-between;
-  align-items: baseline;
-  margin-bottom: 0.5rem;
+  align-items: flex-start;
+  margin-bottom: 0.35rem;
+  gap: 1rem;
+}
+
+.question-title-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 0;
 }
 
 .question-item:hover {
@@ -427,6 +431,12 @@ watch(() => props.appliedSearchKeyword, (value) => {
   color: #94a3b8;
   text-transform: uppercase;
   letter-spacing: 0.05em;
+  min-width: 0;
+}
+
+.question-type-badge {
+  flex-shrink: 0;
+  padding: 0.2rem 0.6rem;
 }
 
 .question-preview {
@@ -442,7 +452,7 @@ watch(() => props.appliedSearchKeyword, (value) => {
 }
 
 .question-secondary {
-  margin: -0.5rem 0 1rem 0;
+  margin: -0.35rem 0 0 0;
   font-size: 1rem;
   font-weight: 400;
   color: #94a3b8;
@@ -451,12 +461,6 @@ watch(() => props.appliedSearchKeyword, (value) => {
   line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
-}
-
-.question-footer {
-  display: flex;
-  gap: 0.75rem;
-  align-items: center;
 }
 
 .badge {
@@ -470,18 +474,6 @@ watch(() => props.appliedSearchKeyword, (value) => {
   background: rgba(99, 102, 241, 0.15);
   color: #818cf8;
   border: 1px solid rgba(99, 102, 241, 0.3);
-}
-
-.badge-level {
-  background: rgba(245, 158, 11, 0.15);
-  color: #fbbf24;
-  border: 1px solid rgba(245, 158, 11, 0.3);
-}
-
-.badge-time {
-  background: rgba(16, 185, 129, 0.15);
-  color: #34d399;
-  border: 1px solid rgba(16, 185, 129, 0.3);
 }
 
 .question-actions {
