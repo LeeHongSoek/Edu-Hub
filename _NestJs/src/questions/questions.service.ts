@@ -20,7 +20,10 @@ export class QuestionsService {
     if (creatorNo !== undefined) where.creator_no = creatorNo;
 
     if (groupId !== undefined) {
-      where.group_id = groupId;
+      const descendantGroupIds = await this.getDescendantGroupIds(groupId);
+      where.group_id = {
+        in: descendantGroupIds,
+      };
     }
 
     if (searchKeyword) {
@@ -76,6 +79,32 @@ export class QuestionsService {
       limit: safeLimit,
       totalPages: Math.max(1, Math.ceil(total / safeLimit)),
     };
+  }
+
+  private async getDescendantGroupIds(groupId: bigint) {
+    const groups = await this.prisma.group.findMany({
+      select: {
+        group_id: true,
+        parent_group_id: true,
+      },
+    });
+
+    const descendantIds: bigint[] = [];
+    const queue: bigint[] = [groupId];
+
+    while (queue.length > 0) {
+      const currentGroupId = queue.shift();
+      if (currentGroupId === undefined) continue;
+
+      descendantIds.push(currentGroupId);
+
+      const childGroups = groups.filter((group) => group.parent_group_id === currentGroupId);
+      for (const childGroup of childGroups) {
+        queue.push(childGroup.group_id);
+      }
+    }
+
+    return descendantIds;
   }
 
   private buildSearchCondition(searchField: 'title' | 'content', searchKeyword: string) {
