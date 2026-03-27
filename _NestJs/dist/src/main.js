@@ -9,6 +9,46 @@ const prisma_service_1 = require("./common/prisma/prisma.service");
 BigInt.prototype.toJSON = function () {
     return this.toString();
 };
+const SQL_CONSOLE_PAGE = 'sql-console';
+const SQL_CONSOLE_DEFAULT_QUERY = [
+    'SELECT',
+    '  q.question_id,',
+    '  q.title,',
+    '  g.name AS group_name,',
+    '  u.username AS creator_name',
+    'FROM questions q',
+    'LEFT JOIN groups g ON g.group_id = q.group_id',
+    'LEFT JOIN users u ON u.user_no = q.creator_no',
+    'ORDER BY q.question_id DESC',
+    'LIMIT 20;',
+].join('\n');
+const READ_QUERY_REGEX = /^\s*(select|show|desc|describe|explain|with)\b/i;
+const MUTATION_QUERY_REGEX = /^\s*(insert|update|delete|replace|create|alter|drop|truncate|rename|grant|revoke|set|use)\b/i;
+function normalizeSqlQuery(query) {
+    return typeof query === 'string' ? query.trim() : '';
+}
+function validateSqlQuery(query) {
+    if (!query) {
+        return 'SQL 문을 입력해 주세요.';
+    }
+    const sanitized = query.replace(/;+\s*$/, '');
+    if (!sanitized) {
+        return '실행 가능한 SQL 문이 비어 있습니다.';
+    }
+    if (sanitized.includes(';')) {
+        return '한 번에 하나의 SQL 문만 실행할 수 있습니다.';
+    }
+    return null;
+}
+function classifySqlQuery(query) {
+    if (READ_QUERY_REGEX.test(query)) {
+        return 'read';
+    }
+    if (MUTATION_QUERY_REGEX.test(query)) {
+        return 'mutation';
+    }
+    return 'mutation';
+}
 async function bootstrap() {
     const app = await core_1.NestFactory.create(app_module_1.AppModule, {
         bodyParser: true,
@@ -16,7 +56,7 @@ async function bootstrap() {
     app.enableCors();
     app.setGlobalPrefix('api');
     const prisma = app.get(prisma_service_1.PrismaService);
-    const [{ default: AdminJS }, AdminJSExpress, AdminJSPrisma] = await Promise.all([
+    const [{ default: AdminJS, ComponentLoader }, AdminJSExpress, AdminJSPrisma] = await Promise.all([
         import('adminjs'),
         import('@adminjs/express'),
         import('@adminjs/prisma'),
@@ -31,10 +71,13 @@ async function bootstrap() {
     const adminEmail = process.env.ADMINJS_EMAIL || 'admin@edu-hub.com';
     const adminPassword = process.env.ADMINJS_PASSWORD || 'admin1234';
     const adminCookieSecret = process.env.ADMINJS_COOKIE_SECRET || 'edu-hub-admin-cookie-secret-change-me';
+    const componentLoader = new ComponentLoader();
+    const sqlConsoleComponent = componentLoader.add('SqlConsolePage', (0, path_1.resolve)(process.cwd(), 'src', 'adminjs', 'sql-console-page.jsx'));
     const admin = new AdminJS({
         rootPath: '/api/admin',
         loginPath: '/api/admin/login',
         logoutPath: '/api/admin/logout',
+        componentLoader,
         resources: resourceNames.map((name) => ({
             resource: {
                 model: AdminJSPrisma.getModelByName(name),
@@ -47,7 +90,73 @@ async function bootstrap() {
         branding: {
             companyName: 'Edu Hub DB Admin',
         },
+        pages: {
+            [SQL_CONSOLE_PAGE]: {
+                icon: 'Terminal',
+                component: sqlConsoleComponent,
+                handler: async (request) => {
+                    if (request.method?.toLowerCase() !== 'post') {
+                        return {
+                            ok: true,
+                            mode: 'idle',
+                            defaultQuery: SQL_CONSOLE_DEFAULT_QUERY,
+                            helperText: '단일 SQL만 실행됩니다. SELECT/SHOW 계열은 결과 테이블, 그 외는 영향 건수로 표시됩니다.',
+                        };
+                    }
+                    const query = normalizeSqlQuery(request.payload?.query);
+                    const validationError = validateSqlQuery(query);
+                    if (validationError) {
+                        return {
+                            ok: false,
+                            error: validationError,
+                            query,
+                        };
+                    }
+                    try {
+                        const mode = classifySqlQuery(query);
+                        if (mode === 'read') {
+                            const rows = await prisma.$queryRawUnsafe(query);
+                            const columns = Array.from(rows.reduce((set, row) => {
+                                Object.keys(row).forEach((key) => set.add(key));
+                                return set;
+                            }, new Set()));
+                            return {
+                                ok: true,
+                                mode,
+                                query,
+                                columns,
+                                rows,
+                                rowCount: rows.length,
+                            };
+                        }
+                        const affectedRows = await prisma.$executeRawUnsafe(query);
+                        return {
+                            ok: true,
+                            mode,
+                            query,
+                            affectedRows,
+                        };
+                    }
+                    catch (error) {
+                        return {
+                            ok: false,
+                            query,
+                            error: error instanceof Error ? error.message : 'SQL 실행 중 알 수 없는 오류가 발생했습니다.',
+                        };
+                    }
+                },
+            },
+        },
     });
+    if (process.env.NODE_ENV !== 'production') {
+        const adminTmpDir = (0, path_1.resolve)(process.cwd(), '.adminjs');
+        if ((0, fs_1.existsSync)(adminTmpDir)) {
+            (0, fs_1.rmSync)(adminTmpDir, { recursive: true, force: true });
+        }
+        void admin.watch().catch((error) => {
+            console.error('AdminJS component watch failed:', error);
+        });
+    }
     const adminRouter = AdminJSExpress.buildAuthenticatedRouter(admin, {
         authenticate: async (email, password) => {
             if (email === adminEmail && password === adminPassword) {
