@@ -13,12 +13,12 @@ export declare class QuestionBooksService {
         items: ({
             question: {
                 question: string;
+                title: string;
+                content: string | null;
                 question_id: bigint;
                 creator_no: bigint;
                 group_id: bigint | null;
                 question_type_id: string;
-                title: string;
-                content: string | null;
                 answer: string;
                 explanation: string | null;
                 hint: string | null;

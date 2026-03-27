@@ -20,8 +20,13 @@ let QuestionsController = class QuestionsController {
     constructor(questionsService) {
         this.questionsService = questionsService;
     }
-    findAll(creatorNo, groupId) {
-        return this.questionsService.findAll((creatorNo && creatorNo !== 'undefined') ? BigInt(creatorNo) : undefined, (groupId && groupId !== 'undefined') ? BigInt(groupId) : undefined);
+    findAll(creatorNo, groupId, searchField, searchKeyword) {
+        return this.questionsService.findAll({
+            creatorNo: (creatorNo && creatorNo !== 'undefined') ? BigInt(creatorNo) : undefined,
+            groupId: (groupId && groupId !== 'undefined') ? BigInt(groupId) : undefined,
+            searchField: searchField === 'content' ? 'content' : 'title',
+            searchKeyword: searchKeyword?.trim() || undefined,
+        });
     }
     create(createQuestionDto) {
         return this.questionsService.create(createQuestionDto);
@@ -41,15 +46,17 @@ let QuestionsController = class QuestionsController {
 };
 exports.QuestionsController = QuestionsController;
 __decorate([
-    (0, common_1.Get)(),
-    __param(0, (0, common_1.Query)('creator_no')),
-    __param(1, (0, common_1.Query)('group_id')),
+    (0, common_1.Post)(),
+    __param(0, (0, common_1.Body)('creator_no')),
+    __param(1, (0, common_1.Body)('group_id')),
+    __param(2, (0, common_1.Body)('search_field')),
+    __param(3, (0, common_1.Body)('search_keyword')),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, String]),
+    __metadata("design:paramtypes", [String, String, String, String]),
     __metadata("design:returntype", void 0)
 ], QuestionsController.prototype, "findAll", null);
 __decorate([
-    (0, common_1.Post)(),
+    (0, common_1.Post)('create'),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object]),

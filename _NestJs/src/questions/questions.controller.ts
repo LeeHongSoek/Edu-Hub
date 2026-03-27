@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Patch, Delete, Body, Param, Query } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Delete, Body, Param } from '@nestjs/common';
 import { QuestionsService } from './questions.service';
 
 @Controller('questions')
@@ -6,19 +6,23 @@ export class QuestionsController {
   constructor(private readonly questionsService: QuestionsService) {}
 
   // 모든 문제 목록 조회 API
-  @Get()
+  @Post()
   findAll(
-    @Query('creator_no') creatorNo?: string,
-    @Query('group_id') groupId?: string,
+    @Body('creator_no') creatorNo?: string,
+    @Body('group_id') groupId?: string,
+    @Body('search_field') searchField?: string,
+    @Body('search_keyword') searchKeyword?: string,
   ) {
-    return this.questionsService.findAll(
-      (creatorNo && creatorNo !== 'undefined') ? BigInt(creatorNo) : undefined,
-      (groupId && groupId !== 'undefined') ? BigInt(groupId) : undefined,
-    );
+    return this.questionsService.findAll({
+      creatorNo: (creatorNo && creatorNo !== 'undefined') ? BigInt(creatorNo) : undefined,
+      groupId: (groupId && groupId !== 'undefined') ? BigInt(groupId) : undefined,
+      searchField: searchField === 'content' ? 'content' : 'title',
+      searchKeyword: searchKeyword?.trim() || undefined,
+    });
   }
 
   // 문제 생성
-  @Post()
+  @Post('create')
   create(@Body() createQuestionDto: any) {
     return this.questionsService.create(createQuestionDto);
   }

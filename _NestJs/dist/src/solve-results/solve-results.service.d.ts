@@ -16,12 +16,12 @@ export declare class SolveResultsService {
     findByUser(userNo: bigint): Promise<({
         question: {
             question: string;
+            title: string;
+            content: string | null;
             question_id: bigint;
             creator_no: bigint;
             group_id: bigint | null;
             question_type_id: string;
-            title: string;
-            content: string | null;
             answer: string;
             explanation: string | null;
             hint: string | null;
@@ -78,12 +78,12 @@ export declare class SolveResultsService {
         };
         question: {
             question: string;
+            title: string;
+            content: string | null;
             question_id: bigint;
             creator_no: bigint;
             group_id: bigint | null;
             question_type_id: string;
-            title: string;
-            content: string | null;
             answer: string;
             explanation: string | null;
             hint: string | null;

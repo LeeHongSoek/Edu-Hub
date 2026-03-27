@@ -1,59 +1,46 @@
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue';
+import { ref, onMounted, computed, watch } from 'vue';
 import type { Question, Group } from '~/types';
 
 const props = defineProps<{
   questions: Question[];
+  selectedGroupId: string | number | null;
+  appliedSearchField: 'title' | 'content';
+  appliedSearchKeyword: string;
 }>();
 
 // API 설정 통합
 const { apiBase } = useApi();
 
 const groups = ref<Group[]>([]);
-const selectedGroupId = ref<string | number | null>(null);
 const selectedQuestionForSolve = ref<Question | null>(null);
 const selectedQuestionForEdit = ref<Question | null>(null);
 const showGroupManager = ref(false);
+const searchField = ref<'title' | 'content'>(props.appliedSearchField);
+const searchInput = ref('');
 
 const emit = defineEmits<{
   (e: 'refresh'): void;
+  (e: 'change-group', groupId: string | number | null): void;
+  (e: 'search', payload: { field: 'title' | 'content'; keyword: string }): void;
+  (e: 'reset-search'): void;
 }>();
 
-// 선택된 그룹과 그 하위 그룹들의 모든 ID를 가져오는 함수
-const getDescendantIds = (groupId: string | number, allGroups: Group[]): (string | number)[] => {
-  const ids: (string | number)[] = [];
-  const targetIdStr = String(groupId);
-  
-  const traverse = (groups: Group[], targetFound = false) => {
-    for (const g of groups) {
-      const isTarget = String(g.group_id) === targetIdStr || targetFound;
-      if (isTarget) {
-        ids.push(g.group_id);
-      }
-      if (g.child_groups && g.child_groups.length > 0) {
-        traverse(g.child_groups, isTarget);
-      }
-    }
-  };
-
-  traverse(allGroups);
-  return ids;
+const handleSelectGroup = (groupId: string | number | null) => {
+  emit('change-group', groupId);
 };
 
-// 필터링된 문제 목록 (계층 구조 반영)
-const filteredQuestions = computed(() => {
-  if (!selectedGroupId.value) return props.questions;
-  
-  // 모든 비교를 문자열로 수행하여 BigInt/String/Number 타입 불일치 방지
-  const targetIds = getDescendantIds(selectedGroupId.value, groups.value).map(String);
-  return props.questions.filter(q => {
-    if (!q.group_id) return false;
-    return targetIds.includes(String(q.group_id));
+const applySearch = () => {
+  emit('search', {
+    field: searchField.value,
+    keyword: searchInput.value.trim(),
   });
-});
+};
 
-const handleSelectGroup = (groupId: string | number | null) => {
-  selectedGroupId.value = groupId;
+const resetSearch = () => {
+  searchField.value = 'title';
+  searchInput.value = '';
+  emit('reset-search');
 };
 
 const handleSolve = (question: Question) => {
@@ -63,18 +50,18 @@ const handleSolve = (question: Question) => {
 // 이전/다음 문제 탐색용 로직
 const currentQuestionIndex = computed(() => {
   if (!selectedQuestionForSolve.value) return -1;
-  return filteredQuestions.value.findIndex(q => q.question_id === selectedQuestionForSolve.value?.question_id);
+  return props.questions.findIndex(q => q.question_id === selectedQuestionForSolve.value?.question_id);
 });
 
 const getPrevQuestion = () => {
   const idx = currentQuestionIndex.value;
-  if (idx > 0) return filteredQuestions.value[idx - 1];
+  if (idx > 0) return props.questions[idx - 1];
   return null;
 };
 
 const getNextQuestion = () => {
   const idx = currentQuestionIndex.value;
-  if (idx !== -1 && idx < filteredQuestions.value.length - 1) return filteredQuestions.value[idx + 1];
+  if (idx !== -1 && idx < props.questions.length - 1) return props.questions[idx + 1];
   return null;
 };
 
@@ -109,25 +96,34 @@ const fetchGroups = async () => {
 
 onMounted(async () => {
   await fetchGroups();
+  searchInput.value = props.appliedSearchKeyword;
+});
+
+watch(() => props.appliedSearchField, (value) => {
+  searchField.value = value;
+});
+
+watch(() => props.appliedSearchKeyword, (value) => {
+  searchInput.value = value;
 });
 </script>
 
 <template>
   <div class="question-list-container">
     <!-- 계층형 그룹 표시 (우측 상단 오버레이) -->
-    <div v-if="groups.length > 0" class="group-overlay">
+      <div v-if="groups.length > 0" class="group-overlay">
       <div class="group-overlay-header">
         <span>문제 그룹</span>
         <div class="header-actions">
           <button class="btn-manage-groups" title="그룹 관리" @click="showGroupManager = true">⚙️</button>
-          <button v-if="selectedGroupId" class="btn-clear-filter" @click="handleSelectGroup(null)">
+          <button v-if="props.selectedGroupId" class="btn-clear-filter" @click="handleSelectGroup(null)">
             전체
           </button>
         </div>
       </div>
       <GroupHierarchy 
         :groups="groups" 
-        :selected-group-id="selectedGroupId"
+        :selected-group-id="props.selectedGroupId"
         @select-group="handleSelectGroup" 
       />
     </div>
@@ -140,12 +136,36 @@ onMounted(async () => {
     />
 
     <div class="question-list">
-      <div v-if="filteredQuestions.length === 0" class="no-results">
-        해당 그룹에 등록된 문제가 없습니다.
+      <div class="search-bar">
+        <select v-model="searchField" class="search-select">
+          <option value="title">문제제목</option>
+          <option value="content">문제내용</option>
+        </select>
+        <input
+          v-model="searchInput"
+          type="text"
+          class="search-input"
+          :placeholder="searchField === 'title' ? '문제 제목을 입력하세요' : '문제 내용을 입력하세요'"
+          @keyup.enter="applySearch"
+        />
+        <button class="btn-search" @click="applySearch">검색</button>
+        <button
+          v-if="props.appliedSearchKeyword || searchInput"
+          class="btn-reset-search"
+          @click="resetSearch"
+        >
+          초기화
+        </button>
       </div>
-      <div v-for="q in filteredQuestions" :key="q.question_id" class="question-item">
+
+      <div v-if="props.questions.length === 0" class="no-results">
+        {{ props.appliedSearchKeyword ? '검색 조건에 맞는 문제가 없습니다.' : '해당 조건에 등록된 문제가 없습니다.' }}
+      </div>
+      <div v-for="q in props.questions" :key="q.question_id" class="question-item">
         <div class="question-header">
-          <h3 class="question-title">{{ q.title }}</h3>
+          <!-- 문제 제목과 문제 ID를 h3 태그로 표시 -->
+          <h3 class="question-title">{{ q.title }} <{{ q.question_id }}></h3>
+          <!-- 문제의 그룹 경로를 표시 -->
           <div v-if="q.group" class="question-group-path">
             {{ formatGroupPath(q.group) }}
           </div>
@@ -153,14 +173,18 @@ onMounted(async () => {
         
         <div class="question-main">
           <div class="question-content">
+            <!--  문제 내용, 추가 내용을 표시 -->
             <LatexRenderer :text="q.question" class="question-preview" />
             <LatexRenderer v-if="q.content" :text="q.content" class="question-secondary" />
+
+            <!-- 문제 유형, 난이도, 제한 시간을 표시 -->
             <div class="question-footer">
               <span class="badge badge-type">{{ q.type.type_name }}</span>
               <span class="badge badge-level">Level: {{ q.difficulty || 1 }}</span>
               <span v-if="q.time_limit" class="badge badge-time">{{ q.time_limit }}s</span>
             </div>
           </div>
+
           <div class="question-actions">
             <button class="btn-modify" @click="selectedQuestionForEdit = q">수정</button>
             <button class="btn-solve" @click="handleSolve(q)">풀기</button>
@@ -185,7 +209,7 @@ onMounted(async () => {
       :has-prev="getPrevQuestion() !== null"
       :has-next="getNextQuestion() !== null"
       :current-index="currentQuestionIndex"
-      :total-questions="filteredQuestions.length"
+      :total-questions="props.questions.length"
       @close="selectedQuestionForSolve = null"
       @prev="handlePrev"
       @next="handleNext"
@@ -200,6 +224,71 @@ onMounted(async () => {
   gap: 1rem;
   max-width: 900px;
   margin: 0 auto;
+}
+
+.search-bar {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.search-select,
+.search-input {
+  height: 2.75rem;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(15, 23, 42, 0.72);
+  color: #e2e8f0;
+  padding: 0 0.9rem;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.search-select {
+  min-width: 8.5rem;
+  cursor: pointer;
+}
+
+.search-input {
+  flex: 1;
+}
+
+.search-select:focus,
+.search-input:focus {
+  border-color: rgba(99, 102, 241, 0.65);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+}
+
+.btn-search,
+.btn-reset-search {
+  height: 2.75rem;
+  padding: 0 1rem;
+  border-radius: 10px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-search {
+  border: none;
+  background: #6366f1;
+  color: #fff;
+}
+
+.btn-search:hover {
+  background: #4f46e5;
+}
+
+.btn-reset-search {
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.05);
+  color: #cbd5e1;
+}
+
+.btn-reset-search:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
 }
 
 .question-item {
@@ -350,6 +439,18 @@ onMounted(async () => {
 }
 
 @media (max-width: 640px) {
+  .search-bar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .search-select,
+  .search-input,
+  .btn-search,
+  .btn-reset-search {
+    width: 100%;
+  }
+
   .question-item {
     flex-direction: column;
     align-items: flex-start;

@@ -1,18 +1,41 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../common/prisma/prisma.service';
 
+type FindAllParams = {
+  creatorNo?: bigint;
+  groupId?: bigint;
+  searchField?: 'title' | 'content';
+  searchKeyword?: string;
+};
+
 @Injectable()
 export class QuestionsService {
   constructor(private prisma: PrismaService) {}
 
   // 모든 문제 목록 조회 API (필터링 지원)
-  async findAll(creator_no?: bigint, group_id?: bigint) {
+  async findAll({ creatorNo, groupId, searchField, searchKeyword }: FindAllParams) {
     const where: any = {};
-    if (creator_no !== undefined) where.creator_no = creator_no;
-    if (group_id !== undefined) where.group_id = group_id;
+    if (creatorNo !== undefined) where.creator_no = creatorNo;
+
+    if (groupId !== undefined) {
+      const descendantGroupIds = await this.getDescendantGroupIds(groupId);
+      where.group_id = {
+        in: descendantGroupIds,
+      };
+    }
+
+    if (searchKeyword) {
+      where.AND = [
+        ...(where.AND ?? []),
+        this.buildSearchCondition(searchField ?? 'title', searchKeyword),
+      ];
+    }
 
     return this.prisma.question.findMany({
       where,
+      orderBy: {
+        question_id: 'desc',
+      },
       include: {
         type: true,
         passage: true,
@@ -37,6 +60,50 @@ export class QuestionsService {
         },
       },
     });
+  }
+
+  private async getDescendantGroupIds(groupId: bigint) {
+    const groups = await this.prisma.group.findMany({
+      select: {
+        group_id: true,
+        parent_group_id: true,
+      },
+    });
+
+    const descendantIds: bigint[] = [];
+    const queue: bigint[] = [groupId];
+
+    while (queue.length > 0) {
+      const currentGroupId = queue.shift();
+      if (currentGroupId === undefined) continue;
+
+      descendantIds.push(currentGroupId);
+
+      const childGroups = groups.filter((group) => group.parent_group_id === currentGroupId);
+      for (const childGroup of childGroups) {
+        queue.push(childGroup.group_id);
+      }
+    }
+
+    return descendantIds;
+  }
+
+  private buildSearchCondition(searchField: 'title' | 'content', searchKeyword: string) {
+    if (searchField === 'content') {
+      return {
+        OR: [
+          { question: { contains: searchKeyword } },
+          { content: { contains: searchKeyword } },
+          { passage: { is: { content_md: { contains: searchKeyword } } } },
+        ],
+      };
+    }
+
+    return {
+      title: {
+        contains: searchKeyword,
+      },
+    };
   }
 
   // 문제 생성

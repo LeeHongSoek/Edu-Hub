@@ -17,14 +17,27 @@ let QuestionsService = class QuestionsService {
     constructor(prisma) {
         this.prisma = prisma;
     }
-    async findAll(creator_no, group_id) {
+    async findAll({ creatorNo, groupId, searchField, searchKeyword }) {
         const where = {};
-        if (creator_no !== undefined)
-            where.creator_no = creator_no;
-        if (group_id !== undefined)
-            where.group_id = group_id;
+        if (creatorNo !== undefined)
+            where.creator_no = creatorNo;
+        if (groupId !== undefined) {
+            const descendantGroupIds = await this.getDescendantGroupIds(groupId);
+            where.group_id = {
+                in: descendantGroupIds,
+            };
+        }
+        if (searchKeyword) {
+            where.AND = [
+                ...(where.AND ?? []),
+                this.buildSearchCondition(searchField ?? 'title', searchKeyword),
+            ];
+        }
         return this.prisma.question.findMany({
             where,
+            orderBy: {
+                question_id: 'desc',
+            },
             include: {
                 type: true,
                 passage: true,
@@ -49,6 +62,43 @@ let QuestionsService = class QuestionsService {
                 },
             },
         });
+    }
+    async getDescendantGroupIds(groupId) {
+        const groups = await this.prisma.group.findMany({
+            select: {
+                group_id: true,
+                parent_group_id: true,
+            },
+        });
+        const descendantIds = [];
+        const queue = [groupId];
+        while (queue.length > 0) {
+            const currentGroupId = queue.shift();
+            if (currentGroupId === undefined)
+                continue;
+            descendantIds.push(currentGroupId);
+            const childGroups = groups.filter((group) => group.parent_group_id === currentGroupId);
+            for (const childGroup of childGroups) {
+                queue.push(childGroup.group_id);
+            }
+        }
+        return descendantIds;
+    }
+    buildSearchCondition(searchField, searchKeyword) {
+        if (searchField === 'content') {
+            return {
+                OR: [
+                    { question: { contains: searchKeyword } },
+                    { content: { contains: searchKeyword } },
+                    { passage: { is: { content_md: { contains: searchKeyword } } } },
+                ],
+            };
+        }
+        return {
+            title: {
+                contains: searchKeyword,
+            },
+        };
     }
     async create(data) {
         const { options, ...questionData } = data;

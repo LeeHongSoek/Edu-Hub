@@ -10,17 +10,49 @@ const userInfo = computed(() => {
   return typeof userCookie.value === 'string' ? JSON.parse(userCookie.value) : userCookie.value;
 });
 
-const fetchUrl = computed(() => {
-  let url = `${apiBase.value}/questions`;
+const selectedGroupId = ref<string | number | null>(null);
+const appliedSearchField = ref<'title' | 'content'>('title');
+const appliedSearchKeyword = ref('');
+
+const requestBody = computed(() => {
+  const body: Record<string, string | number> = {};
+
   if (route.query.mine === 'true' && userInfo.value) {
-    url += `?creator_no=${userInfo.value.user_no}`;
+    body.creator_no = userInfo.value.user_no;
   }
-  return url;
+
+  if (selectedGroupId.value !== null) {
+    body.group_id = selectedGroupId.value;
+  }
+
+  if (appliedSearchKeyword.value) {
+    body.search_field = appliedSearchField.value;
+    body.search_keyword = appliedSearchKeyword.value;
+  }
+
+  return body;
 });
 
-const { data: questions, pending, error, refresh } = await useFetch<Question[]>(fetchUrl);
+const { data: questions, pending, error, refresh } = await useFetch<Question[]>(() => `${apiBase.value}/questions`, {
+  method: 'POST',
+  body: requestBody,
+});
 
 watch(() => route.query.mine, () => refresh());
+
+const handleGroupChange = (groupId: string | number | null) => {
+  selectedGroupId.value = groupId;
+};
+
+const handleSearch = (payload: { field: 'title' | 'content'; keyword: string }) => {
+  appliedSearchField.value = payload.field;
+  appliedSearchKeyword.value = payload.keyword;
+};
+
+const handleResetSearch = () => {
+  appliedSearchField.value = 'title';
+  appliedSearchKeyword.value = '';
+};
 </script>
 
 <template>
@@ -38,7 +70,16 @@ watch(() => route.query.mine, () => refresh());
     </div>
     
     <div v-else>
-      <QuestionList :questions="questions || []" @refresh="refresh" />
+      <QuestionList
+        :questions="questions || []"
+        :selected-group-id="selectedGroupId"
+        :applied-search-field="appliedSearchField"
+        :applied-search-keyword="appliedSearchKeyword"
+        @refresh="refresh"
+        @change-group="handleGroupChange"
+        @search="handleSearch"
+        @reset-search="handleResetSearch"
+      />
     </div>
   </div>
 </template>

@@ -101,11 +101,14 @@ const testBackendApis = async () => {
 
     // 테스트 3: 질문 목록
     try {
-      console.log('📡 Test 3: GET /api/questions');
-      const res3 = await $fetch('/api/questions');
+      console.log('📡 Test 3: POST /api/questions');
+      const res3 = await $fetch('/api/questions', {
+        method: 'POST',
+        body: {},
+      });
 
       testResults.value.push({
-        method: 'GET',
+        method: 'POST',
         url: '/api/questions',
 
         status: 200,

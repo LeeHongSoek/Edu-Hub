@@ -1,6 +1,10 @@
 <script setup lang="ts">
-import type { Group } from '~/types';
 import { ref } from 'vue';
+import type { Group } from '~/types';
+
+defineOptions({
+  name: 'GroupTreeNode',
+});
 
 const props = defineProps<{
   group: Group;
@@ -12,24 +16,24 @@ const emit = defineEmits<{
   (e: 'select-group', groupId: string | number | null): void;
 }>();
 
-const isExpanded = ref(false); // 기본적으로 접힌 상태
+const isExpanded = ref(false);
 
 const toggleExpand = (event: Event) => {
-  event.stopPropagation(); // 그룹 선택 이벤트와 분리
+  event.stopPropagation();
   isExpanded.value = !isExpanded.value;
 };
 </script>
 
 <template>
   <div class="tree-node" :style="{ paddingLeft: `${depth * 0.5}rem` }">
-    <div 
+    <div
       class="node-content"
       :class="{ 'is-selected': group.group_id === selectedGroupId }"
       @click="emit('select-group', group.group_id)"
     >
-      <span 
-        v-if="group.child_groups && group.child_groups.length > 0" 
-        class="toggle-icon" 
+      <span
+        v-if="group.child_groups && group.child_groups.length > 0"
+        class="toggle-icon"
         :class="{ 'is-expanded': isExpanded }"
         @click="toggleExpand"
       >
@@ -40,8 +44,8 @@ const toggleExpand = (event: Event) => {
     </div>
 
     <div v-if="isExpanded && group.child_groups && group.child_groups.length > 0" class="child-nodes">
-      <GroupTreeNode 
-        v-for="child in group.child_groups" 
+      <GroupTreeNode
+        v-for="child in group.child_groups"
         :key="child.group_id"
         :group="child"
         :selected-group-id="selectedGroupId"
@@ -87,8 +91,8 @@ const toggleExpand = (event: Event) => {
 }
 
 .toggle-icon {
-  font-size: 0.75rem; /* 기본 0.6에서 20% 이상 확대 */
-  color: #94a3b8; /* 기존보다 살짝 밝게 */
+  font-size: 0.75rem;
+  color: #94a3b8;
   transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275), color 0.2s;
   display: inline-block;
   width: 1.2rem;
@@ -96,8 +100,8 @@ const toggleExpand = (event: Event) => {
 }
 
 .toggle-icon:hover {
-  color: #ababc6; /* 마우스 오버 시 완전 밝게 */
-  transform: scale(1.7); /* 살짝 더 커짐 */
+  color: #ababc6;
+  transform: scale(1.7);
 }
 
 .toggle-icon.is-expanded {

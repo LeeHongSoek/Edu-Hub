@@ -154,7 +154,10 @@ const tickerQuestions = ref<any[]>([]);
 const fetchTickerData = async () => {
   console.log('[ticker] Starting fetch...');
   try {
-    const data = await $fetch(`${apiBase.value}/questions`);
+    const data = await $fetch(`${apiBase.value}/questions`, {
+      method: 'POST',
+      body: {},
+    });
     console.log('[ticker] Data received:', Array.isArray(data) ? data.length : 'not an array');
     if (Array.isArray(data) && data.length > 0) {
       // 모든 문제 최신순 노출
