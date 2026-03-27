@@ -45,7 +45,11 @@ async function bootstrap() {
       };
 
       res.on('finish', () => {
-        const url = req.originalUrl ?? req.url ?? '';
+        let url = req.originalUrl ?? req.url ?? '';
+        // 모든 요청 로그에 /api 접두사가 붙어 나오도록 수정
+        if (!url.startsWith('/api')) {
+          url = `/api${url.startsWith('/') ? '' : '/'}${url}`;
+        }
         if (url.includes('favicon.ico') || url.includes('sockjs-node')) return;
 
         let responseBody: any = null;

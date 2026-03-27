@@ -12,6 +12,7 @@ async function bootstrap() {
         bodyParser: true,
     });
     app.enableCors();
+    app.setGlobalPrefix('api');
     const loggerEnabled = process.env.API_REQUEST_LOGGER !== 'false';
     if (loggerEnabled) {
         const workspaceRoot = (0, path_1.resolve)(__dirname, '..', '..', '..');
@@ -37,7 +38,10 @@ async function bootstrap() {
                 return originalEnd.apply(res, [chunk, ...args]);
             };
             res.on('finish', () => {
-                const url = req.originalUrl ?? req.url ?? '';
+                let url = req.originalUrl ?? req.url ?? '';
+                if (!url.startsWith('/api')) {
+                    url = `/api${url.startsWith('/') ? '' : '/'}${url}`;
+                }
                 if (url.includes('favicon.ico') || url.includes('sockjs-node'))
                     return;
                 let responseBody = null;
