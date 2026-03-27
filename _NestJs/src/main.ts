@@ -3,6 +3,8 @@ import { AppModule } from './app.module';
 import { appendFileSync, mkdirSync } from 'fs';
 import { resolve } from 'path';
 import type { NextFunction, Request, Response } from 'express';
+import { Prisma } from '@prisma/client';
+import { PrismaService } from './common/prisma/prisma.service';
 
 (BigInt.prototype as any).toJSON = function () {
   return this.toString();
@@ -16,6 +18,41 @@ async function bootstrap() {
 
   app.enableCors();
   app.setGlobalPrefix('api');
+
+  const prisma = app.get(PrismaService);
+  const [{ default: AdminJS }, AdminJSExpress, AdminJSPrisma] = await Promise.all([
+    import('adminjs'),
+    import('@adminjs/express'),
+    import('@adminjs/prisma'),
+  ]);
+
+  AdminJS.registerAdapter({
+    Database: AdminJSPrisma.Database,
+    Resource: AdminJSPrisma.Resource,
+  });
+
+  const resourceNames = Prisma.dmmf.datamodel.models
+    .map((model) => model.name)
+    .filter((name) => !['ClassStudent', 'QuestionTag', 'ExamQuestion', 'UserQuestionBookItem'].includes(name));
+
+  const admin = new AdminJS({
+    rootPath: '/admin',
+    resources: resourceNames.map((name) => ({
+      resource: {
+        model: AdminJSPrisma.getModelByName(name),
+        client: prisma,
+      },
+      options: {
+        navigation: 'MySQL DB',
+      },
+    })),
+    branding: {
+      companyName: 'Edu Hub DB Admin',
+    },
+  });
+
+  const adminRouter = AdminJSExpress.buildRouter(admin);
+  app.use(admin.options.rootPath, adminRouter);
 
 
   const loggerEnabled = process.env.API_REQUEST_LOGGER !== 'false';

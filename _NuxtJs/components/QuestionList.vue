@@ -203,6 +203,32 @@ watch(() => props.appliedSearchKeyword, (value) => {
         <span>총 {{ props.totalItems }}문제</span>
         <span>{{ pageStartItem }}-{{ pageEndItem }}번째 문제 표시 중</span>
       </div>
+      <div v-if="props.totalPages > 1" class="pagination">
+        <button
+          class="pagination-btn pagination-nav"
+          :disabled="pageRibbonStart === 1"
+          @click="goToPrevRibbon"
+        >
+          이전
+        </button>
+        <button
+          v-for="page in visiblePages"
+          :key="page"
+          class="pagination-btn"
+          :class="{ active: page === props.currentPage }"
+          @click="goToPage(page)"
+        >
+          {{ page }}
+        </button>
+        <button
+          class="pagination-btn pagination-nav"
+          :disabled="pageRibbonEnd === props.totalPages"
+          @click="goToNextRibbon"
+        >
+          다음
+        </button>
+      </div>
+
       <div v-for="q in props.questions" :key="q.question_id" class="question-item">
         <div class="question-header">
           <!-- 문제 제목과 문제 ID를 h3 태그로 표시 -->
@@ -232,32 +258,6 @@ watch(() => props.appliedSearchKeyword, (value) => {
             <button class="btn-solve" @click="handleSolve(q)">풀기</button>
           </div>
         </div>
-      </div>
-
-      <div v-if="props.totalPages > 1" class="pagination">
-        <button
-          class="pagination-btn pagination-nav"
-          :disabled="pageRibbonStart === 1"
-          @click="goToPrevRibbon"
-        >
-          이전
-        </button>
-        <button
-          v-for="page in visiblePages"
-          :key="page"
-          class="pagination-btn"
-          :class="{ active: page === props.currentPage }"
-          @click="goToPage(page)"
-        >
-          {{ page }}
-        </button>
-        <button
-          class="pagination-btn pagination-nav"
-          :disabled="pageRibbonEnd === props.totalPages"
-          @click="goToNextRibbon"
-        >
-          다음
-        </button>
       </div>
     </div>
 

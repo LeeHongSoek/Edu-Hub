@@ -15,7 +15,20 @@ import { ExamsModule } from './exams/exams.module';
 import { SolveResultsModule } from './solve-results/solve-results.module';
 
 @Module({
-  imports: [ConfigModule.forRoot({ isGlobal: true }), PrismaModule, QuestionsModule, GroupsModule, AuthModule, StatsModule, DashboardModule, OmbudsmanModule, StudyLogsModule, QuestionBooksModule, ExamsModule, SolveResultsModule],
+  imports: [
+    ConfigModule.forRoot({ isGlobal: true }),
+    PrismaModule,
+    QuestionsModule,
+    GroupsModule,
+    AuthModule,
+    StatsModule,
+    DashboardModule,
+    OmbudsmanModule,
+    StudyLogsModule,
+    QuestionBooksModule,
+    ExamsModule,
+    SolveResultsModule,
+  ],
   controllers: [AppController],
   providers: [AppService],
 })

@@ -4,6 +4,8 @@ const core_1 = require("@nestjs/core");
 const app_module_1 = require("./app.module");
 const fs_1 = require("fs");
 const path_1 = require("path");
+const client_1 = require("@prisma/client");
+const prisma_service_1 = require("./common/prisma/prisma.service");
 BigInt.prototype.toJSON = function () {
     return this.toString();
 };
@@ -13,6 +15,36 @@ async function bootstrap() {
     });
     app.enableCors();
     app.setGlobalPrefix('api');
+    const prisma = app.get(prisma_service_1.PrismaService);
+    const [{ default: AdminJS }, AdminJSExpress, AdminJSPrisma] = await Promise.all([
+        import('adminjs'),
+        import('@adminjs/express'),
+        import('@adminjs/prisma'),
+    ]);
+    AdminJS.registerAdapter({
+        Database: AdminJSPrisma.Database,
+        Resource: AdminJSPrisma.Resource,
+    });
+    const resourceNames = client_1.Prisma.dmmf.datamodel.models
+        .map((model) => model.name)
+        .filter((name) => !['ClassStudent', 'QuestionTag', 'ExamQuestion', 'UserQuestionBookItem'].includes(name));
+    const admin = new AdminJS({
+        rootPath: '/admin',
+        resources: resourceNames.map((name) => ({
+            resource: {
+                model: AdminJSPrisma.getModelByName(name),
+                client: prisma,
+            },
+            options: {
+                navigation: 'MySQL DB',
+            },
+        })),
+        branding: {
+            companyName: 'Edu Hub DB Admin',
+        },
+    });
+    const adminRouter = AdminJSExpress.buildRouter(admin);
+    app.use(admin.options.rootPath, adminRouter);
     const loggerEnabled = process.env.API_REQUEST_LOGGER !== 'false';
     if (loggerEnabled) {
         const workspaceRoot = (0, path_1.resolve)(__dirname, '..', '..', '..');

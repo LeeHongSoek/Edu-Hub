@@ -1,0 +1,89 @@
+서버 부트스트랩 중 치명적 오류 발생: NoResourceAdapterError: There are no adapters supporting one of the resource you provided
+    at /Users/ihongseok/MyProject/Edu_Hub/_NestJs/node_modules/adminjs/lib/backend/utils/resources-factory/resources-factory.js:99:15
+    at Array.map (<anonymous>)
+    at ResourcesFactory._convertResources (/Users/ihongseok/MyProject/Edu_Hub/_NestJs/node_modules/adminjs/lib/backend/utils/resources-factory/resources-factory.js:93:22)
+    at ResourcesFactory.buildResources (/Users/ihongseok/MyProject/Edu_Hub/_NestJs/node_modules/adminjs/lib/backend/utils/resources-factory/resources-factory.js:48:35)
+    at new AdminJS (/Users/ihongseok/MyProject/Edu_Hub/_NestJs/node_modules/adminjs/lib/adminjs.js:114:39)
+    at AdminModule.onModuleInit (/Users/ihongseok/MyProject/Edu_Hub/_NestJs/node_modules/@adminjs/nestjs/build/admin.module.js:72:23)
+    at callModuleInitHook (/Users/ihongseok/MyProject/Edu_Hub/_NestJs/node_modules/@nestjs/core/hooks/on-module-init.hook.js:51:35)
+    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+    at async NestApplication.callInitHook (/Users/ihongseok/MyProject/Edu_Hub/_NestJs/node_modules/@nestjs/core/nest-application-context.js:252:13)
+    at async NestApplication.init (/Users/ihongseok/MyProject/Edu_Hub/_NestJs/node_modules/@nestjs/core/nest-application.js:103:9) {
+  resource: {
+    model: {
+      findUnique: [Function (anonymous)],
+      findUniqueOrThrow: [Function (anonymous)],
+      findFirst: [Function (anonymous)],
+      findFirstOrThrow: [Function (anonymous)],
+      findMany: [Function (anonymous)],
+      create: [Function (anonymous)],
+      createMany: [Function (anonymous)],
+      createManyAndReturn: [Function (anonymous)],
+      update: [Function (anonymous)],
+      updateMany: [Function (anonymous)],
+      updateManyAndReturn: [Function (anonymous)],
+      upsert: [Function (anonymous)],
+      delete: [Function (anonymous)],
+      deleteMany: [Function (anonymous)],
+      groupBy: [Function (anonymous)],
+      count: [Function (anonymous)],
+      aggregate: [Function (anonymous)],
+      findRaw: [Function (anonymous)],
+      aggregateRaw: [Function (anonymous)],
+      fields: [Object],
+      name: 'User',
+      '$name': 'User',
+      '$parent': [Object]
+    },
+    client: {
+      _originalClient: [Object],
+      _runtimeDataModel: [Object],
+      _requestHandler: [Gr [RequestHandler]],
+      _connectionPromise: undefined,
+      _disconnectionPromise: undefined,
+      _engineConfig: [Object],
+      _accelerateEngineConfig: [Object],
+      _clientVersion: '7.5.0',
+      _errorFormat: 'colorless',
+      _tracingHelper: di {},
+      _previewFeatures: [],
+      _activeProvider: 'mysql',
+      _globalOmit: undefined,
+      _extensions: [e],
+      _engine: [jt],
+      _appliedParent: [Object],
+      _createPrismaPromise: [Function (anonymous)],
+      '$extends': [Function: Qo],
+      constructor: [class PrismaService extends t],
+      onModuleInit: [AsyncFunction: onModuleInit],
+      enmRole: [Object],
+      enmQuestionType: [Object],
+      enmMediaType: [Object],
+      enmRelationType: [Object],
+      user: [Object],
+      class: [Object],
+      classStudent: [Object],
+      userRelation: [Object],
+      userMessage: [Object],
+      group: [Object],
+      question: [Object],
+      questionOption: [Object],
+      mediaAttachment: [Object],
+      tag: [Object],
+      questionTag: [Object],
+      exam: [Object],
+      examQuestion: [Object],
+      examResult: [Object],
+      userComment: [Object],
+      studyLog: [Object],
+      solveResult: [Object],
+      questionReview: [Object],
+      questionPassage: [Object],
+      ombudsmanReport: [Object],
+      userQuestionBook: [Object],
+      userQuestionBookItem: [Object],
+      '$parent': [Object],
+      Symbol(): [Object]
+    }
+  }
+}
