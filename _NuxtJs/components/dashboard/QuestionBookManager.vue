@@ -1,8 +1,51 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed, watch } from 'vue';
 
 const books = ref<any[]>([]);
 const loading = ref(true);
+const itemsPerPage = 6;
+const currentPage = ref(1);
+const sliderValue = ref(1);
+const totalPages = computed(() => Math.max(1, Math.ceil(books.value.length / itemsPerPage)));
+const pagedBooks = computed(() => {
+  const start = (currentPage.value - 1) * itemsPerPage;
+  return books.value.slice(start, start + itemsPerPage);
+});
+const pageStartItem = computed(() => {
+  if (books.value.length === 0) return 0;
+  return (currentPage.value - 1) * itemsPerPage + 1;
+});
+const pageEndItem = computed(() => Math.min(currentPage.value * itemsPerPage, books.value.length));
+const sliderPercentage = computed(() => {
+  if (totalPages.value <= 1) return 0;
+  return ((sliderValue.value - 1) / (totalPages.value - 1)) * 100;
+});
+
+watch(() => books.value.length, () => {
+  currentPage.value = 1;
+  sliderValue.value = 1;
+});
+
+watch(currentPage, (page) => {
+  sliderValue.value = page;
+});
+const handleSliderInput = (e: Event) => {
+  sliderValue.value = Number((e.target as HTMLInputElement).value);
+};
+
+const goToPage = (page: number) => {
+  const normalized = Math.min(Math.max(page, 1), totalPages.value);
+  if (normalized !== currentPage.value) {
+    currentPage.value = normalized;
+  }
+};
+
+const commitSliderValue = () => {
+  goToPage(sliderValue.value);
+};
+
+const prevPage = () => goToPage(currentPage.value - 1);
+const nextPage = () => goToPage(currentPage.value + 1);
 const showCreateModal = ref(false);
 const newBook = ref({ book_name: '', description: '' });
 
@@ -18,6 +61,8 @@ const fetchBooks = async () => {
     console.error('서버 통신 오류(fetch) books:', err);
   } finally {
     loading.value = false;
+    currentPage.value = Math.min(currentPage.value, totalPages.value);
+    sliderValue.value = currentPage.value;
   }
 };
 
@@ -48,15 +93,51 @@ onMounted(fetchBooks);
 
     <div v-if="loading" class="loading">불러오는 중...</div>
     <div v-else-if="books.length === 0" class="empty">생성된 문제집이 없습니다.</div>
-    <div v-else class="book-grid">
-      <div v-for="book in books" :key="book.book_id" class="book-card">
-        <div class="book-info">
-          <h4>{{ book.book_name }}</h4>
-          <p>{{ book.description || '설명 없음' }}</p>
-          <div class="book-meta">문항 수: {{ book.items?.length || 0 }}개</div>
+    <div v-else>
+      <div class="pagination-panel-border">
+        <div class="pagination-panel">
+          <div class="pagination-summary">
+            <span>총 {{ books.length }}개의 문제집</span>
+            <span>{{ pageStartItem }}-{{ pageEndItem }}번째 항목 표시 중</span>
+          </div>
+          <div class="pagination-actions">
+            <button class="btn-nav" :disabled="currentPage <= 1" @click="prevPage">이전 페이지</button>
+            <span>페이지 {{ currentPage }} / {{ totalPages }}</span>
+            <button class="btn-nav" :disabled="currentPage >= totalPages" @click="nextPage">다음 페이지</button>
+          </div>
+          <div v-if="totalPages > 1" class="page-slider-container">
+            <div class="slider-wrapper">
+              <span class="slider-limit">1</span>
+              <div class="slider-track-container">
+                <input
+                  type="range"
+                  :min="1"
+                  :max="totalPages"
+                  :value="sliderValue"
+                  class="page-slider"
+                  @input="handleSliderInput"
+                  @change="commitSliderValue"
+                />
+                <div class="slider-fill" :style="{ width: sliderPercentage + '%' }"></div>
+                <div class="slider-tooltip" :style="{ left: sliderPercentage + '%' }">
+                  {{ sliderValue }}
+                </div>
+              </div>
+              <span class="slider-limit">{{ totalPages }}</span>
+            </div>
+          </div>
         </div>
-        <div class="book-actions">
-          <button class="btn-view">상세보기</button>
+      </div>
+      <div class="book-grid">
+        <div v-for="book in pagedBooks" :key="book.book_id" class="book-card">
+          <div class="book-info">
+            <h4>{{ book.book_name }}</h4>
+            <p>{{ book.description || '설명 없음' }}</p>
+            <div class="book-meta">문항 수: {{ book.items?.length || 0 }}개</div>
+          </div>
+          <div class="book-actions">
+            <button class="btn-view">상세보기</button>
+          </div>
         </div>
       </div>
     </div>
@@ -98,23 +179,24 @@ onMounted(fetchBooks);
 }
 
 .book-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-top: 1rem;
 }
 
 .book-card {
   background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.15);
   border-radius: 10px;
-  padding: 1.5rem;
+  padding: 1.25rem 1.5rem;
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
-  transition: all 0.3s;
+  gap: 0.5rem;
+  transition: border 0.3s, transform 0.3s;
 }
 
-.book-card:hover { border-color: #6366f1; transform: translateY(-4px); }
+.book-card:hover { border-color: #6366f1; transform: translateY(-3px); }
 
 .book-info h4 { color: #f8fafc; margin: 0 0 0.5rem 0; font-size: 1.1rem; }
 .book-info p { color: #94a3b8; font-size: 0.9rem; margin-bottom: 1rem; line-height: 1.4; }
@@ -166,5 +248,144 @@ onMounted(fetchBooks);
 .modal-actions { display: flex; justify-content: flex-end; gap: 1rem; margin-top: 1rem; }
 .btn-primary { background: #6366f1; border: none; color: white; padding: 0.6rem 1.5rem; border-radius: 10px; cursor: pointer; }
 
+.pagination-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding-bottom: 0.5rem;
+}
+
+.pagination-summary {
+  display: flex;
+  justify-content: space-between;
+  color: #cbd5f5;
+  font-size: 0.9rem;
+}
+
+.pagination-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem;
+  color: #e2e8f0;
+  font-size: 0.85rem;
+}
+
+.btn-nav {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #e2e8f0;
+  padding: 0.4rem 0.9rem;
+  border-radius: 999px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+.btn-nav:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.btn-nav:not(:disabled):hover {
+  transform: translateY(-1px);
+}
+
+.page-slider-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 0 0.75rem;
+}
+
+.slider-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  width: 100%;
+  max-width: 420px;
+}
+
+.slider-limit {
+  font-size: 0.75rem;
+  color: #64748b;
+  font-weight: 600;
+  min-width: 20px;
+  text-align: center;
+}
+
+.slider-track-container {
+  position: relative;
+  flex: 1;
+  height: 32px;
+  display: flex;
+  align-items: center;
+}
+
+.page-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
+  outline: none;
+  cursor: pointer;
+  z-index: 2;
+  position: relative;
+}
+
+.page-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  background: #6366f1;
+  border-radius: 50%;
+  cursor: pointer;
+  box-shadow: 0 0 15px rgba(99, 102, 241, 0.4);
+  border: 2px solid #fff;
+  transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.page-slider:hover::-webkit-slider-thumb {
+  transform: scale(1.15);
+  box-shadow: 0 0 20px rgba(99, 102, 241, 0.6);
+}
+
+.slider-fill {
+  position: absolute;
+  height: 6px;
+  background: linear-gradient(90deg, #6366f1, #a855f7);
+  border-radius: 3px;
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.slider-tooltip {
+  position: absolute;
+  top: -24px;
+  transform: translateX(-50%);
+  background: #6366f1;
+  color: white;
+  padding: 2px 8px;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 800;
+  pointer-events: none;
+  white-space: nowrap;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
 .loading, .empty { text-align: center; padding: 3rem; color: #64748b; }
+
+.pagination-panel-border {
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 1rem 1rem 0.5rem;
+  background: rgba(15, 23, 42, 0.6);
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.35);
+}
 </style>
