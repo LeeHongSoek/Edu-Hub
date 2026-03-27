@@ -292,7 +292,7 @@ async function bootstrap() {
 
         const tabSize = 8;
         try {
-          const logHeader = `[API통신_헤더] ${logEntry.method} ${url} (${logEntry.statusCode}) - ${logEntry.duration}\n`;
+          const logHeader = `[API통신_헤더] <${logEntry.method}> ${url} (${logEntry.statusCode}) - ${logEntry.duration}\n`;
 
           // 요청 데이터가 있을 때만 요청 로그 생성, 없으면 빈 문자열
           const logReqData = hasRequest ? `[API통신_데이터_요청]\n${JSON.stringify(logEntry.payload.request, null, tabSize)}\n` : '';
@@ -303,7 +303,7 @@ async function bootstrap() {
         } catch { }
 
         // 콘솔 출력
-        console.log(`\n[API통신_헤더] ${logEntry.method} ${url} (${logEntry.statusCode}) - ${logEntry.duration}`);
+        console.log(`\n[API통신_헤더] <${logEntry.method}> ${url} (${logEntry.statusCode}) - ${logEntry.duration}`);
 
         // 요청 데이터가 있을 때만 콘솔에 출력
         if (hasRequest) {
