@@ -28,8 +28,13 @@ async function bootstrap() {
     const resourceNames = client_1.Prisma.dmmf.datamodel.models
         .map((model) => model.name)
         .filter((name) => !['ClassStudent', 'QuestionTag', 'ExamQuestion', 'UserQuestionBookItem'].includes(name));
+    const adminEmail = process.env.ADMINJS_EMAIL || 'admin@edu-hub.com';
+    const adminPassword = process.env.ADMINJS_PASSWORD || 'admin1234';
+    const adminCookieSecret = process.env.ADMINJS_COOKIE_SECRET || 'edu-hub-admin-cookie-secret-change-me';
     const admin = new AdminJS({
-        rootPath: '/admin',
+        rootPath: '/api/admin',
+        loginPath: '/api/admin/login',
+        logoutPath: '/api/admin/logout',
         resources: resourceNames.map((name) => ({
             resource: {
                 model: AdminJSPrisma.getModelByName(name),
@@ -43,7 +48,24 @@ async function bootstrap() {
             companyName: 'Edu Hub DB Admin',
         },
     });
-    const adminRouter = AdminJSExpress.buildRouter(admin);
+    const adminRouter = AdminJSExpress.buildAuthenticatedRouter(admin, {
+        authenticate: async (email, password) => {
+            if (email === adminEmail && password === adminPassword) {
+                return { email };
+            }
+            return null;
+        },
+        cookieName: 'edu-hub-admin',
+        cookiePassword: adminCookieSecret,
+    }, null, {
+        secret: adminCookieSecret,
+        resave: false,
+        saveUninitialized: false,
+    });
+    app.use('/admin', (req, res) => {
+        const suffix = req.originalUrl.replace(/^\/admin/, '') || '';
+        res.redirect(302, `/api/admin${suffix}`);
+    });
     app.use(admin.options.rootPath, adminRouter);
     const loggerEnabled = process.env.API_REQUEST_LOGGER !== 'false';
     if (loggerEnabled) {
@@ -70,10 +92,7 @@ async function bootstrap() {
                 return originalEnd.apply(res, [chunk, ...args]);
             };
             res.on('finish', () => {
-                let url = req.originalUrl ?? req.url ?? '';
-                if (!url.startsWith('/api')) {
-                    url = `/api${url.startsWith('/') ? '' : '/'}${url}`;
-                }
+                const url = req.originalUrl ?? req.url ?? '';
                 if (url.includes('favicon.ico') || url.includes('sockjs-node'))
                     return;
                 let responseBody = null;
