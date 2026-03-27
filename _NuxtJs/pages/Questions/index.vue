@@ -15,6 +15,7 @@ const appliedSearchField = ref<'title' | 'content'>('title');
 const appliedSearchKeyword = ref('');
 const currentPage = ref(1);
 const pageSize = 10;
+const hasResolvedOnce = ref(false);
 
 const requestBody = computed(() => {
   const body: Record<string, string | number> = {};
@@ -42,6 +43,16 @@ const { data: questionResponse, pending, error, refresh } = await useFetch<Quest
   method: 'POST',
   body: requestBody,
 });
+
+watch(
+  [questionResponse, error],
+  ([data, fetchError]) => {
+    if (data || fetchError) {
+      hasResolvedOnce.value = true;
+    }
+  },
+  { immediate: true },
+);
 
 watch(requestBody, () => {
   refresh();
@@ -78,31 +89,41 @@ const handlePageChange = (page: number) => {
 
     <h1 class="title">나의 문제목록</h1>
     
-    <div v-if="pending" class="loading">
+    <div v-if="pending && !hasResolvedOnce" class="loading">
       문제를 불러오는 중...
     </div>
-    
-    <div v-else-if="error" class="error">
+
+    <div v-else-if="error && !questionResponse" class="error">
       문제를 불러오지 못했습니다. 백엔드 서버가 실행 중인지 확인해 주세요.
       <pre>{{ error }}</pre>
     </div>
-    
+
     <div v-else>
-      <QuestionList
-        :questions="questionResponse?.items || []"
-        :selected-group-id="selectedGroupId"
-        :applied-search-field="appliedSearchField"
-        :applied-search-keyword="appliedSearchKeyword"
-        :current-page="questionResponse?.page || 1"
-        :total-pages="questionResponse?.totalPages || 1"
-        :total-items="questionResponse?.total || 0"
-        :page-size="questionResponse?.limit || pageSize"
-        @refresh="refresh"
-        @change-group="handleGroupChange"
-        @search="handleSearch"
-        @reset-search="handleResetSearch"
-        @change-page="handlePageChange"
-      />
+      <div class="question-list-shell">
+        <QuestionList
+          :questions="questionResponse?.items || []"
+          :selected-group-id="selectedGroupId"
+          :applied-search-field="appliedSearchField"
+          :applied-search-keyword="appliedSearchKeyword"
+          :current-page="questionResponse?.page || 1"
+          :total-pages="questionResponse?.totalPages || 1"
+          :total-items="questionResponse?.total || 0"
+          :page-size="questionResponse?.limit || pageSize"
+          @refresh="refresh"
+          @change-group="handleGroupChange"
+          @search="handleSearch"
+          @reset-search="handleResetSearch"
+          @change-page="handlePageChange"
+        />
+
+        <div v-if="pending && hasResolvedOnce" class="loading-overlay">
+          문제를 불러오는 중...
+        </div>
+      </div>
+
+      <div v-if="error && questionResponse" class="inline-error">
+        최신 문제 목록을 불러오지 못했습니다.
+      </div>
     </div>
   </div>
 </template>
@@ -172,5 +193,32 @@ const handlePageChange = (page: number) => {
 .error {
   color: #f87171;
   border-color: rgba(248, 113, 113, 0.2);
+}
+
+.question-list-shell {
+  position: relative;
+}
+
+.loading-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 5rem;
+  background: rgba(15, 23, 42, 0.18);
+  backdrop-filter: blur(2px);
+  border-radius: 16px;
+  color: #cbd5e1;
+  font-size: 0.95rem;
+  font-weight: 600;
+  pointer-events: none;
+}
+
+.inline-error {
+  margin-top: 1rem;
+  text-align: center;
+  color: #fca5a5;
+  font-size: 0.9rem;
 }
 </style>
