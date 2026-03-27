@@ -302,16 +302,16 @@ async function bootstrap() {
           appendFileSync(logPath, logHeader + logReqData + logResData);
         } catch { }
 
-        // 콘솔 출력
-        console.log(`\n[API통신_헤더] <${logEntry.method}> ${url} (${logEntry.statusCode}) - ${logEntry.duration}`);
+        // // 콘솔 출력
+        // console.log(`\n[API통신_헤더] <${logEntry.method}> ${url} (${logEntry.statusCode}) - ${logEntry.duration}`);
 
-        // 요청 데이터가 있을 때만 콘솔에 출력
-        if (hasRequest) {
-          console.log(`[API통신_데이터_요청]\n${JSON.stringify(logEntry.payload.request, null, tabSize)}`);
-        }
+        // // 요청 데이터가 있을 때만 콘솔에 출력
+        // if (hasRequest) {
+        //   console.log(`[API통신_데이터_요청]\n${JSON.stringify(logEntry.payload.request, null, tabSize)}`);
+        // }
 
-        console.log(`[API통신_데이터_응답]\n${JSON.stringify(logEntry.payload.response, null, tabSize)}`);
-        console.log('-'.repeat(60));
+        // console.log(`[API통신_데이터_응답]\n${JSON.stringify(logEntry.payload.response, null, tabSize)}`);
+        // console.log('-'.repeat(60));
       });
 
       next();
