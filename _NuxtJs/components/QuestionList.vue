@@ -22,7 +22,27 @@ const selectedQuestionForEdit = ref<Question | null>(null);
 const showGroupManager = ref(false);
 const searchField = ref<'title' | 'content'>(props.appliedSearchField);
 const searchInput = ref('');
-const pageRibbonSize = 10;
+const sliderValue = ref(props.currentPage);
+
+watch(() => props.currentPage, (val) => {
+  sliderValue.value = val;
+});
+
+let debounceTimer: any = null;
+const handleSliderInput = (e: Event) => {
+  const value = parseInt((e.target as HTMLInputElement).value);
+  sliderValue.value = value;
+  
+  if (debounceTimer) clearTimeout(debounceTimer);
+  debounceTimer = setTimeout(() => {
+    goToPage(value);
+  }, 100);
+};
+
+const sliderPercentage = computed(() => {
+  if (props.totalPages <= 1) return 0;
+  return ((sliderValue.value - 1) / (props.totalPages - 1)) * 100;
+});
 
 const emit = defineEmits<{
   (e: 'refresh'): void;
@@ -53,15 +73,6 @@ const handleSolve = (question: Question) => {
   selectedQuestionForSolve.value = question;
 };
 
-const pageRibbonStart = computed(() => Math.floor((props.currentPage - 1) / pageRibbonSize) * pageRibbonSize + 1);
-const pageRibbonEnd = computed(() => Math.min(pageRibbonStart.value + pageRibbonSize - 1, props.totalPages));
-
-const visiblePages = computed(() => {
-  return Array.from(
-    { length: pageRibbonEnd.value - pageRibbonStart.value + 1 },
-    (_, index) => pageRibbonStart.value + index,
-  );
-});
 
 const pageStartItem = computed(() => {
   if (props.totalItems === 0) return 0;
@@ -76,13 +87,6 @@ const goToPage = (page: number) => {
   emit('change-page', Math.min(Math.max(page, 1), props.totalPages));
 };
 
-const goToPrevRibbon = () => {
-  goToPage(pageRibbonStart.value - 1);
-};
-
-const goToNextRibbon = () => {
-  goToPage(pageRibbonEnd.value + 1);
-};
 
 // 이전/다음 문제 탐색용 로직
 const currentQuestionIndex = computed(() => {
@@ -201,33 +205,29 @@ watch(() => props.appliedSearchKeyword, (value) => {
       </div>
       <div v-else class="pagination-summary">
         <span>총 {{ props.totalItems }}문제</span>
+         <div v-if="props.totalPages > 1" class="page-slider-container">
+           <div class="slider-wrapper">
+             <span class="slider-limit">1</span>
+             <div class="slider-track-container">
+               <input
+                 type="range"
+                 :min="1"
+                 :max="props.totalPages"
+                 :value="sliderValue"
+                 class="page-slider"
+                 @input="handleSliderInput"
+               />
+               <div class="slider-fill" :style="{ width: sliderPercentage + '%' }"></div>
+               <div class="slider-tooltip" :style="{ left: sliderPercentage + '%' }">
+                 {{ sliderValue }}
+               </div>
+             </div>
+             <span class="slider-limit">{{ props.totalPages }}</span>
+           </div>
+         </div>
         <span>{{ pageStartItem }}-{{ pageEndItem }}번째 문제 표시 중</span>
       </div>
-      <div v-if="props.totalPages > 1" class="pagination">
-        <button
-          class="pagination-btn pagination-nav"
-          :disabled="pageRibbonStart === 1"
-          @click="goToPrevRibbon"
-        >
-          이전
-        </button>
-        <button
-          v-for="page in visiblePages"
-          :key="page"
-          class="pagination-btn"
-          :class="{ active: page === props.currentPage }"
-          @click="goToPage(page)"
-        >
-          {{ page }}
-        </button>
-        <button
-          class="pagination-btn pagination-nav"
-          :disabled="pageRibbonEnd === props.totalPages"
-          @click="goToNextRibbon"
-        >
-          다음
-        </button>
-      </div>
+     
 
       <div v-for="q in props.questions" :key="q.question_id" class="question-item">
         <div class="question-header">
@@ -519,51 +519,107 @@ watch(() => props.appliedSearchKeyword, (value) => {
   transform: translateY(-2px);
 }
 
-.pagination {
+.page-slider-container {
+  flex: 1;
   display: flex;
   justify-content: center;
   align-items: center;
-  flex-wrap: wrap;
-  gap: 0.6rem;
-  margin-top: 1rem;
-  padding: 1rem 0 0.5rem;
+  padding: 0 1rem;
 }
 
-.pagination-btn {
-  min-width: 2.75rem;
-  height: 2.75rem;
-  padding: 0 0.85rem;
-  border-radius: 999px;
-  border: 1px solid rgba(148, 163, 184, 0.18);
-  background: rgba(15, 23, 42, 0.72);
-  color: #cbd5e1;
-  font-weight: 700;
+.slider-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  width: 100%;
+  max-width: 400px;
+}
+
+.slider-limit {
+  font-size: 0.75rem;
+  color: #64748b;
+  font-weight: 600;
+  min-width: 20px;
+  text-align: center;
+}
+
+.slider-track-container {
+  position: relative;
+  flex: 1;
+  height: 32px;
+  display: flex;
+  align-items: center;
+}
+
+.page-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
+  outline: none;
   cursor: pointer;
-  transition: all 0.2s ease;
+  z-index: 2;
+  position: relative;
 }
 
-.pagination-btn:hover:not(:disabled) {
-  border-color: rgba(99, 102, 241, 0.45);
-  color: #fff;
-  transform: translateY(-1px);
+.page-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  background: #6366f1;
+  border-radius: 50%;
+  cursor: pointer;
+  box-shadow: 0 0 15px rgba(99, 102, 241, 0.4);
+  border: 2px solid #fff;
+  transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
-.pagination-btn.active {
-  background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
-  border-color: transparent;
-  color: #fff;
-  box-shadow: 0 10px 24px rgba(79, 70, 229, 0.28);
+.page-slider:hover::-webkit-slider-thumb {
+  transform: scale(1.15);
+  box-shadow: 0 0 20px rgba(99, 102, 241, 0.6);
 }
 
-.pagination-nav {
-  min-width: 4.5rem;
+.slider-fill {
+  position: absolute;
+  height: 6px;
+  background: linear-gradient(90deg, #6366f1, #a855f7);
+  border-radius: 3px;
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
+  z-index: 1;
 }
 
-.pagination-btn:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
-  transform: none;
+.slider-tooltip {
+  position: absolute;
+  top: -24px;
+  transform: translateX(-50%);
+  background: #6366f1;
+  color: white;
+  padding: 2px 8px;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 800;
+  pointer-events: none;
+  white-space: nowrap;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  transition: left 0.1s ease-out;
 }
+
+.slider-tooltip::after {
+  content: '';
+  position: absolute;
+  bottom: -4px;
+  left: 50%;
+  transform: translateX(-50%);
+  border-left: 4px solid transparent;
+  border-right: 4px solid transparent;
+  border-top: 4px solid #6366f1;
+}
+
 
 @media (max-width: 640px) {
   .search-bar {
