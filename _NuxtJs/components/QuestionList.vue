@@ -7,6 +7,10 @@ const props = defineProps<{
   selectedGroupId: string | number | null;
   appliedSearchField: 'title' | 'content';
   appliedSearchKeyword: string;
+  currentPage: number;
+  totalPages: number;
+  totalItems: number;
+  pageSize: number;
 }>();
 
 // API 설정 통합
@@ -18,12 +22,14 @@ const selectedQuestionForEdit = ref<Question | null>(null);
 const showGroupManager = ref(false);
 const searchField = ref<'title' | 'content'>(props.appliedSearchField);
 const searchInput = ref('');
+const pageRibbonSize = 10;
 
 const emit = defineEmits<{
   (e: 'refresh'): void;
   (e: 'change-group', groupId: string | number | null): void;
   (e: 'search', payload: { field: 'title' | 'content'; keyword: string }): void;
   (e: 'reset-search'): void;
+  (e: 'change-page', page: number): void;
 }>();
 
 const handleSelectGroup = (groupId: string | number | null) => {
@@ -45,6 +51,37 @@ const resetSearch = () => {
 
 const handleSolve = (question: Question) => {
   selectedQuestionForSolve.value = question;
+};
+
+const pageRibbonStart = computed(() => Math.floor((props.currentPage - 1) / pageRibbonSize) * pageRibbonSize + 1);
+const pageRibbonEnd = computed(() => Math.min(pageRibbonStart.value + pageRibbonSize - 1, props.totalPages));
+
+const visiblePages = computed(() => {
+  return Array.from(
+    { length: pageRibbonEnd.value - pageRibbonStart.value + 1 },
+    (_, index) => pageRibbonStart.value + index,
+  );
+});
+
+const pageStartItem = computed(() => {
+  if (props.totalItems === 0) return 0;
+  return (props.currentPage - 1) * props.pageSize + 1;
+});
+
+const pageEndItem = computed(() => {
+  return Math.min(props.currentPage * props.pageSize, props.totalItems);
+});
+
+const goToPage = (page: number) => {
+  emit('change-page', Math.min(Math.max(page, 1), props.totalPages));
+};
+
+const goToPrevRibbon = () => {
+  goToPage(pageRibbonStart.value - 1);
+};
+
+const goToNextRibbon = () => {
+  goToPage(pageRibbonEnd.value + 1);
 };
 
 // 이전/다음 문제 탐색용 로직
@@ -106,6 +143,7 @@ watch(() => props.appliedSearchField, (value) => {
 watch(() => props.appliedSearchKeyword, (value) => {
   searchInput.value = value;
 });
+
 </script>
 
 <template>
@@ -161,6 +199,10 @@ watch(() => props.appliedSearchKeyword, (value) => {
       <div v-if="props.questions.length === 0" class="no-results">
         {{ props.appliedSearchKeyword ? '검색 조건에 맞는 문제가 없습니다.' : '해당 조건에 등록된 문제가 없습니다.' }}
       </div>
+      <div v-else class="pagination-summary">
+        <span>총 {{ props.totalItems }}문제</span>
+        <span>{{ pageStartItem }}-{{ pageEndItem }}번째 문제 표시 중</span>
+      </div>
       <div v-for="q in props.questions" :key="q.question_id" class="question-item">
         <div class="question-header">
           <!-- 문제 제목과 문제 ID를 h3 태그로 표시 -->
@@ -190,6 +232,32 @@ watch(() => props.appliedSearchKeyword, (value) => {
             <button class="btn-solve" @click="handleSolve(q)">풀기</button>
           </div>
         </div>
+      </div>
+
+      <div v-if="props.totalPages > 1" class="pagination">
+        <button
+          class="pagination-btn pagination-nav"
+          :disabled="pageRibbonStart === 1"
+          @click="goToPrevRibbon"
+        >
+          이전
+        </button>
+        <button
+          v-for="page in visiblePages"
+          :key="page"
+          class="pagination-btn"
+          :class="{ active: page === props.currentPage }"
+          @click="goToPage(page)"
+        >
+          {{ page }}
+        </button>
+        <button
+          class="pagination-btn pagination-nav"
+          :disabled="pageRibbonEnd === props.totalPages"
+          @click="goToNextRibbon"
+        >
+          다음
+        </button>
       </div>
     </div>
 
@@ -289,6 +357,19 @@ watch(() => props.appliedSearchKeyword, (value) => {
 .btn-reset-search:hover {
   background: rgba(255, 255, 255, 0.1);
   color: #fff;
+}
+
+.pagination-summary {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.9rem 1rem;
+  border-radius: 12px;
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid rgba(148, 163, 184, 0.14);
+  color: #94a3b8;
+  font-size: 0.9rem;
 }
 
 .question-item {
@@ -438,6 +519,52 @@ watch(() => props.appliedSearchKeyword, (value) => {
   transform: translateY(-2px);
 }
 
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin-top: 1rem;
+  padding: 1rem 0 0.5rem;
+}
+
+.pagination-btn {
+  min-width: 2.75rem;
+  height: 2.75rem;
+  padding: 0 0.85rem;
+  border-radius: 999px;
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  background: rgba(15, 23, 42, 0.72);
+  color: #cbd5e1;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.pagination-btn:hover:not(:disabled) {
+  border-color: rgba(99, 102, 241, 0.45);
+  color: #fff;
+  transform: translateY(-1px);
+}
+
+.pagination-btn.active {
+  background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+  border-color: transparent;
+  color: #fff;
+  box-shadow: 0 10px 24px rgba(79, 70, 229, 0.28);
+}
+
+.pagination-nav {
+  min-width: 4.5rem;
+}
+
+.pagination-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  transform: none;
+}
+
 @media (max-width: 640px) {
   .search-bar {
     flex-direction: column;
@@ -449,6 +576,11 @@ watch(() => props.appliedSearchKeyword, (value) => {
   .btn-search,
   .btn-reset-search {
     width: 100%;
+  }
+
+  .pagination-summary {
+    flex-direction: column;
+    align-items: flex-start;
   }
 
   .question-item {

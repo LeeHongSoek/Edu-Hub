@@ -6,6 +6,8 @@ type FindAllParams = {
   groupId?: bigint;
   searchField?: 'title' | 'content';
   searchKeyword?: string;
+  page?: number;
+  limit?: number;
 };
 
 @Injectable()
@@ -13,7 +15,7 @@ export class QuestionsService {
   constructor(private prisma: PrismaService) {}
 
   // 모든 문제 목록 조회 API (필터링 지원)
-  async findAll({ creatorNo, groupId, searchField, searchKeyword }: FindAllParams) {
+  async findAll({ creatorNo, groupId, searchField, searchKeyword, page = 1, limit = 10 }: FindAllParams) {
     const where: any = {};
     if (creatorNo !== undefined) where.creator_no = creatorNo;
 
@@ -31,35 +33,52 @@ export class QuestionsService {
       ];
     }
 
-    return this.prisma.question.findMany({
-      where,
-      orderBy: {
-        question_id: 'desc',
-      },
-      include: {
-        type: true,
-        passage: true,
-        options: {
-          orderBy: {
-            option_number: 'asc',
-          },
+    const safePage = Number.isFinite(page) && page > 0 ? Math.floor(page) : 1;
+    const safeLimit = Number.isFinite(limit) && limit > 0 ? Math.min(Math.floor(limit), 100) : 10;
+    const skip = (safePage - 1) * safeLimit;
+
+    const [total, items] = await this.prisma.$transaction([
+      this.prisma.question.count({ where }),
+      this.prisma.question.findMany({
+        where,
+        skip,
+        take: safeLimit,
+        orderBy: {
+          question_id: 'desc',
         },
-        group: {
-          include: {
-            parent_group: {
-              include: {
-                parent_group: true,
+        include: {
+          type: true,
+          passage: true,
+          options: {
+            orderBy: {
+              option_number: 'asc',
+            },
+          },
+          group: {
+            include: {
+              parent_group: {
+                include: {
+                  parent_group: true,
+                },
               },
             },
           },
-        },
-        tags: {
-          include: {
-            tag: true,
+          tags: {
+            include: {
+              tag: true,
+            },
           },
         },
-      },
-    });
+      }),
+    ]);
+
+    return {
+      items,
+      total,
+      page: safePage,
+      limit: safeLimit,
+      totalPages: Math.max(1, Math.ceil(total / safeLimit)),
+    };
   }
 
   private async getDescendantGroupIds(groupId: bigint) {

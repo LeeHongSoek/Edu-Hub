@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { Question } from '~/types';
+import type { QuestionListResponse } from '~/types';
 
 const { apiBase } = useApi();
 
@@ -13,6 +13,8 @@ const userInfo = computed(() => {
 const selectedGroupId = ref<string | number | null>(null);
 const appliedSearchField = ref<'title' | 'content'>('title');
 const appliedSearchKeyword = ref('');
+const currentPage = ref(1);
+const pageSize = 10;
 
 const requestBody = computed(() => {
   const body: Record<string, string | number> = {};
@@ -30,28 +32,44 @@ const requestBody = computed(() => {
     body.search_keyword = appliedSearchKeyword.value;
   }
 
+  body.page = currentPage.value;
+  body.limit = pageSize;
+
   return body;
 });
 
-const { data: questions, pending, error, refresh } = await useFetch<Question[]>(() => `${apiBase.value}/questions`, {
+const { data: questionResponse, pending, error, refresh } = await useFetch<QuestionListResponse>(() => `${apiBase.value}/questions`, {
   method: 'POST',
   body: requestBody,
 });
 
-watch(() => route.query.mine, () => refresh());
+watch(requestBody, () => {
+  refresh();
+}, { deep: true });
+
+watch(() => route.query.mine, () => {
+  currentPage.value = 1;
+});
 
 const handleGroupChange = (groupId: string | number | null) => {
   selectedGroupId.value = groupId;
+  currentPage.value = 1;
 };
 
 const handleSearch = (payload: { field: 'title' | 'content'; keyword: string }) => {
   appliedSearchField.value = payload.field;
   appliedSearchKeyword.value = payload.keyword;
+  currentPage.value = 1;
 };
 
 const handleResetSearch = () => {
   appliedSearchField.value = 'title';
   appliedSearchKeyword.value = '';
+  currentPage.value = 1;
+};
+
+const handlePageChange = (page: number) => {
+  currentPage.value = page;
 };
 </script>
 
@@ -71,14 +89,19 @@ const handleResetSearch = () => {
     
     <div v-else>
       <QuestionList
-        :questions="questions || []"
+        :questions="questionResponse?.items || []"
         :selected-group-id="selectedGroupId"
         :applied-search-field="appliedSearchField"
         :applied-search-keyword="appliedSearchKeyword"
+        :current-page="questionResponse?.page || 1"
+        :total-pages="questionResponse?.totalPages || 1"
+        :total-items="questionResponse?.total || 0"
+        :page-size="questionResponse?.limit || pageSize"
         @refresh="refresh"
         @change-group="handleGroupChange"
         @search="handleSearch"
         @reset-search="handleResetSearch"
+        @change-page="handlePageChange"
       />
     </div>
   </div>

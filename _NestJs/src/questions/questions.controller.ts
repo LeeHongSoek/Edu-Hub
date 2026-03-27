@@ -12,12 +12,16 @@ export class QuestionsController {
     @Body('group_id') groupId?: string,
     @Body('search_field') searchField?: string,
     @Body('search_keyword') searchKeyword?: string,
+    @Body('page') page?: number,
+    @Body('limit') limit?: number,
   ) {
     return this.questionsService.findAll({
       creatorNo: (creatorNo && creatorNo !== 'undefined') ? BigInt(creatorNo) : undefined,
       groupId: (groupId && groupId !== 'undefined') ? BigInt(groupId) : undefined,
       searchField: searchField === 'content' ? 'content' : 'title',
       searchKeyword: searchKeyword?.trim() || undefined,
+      page: page ? Number(page) : 1,
+      limit: limit ? Number(limit) : 10,
     });
   }
 

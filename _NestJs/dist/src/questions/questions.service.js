@@ -17,7 +17,7 @@ let QuestionsService = class QuestionsService {
     constructor(prisma) {
         this.prisma = prisma;
     }
-    async findAll({ creatorNo, groupId, searchField, searchKeyword }) {
+    async findAll({ creatorNo, groupId, searchField, searchKeyword, page = 1, limit = 10 }) {
         const where = {};
         if (creatorNo !== undefined)
             where.creator_no = creatorNo;
@@ -33,35 +33,50 @@ let QuestionsService = class QuestionsService {
                 this.buildSearchCondition(searchField ?? 'title', searchKeyword),
             ];
         }
-        return this.prisma.question.findMany({
-            where,
-            orderBy: {
-                question_id: 'desc',
-            },
-            include: {
-                type: true,
-                passage: true,
-                options: {
-                    orderBy: {
-                        option_number: 'asc',
-                    },
+        const safePage = Number.isFinite(page) && page > 0 ? Math.floor(page) : 1;
+        const safeLimit = Number.isFinite(limit) && limit > 0 ? Math.min(Math.floor(limit), 100) : 10;
+        const skip = (safePage - 1) * safeLimit;
+        const [total, items] = await this.prisma.$transaction([
+            this.prisma.question.count({ where }),
+            this.prisma.question.findMany({
+                where,
+                skip,
+                take: safeLimit,
+                orderBy: {
+                    question_id: 'desc',
                 },
-                group: {
-                    include: {
-                        parent_group: {
-                            include: {
-                                parent_group: true,
+                include: {
+                    type: true,
+                    passage: true,
+                    options: {
+                        orderBy: {
+                            option_number: 'asc',
+                        },
+                    },
+                    group: {
+                        include: {
+                            parent_group: {
+                                include: {
+                                    parent_group: true,
+                                },
                             },
                         },
                     },
-                },
-                tags: {
-                    include: {
-                        tag: true,
+                    tags: {
+                        include: {
+                            tag: true,
+                        },
                     },
                 },
-            },
-        });
+            }),
+        ]);
+        return {
+            items,
+            total,
+            page: safePage,
+            limit: safeLimit,
+            totalPages: Math.max(1, Math.ceil(total / safeLimit)),
+        };
     }
     async getDescendantGroupIds(groupId) {
         const groups = await this.prisma.group.findMany({

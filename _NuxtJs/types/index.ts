@@ -36,6 +36,14 @@ export interface Question {
   reviews?: QuestionReview[]; // 관계: 리뷰 목록
 }
 
+export interface QuestionListResponse {
+  items: Question[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
+
 export interface Group {
   group_id: string | number; // 그룹 고유 ID
   name: string; // 그룹 이름

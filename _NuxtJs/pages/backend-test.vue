@@ -104,7 +104,10 @@ const testBackendApis = async () => {
       console.log('📡 Test 3: POST /api/questions');
       const res3 = await $fetch('/api/questions', {
         method: 'POST',
-        body: {},
+        body: {
+          page: 1,
+          limit: 10,
+        },
       });
 
       testResults.value.push({

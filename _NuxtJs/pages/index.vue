@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, computed } from 'vue';
+import type { QuestionListResponse } from '~/types';
 import LatexRenderer from '~/components/LatexRenderer.vue';
 import IconHome from '~/assets/icons/IconHome.svg?component';
 import IconUser from '~/assets/icons/IconUser.svg?component';
@@ -154,14 +155,16 @@ const tickerQuestions = ref<any[]>([]);
 const fetchTickerData = async () => {
   console.log('[ticker] Starting fetch...');
   try {
-    const data = await $fetch(`${apiBase.value}/questions`, {
+    const data = await $fetch<QuestionListResponse>(`${apiBase.value}/questions`, {
       method: 'POST',
-      body: {},
+      body: {
+        page: 1,
+        limit: 10,
+      },
     });
-    console.log('[ticker] Data received:', Array.isArray(data) ? data.length : 'not an array');
-    if (Array.isArray(data) && data.length > 0) {
-      // 모든 문제 최신순 노출
-      const sorted = [...data].sort((a, b) => Number(b.question_id) - Number(a.question_id));
+    console.log('[ticker] Data received:', data?.items?.length ?? 0);
+    if (Array.isArray(data?.items) && data.items.length > 0) {
+      const sorted = [...data.items].sort((a, b) => Number(b.question_id) - Number(a.question_id));
       tickerQuestions.value = sorted;
       showTicker.value = true;
       console.log('[ticker] All Questions selected:', tickerQuestions.value.map(q => q.question_id));
