@@ -1,110 +1,120 @@
 <template>
-  <div style="padding: 20px; max-width: 600px;">
-    <h1>🧪 API Logger 테스트</h1>
-    
-    <div style="background: #e3f2fd; padding: 15px; border-radius: 5px; margin-bottom: 20px;">
-      <h3>📋 테스트 시작</h3>
-      <button 
-        @click="testApis" 
+  <div class="api-test">
+    <section class="header-card">
+      <div>
+        <p class="eyebrow">API Health Check</p>
+        <h1>백엔드 /api/demo 연결 상태</h1>
+        <p class="lede">
+          버튼을 누르면 GET, 쿼리付き GET, POST 요청을 순차적으로 보내고 결과를 하단 카드에 정리합니다.
+        </p>
+      </div>
+      <button
+        class="run-btn"
         :disabled="testing"
-        style="padding: 12px 24px; font-size: 16px; background: #2196F3; color: white; border: none; border-radius: 5px; cursor: pointer;"
+        @click="testApis"
       >
-        {{ testing ? '🔄 실행 중...' : '▶️ 백엔드 API 호출' }}
+        <span v-if="testing">🔄 호출 중...</span>
+        <span v-else>▶️ 테스트 실행</span>
       </button>
-      <p style="margin-top: 10px; color: #666;">
-        이 버튼을 클릭하면 실제 백엔드 API를 호출하고 모든 응답을 로깅합니다.
-      </p>
-    </div>
+    </section>
 
-    <div style="background: #f5f5f5; padding: 15px; border-radius: 5px; margin-bottom: 20px;">
-      <h3>📊 콘솔 명령어</h3>
-      <code style="display: block; background: #fff; padding: 10px; margin: 5px 0; border-left: 3px solid #2196F3;">
-        // 모든 로그 보기
-        window.__API_LOGS__
-      </code>
-      <code style="display: block; background: #fff; padding: 10px; margin: 5px 0; border-left: 3px solid #2196F3;">
-        // 테이블 형식으로 보기
-        console.table(window.__API_LOGS__)
-      </code>
-      <code style="display: block; background: #fff; padding: 10px; margin: 5px 0; border-left: 3px solid #2196F3;">
-        // JSON으로 다운로드
-        window.__API_DEBUG__.download()
-      </code>
-    </div>
-
-    <div v-if="testResults.length > 0" style="background: #fff3e0; padding: 15px; border-radius: 5px;">
-      <h3>✅ 테스트 결과</h3>
+    <section class="results-card" v-if="testResults.length">
+      <header>
+        <h2>응답 로그</h2>
+        <p>{{ testResults.length }}건 기록됨</p>
+      </header>
       <ul>
-        <li v-for="(result, idx) in testResults" :key="idx" style="margin: 10px 0; padding: 10px; background: white; border-radius: 3px; border-left: 3px solid #4CAF50;">
-          <strong>{{ result.method }} {{ result.url }}</strong><br>
-          <small>상태: {{ result.status }} | 데이터: {{ result.dataSize }} bytes</small>
+        <li v-for="(item, idx) in testResults" :key="idx">
+          <div>
+            <strong>{{ item.method }} {{ item.url }}</strong>
+            <p class="meta">상태 {{ item.status }} · {{ item.dataSize }} bytes · {{ item.duration }}ms</p>
+          </div>
+          <pre>{{ item.payload }}</pre>
         </li>
       </ul>
-    </div>
+    </section>
+
+    <section class="hint-card">
+      <p>콘솔에서 다음을 실행하면 로그가 탐색 가능합니다:</p>
+      <code>console.table(window.__API_LOGS__)</code>
+    </section>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref } from 'vue';
+import type { NitroFetchOptions } from 'nitropack/types';
+
+type TestCaseMethod = 'GET' | 'POST';
+
+type TestCase = {
+  label: string;
+  method: TestCaseMethod;
+  url: string;
+  options?: NitroFetchOptions<string & {}, TestCaseMethod>;
+};
 
 const testing = ref(false);
-const testResults = ref<any[]>([]);
+const testResults = ref<
+  Array<{
+    method: string;
+    url: string;
+    status: number;
+    dataSize: number;
+    duration: number;
+    payload: string;
+  }>
+>([]);
+
+const testCases: TestCase[] = [
+  {
+    label: '기본 GET',
+    method: 'GET',
+    url: '/api/demo',
+    options: { method: 'GET' }
+  },
+  {
+    label: '쿼리付き GET',
+    method: 'GET',
+    url: '/api/demo?id=123&type=test',
+    options: { method: 'GET' }
+  },
+  {
+    label: 'POST (데이터 포함)',
+    method: 'POST',
+    url: '/api/demo',
+    options: {
+      method: 'POST',
+      body: { userId: 123, action: 'test', timestamp: new Date().toISOString() }
+    }
+  }
+];
 
 const testApis = async () => {
+  if (testing.value) return;
   testing.value = true;
   testResults.value = [];
 
   try {
-    console.log('%c🚀 API 테스트 시작', 'color: #2196F3; font-weight: bold; font-size: 14px;');
+    for (const test of testCases) {
+      const start = performance.now();
+      const res = await $fetch(test.url, test.options);
+      const duration = Math.round(performance.now() - start);
 
-    // 테스트 1: GET /api/demo
-    console.log('📡 Test 1: GET /api/demo');
-    const res1 = await $fetch('/api/demo', { method: 'GET' });
-    testResults.value.push({
-      method: 'GET',
-      url: '/api/demo',
-      status: 200,
-      dataSize: JSON.stringify(res1).length
-    });
-    console.log('✅ Result 1:', res1);
+      testResults.value.push({
+        method: test.method,
+        url: test.url,
+        status: 200,
+        dataSize: JSON.stringify(res).length,
+        duration,
+        payload: JSON.stringify(res, null, 2)
+      });
+    }
 
-    // 테스트 2: GET /api/demo (쿼리 파라미터)
-    console.log('📡 Test 2: GET /api/demo?id=123&type=test');
-    const res2 = await $fetch('/api/demo?id=123&type=test', { method: 'GET' });
-    testResults.value.push({
-      method: 'GET',
-      url: '/api/demo?id=123&type=test',
-      status: 200,
-      dataSize: JSON.stringify(res2).length
-    });
-    console.log('✅ Result 2:', res2);
-
-    // 테스트 3: POST /api/demo (바디 포함)
-    console.log('📡 Test 3: POST /api/demo');
-    const res3 = await $fetch('/api/demo', {
-      method: 'POST' as const,
-      body: { userId: 123, action: 'test', timestamp: new Date().toISOString() }
-    });
-    testResults.value.push({
-      method: 'POST',
-      url: '/api/demo',
-      status: 200,
-      dataSize: JSON.stringify(res3).length
-    });
-    console.log('✅ Result 3:', res3);
-
-    console.log('%c✅ 모든 테스트 완료!', 'color: #4CAF50; font-weight: bold; font-size: 14px;');
-    console.log('%c📊 브라우저 콘솔에서 다음 명령어를 실행하세요:', 'color: #FF9800; font-style: italic;');
-    console.log('   console.table(window.__API_LOGS__)');
-    console.log('   window.__API_DEBUG__.download()');
-    
-    setTimeout(() => {
-      alert('✅ 모든 API 호출이 완료됐습니다!\n\n브라우저 콘솔을 열어서 다음을 실행하세요:\nconsole.table(window.__API_LOGS__)');
-    }, 500);
-
+    console.log('✅ 모든 API 테스트 완료', testResults.value);
   } catch (error) {
-    console.error('❌ 오류 발생:', error);
-    alert('❌ 오류: ' + (error as any).message);
+    console.error('❌ API 테스트 실패', error);
+    alert(`API 요청 중 오류가 발생했습니다: ${(error as Error).message}`);
   } finally {
     testing.value = false;
   }
@@ -112,20 +122,128 @@ const testApis = async () => {
 </script>
 
 <style scoped>
-code {
-  background: #f0f0f0;
-  padding: 4px 8px;
-  border-radius: 3px;
-  font-family: 'Courier New', monospace;
-  font-size: 12px;
+.api-test {
+  max-width: 900px;
+  margin: 2rem auto;
+  padding: 0 1rem 3rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
 }
 
-button:disabled {
+.header-card {
+  background: linear-gradient(135deg, #25265c, #1d213c);
+  border-radius: 18px;
+  padding: 2rem;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 2rem;
+  box-shadow: 0 20px 45px rgba(9, 8, 30, 0.5);
+}
+
+.header-card h1 {
+  margin: 0.25rem 0 0.5rem;
+  font-size: 2rem;
+}
+
+.header-card .lede {
+  max-width: 480px;
+  margin: 0;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.eyebrow {
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  font-size: 0.75rem;
+  color: #a3a6ff;
+}
+
+.run-btn {
+  background: #9b65ff;
+  border: none;
+  padding: 0.85rem 1.85rem;
+  border-radius: 999px;
+  color: white;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.run-btn:disabled {
   opacity: 0.6;
-  cursor: not-allowed;
+  cursor: progress;
 }
 
-button:hover:not(:disabled) {
-  background: #1976D2 !important;
+.run-btn:not(:disabled):hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 40px rgba(155, 101, 255, 0.3);
+}
+
+.results-card {
+  background: #0f1324;
+  border-radius: 16px;
+  padding: 1.5rem;
+  color: #f3f4ff;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.results-card header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+}
+
+.results-card h2 {
+  margin: 0;
+}
+
+.results-card ul {
+  list-style: none;
+  padding: 0;
+  margin: 1rem 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.results-card li {
+  background: rgba(255, 255, 255, 0.04);
+  padding: 1rem;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.results-card .meta {
+  margin: 0.2rem 0 0;
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.results-card pre {
+  margin: 0.75rem 0 0;
+  background: rgba(16, 30, 70, 0.5);
+  border-radius: 10px;
+  padding: 0.75rem;
+  font-size: 0.85rem;
+  overflow-x: auto;
+}
+
+.hint-card {
+  background: #fff7e2;
+  padding: 1.25rem 1.5rem;
+  border-radius: 12px;
+  border: 1px solid #ffeecc;
+  font-size: 0.95rem;
+}
+
+.hint-card code {
+  display: block;
+  margin-top: 0.5rem;
+  background: #fff;
+  padding: 0.5rem;
+  border-radius: 8px;
 }
 </style>

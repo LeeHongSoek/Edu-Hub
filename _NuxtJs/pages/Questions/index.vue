@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import QuestionList from '~/components/dashboard/QuestionList.vue';
 import type { QuestionListResponse } from '~/types';
 
 const { apiBase } = useApi();

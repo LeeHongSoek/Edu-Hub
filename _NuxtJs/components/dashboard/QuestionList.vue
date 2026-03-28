@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted, computed, watch } from 'vue';
+import GroupHierarchy from '~/components/dashboard/GroupHierarchy.vue';
 import type { Question, Group } from '~/types';
 
 const props = defineProps<{

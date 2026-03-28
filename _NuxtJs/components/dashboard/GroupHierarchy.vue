@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import GroupTreeNode from '~/components/dashboard/GroupTreeNode.vue';
 import type { Group } from '~/types';
 
 const props = defineProps<{
