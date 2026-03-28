@@ -1,6 +1,9 @@
 <script setup lang="ts">
 import { ref, onMounted, computed, watch } from 'vue';
 import GroupHierarchy from '~/components/dashboard/GroupHierarchy.vue';
+import QuestionEditor from '~/components/dashboard/QuestionEditor.vue';
+import QuestionSolver from '~/components/dashboard/QuestionSolver.vue';
+import { useApi } from '~/composables/useApi';
 import type { Question, Group } from '~/types';
 
 const props = defineProps<{
@@ -241,7 +244,11 @@ watch(() => props.appliedSearchKeyword, (value) => {
                     :disabled="isSliderDisabled"
                   />
                   <div class="slider-fill" :style="{ width: sliderPercentage + '%' }"></div>
-                  <div class="slider-tooltip" :style="{ left: sliderPercentage + '%' }">
+                  <div
+                    v-if="!isSliderDisabled"
+                    class="slider-tooltip"
+                    :style="{ left: sliderPercentage + '%' }"
+                  >
                     {{ sliderValue }}
                   </div>
                 </div>
@@ -549,7 +556,6 @@ watch(() => props.appliedSearchKeyword, (value) => {
 }
 
 .slider-wrapper.disabled {
-  pointer-events: none;
   opacity: 0.6;
 }
 
