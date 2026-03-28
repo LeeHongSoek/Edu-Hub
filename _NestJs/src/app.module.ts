@@ -13,6 +13,7 @@ import { StudyLogsModule } from './study-logs/study-logs.module';
 import { QuestionBooksModule } from './question-books/question-books.module';
 import { ExamsModule } from './exams/exams.module';
 import { SolveResultsModule } from './solve-results/solve-results.module';
+import { DemoModule } from './demo/demo.module';
 
 @Module({
   imports: [
@@ -28,6 +29,7 @@ import { SolveResultsModule } from './solve-results/solve-results.module';
     QuestionBooksModule,
     ExamsModule,
     SolveResultsModule,
+    DemoModule,
   ],
   controllers: [AppController],
   providers: [AppService],

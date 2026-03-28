@@ -22,6 +22,7 @@ const study_logs_module_1 = require("./study-logs/study-logs.module");
 const question_books_module_1 = require("./question-books/question-books.module");
 const exams_module_1 = require("./exams/exams.module");
 const solve_results_module_1 = require("./solve-results/solve-results.module");
+const demo_module_1 = require("./demo/demo.module");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
@@ -40,6 +41,7 @@ exports.AppModule = AppModule = __decorate([
             question_books_module_1.QuestionBooksModule,
             exams_module_1.ExamsModule,
             solve_results_module_1.SolveResultsModule,
+            demo_module_1.DemoModule,
         ],
         controllers: [app_controller_1.AppController],
         providers: [app_service_1.AppService],

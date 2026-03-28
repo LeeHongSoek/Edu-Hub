@@ -82,7 +82,7 @@ const testApis = async () => {
     // 테스트 3: POST /api/demo (바디 포함)
     console.log('📡 Test 3: POST /api/demo');
     const res3 = await $fetch('/api/demo', {
-      method: 'POST',
+      method: 'POST' as const,
       body: { userId: 123, action: 'test', timestamp: new Date().toISOString() }
     });
     testResults.value.push({
