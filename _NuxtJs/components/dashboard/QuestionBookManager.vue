@@ -75,6 +75,14 @@ const showCreateModal = ref(false);
 const newBook = ref({ book_name: '', description: '' });
 
 const { apiBase, token, getAuthHeader } = useApi();
+const router = useRouter();
+
+const viewBookDetails = (bookId: number | string | bigint) => {
+  router.push({
+    path: '/questions',
+    query: { book: String(bookId) },
+  });
+};
 
 const fetchBooks = async () => {
   try {
@@ -130,7 +138,7 @@ onMounted(fetchBooks);
               v-model="searchInput"
               type="text"
               class="search-input"
-              placeholder="문제집 명이나 설명으로 검색하세요"
+              placeholder="문제집명 또는 설명을 입력하세요"
               @keyup.enter="applySearch"
             />
             <button class="btn-search" @click="applySearch">검색</button>
@@ -138,8 +146,8 @@ onMounted(fetchBooks);
           </div>
           <div class="slider-row">
             <span class="summary-text">총 {{ filteredBooks.length }}개 문제집</span>
-            <div v-if="totalPages > 1" class="page-slider-section">
-              <div class="slider-wrapper">
+            <div class="page-slider-section">
+              <div class="slider-wrapper" :class="{ disabled: totalPages <= 1 }">
                 <span class="slider-limit">1</span>
                 <div class="slider-track-container">
                   <input
@@ -150,6 +158,7 @@ onMounted(fetchBooks);
                     class="page-slider"
                     @input="handleSliderInput"
                     @change="commitSliderValue"
+                    :disabled="totalPages <= 1"
                   />
                   <div class="slider-fill" :style="{ width: sliderPercentage + '%' }"></div>
                   <div class="slider-tooltip" :style="{ left: sliderPercentage + '%' }">
@@ -166,12 +175,12 @@ onMounted(fetchBooks);
       <div class="book-grid">
         <div v-for="book in pagedBooks" :key="book.book_id" class="book-card">
           <div class="book-info">
-            <h4>{{ book.book_name }}</h4>
+            <h4><{{ book.book_id }}> {{ book.book_name }}</h4>
             <p>{{ book.description || '설명 없음' }}</p>
           </div>
           <div class="book-card-footer">
             <span class="book-meta">문항 수: {{ book.items?.length || 0 }}개</span>
-            <button class="btn-view">상세보기</button>
+            <button class="btn-view" @click="viewBookDetails(book.book_id)">상세보기</button>
           </div>
         </div>
       </div>
@@ -305,19 +314,20 @@ onMounted(fetchBooks);
   border: 1px solid rgba(255, 255, 255, 0.15);
   border-radius: 12px;
   color: #fff;
-  padding: 0.45rem 0.75rem;
+  padding: 0 0.95rem;
   font-size: 0.9rem;
+  height: 2.3rem;
+  display: flex;
+  align-items: center;
 }
 
 .search-select {
   min-width: 130px;
-  height: 38px;
 }
 
 .search-input {
   flex: 1;
   min-width: 200px;
-  height: 38px;
 }
 
 .btn-search,
@@ -367,6 +377,15 @@ onMounted(fetchBooks);
   gap: 0.85rem;
   width: 100%;
   max-width: none;
+}
+
+.slider-wrapper.disabled {
+  pointer-events: none;
+  opacity: 0.6;
+}
+
+.slider-wrapper.disabled .page-slider {
+  cursor: not-allowed;
 }
 
 .slider-limit {

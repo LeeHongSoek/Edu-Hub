@@ -19,6 +19,12 @@ export class QuestionBooksController {
     return this.questionBooksService.findByUser(userNo);
   }
 
+  @Get(':id')
+  async findOne(@Request() req, @Param('id') id: string) {
+    const userNo = BigInt(req.user.user_no);
+    return this.questionBooksService.findById(BigInt(id), userNo);
+  }
+
   @Patch(':id')
   async update(@Request() req, @Param('id') id: string, @Body() body: any) {
     const userNo = BigInt(req.user.user_no);

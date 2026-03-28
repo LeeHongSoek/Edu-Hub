@@ -138,11 +138,11 @@ const clearExamSearch = () => {
         <div v-for="exam in pagedExams" :key="exam.exam_id" class="exam-card">
           <div class="exam-info">
             <div class="exam-badge">고사</div>
-            <h4>{{ exam.exam_name }}</h4>
+            <h4><{{ exam.exam_id }}> {{ exam.exam_name }}</h4>
           </div>
           <div class="exam-meta">
             <span class="exam-period">{{ new Date(exam.start_time).toLocaleDateString('ko-KR') }} ~ {{ new Date(exam.end_time).toLocaleDateString('ko-KR') }}</span>
-            <button class="btn-start" disabled>자세히 보기 (준비중)</button>
+            <button class="btn-start" disabled>상세보기</button>
           </div>
         </div>
       </div>

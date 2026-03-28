@@ -2,6 +2,7 @@ import { PrismaService } from '../common/prisma/prisma.service';
 type FindAllParams = {
     creatorNo?: bigint;
     groupId?: bigint;
+    bookId?: bigint;
     searchField?: 'title' | 'content';
     searchKeyword?: string;
     page?: number;
@@ -10,7 +11,7 @@ type FindAllParams = {
 export declare class QuestionsService {
     private prisma;
     constructor(prisma: PrismaService);
-    findAll({ creatorNo, groupId, searchField, searchKeyword, page, limit }: FindAllParams): Promise<{
+    findAll({ creatorNo, groupId, bookId, searchField, searchKeyword, page, limit }: FindAllParams): Promise<{
         items: ({
             group: ({
                 parent_group: ({
@@ -41,11 +42,6 @@ export declare class QuestionsService {
                 parent_group_id: bigint | null;
                 depth: number | null;
             }) | null;
-            passage: {
-                question_id: bigint;
-                passage_id: bigint;
-                content_md: string;
-            } | null;
             options: {
                 content: string;
                 question_id: bigint;
@@ -68,6 +64,11 @@ export declare class QuestionsService {
                 type_id: string;
                 type_name: string;
             };
+            passage: {
+                question_id: bigint;
+                passage_id: bigint;
+                content_md: string;
+            } | null;
         } & {
             question: string;
             title: string;
@@ -94,11 +95,6 @@ export declare class QuestionsService {
     private getDescendantGroupIds;
     private buildSearchCondition;
     create(data: any): Promise<{
-        passage: {
-            question_id: bigint;
-            passage_id: bigint;
-            content_md: string;
-        } | null;
         options: {
             content: string;
             question_id: bigint;
@@ -106,6 +102,11 @@ export declare class QuestionsService {
             option_id: bigint;
             is_answer: boolean | null;
         }[];
+        passage: {
+            question_id: bigint;
+            passage_id: bigint;
+            content_md: string;
+        } | null;
     } & {
         question: string;
         title: string;
@@ -125,11 +126,6 @@ export declare class QuestionsService {
         created_at: Date | null;
     }>;
     update(id: string | number, data: any): Promise<{
-        passage: {
-            question_id: bigint;
-            passage_id: bigint;
-            content_md: string;
-        } | null;
         options: {
             content: string;
             question_id: bigint;
@@ -137,6 +133,11 @@ export declare class QuestionsService {
             option_id: bigint;
             is_answer: boolean | null;
         }[];
+        passage: {
+            question_id: bigint;
+            passage_id: bigint;
+            content_md: string;
+        } | null;
     } & {
         question: string;
         title: string;

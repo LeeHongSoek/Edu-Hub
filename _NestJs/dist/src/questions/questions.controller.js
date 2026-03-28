@@ -20,10 +20,11 @@ let QuestionsController = class QuestionsController {
     constructor(questionsService) {
         this.questionsService = questionsService;
     }
-    findAll(creatorNo, groupId, searchField, searchKeyword, page, limit) {
+    findAll(creatorNo, groupId, searchField, searchKeyword, page, limit, bookId) {
         return this.questionsService.findAll({
             creatorNo: (creatorNo && creatorNo !== 'undefined') ? BigInt(creatorNo) : undefined,
             groupId: (groupId && groupId !== 'undefined') ? BigInt(groupId) : undefined,
+            bookId: (bookId && bookId !== 'undefined') ? BigInt(bookId) : undefined,
             searchField: searchField === 'content' ? 'content' : 'title',
             searchKeyword: searchKeyword?.trim() || undefined,
             page: page ? Number(page) : 1,
@@ -55,8 +56,9 @@ __decorate([
     __param(3, (0, common_1.Body)('search_keyword')),
     __param(4, (0, common_1.Body)('page')),
     __param(5, (0, common_1.Body)('limit')),
+    __param(6, (0, common_1.Body)('book_id')),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, String, String, String, Number, Number]),
+    __metadata("design:paramtypes", [String, String, String, String, Number, Number, String]),
     __metadata("design:returntype", void 0)
 ], QuestionsController.prototype, "findAll", null);
 __decorate([

@@ -13,4 +13,11 @@ export class ExamsController {
     if (!userNoVal) throw new UnauthorizedException();
     return this.examsService.findAll(BigInt(userNoVal));
   }
+
+  @Get(':id')
+  async findOne(@Request() req: any, @Param('id') id: string) {
+    const userNoVal = req.user?.user_no || req.user?.userNo;
+    if (!userNoVal) throw new UnauthorizedException();
+    return this.examsService.findById(BigInt(id), BigInt(userNoVal));
+  }
 }

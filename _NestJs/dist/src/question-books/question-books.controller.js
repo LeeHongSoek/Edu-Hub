@@ -29,6 +29,10 @@ let QuestionBooksController = class QuestionBooksController {
         const userNo = BigInt(req.user.user_no);
         return this.questionBooksService.findByUser(userNo);
     }
+    async findOne(req, id) {
+        const userNo = BigInt(req.user.user_no);
+        return this.questionBooksService.findById(BigInt(id), userNo);
+    }
     async update(req, id, body) {
         const userNo = BigInt(req.user.user_no);
         return this.questionBooksService.update(BigInt(id), userNo, body);
@@ -62,6 +66,14 @@ __decorate([
     __metadata("design:paramtypes", [Object]),
     __metadata("design:returntype", Promise)
 ], QuestionBooksController.prototype, "findMyBooks", null);
+__decorate([
+    (0, common_1.Get)(':id'),
+    __param(0, (0, common_1.Request)()),
+    __param(1, (0, common_1.Param)('id')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String]),
+    __metadata("design:returntype", Promise)
+], QuestionBooksController.prototype, "findOne", null);
 __decorate([
     (0, common_1.Patch)(':id'),
     __param(0, (0, common_1.Request)()),

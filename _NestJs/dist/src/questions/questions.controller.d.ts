@@ -2,7 +2,7 @@ import { QuestionsService } from './questions.service';
 export declare class QuestionsController {
     private readonly questionsService;
     constructor(questionsService: QuestionsService);
-    findAll(creatorNo?: string, groupId?: string, searchField?: string, searchKeyword?: string, page?: number, limit?: number): Promise<{
+    findAll(creatorNo?: string, groupId?: string, searchField?: string, searchKeyword?: string, page?: number, limit?: number, bookId?: string): Promise<{
         items: ({
             group: ({
                 parent_group: ({
@@ -33,11 +33,6 @@ export declare class QuestionsController {
                 parent_group_id: bigint | null;
                 depth: number | null;
             }) | null;
-            passage: {
-                question_id: bigint;
-                passage_id: bigint;
-                content_md: string;
-            } | null;
             options: {
                 content: string;
                 question_id: bigint;
@@ -60,6 +55,11 @@ export declare class QuestionsController {
                 type_id: string;
                 type_name: string;
             };
+            passage: {
+                question_id: bigint;
+                passage_id: bigint;
+                content_md: string;
+            } | null;
         } & {
             question: string;
             title: string;
@@ -84,11 +84,6 @@ export declare class QuestionsController {
         totalPages: number;
     }>;
     create(createQuestionDto: any): Promise<{
-        passage: {
-            question_id: bigint;
-            passage_id: bigint;
-            content_md: string;
-        } | null;
         options: {
             content: string;
             question_id: bigint;
@@ -96,6 +91,11 @@ export declare class QuestionsController {
             option_id: bigint;
             is_answer: boolean | null;
         }[];
+        passage: {
+            question_id: bigint;
+            passage_id: bigint;
+            content_md: string;
+        } | null;
     } & {
         question: string;
         title: string;
@@ -115,11 +115,6 @@ export declare class QuestionsController {
         created_at: Date | null;
     }>;
     update(id: string, updateQuestionDto: any): Promise<{
-        passage: {
-            question_id: bigint;
-            passage_id: bigint;
-            content_md: string;
-        } | null;
         options: {
             content: string;
             question_id: bigint;
@@ -127,6 +122,11 @@ export declare class QuestionsController {
             option_id: bigint;
             is_answer: boolean | null;
         }[];
+        passage: {
+            question_id: bigint;
+            passage_id: bigint;
+            content_md: string;
+        } | null;
     } & {
         question: string;
         title: string;

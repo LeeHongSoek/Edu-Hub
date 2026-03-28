@@ -322,14 +322,17 @@ watch(() => props.appliedSearchKeyword, (value) => {
 
 .search-select,
 .search-input {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 12px;
+  color: #fff;
+  padding: 0 1rem;
+  font-size: 0.9rem;
   height: 2.75rem;
-  border-radius: 10px;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  background: rgba(15, 23, 42, 0.72);
-  color: #e2e8f0;
-  padding: 0 0.9rem;
-  outline: none;
-  transition: border-color 0.2s, box-shadow 0.2s;
+  line-height: 2.75rem;
+  display: flex;
+  align-items: center;
+  box-sizing: border-box;
 }
 
 .search-select {

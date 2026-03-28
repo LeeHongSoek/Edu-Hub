@@ -39,6 +39,23 @@ let QuestionBooksService = class QuestionBooksService {
             orderBy: { created_at: 'desc' },
         });
     }
+    async findById(bookId, userNo) {
+        const book = await this.prisma.userQuestionBook.findUnique({
+            where: { book_id: bookId },
+            include: {
+                items: {
+                    include: {
+                        question: true,
+                    },
+                },
+            },
+        });
+        if (!book)
+            throw new common_1.NotFoundException('Question book not found');
+        if (book.user_no !== userNo)
+            throw new common_1.ForbiddenException('Not authorized');
+        return book;
+    }
     async update(bookId, userNo, data) {
         const book = await this.prisma.userQuestionBook.findUnique({
             where: { book_id: bookId },

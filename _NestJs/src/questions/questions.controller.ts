@@ -14,10 +14,14 @@ export class QuestionsController {
     @Body('search_keyword') searchKeyword?: string,
     @Body('page') page?: number,
     @Body('limit') limit?: number,
+    @Body('book_id') bookId?: string,
+    @Body('exam_id') examId?: string,
   ) {
     return this.questionsService.findAll({
       creatorNo: (creatorNo && creatorNo !== 'undefined') ? BigInt(creatorNo) : undefined,
       groupId: (groupId && groupId !== 'undefined') ? BigInt(groupId) : undefined,
+      bookId: (bookId && bookId !== 'undefined') ? BigInt(bookId) : undefined,
+      examId: (examId && examId !== 'undefined') ? BigInt(examId) : undefined,
       searchField: searchField === 'content' ? 'content' : 'title',
       searchKeyword: searchKeyword?.trim() || undefined,
       page: page ? Number(page) : 1,

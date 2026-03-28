@@ -29,6 +29,24 @@ export class QuestionBooksService {
     });
   }
 
+  async findById(bookId: bigint, userNo: bigint) {
+    const book = await this.prisma.userQuestionBook.findUnique({
+      where: { book_id: bookId },
+      include: {
+        items: {
+          include: {
+            question: true,
+          },
+        },
+      },
+    });
+
+    if (!book) throw new NotFoundException('Question book not found');
+    if (book.user_no !== userNo) throw new ForbiddenException('Not authorized');
+
+    return book;
+  }
+
   async update(bookId: bigint, userNo: bigint, data: any) {
     const book = await this.prisma.userQuestionBook.findUnique({
       where: { book_id: bookId },

@@ -1,8 +1,9 @@
 <script setup lang="ts">
+import { computed, ref, watch } from 'vue';
 import QuestionList from '~/components/dashboard/QuestionList.vue';
 import type { QuestionListResponse } from '~/types';
 
-const { apiBase } = useApi();
+const { apiBase, token, getAuthHeader } = useApi();
 
 const route = useRoute();
 const userCookie = useCookie('user_info');
@@ -17,6 +18,15 @@ const appliedSearchKeyword = ref('');
 const currentPage = ref(1);
 const pageSize = 10;
 const hasResolvedOnce = ref(false);
+
+const activeBookId = computed<number | undefined>(() => {
+  const raw = route.query.book;
+  if (!raw) return undefined;
+  const numeric = Number(raw);
+  return Number.isNaN(numeric) ? undefined : numeric;
+});
+
+const activeBookDetail = ref<any | null>(null);
 
 const requestBody = computed(() => {
   const body: Record<string, string | number> = {};
@@ -34,11 +44,38 @@ const requestBody = computed(() => {
     body.search_keyword = appliedSearchKeyword.value;
   }
 
+  if (activeBookId.value !== undefined) {
+    body.book_id = activeBookId.value;
+  }
+
   body.page = currentPage.value;
   body.limit = pageSize;
 
   return body;
 });
+
+const activeBookDisplayName = computed(() => activeBookDetail.value?.book_name || '');
+
+const loadActiveBookDetail = async (bookId?: number) => {
+  if (!bookId) {
+    activeBookDetail.value = null;
+    return;
+  }
+
+  if (!token.value) {
+    activeBookDetail.value = null;
+    return;
+  }
+
+  try {
+    activeBookDetail.value = await $fetch(`${apiBase.value}/question-books/${bookId}`, {
+      headers: getAuthHeader(),
+    });
+  } catch (err) {
+    console.error('문제집 상세 조회 실패:', err);
+    activeBookDetail.value = null;
+  }
+};
 
 const { data: questionResponse, pending, error, refresh } = await useFetch<QuestionListResponse>(() => `${apiBase.value}/questions`, {
   method: 'POST',
@@ -59,9 +96,21 @@ watch(requestBody, () => {
   refresh();
 }, { deep: true });
 
-watch(() => route.query.mine, () => {
-  currentPage.value = 1;
-});
+watch(
+  () => route.query.mine,
+  () => {
+    currentPage.value = 1;
+  }
+);
+
+watch(
+  () => route.query.book,
+  () => {
+    currentPage.value = 1;
+    loadActiveBookDetail(activeBookId.value);
+  },
+  { immediate: true }
+);
 
 const handleGroupChange = (groupId: string | number | null) => {
   selectedGroupId.value = groupId;
@@ -89,7 +138,10 @@ const handlePageChange = (page: number) => {
   <div class="page-container">
 
     <div class="page-header">
-      <h1 class="page-title">나의 문제목록</h1>
+      <div class="title-wrapper">
+        <h1 class="page-title">나의 문제목록</h1>
+        <span v-if="activeBookDisplayName" class="page-subtitle">문제집: {{ activeBookDisplayName }}</span>
+      </div>
       <NuxtLink to="/dashboard" class="back-btn">← 대시보드</NuxtLink>
     </div>
     
@@ -186,6 +238,18 @@ const handlePageChange = (page: number) => {
   font-weight: 700;
   color: #f8fafc;
   margin: 0;
+}
+
+.page-subtitle {
+  font-size: 0.85rem;
+  color: #94a3b8;
+  margin: 0.2rem 0 0;
+}
+
+.title-wrapper {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.6rem;
 }
 
 .back-btn {

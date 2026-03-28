@@ -4,6 +4,8 @@ import { PrismaService } from '../common/prisma/prisma.service';
 type FindAllParams = {
   creatorNo?: bigint;
   groupId?: bigint;
+  bookId?: bigint;
+  examId?: bigint;
   searchField?: 'title' | 'content';
   searchKeyword?: string;
   page?: number;
@@ -15,7 +17,7 @@ export class QuestionsService {
   constructor(private prisma: PrismaService) {}
 
   // 모든 문제 목록 조회 API (필터링 지원)
-  async findAll({ creatorNo, groupId, searchField, searchKeyword, page = 1, limit = 10 }: FindAllParams) {
+  async findAll({ creatorNo, groupId, bookId, examId, searchField, searchKeyword, page = 1, limit = 10 }: FindAllParams) {
     const where: any = {};
     if (creatorNo !== undefined) where.creator_no = creatorNo;
 
@@ -26,16 +28,54 @@ export class QuestionsService {
       };
     }
 
+    const safePage = Number.isFinite(page) && page > 0 ? Math.floor(page) : 1;
+    const safeLimit = Number.isFinite(limit) && limit > 0 ? Math.min(Math.floor(limit), 100) : 10;
+    const skip = (safePage - 1) * safeLimit;
+
+    if (examId !== undefined) {
+      const examItems = await this.prisma.examQuestion.findMany({
+        where: { exam_id: examId },
+        select: { question_id: true },
+      });
+
+      const ids = examItems.map((item) => item.question_id);
+      if (ids.length === 0) {
+        return {
+          items: [],
+          total: 0,
+          page: safePage,
+          limit: safeLimit,
+          totalPages: 1,
+        };
+      }
+
+      where.question_id = { in: ids };
+    } else if (bookId !== undefined) {
+      const questionItems = await this.prisma.userQuestionBookItem.findMany({
+        where: { book_id: bookId },
+        select: { question_id: true },
+      });
+
+      const ids = questionItems.map((item) => item.question_id);
+      if (ids.length === 0) {
+        return {
+          items: [],
+          total: 0,
+          page: safePage,
+          limit: safeLimit,
+          totalPages: 1,
+        };
+      }
+
+      where.question_id = { in: ids };
+    }
+
     if (searchKeyword) {
       where.AND = [
         ...(where.AND ?? []),
         this.buildSearchCondition(searchField ?? 'title', searchKeyword),
       ];
     }
-
-    const safePage = Number.isFinite(page) && page > 0 ? Math.floor(page) : 1;
-    const safeLimit = Number.isFinite(limit) && limit > 0 ? Math.min(Math.floor(limit), 100) : 10;
-    const skip = (safePage - 1) * safeLimit;
 
     const [total, items] = await this.prisma.$transaction([
       this.prisma.question.count({ where }),
