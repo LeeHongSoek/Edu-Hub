@@ -4,10 +4,10 @@ import ExamListManager from '~/components/dashboard/ExamListManager.vue';
 
 <template>
   <div class="page-container">
-    <div class="page-header">
-      <NuxtLink to="/dashboard" class="back-btn">← 대시보드</NuxtLink>
-      <h1 class="page-title">나의 고사집 목록</h1>
-    </div>
+  <div class="page-header">
+    <h1 class="page-title">나의 고사집 목록</h1>
+    <NuxtLink to="/dashboard" class="back-btn">← 대시보드</NuxtLink>
+  </div>
     
     <div class="content-box">
       <ExamListManager />
@@ -19,11 +19,15 @@ import ExamListManager from '~/components/dashboard/ExamListManager.vue';
 .page-container {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 3rem 2rem;
+  padding: 1rem 1rem;
 }
 
 .page-header {
-  display: flex; flex-direction: column; gap: 1rem; margin-bottom: 2.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
 }
 
 .back-btn { color: #818cf8; text-decoration: none; font-weight: 600; font-size: 0.95rem; }
@@ -34,7 +38,7 @@ import ExamListManager from '~/components/dashboard/ExamListManager.vue';
   background: rgba(30, 41, 59, 0.5);
   border-radius: 20px;
   border: 1px solid rgba(255, 255, 255, 0.05);
-  padding: 2.5rem;
-  min-height: 500px;
+  padding: 1rem 1rem;
+  min-height: 430px;
 }
 </style>

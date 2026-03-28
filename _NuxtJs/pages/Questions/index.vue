@@ -86,9 +86,12 @@ const handlePageChange = (page: number) => {
 </script>
 
 <template>
-  <div class="container">
+  <div class="page-container">
 
-    <h1 class="title">나의 문제목록</h1>
+    <div class="page-header">
+      <h1 class="page-title">나의 문제목록</h1>
+      <NuxtLink to="/dashboard" class="back-btn">← 대시보드</NuxtLink>
+    </div>
     
     <div v-if="error && !questionResponse && !pending" class="error">
       문제를 불러오지 못했습니다. 백엔드 서버가 실행 중인지 확인해 주세요.
@@ -160,21 +163,36 @@ const handlePageChange = (page: number) => {
   height: 1.25rem;
 }
 
-.container {
+.page-container {
   max-width: 1000px;
   margin: 0 auto;
-  padding: 2rem 1rem;
+  padding: 2rem 1rem 3rem;
 }
 
-.title {
-  font-size: 2.5rem;
-  font-weight: 800;
-  text-align: center;
-  margin-bottom: 3rem;
-  background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
+.page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 2rem;
+  max-width: 900px;
+  width: 100%;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.page-title {
+  font-size: 2.25rem;
+  font-weight: 700;
+  color: #f8fafc;
+  margin: 0;
+}
+
+.back-btn {
+  color: #818cf8;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 0.95rem;
 }
 
 .loading, .error {

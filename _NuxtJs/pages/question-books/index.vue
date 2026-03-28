@@ -6,10 +6,10 @@ const route = useRoute();
 
 <template>
   <div class="page-container">
-    <div class="page-header">
-      <NuxtLink to="/dashboard" class="back-btn">← 대시보드</NuxtLink>
-      <h1 class="page-title">나의 문제집 관리</h1>
-    </div>
+  <div class="page-header">
+    <h1 class="page-title">나의 문제집 관리</h1>
+    <NuxtLink to="/dashboard" class="back-btn">← 대시보드</NuxtLink>
+  </div>
     
     <div class="content-box">
       <QuestionBookManager />
@@ -21,14 +21,15 @@ const route = useRoute();
 .page-container {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 3rem 2rem;
+  padding: 1rem 1rem;
 }
 
 .page-header {
   display: flex;
-  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
   gap: 1rem;
-  margin-bottom: 2.5rem;
+  margin-bottom: 1.25rem;
 }
 
 .back-btn {
@@ -48,7 +49,7 @@ const route = useRoute();
   background: rgba(30, 41, 59, 0.5);
   border-radius: 20px;
   border: 1px solid rgba(255, 255, 255, 0.05);
-  padding: 2.5rem;
-  min-height: 500px;
+  padding: 1.5rem 1.75rem;
+  min-height: 430px;
 }
 </style>

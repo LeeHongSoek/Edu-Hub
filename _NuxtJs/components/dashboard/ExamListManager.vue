@@ -6,7 +6,6 @@ const loading = ref(true);
 const pageSize = 5;
 const currentPage = ref(1);
 const sliderValue = ref(1);
-const examSearchField = ref<'name' | 'period'>('name');
 const examSearchInput = ref('');
 const examSearchQuery = ref('');
 
@@ -14,9 +13,7 @@ const filteredExams = computed(() => {
   const keyword = examSearchQuery.value.trim().toLowerCase();
   if (!keyword) return exams.value;
   return exams.value.filter((exam) => {
-    const target = examSearchField.value === 'period'
-      ? `${new Date(exam.start_time).toLocaleDateString('ko-KR')} ~ ${new Date(exam.end_time).toLocaleDateString('ko-KR')}`
-      : exam.exam_name;
+  const target = exam.exam_name;
     return target.toLowerCase().includes(keyword);
   });
 });
@@ -100,17 +97,13 @@ const clearExamSearch = () => {
       <div class="pagination-panel-border">
         <div class="slider-panel">
           <div class="search-row">
-            <select v-model="examSearchField" class="search-select">
-              <option value="name">시험 제목</option>
-              <option value="period">기간</option>
-            </select>
-            <input
-              v-model="examSearchInput"
-              type="text"
-              class="search-input"
-              placeholder="시험 제목 또는 기간으로 검색하세요"
-              @keyup.enter="applyExamSearch"
-            />
+          <input
+            v-model="examSearchInput"
+            type="text"
+            class="search-input"
+            placeholder="시험 제목을 입력하세요"
+            @keyup.enter="applyExamSearch"
+          />
             <button class="btn-search" @click="applyExamSearch">검색</button>
             <button v-if="examSearchQuery" class="btn-reset-search" @click="clearExamSearch">초기화</button>
           </div>
