@@ -174,12 +174,12 @@ onMounted(fetchBooks);
       </div>
       <div class="book-grid">
         <div v-for="book in pagedBooks" :key="book.book_id" class="book-card">
-          <div class="book-info">
+          <div class="book-card-head">
             <h4><{{ book.book_id }}> {{ book.book_name }}</h4>
-            <p>{{ book.description || '설명 없음' }}</p>
-          </div>
-          <div class="book-card-footer">
             <span class="book-meta">문항 수: {{ book.items?.length || 0 }}개</span>
+          </div>
+          <div class="book-card-body">
+            <p>{{ book.description || '설명 없음' }}</p>
             <button class="btn-view" @click="viewBookDetails(book.book_id)">상세보기</button>
           </div>
         </div>
@@ -233,44 +233,59 @@ onMounted(fetchBooks);
   background: rgba(255, 255, 255, 0.03);
   border: 1px solid rgba(255, 255, 255, 0.15);
   border-radius: 10px;
-  padding: 1.25rem 1.5rem;
+  padding: 1rem 1.5rem;
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 0.45rem;
   transition: border 0.3s, transform 0.3s;
 }
 
 .book-card:hover { border-color: #6366f1; transform: translateY(-3px); }
 
-.book-info h4 { color: #f8fafc; margin: 0 0 0.5rem 0; font-size: 1.1rem; }
-.book-info p { color: #94a3b8; font-size: 0.9rem; margin-bottom: 1rem; line-height: 1.4; }
+.book-card-head,
+.book-card-body {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+}
+
+.book-card-head h4 {
+  color: #f8fafc;
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+.book-card-body p {
+  color: #94a3b8;
+  font-size: 0.9rem;
+  margin: 0;
+  line-height: 1.4;
+  flex: 1;
+}
+
 .book-meta {
   font-size: 0.8rem;
   color: #64748b;
   font-weight: 600;
-  margin-right: 0.5rem;
-}
-
-.book-card-footer {
-  display: flex;
-  justify-content: flex-end;
-  align-items: center;
-  gap: 1rem;
-  padding-top: 0.75rem;
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
-  margin-top: 0.5rem;
+  white-space: nowrap;
 }
 
 .btn-view {
-  padding: 0.55rem 1.5rem;
+  padding: 0.5rem 1.2rem;
   background: rgba(255, 255, 255, 0.06);
   border: 1px solid rgba(255, 255, 255, 0.15);
   color: #e2e8f0;
   border-radius: 8px;
   cursor: pointer;
   font-weight: 600;
-  align-self: flex-end;
   transition: border-color 0.2s, background 0.2s;
+  white-space: nowrap;
+}
+
+.btn-view:hover {
+  border-color: rgba(99, 102, 241, 0.8);
+  background: rgba(99, 102, 241, 0.14);
 }
 
 /* Modal */
