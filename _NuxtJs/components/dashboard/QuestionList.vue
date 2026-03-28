@@ -334,7 +334,7 @@ watch(() => props.appliedSearchKeyword, (value) => {
 .search-input {
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid rgba(255, 255, 255, 0.15);
-  border-radius: 12px;
+  border-radius: 10px;
   color: #fff;
   padding: 0 1rem;
   font-size: 0.9rem;
@@ -397,7 +397,7 @@ watch(() => props.appliedSearchKeyword, (value) => {
   align-items: center;
   gap: 1rem;
   padding: 0.9rem 1rem;
-  border-radius: 12px;
+  border-radius: 10px;
   background: rgba(15, 23, 42, 0.6);
   border: 1px solid rgba(148, 163, 184, 0.14);
   color: #94a3b8;
@@ -639,7 +639,7 @@ watch(() => props.appliedSearchKeyword, (value) => {
 
 .slider-panel-border {
   border: 1px solid rgba(255, 255, 255, 0.18);
-  border-radius: 16px;
+  border-radius: 10px;
   padding: 1rem 1.25rem;
   background: rgba(15, 23, 42, 0.65);
   box-shadow: 0 20px 60px -22px rgba(15, 23, 42, 1);
@@ -663,7 +663,7 @@ watch(() => props.appliedSearchKeyword, (value) => {
 .search-input {
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid rgba(255, 255, 255, 0.15);
-  border-radius: 12px;
+  border-radius: 10px;
   color: #fff;
   padding: 0.45rem 0.75rem;
   font-size: 0.9rem;

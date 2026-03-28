@@ -133,7 +133,7 @@ const testApis = async () => {
 
 .header-card {
   background: linear-gradient(135deg, #25265c, #1d213c);
-  border-radius: 18px;
+  border-radius: 10px;
   padding: 2rem;
   color: #fff;
   display: flex;
@@ -165,7 +165,7 @@ const testApis = async () => {
   background: #9b65ff;
   border: none;
   padding: 0.85rem 1.85rem;
-  border-radius: 999px;
+  border-radius: 10px;
   color: white;
   font-weight: 600;
   cursor: pointer;
@@ -184,7 +184,7 @@ const testApis = async () => {
 
 .results-card {
   background: #0f1324;
-  border-radius: 16px;
+  border-radius: 10px;
   padding: 1.5rem;
   color: #f3f4ff;
   border: 1px solid rgba(255, 255, 255, 0.08);
@@ -212,7 +212,7 @@ const testApis = async () => {
 .results-card li {
   background: rgba(255, 255, 255, 0.04);
   padding: 1rem;
-  border-radius: 12px;
+  border-radius: 10px;
   border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
@@ -234,7 +234,7 @@ const testApis = async () => {
 .hint-card {
   background: #fff7e2;
   padding: 1.25rem 1.5rem;
-  border-radius: 12px;
+  border-radius: 10px;
   border: 1px solid #ffeecc;
   font-size: 0.95rem;
 }

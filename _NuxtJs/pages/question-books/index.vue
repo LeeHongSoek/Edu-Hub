@@ -47,7 +47,7 @@ const route = useRoute();
 
 .content-box {
   background: rgba(30, 41, 59, 0.5);
-  border-radius: 20px;
+  border-radius: 10px;
   border: 1px solid rgba(255, 255, 255, 0.05);
   padding: 1rem 1rem;
   min-height: 430px;

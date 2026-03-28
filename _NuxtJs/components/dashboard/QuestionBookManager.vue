@@ -327,7 +327,7 @@ onMounted(fetchBooks);
 .search-input {
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid rgba(255, 255, 255, 0.15);
-  border-radius: 12px;
+  border-radius: 10px;
   color: #fff;
   padding: 0 0.95rem;
   font-size: 0.9rem;
@@ -496,7 +496,7 @@ onMounted(fetchBooks);
 
 .pagination-panel-border {
   border: 1px solid rgba(255, 255, 255, 0.18);
-  border-radius: 16px;
+  border-radius: 10px;
   padding: 1rem 1.25rem;
   background: rgba(15, 23, 42, 0.65);
   box-shadow: 0 20px 60px -22px rgba(15, 23, 42, 1);

@@ -156,7 +156,7 @@ CREATE TABLE `ombudsman_reports` (
   PRIMARY KEY (`report_id`),
   KEY `fk_ombudsman_user` (`user_no`),
   CONSTRAINT `fk_ombudsman_user` FOREIGN KEY (`user_no`) REFERENCES `users` (`user_no`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci COMMENT='사용자 요구사항 및 피드백 테이블';
+) ENGINE=InnoDB AUTO_INCREMENT=31 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci COMMENT='사용자 요구사항 및 피드백 테이블';
 /*!40101 SET character_set_client = @saved_cs_client */;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8mb4 */;

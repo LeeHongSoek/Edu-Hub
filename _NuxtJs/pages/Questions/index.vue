@@ -337,7 +337,7 @@ const handlePageChange = (page: number) => {
   padding-top: 5rem;
   background: rgba(15, 23, 42, 0.18);
   backdrop-filter: blur(2px);
-  border-radius: 16px;
+  border-radius: 10px;
   color: #cbd5e1;
   font-size: 0.95rem;
   font-weight: 600;

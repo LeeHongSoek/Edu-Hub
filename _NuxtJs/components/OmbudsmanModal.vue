@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { computed, onMounted, ref, watch } from 'vue';
 
 const emit = defineEmits(['close']);
 
@@ -7,8 +7,13 @@ const reports = ref<any[]>([]);
 const loading = ref(true);
 const showForm = ref(false);
 const editingReport = ref<any>(null);
+const searchInput = ref('');
+const searchQuery = ref('');
+const currentPage = ref(1);
+const pageSize = 5;
+const sliderValue = ref(1);
 
-const { apiBase, token, getAuthHeader } = useApi();
+const { apiBase, getAuthHeader } = useApi();
 
 const form = ref({
   category: 'OPINION',
@@ -22,6 +27,74 @@ const categories = [
   { value: 'COMPLAINT', label: '불만/오류 제보' }
 ];
 
+const normalizedSearch = computed(() => searchQuery.value.trim().toLowerCase());
+
+const filteredReports = computed(() => {
+  if (!normalizedSearch.value) return reports.value;
+
+  return reports.value.filter((report) => {
+    const categoryLabel = categories.find((item) => item.value === report.category)?.label ?? '';
+
+    return [report.title, report.content, categoryLabel]
+      .filter(Boolean)
+      .some((value) => String(value).toLowerCase().includes(normalizedSearch.value));
+  });
+});
+
+const totalPages = computed(() => Math.max(1, Math.ceil(filteredReports.value.length / pageSize)));
+const isSliderDisabled = computed(() => totalPages.value <= 1);
+
+const paginatedReports = computed(() => {
+  const start = (currentPage.value - 1) * pageSize;
+  return filteredReports.value.slice(start, start + pageSize);
+});
+
+const pageStartItem = computed(() => {
+  if (filteredReports.value.length === 0) return 0;
+  return (currentPage.value - 1) * pageSize + 1;
+});
+
+const pageEndItem = computed(() => Math.min(currentPage.value * pageSize, filteredReports.value.length));
+
+const sliderPercentage = computed(() => {
+  if (totalPages.value <= 1) return 0;
+  return ((sliderValue.value - 1) / (totalPages.value - 1)) * 100;
+});
+
+watch(searchQuery, () => {
+  currentPage.value = 1;
+  sliderValue.value = 1;
+});
+
+watch(filteredReports, () => {
+  if (currentPage.value > totalPages.value) {
+    currentPage.value = totalPages.value;
+  }
+  sliderValue.value = currentPage.value;
+});
+
+const goToPage = (page: number) => {
+  currentPage.value = Math.min(Math.max(page, 1), totalPages.value);
+  sliderValue.value = currentPage.value;
+};
+
+const applySearch = () => {
+  searchQuery.value = searchInput.value.trim();
+};
+
+const clearSearch = () => {
+  searchInput.value = '';
+  searchQuery.value = '';
+};
+
+const handleSliderInput = (event: Event) => {
+  sliderValue.value = Number((event.target as HTMLInputElement).value);
+};
+
+const commitSliderValue = () => {
+  goToPage(sliderValue.value);
+};
+
 
 const fetchMyReports = async () => {
   try {
@@ -29,6 +102,8 @@ const fetchMyReports = async () => {
       headers: getAuthHeader()
     });
     reports.value = data as any[];
+    currentPage.value = 1;
+    sliderValue.value = 1;
   } catch (err) {
     console.error('서버 통신 오류(fetch) reports:', err);
   } finally {
@@ -99,58 +174,113 @@ onMounted(fetchMyReports);
       </div>
 
       <div class="modal-body">
-        <div v-if="!showForm" class="list-section">
-          <div class="list-header">
-            <h3>나의 제보 내역</h3>
-            <button class="btn-primary" @click="showForm = true">새 제보하기</button>
-          </div>
-          
-          <div v-if="loading" class="loading">불러오는 중...</div>
-          <div v-else-if="reports.length === 0" class="empty">
-            아직 등록된 제보가 없습니다.
-          </div>
-          <div v-else class="report-list">
-            <div v-for="report in reports" :key="report.report_id" class="report-item">
-              <div class="report-main">
-                <span class="category-badge" :class="report.category.toLowerCase()">
-                  {{ categories.find(c => c.value === report.category)?.label }}
-                </span>
-                <h4 class="report-title">{{ report.title }}</h4>
-                <p class="report-date">{{ new Date(report.created_at).toLocaleDateString() }}</p>
-              </div>
-              <div class="report-actions">
-                <button class="btn-icon" @click="editReport(report)">✏️</button>
-                <button class="btn-icon" @click="deleteReport(report.report_id)">🗑️</button>
+        <Transition name="section-slide" mode="out-in">
+          <div v-if="!showForm" key="report-list" class="list-section">
+            <div class="list-header">
+              <h3>나의 제보 내역</h3>
+              <button class="btn-primary" @click="showForm = true">새 제보하기</button>
+            </div>
+
+            <div v-if="reports.length > 0" class="pagination-panel-border">
+              <div class="slider-panel">
+                <div class="search-row">
+                  <label class="search-box">
+                    <span class="search-icon">⌕</span>
+                    <input
+                      v-model="searchInput"
+                      type="search"
+                      placeholder="제목, 내용, 분류를 입력하세요"
+                      @keyup.enter="applySearch"
+                    />
+                  </label>
+                  <button class="btn-search" @click="applySearch">검색</button>
+                  <button v-if="searchQuery" class="btn-reset-search" @click="clearSearch">초기화</button>
+                </div>
+                <div v-if="filteredReports.length > 0" class="slider-row">
+                  <span class="summary-text">총 {{ filteredReports.length }}건의 제보</span>
+                  <div class="page-slider-section">
+                    <div class="slider-wrapper" :class="{ disabled: isSliderDisabled }">
+                      <span class="slider-limit">1</span>
+                      <div class="slider-track-container">
+                        <input
+                          type="range"
+                          :min="1"
+                          :max="totalPages"
+                          :value="sliderValue"
+                          class="page-slider"
+                          :disabled="isSliderDisabled"
+                          @input="handleSliderInput"
+                          @change="commitSliderValue"
+                        />
+                        <div class="slider-fill" :style="{ width: sliderPercentage + '%' }"></div>
+                        <div class="slider-tooltip" :style="{ left: sliderPercentage + '%' }">
+                          {{ sliderValue }}
+                        </div>
+                      </div>
+                      <span class="slider-limit">{{ totalPages }}</span>
+                    </div>
+                  </div>
+                  <span class="range-text">{{ pageStartItem }}-{{ pageEndItem }}번째 항목 표시 중</span>
+                </div>
               </div>
             </div>
-          </div>
-        </div>
 
-        <div v-else class="form-section">
-          <h3>{{ editingReport ? '제보 수정' : '새 제보 등록' }}</h3>
-          <div class="form-group">
-            <label>분류</label>
-            <select v-model="form.category">
-              <option v-for="cat in categories" :key="cat.value" :value="cat.value">
-                {{ cat.label }}
-              </option>
-            </select>
+            <div v-if="loading" class="loading">불러오는 중...</div>
+            <div v-else-if="reports.length === 0" class="empty">
+              아직 등록된 제보가 없습니다.
+            </div>
+            <div v-else-if="filteredReports.length === 0" class="empty">
+              검색 결과가 없습니다.
+            </div>
+            <div v-else class="report-list-shell">
+              <TransitionGroup name="report-slide" tag="div" class="report-list">
+                <div v-for="report in paginatedReports" :key="report.report_id" class="report-item">
+                  <div class="report-main">
+                    <div class="report-meta">
+                      <span class="category-badge" :class="report.category.toLowerCase()">
+                        {{ categories.find(c => c.value === report.category)?.label }}
+                      </span>
+                      <p class="report-date">{{ new Date(report.created_at).toLocaleDateString() }}</p>
+                    </div>
+                    <div class="report-content-row">
+                      <h4 class="report-title">{{ report.title }}</h4>
+                      <div class="report-actions">
+                        <button class="btn-icon" @click="editReport(report)">✏️</button>
+                        <button class="btn-icon" @click="deleteReport(report.report_id)">🗑️</button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </TransitionGroup>
+            </div>
           </div>
-          <div class="form-group">
-            <label>제목</label>
-            <input v-model="form.title" type="text" placeholder="제목을 입력하세요" />
+
+          <div v-else key="report-form" class="form-section">
+            <h3>{{ editingReport ? '제보 수정' : '새 제보 등록' }}</h3>
+            <div class="form-group">
+              <label>분류</label>
+              <select v-model="form.category">
+                <option v-for="cat in categories" :key="cat.value" :value="cat.value">
+                  {{ cat.label }}
+                </option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>제목</label>
+              <input v-model="form.title" type="text" placeholder="제목을 입력하세요" />
+            </div>
+            <div class="form-group">
+              <label>내용</label>
+              <textarea v-model="form.content" rows="6" placeholder="상세 내용을 입력하세요"></textarea>
+            </div>
+            <div class="form-actions">
+              <button class="btn-secondary" @click="resetForm">취소</button>
+              <button class="btn-primary" @click="submitReport">
+                {{ editingReport ? '수정 완료' : '제출하기' }}
+              </button>
+            </div>
           </div>
-          <div class="form-group">
-            <label>내용</label>
-            <textarea v-model="form.content" rows="6" placeholder="상세 내용을 입력하세요"></textarea>
-          </div>
-          <div class="form-actions">
-            <button class="btn-secondary" @click="resetForm">취소</button>
-            <button class="btn-primary" @click="submitReport">
-              {{ editingReport ? '수정 완료' : '제출하기' }}
-            </button>
-          </div>
-        </div>
+        </Transition>
       </div>
     </div>
   </div>
@@ -181,7 +311,7 @@ onMounted(fetchMyReports);
 }
 
 .modal-header {
-  padding: 1.5rem 2rem;
+  padding: 1.2rem 1.4rem;
   border-bottom: 1px solid rgba(255, 255, 255, 0.05);
   display: flex;
   justify-content: space-between;
@@ -201,7 +331,7 @@ onMounted(fetchMyReports);
 }
 
 .modal-body {
-  padding: 2rem;
+  padding: 1.2rem 1.4rem 1.4rem;
   overflow-y: auto;
 }
 
@@ -209,25 +339,212 @@ onMounted(fetchMyReports);
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 1.5rem;
+  margin-bottom: 0.9rem;
 }
 
 .list-header h3 { color: #94a3b8; font-size: 1rem; }
+.pagination-panel-border {
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 10px;
+  padding: 0.95rem 1rem;
+  background: rgba(15, 23, 42, 0.58);
+  box-shadow: 0 20px 60px -22px rgba(15, 23, 42, 1);
+  margin-bottom: 0.95rem;
+}
+.slider-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+}
+.search-row {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  flex-wrap: wrap;
+}
+.search-box {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  background: rgba(15, 23, 42, 0.55);
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  border-radius: 10px;
+  padding: 0.6rem 0.9rem;
+}
+.search-box input {
+  width: 100%;
+  background: transparent;
+  border: none;
+  color: #e2e8f0;
+  outline: none;
+}
+.search-box input::placeholder { color: #64748b; }
+.search-icon {
+  color: #94a3b8;
+  font-size: 0.9rem;
+}
+.result-count {
+  color: #94a3b8;
+  font-size: 0.82rem;
+  white-space: nowrap;
+}
+.btn-search,
+.btn-reset-search {
+  border: none;
+  border-radius: 10px;
+  padding: 0.62rem 1rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+.btn-search {
+  background: #6366f1;
+  color: #fff;
+}
+.btn-reset-search {
+  background: rgba(255, 255, 255, 0.08);
+  color: #cbd5e1;
+}
+.slider-row {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  justify-content: space-between;
+}
+.summary-text,
+.range-text {
+  font-size: 0.85rem;
+  color: #cbd5f5;
+  font-weight: 500;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.page-slider-section {
+  flex: 1;
+  min-width: 0;
+}
+.slider-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  width: 100%;
+}
+.slider-wrapper.disabled {
+  pointer-events: none;
+  opacity: 0.6;
+}
+.slider-limit {
+  font-size: 0.75rem;
+  color: #64748b;
+  font-weight: 600;
+  min-width: 20px;
+  text-align: center;
+}
+.slider-track-container {
+  position: relative;
+  flex: 1;
+  height: 32px;
+  display: flex;
+  align-items: center;
+}
+.page-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
+  outline: none;
+  cursor: pointer;
+  z-index: 2;
+  position: relative;
+  touch-action: none;
+}
+.page-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  background: #6366f1;
+  border-radius: 50%;
+  cursor: pointer;
+  box-shadow: 0 0 15px rgba(99, 102, 241, 0.4);
+  border: 2px solid #fff;
+  transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+.page-slider:hover::-webkit-slider-thumb {
+  transform: scale(1.15);
+  box-shadow: 0 0 20px rgba(99, 102, 241, 0.6);
+}
+.slider-fill {
+  position: absolute;
+  height: 6px;
+  background: linear-gradient(90deg, #6366f1, #a855f7);
+  border-radius: 3px;
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
+  z-index: 1;
+}
+.slider-tooltip {
+  position: absolute;
+  top: -24px;
+  transform: translateX(-50%);
+  background: #6366f1;
+  color: white;
+  padding: 2px 8px;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 800;
+  pointer-events: none;
+  white-space: nowrap;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+.slider-tooltip::after {
+  content: '';
+  position: absolute;
+  bottom: -4px;
+  left: 50%;
+  transform: translateX(-50%);
+  border-left: 4px solid transparent;
+  border-right: 4px solid transparent;
+  border-top: 4px solid #6366f1;
+}
 
 .report-list {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: 0.65rem;
+}
+.report-list-shell {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
 }
 
 .report-item {
   background: rgba(255, 255, 255, 0.03);
   border: 1px solid rgba(255, 255, 255, 0.05);
   border-radius: 10px;
-  padding: 1rem;
+  padding: 0.75rem 0.9rem;
   display: flex;
   justify-content: space-between;
   align-items: center;
+}
+
+.report-main { width: 100%; }
+.report-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 0.15rem;
+}
+.report-content-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
 }
 
 .category-badge {
@@ -235,7 +552,6 @@ onMounted(fetchMyReports);
   padding: 0.2rem 0.5rem;
   border-radius: 4px;
   font-weight: 700;
-  margin-bottom: 0.3rem;
   display: inline-block;
 }
 
@@ -243,7 +559,7 @@ onMounted(fetchMyReports);
 .category-badge.improvement { background: rgba(34, 197, 94, 0.1); color: #4ade80; }
 .category-badge.complaint { background: rgba(244, 63, 94, 0.1); color: #fb7185; }
 
-.report-title { color: #f8fafc; font-weight: 600; margin-bottom: 0.2rem; }
+.report-title { color: #f8fafc; font-weight: 600; margin-bottom: 0; }
 .report-date { color: #64748b; font-size: 0.8rem; }
 
 .report-actions { display: flex; gap: 0.5rem; }
@@ -252,6 +568,27 @@ onMounted(fetchMyReports);
   opacity: 0.6; transition: opacity 0.2s;
 }
 .btn-icon:hover { opacity: 1; }
+
+.section-slide-enter-active,
+.section-slide-leave-active {
+  transition: opacity 0.22s ease, transform 0.22s ease;
+}
+.section-slide-enter-from,
+.section-slide-leave-to {
+  opacity: 0;
+  transform: translateX(18px);
+}
+
+.report-slide-enter-active,
+.report-slide-leave-active,
+.report-slide-move {
+  transition: opacity 0.22s ease, transform 0.22s ease;
+}
+.report-slide-enter-from,
+.report-slide-leave-to {
+  opacity: 0;
+  transform: translateY(10px);
+}
 
 .form-section h3 { color: #f8fafc; margin-bottom: 1.5rem; }
 
@@ -284,4 +621,31 @@ onMounted(fetchMyReports);
 }
 
 .loading, .empty { text-align: center; padding: 2rem; color: #64748b; }
+
+@media (max-width: 640px) {
+  .modal-card {
+    width: calc(100% - 1.2rem);
+  }
+
+  .list-header,
+  .search-row,
+  .slider-row,
+  .report-meta,
+  .report-content-row {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .search-box,
+  .page-slider-section {
+    width: 100%;
+  }
+
+  .report-actions,
+  .btn-reset-search,
+  .btn-search,
+  .range-text {
+    align-self: flex-end;
+  }
+}
 </style>
