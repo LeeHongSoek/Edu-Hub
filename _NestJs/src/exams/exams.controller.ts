@@ -1,4 +1,4 @@
-import { Controller, Get, UseGuards, Request, UnauthorizedException } from '@nestjs/common';
+import { Controller, Get, UseGuards, Request, UnauthorizedException, Param } from '@nestjs/common';
 import { ExamsService } from './exams.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 

@@ -27,6 +27,12 @@ let ExamsController = class ExamsController {
             throw new common_1.UnauthorizedException();
         return this.examsService.findAll(BigInt(userNoVal));
     }
+    async findOne(req, id) {
+        const userNoVal = req.user?.user_no || req.user?.userNo;
+        if (!userNoVal)
+            throw new common_1.UnauthorizedException();
+        return this.examsService.findById(BigInt(id), BigInt(userNoVal));
+    }
 };
 exports.ExamsController = ExamsController;
 __decorate([
@@ -36,6 +42,14 @@ __decorate([
     __metadata("design:paramtypes", [Object]),
     __metadata("design:returntype", Promise)
 ], ExamsController.prototype, "findAll", null);
+__decorate([
+    (0, common_1.Get)(':id'),
+    __param(0, (0, common_1.Request)()),
+    __param(1, (0, common_1.Param)('id')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String]),
+    __metadata("design:returntype", Promise)
+], ExamsController.prototype, "findOne", null);
 exports.ExamsController = ExamsController = __decorate([
     (0, common_1.Controller)('exams'),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),

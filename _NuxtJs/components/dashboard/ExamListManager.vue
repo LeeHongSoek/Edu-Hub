@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted, computed, watch } from 'vue';
+import { useRouter } from 'vue-router';
 
 const exams = ref<any[]>([]);
 const loading = ref(true);
@@ -33,6 +34,8 @@ const sliderPercentage = computed(() => {
   return ((sliderValue.value - 1) / (totalPages.value - 1)) * 100;
 });
 
+const isSliderDisabled = computed(() => totalPages.value <= 1);
+
 watch(() => filteredExams.value.length, () => {
   currentPage.value = 1;
   sliderValue.value = 1;
@@ -43,6 +46,14 @@ watch(currentPage, (page) => {
 });
 
 const { apiBase, token, getAuthHeader } = useApi();
+const router = useRouter();
+
+const viewExamDetails = (examId: number | string | bigint) => {
+  router.push({
+    path: '/questions',
+    query: { exam: String(examId) },
+  });
+};
 
 const fetchExams = async () => {
   try {
@@ -109,8 +120,8 @@ const clearExamSearch = () => {
           </div>
           <div class="slider-row">
             <span class="summary-text">총 {{ filteredExams.length }}개의 고사집</span>
-            <div v-if="totalPages > 1" class="page-slider-section">
-              <div class="slider-wrapper">
+            <div class="page-slider-section">
+              <div class="slider-wrapper" :class="{ disabled: isSliderDisabled }">
                 <span class="slider-limit">1</span>
                 <div class="slider-track-container">
                   <input
@@ -121,6 +132,7 @@ const clearExamSearch = () => {
                     class="page-slider"
                     @input="handleSliderInput"
                     @change="commitSliderValue"
+                    :disabled="isSliderDisabled"
                   />
                   <div class="slider-fill" :style="{ width: sliderPercentage + '%' }"></div>
                   <div class="slider-tooltip" :style="{ left: sliderPercentage + '%' }">
@@ -142,7 +154,7 @@ const clearExamSearch = () => {
           </div>
           <div class="exam-meta">
             <span class="exam-period">{{ new Date(exam.start_time).toLocaleDateString('ko-KR') }} ~ {{ new Date(exam.end_time).toLocaleDateString('ko-KR') }}</span>
-            <button class="btn-start" disabled>상세보기</button>
+            <button class="btn-start" @click="viewExamDetails(exam.exam_id)">상세보기</button>
           </div>
         </div>
       </div>
@@ -294,6 +306,15 @@ const clearExamSearch = () => {
   gap: 0.85rem;
   width: 100%;
   max-width: none;
+}
+
+.slider-wrapper.disabled {
+  pointer-events: none;
+  opacity: 0.6;
+}
+
+.slider-wrapper.disabled .page-slider {
+  cursor: not-allowed;
 }
 
 .slider-limit {

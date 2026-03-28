@@ -3,6 +3,7 @@ type FindAllParams = {
     creatorNo?: bigint;
     groupId?: bigint;
     bookId?: bigint;
+    examId?: bigint;
     searchField?: 'title' | 'content';
     searchKeyword?: string;
     page?: number;
@@ -11,7 +12,7 @@ type FindAllParams = {
 export declare class QuestionsService {
     private prisma;
     constructor(prisma: PrismaService);
-    findAll({ creatorNo, groupId, bookId, searchField, searchKeyword, page, limit }: FindAllParams): Promise<{
+    findAll({ creatorNo, groupId, bookId, examId, searchField, searchKeyword, page, limit }: FindAllParams): Promise<{
         items: ({
             group: ({
                 parent_group: ({

@@ -17,7 +17,7 @@ let QuestionsService = class QuestionsService {
     constructor(prisma) {
         this.prisma = prisma;
     }
-    async findAll({ creatorNo, groupId, bookId, searchField, searchKeyword, page = 1, limit = 10 }) {
+    async findAll({ creatorNo, groupId, bookId, examId, searchField, searchKeyword, page = 1, limit = 10 }) {
         const where = {};
         if (creatorNo !== undefined)
             where.creator_no = creatorNo;
@@ -30,13 +30,25 @@ let QuestionsService = class QuestionsService {
         const safePage = Number.isFinite(page) && page > 0 ? Math.floor(page) : 1;
         const safeLimit = Number.isFinite(limit) && limit > 0 ? Math.min(Math.floor(limit), 100) : 10;
         const skip = (safePage - 1) * safeLimit;
+        let questionIds = null;
+        if (examId !== undefined) {
+            const examItems = await this.prisma.examQuestion.findMany({
+                where: { exam_id: examId },
+                select: { question_id: true },
+            });
+            const ids = examItems.map((item) => item.question_id);
+            questionIds = mergeIds(questionIds, ids);
+        }
         if (bookId !== undefined) {
             const questionItems = await this.prisma.userQuestionBookItem.findMany({
                 where: { book_id: bookId },
                 select: { question_id: true },
             });
             const ids = questionItems.map((item) => item.question_id);
-            if (ids.length === 0) {
+            questionIds = mergeIds(questionIds, ids);
+        }
+        if (questionIds !== null) {
+            if (questionIds.length === 0) {
                 return {
                     items: [],
                     total: 0,
@@ -45,7 +57,13 @@ let QuestionsService = class QuestionsService {
                     totalPages: 1,
                 };
             }
-            where.question_id = { in: ids };
+            where.question_id = { in: questionIds };
+        }
+        function mergeIds(existing, next) {
+            if (!existing)
+                return next;
+            const set = new Set(existing);
+            return next.filter((id) => set.has(id));
         }
         if (searchKeyword) {
             where.AND = [

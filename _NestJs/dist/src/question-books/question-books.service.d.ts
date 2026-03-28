@@ -30,8 +30,8 @@ export declare class QuestionBooksService {
                 created_at: Date | null;
             };
         } & {
-            book_id: bigint;
             question_id: bigint;
+            book_id: bigint;
         })[];
     } & {
         description: string | null;
@@ -61,8 +61,8 @@ export declare class QuestionBooksService {
                 created_at: Date | null;
             };
         } & {
-            book_id: bigint;
             question_id: bigint;
+            book_id: bigint;
         })[];
     } & {
         description: string | null;
@@ -86,11 +86,11 @@ export declare class QuestionBooksService {
         book_name: string;
     }>;
     addItem(bookId: bigint, userNo: bigint, questionId: bigint): Promise<{
-        book_id: bigint;
         question_id: bigint;
+        book_id: bigint;
     }>;
     removeItem(bookId: bigint, userNo: bigint, questionId: bigint): Promise<{
-        book_id: bigint;
         question_id: bigint;
+        book_id: bigint;
     }>;
 }

@@ -32,32 +32,28 @@ export class QuestionsService {
     const safeLimit = Number.isFinite(limit) && limit > 0 ? Math.min(Math.floor(limit), 100) : 10;
     const skip = (safePage - 1) * safeLimit;
 
+    let questionIds: bigint[] | null = null;
+
     if (examId !== undefined) {
       const examItems = await this.prisma.examQuestion.findMany({
         where: { exam_id: examId },
         select: { question_id: true },
       });
-
       const ids = examItems.map((item) => item.question_id);
-      if (ids.length === 0) {
-        return {
-          items: [],
-          total: 0,
-          page: safePage,
-          limit: safeLimit,
-          totalPages: 1,
-        };
-      }
+      questionIds = mergeIds(questionIds, ids);
+    }
 
-      where.question_id = { in: ids };
-    } else if (bookId !== undefined) {
+    if (bookId !== undefined) {
       const questionItems = await this.prisma.userQuestionBookItem.findMany({
         where: { book_id: bookId },
         select: { question_id: true },
       });
-
       const ids = questionItems.map((item) => item.question_id);
-      if (ids.length === 0) {
+      questionIds = mergeIds(questionIds, ids);
+    }
+
+    if (questionIds !== null) {
+      if (questionIds.length === 0) {
         return {
           items: [],
           total: 0,
@@ -66,8 +62,13 @@ export class QuestionsService {
           totalPages: 1,
         };
       }
+      where.question_id = { in: questionIds };
+    }
 
-      where.question_id = { in: ids };
+    function mergeIds(existing: bigint[] | null, next: bigint[]): bigint[] {
+      if (!existing) return next;
+      const set = new Set(existing);
+      return next.filter((id) => set.has(id));
     }
 
     if (searchKeyword) {

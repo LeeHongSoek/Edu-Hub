@@ -2,7 +2,7 @@ import { QuestionsService } from './questions.service';
 export declare class QuestionsController {
     private readonly questionsService;
     constructor(questionsService: QuestionsService);
-    findAll(creatorNo?: string, groupId?: string, searchField?: string, searchKeyword?: string, page?: number, limit?: number, bookId?: string): Promise<{
+    findAll(creatorNo?: string, groupId?: string, searchField?: string, searchKeyword?: string, page?: number, limit?: number, bookId?: string, examId?: string): Promise<{
         items: ({
             group: ({
                 parent_group: ({

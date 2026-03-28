@@ -28,6 +28,28 @@ let ExamsService = class ExamsService {
             orderBy: { created_at: 'desc' },
         });
     }
+    async findById(examId, userNo) {
+        const exam = await this.prisma.exam.findUnique({
+            where: { exam_id: examId },
+            include: {
+                creator: { select: { username: true } },
+                class: true,
+                questions: {
+                    include: {
+                        question: true,
+                    },
+                    orderBy: {
+                        question_order: 'asc',
+                    },
+                },
+            },
+        });
+        if (!exam)
+            throw new common_1.NotFoundException('Exam not found');
+        if (userNo !== undefined && exam.creator_no !== userNo)
+            throw new common_1.ForbiddenException('Not authorized');
+        return exam;
+    }
 };
 exports.ExamsService = ExamsService;
 exports.ExamsService = ExamsService = __decorate([

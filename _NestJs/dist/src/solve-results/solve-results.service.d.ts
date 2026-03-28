@@ -3,10 +3,10 @@ export declare class SolveResultsService {
     private prisma;
     constructor(prisma: PrismaService);
     create(userNo: bigint, questionId: bigint, correctAnswer: string, submittedAnswer: string, isCorrect: number, timeTaken: number): Promise<{
+        exam_id: bigint | null;
         question_id: bigint;
         user_no: bigint;
         result_id: bigint;
-        exam_id: bigint | null;
         correct_answer: string;
         submitted_answer: string | null;
         is_correct: number;
@@ -33,10 +33,10 @@ export declare class SolveResultsService {
             created_at: Date | null;
         };
     } & {
+        exam_id: bigint | null;
         question_id: bigint;
         user_no: bigint;
         result_id: bigint;
-        exam_id: bigint | null;
         correct_answer: string;
         submitted_answer: string | null;
         is_correct: number;
@@ -55,10 +55,10 @@ export declare class SolveResultsService {
             is_withdrawn: import("@prisma/client").$Enums.IsWithdrawn | null;
         };
     } & {
+        exam_id: bigint | null;
         question_id: bigint;
         user_no: bigint;
         result_id: bigint;
-        exam_id: bigint | null;
         correct_answer: string;
         submitted_answer: string | null;
         is_correct: number;
@@ -95,10 +95,10 @@ export declare class SolveResultsService {
             created_at: Date | null;
         };
     } & {
+        exam_id: bigint | null;
         question_id: bigint;
         user_no: bigint;
         result_id: bigint;
-        exam_id: bigint | null;
         correct_answer: string;
         submitted_answer: string | null;
         is_correct: number;

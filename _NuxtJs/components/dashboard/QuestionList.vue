@@ -49,6 +49,8 @@ const sliderPercentage = computed(() => {
   return ((sliderValue.value - 1) / (props.totalPages - 1)) * 100;
 });
 
+const isSliderDisabled = computed(() => props.totalPages <= 1);
+
 const emit = defineEmits<{
   (e: 'refresh'): void;
   (e: 'change-group', groupId: string | number | null): void;
@@ -225,7 +227,7 @@ watch(() => props.appliedSearchKeyword, (value) => {
           <div class="slider-row">
             <span class="summary-text">총 {{ props.totalItems }}문제</span>
             <div class="page-slider-section">
-              <div class="slider-wrapper">
+              <div class="slider-wrapper" :class="{ disabled: isSliderDisabled }">
                 <span class="slider-limit">1</span>
                 <div class="slider-track-container">
                   <input
@@ -236,6 +238,7 @@ watch(() => props.appliedSearchKeyword, (value) => {
                     class="page-slider"
                     @input="handleSliderInput"
                     @change="commitSliderValue"
+                    :disabled="isSliderDisabled"
                   />
                   <div class="slider-fill" :style="{ width: sliderPercentage + '%' }"></div>
                   <div class="slider-tooltip" :style="{ left: sliderPercentage + '%' }">
@@ -543,6 +546,15 @@ watch(() => props.appliedSearchKeyword, (value) => {
   gap: 0.85rem;
   width: 100%;
   max-width: none;
+}
+
+.slider-wrapper.disabled {
+  pointer-events: none;
+  opacity: 0.6;
+}
+
+.slider-wrapper.disabled .page-slider {
+  cursor: not-allowed;
 }
 
 .slider-limit {

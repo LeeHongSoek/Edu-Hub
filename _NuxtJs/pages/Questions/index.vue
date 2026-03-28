@@ -27,6 +27,13 @@ const activeBookId = computed<number | undefined>(() => {
 });
 
 const activeBookDetail = ref<any | null>(null);
+const activeExamId = computed<number | undefined>(() => {
+  const raw = route.query.exam;
+  if (!raw) return undefined;
+  const numeric = Number(raw);
+  return Number.isNaN(numeric) ? undefined : numeric;
+});
+const activeExamDetail = ref<any | null>(null);
 
 const requestBody = computed(() => {
   const body: Record<string, string | number> = {};
@@ -44,6 +51,10 @@ const requestBody = computed(() => {
     body.search_keyword = appliedSearchKeyword.value;
   }
 
+  if (activeExamId.value !== undefined) {
+    body.exam_id = activeExamId.value;
+  }
+
   if (activeBookId.value !== undefined) {
     body.book_id = activeBookId.value;
   }
@@ -54,7 +65,11 @@ const requestBody = computed(() => {
   return body;
 });
 
-const activeBookDisplayName = computed(() => activeBookDetail.value?.book_name || '');
+const activeSourceLabel = computed(() => {
+  if (activeExamDetail.value?.exam_name) return `고사집: ${activeExamDetail.value.exam_name}`;
+  if (activeBookDetail.value?.book_name) return `문제집: ${activeBookDetail.value.book_name}`;
+  return '';
+});
 
 const loadActiveBookDetail = async (bookId?: number) => {
   if (!bookId) {
@@ -74,6 +89,27 @@ const loadActiveBookDetail = async (bookId?: number) => {
   } catch (err) {
     console.error('문제집 상세 조회 실패:', err);
     activeBookDetail.value = null;
+  }
+};
+
+const loadActiveExamDetail = async (examId?: number) => {
+  if (!examId) {
+    activeExamDetail.value = null;
+    return;
+  }
+
+  if (!token.value) {
+    activeExamDetail.value = null;
+    return;
+  }
+
+  try {
+    activeExamDetail.value = await $fetch(`${apiBase.value}/exams/${examId}`, {
+      headers: getAuthHeader(),
+    });
+  } catch (err) {
+    console.error('고사집 상세 조회 실패:', err);
+    activeExamDetail.value = null;
   }
 };
 
@@ -107,7 +143,21 @@ watch(
   () => route.query.book,
   () => {
     currentPage.value = 1;
-    loadActiveBookDetail(activeBookId.value);
+    if (activeExamId.value === undefined) {
+      loadActiveBookDetail(activeBookId.value);
+    } else {
+      activeBookDetail.value = null;
+    }
+  },
+  { immediate: true }
+);
+
+watch(
+  () => route.query.exam,
+  () => {
+    currentPage.value = 1;
+    activeBookDetail.value = null;
+    loadActiveExamDetail(activeExamId.value);
   },
   { immediate: true }
 );
@@ -140,7 +190,7 @@ const handlePageChange = (page: number) => {
     <div class="page-header">
       <div class="title-wrapper">
         <h1 class="page-title">나의 문제목록</h1>
-        <span v-if="activeBookDisplayName" class="page-subtitle">문제집: {{ activeBookDisplayName }}</span>
+        <span v-if="activeSourceLabel" class="page-subtitle">{{ activeSourceLabel }}</span>
       </div>
       <NuxtLink to="/dashboard" class="back-btn">← 대시보드</NuxtLink>
     </div>

@@ -9,10 +9,10 @@ export declare class SolveResultsController {
         is_correct: number;
         time_taken: number;
     }): Promise<{
+        exam_id: bigint | null;
         question_id: bigint;
         user_no: bigint;
         result_id: bigint;
-        exam_id: bigint | null;
         correct_answer: string;
         submitted_answer: string | null;
         is_correct: number;
@@ -39,10 +39,10 @@ export declare class SolveResultsController {
             created_at: Date | null;
         };
     } & {
+        exam_id: bigint | null;
         question_id: bigint;
         user_no: bigint;
         result_id: bigint;
-        exam_id: bigint | null;
         correct_answer: string;
         submitted_answer: string | null;
         is_correct: number;
@@ -61,10 +61,10 @@ export declare class SolveResultsController {
             is_withdrawn: import("@prisma/client").$Enums.IsWithdrawn | null;
         };
     } & {
+        exam_id: bigint | null;
         question_id: bigint;
         user_no: bigint;
         result_id: bigint;
-        exam_id: bigint | null;
         correct_answer: string;
         submitted_answer: string | null;
         is_correct: number;
@@ -91,10 +91,10 @@ export declare class SolveResultsController {
             created_at: Date | null;
         };
     } & {
+        exam_id: bigint | null;
         question_id: bigint;
         user_no: bigint;
         result_id: bigint;
-        exam_id: bigint | null;
         correct_answer: string;
         submitted_answer: string | null;
         is_correct: number;

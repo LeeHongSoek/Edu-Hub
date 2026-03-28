@@ -30,8 +30,8 @@ export declare class QuestionBooksController {
                 created_at: Date | null;
             };
         } & {
-            book_id: bigint;
             question_id: bigint;
+            book_id: bigint;
         })[];
     } & {
         description: string | null;
@@ -61,8 +61,8 @@ export declare class QuestionBooksController {
                 created_at: Date | null;
             };
         } & {
-            book_id: bigint;
             question_id: bigint;
+            book_id: bigint;
         })[];
     } & {
         description: string | null;
@@ -86,11 +86,11 @@ export declare class QuestionBooksController {
         book_name: string;
     }>;
     addItem(req: any, id: string, questionId: string): Promise<{
-        book_id: bigint;
         question_id: bigint;
+        book_id: bigint;
     }>;
     removeItem(req: any, id: string, qId: string): Promise<{
-        book_id: bigint;
         question_id: bigint;
+        book_id: bigint;
     }>;
 }
