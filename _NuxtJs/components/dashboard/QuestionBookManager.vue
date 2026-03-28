@@ -327,7 +327,7 @@ onMounted(fetchBooks);
 .search-input {
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid rgba(255, 255, 255, 0.15);
-  border-radius: 10px;
+  border-radius: 5px;
   color: #fff;
   padding: 0 0.7rem;
   font-size: 0.9rem;

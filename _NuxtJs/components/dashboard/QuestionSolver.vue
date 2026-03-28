@@ -745,7 +745,7 @@ const submitReview = async () => {
   padding: 1rem 1.5rem;
   background: rgba(255, 255, 255, 0.05);
   border: 2px solid rgba(255, 255, 255, 0.1);
-  border-radius: 10px;
+  border-radius: 5px;
   color: #fff;
   font-size: 1.1rem;
   outline: none;

@@ -334,7 +334,7 @@ watch(() => props.appliedSearchKeyword, (value) => {
 .search-input {
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid rgba(255, 255, 255, 0.15);
-  border-radius: 10px;
+  border-radius: 5px;
   color: #fff;
   padding: 0 1rem;
   font-size: 0.7rem;
@@ -663,7 +663,7 @@ watch(() => props.appliedSearchKeyword, (value) => {
 .search-input {
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid rgba(255, 255, 255, 0.15);
-  border-radius: 10px;
+  border-radius: 5px;
   color: #fff;
   padding: 0.45rem 0.7rem;
   font-size: 0.9rem;
