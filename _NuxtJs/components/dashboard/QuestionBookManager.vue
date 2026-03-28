@@ -329,7 +329,7 @@ onMounted(fetchBooks);
   border: 1px solid rgba(255, 255, 255, 0.15);
   border-radius: 10px;
   color: #fff;
-  padding: 0 0.95rem;
+  padding: 0 0.7rem;
   font-size: 0.9rem;
   height: 2.3rem;
   display: flex;

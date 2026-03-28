@@ -223,7 +223,7 @@ const clearExamSearch = () => {
   border: 1px solid rgba(255, 255, 255, 0.15);
   border-radius: 10px;
   color: #fff;
-  padding: 0.45rem 0.75rem;
+  padding: 0.45rem 0.7rem;
   font-size: 0.9rem;
 }
 

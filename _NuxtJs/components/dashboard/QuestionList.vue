@@ -337,7 +337,7 @@ watch(() => props.appliedSearchKeyword, (value) => {
   border-radius: 10px;
   color: #fff;
   padding: 0 1rem;
-  font-size: 0.9rem;
+  font-size: 0.7rem;
   height: 2.75rem;
   line-height: 2.75rem;
   display: flex;
@@ -665,7 +665,7 @@ watch(() => props.appliedSearchKeyword, (value) => {
   border: 1px solid rgba(255, 255, 255, 0.15);
   border-radius: 10px;
   color: #fff;
-  padding: 0.45rem 0.75rem;
+  padding: 0.45rem 0.7rem;
   font-size: 0.9rem;
 }
 
