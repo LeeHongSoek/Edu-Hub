@@ -405,7 +405,7 @@ onMounted(() => {
               <span class="dict-sep">-</span>
               <span class="dict-word accent">문풀</span>
               <span class="dict-sep dict-sep--ipa">ː</span>
-              <span class="dict-word">리언스</span>
+              <span class="dict-word">쿠스</span>
             </div>
             <div class="dict-meta">
               <span class="dict-pron">[ho·mo mun·pul·li·eon·seu]</span>

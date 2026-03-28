@@ -53,7 +53,15 @@ async function bootstrap() {
     const app = await core_1.NestFactory.create(app_module_1.AppModule, {
         bodyParser: true,
     });
+    const expressApp = app.getHttpAdapter().getInstance();
     app.enableCors();
+    expressApp.set('trust proxy', 1);
+    app.use((req, res, next) => {
+        if (req.method === 'GET' && req.path === '/') {
+            return res.redirect(302, 'http://localhost:3000');
+        }
+        next();
+    });
     app.setGlobalPrefix('api');
     const prisma = app.get(prisma_service_1.PrismaService);
     const [{ default: AdminJS, ComponentLoader }, AdminJSExpress, AdminJSPrisma] = await Promise.all([
@@ -68,8 +76,8 @@ async function bootstrap() {
     const resourceNames = client_1.Prisma.dmmf.datamodel.models
         .map((model) => model.name)
         .filter((name) => !['ClassStudent', 'QuestionTag', 'ExamQuestion', 'UserQuestionBookItem'].includes(name));
-    const adminEmail = process.env.ADMINJS_EMAIL || 'admin@edu-hub.com';
-    const adminPassword = process.env.ADMINJS_PASSWORD || 'admin1234';
+    const adminEmail = process.env.ADMINJS_EMAIL || 'lhs0806@gmail.com';
+    const adminPassword = process.env.ADMINJS_PASSWORD || 'Leehs1181!';
     const adminCookieSecret = process.env.ADMINJS_COOKIE_SECRET || 'edu-hub-admin-cookie-secret-change-me';
     const componentLoader = new ComponentLoader();
     const sqlConsoleComponent = componentLoader.add('SqlConsolePage', (0, path_1.resolve)(process.cwd(), 'src', 'adminjs', 'sql-console-page.jsx'));
@@ -157,19 +165,52 @@ async function bootstrap() {
             console.error('AdminJS component watch failed:', error);
         });
     }
+    app.use('/api/admin', (req, res, next) => {
+        const originalEnd = res.end;
+        res.end = function (chunk, ...args) {
+            const setCookie = res.getHeader('set-cookie');
+            const location = res.getHeader('location');
+            console.log('[AdminJS] response', {
+                method: req.method,
+                url: req.originalUrl,
+                host: req.headers.host,
+                origin: req.headers.origin,
+                referer: req.headers.referer,
+                forwardedProto: req.headers['x-forwarded-proto'],
+                forwardedHost: req.headers['x-forwarded-host'],
+                cookie: req.headers.cookie,
+                statusCode: res.statusCode,
+                location,
+                setCookie,
+            });
+            return originalEnd.apply(res, [chunk, ...args]);
+        };
+        next();
+    });
     const adminRouter = AdminJSExpress.buildAuthenticatedRouter(admin, {
         authenticate: async (email, password) => {
             if (email === adminEmail && password === adminPassword) {
+                console.log('[AdminJS] login success', { email });
                 return { email };
             }
+            console.warn('[AdminJS] login failed', { email });
             return null;
         },
         cookieName: 'edu-hub-admin',
         cookiePassword: adminCookieSecret,
     }, null, {
         secret: adminCookieSecret,
+        proxy: true,
+        name: 'edu-hub-admin-session',
+        rolling: true,
         resave: false,
-        saveUninitialized: false,
+        saveUninitialized: true,
+        cookie: {
+            httpOnly: true,
+            sameSite: 'lax',
+            secure: false,
+            maxAge: 1000 * 60 * 60 * 8,
+        },
     });
     app.use('/admin', (req, res) => {
         const suffix = req.originalUrl.replace(/^\/admin/, '') || '';

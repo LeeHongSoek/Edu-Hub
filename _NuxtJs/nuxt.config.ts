@@ -41,9 +41,6 @@ export default defineNuxtConfig({
     }
   },
   ssr: false,
-  routeRules: {
-    '/api/**': { proxy: 'http://localhost:4000/api/**' }
-  },
   hooks: {
 
     'nitro:init': (nitro) => {
