@@ -311,7 +311,7 @@ onMounted(fetchMyReports);
 }
 
 .modal-header {
-  padding: 1.2rem 1.4rem;
+  padding: 0.5rem 1.4rem;
   border-bottom: 1px solid rgba(255, 255, 255, 0.05);
   display: flex;
   justify-content: space-between;
