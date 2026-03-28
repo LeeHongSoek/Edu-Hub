@@ -194,56 +194,61 @@ watch(() => props.appliedSearchKeyword, (value) => {
     />
 
     <div class="question-list">
-      <div class="search-bar">
-        <select v-model="searchField" class="search-select">
-          <option value="title">문제제목</option>
-          <option value="content">문제내용</option>
-        </select>
-        <input
-          v-model="searchInput"
-          type="text"
-          class="search-input"
-          :placeholder="searchField === 'title' ? '문제 제목을 입력하세요' : '문제 내용을 입력하세요'"
-          @keyup.enter="applySearch"
-        />
-        <button class="btn-search" @click="applySearch">검색</button>
-        <button
-          v-if="props.appliedSearchKeyword || searchInput"
-          class="btn-reset-search"
-          @click="resetSearch"
-        >
-          초기화
-        </button>
+    <div v-if="props.questions.length === 0" class="no-results">
+      {{ props.appliedSearchKeyword ? '검색 조건에 맞는 문제가 없습니다.' : '해당 조건에 등록된 문제가 없습니다.' }}
+    </div>
+    <div v-else>
+      <div class="slider-panel-border">
+        <div class="slider-panel">
+          <div class="search-row">
+            <select v-model="searchField" class="search-select">
+              <option value="title">문제제목</option>
+              <option value="content">문제내용</option>
+            </select>
+            <input
+              v-model="searchInput"
+              type="text"
+              class="search-input"
+              :placeholder="searchField === 'title' ? '문제 제목을 입력하세요' : '문제 내용을 입력하세요'"
+              @keyup.enter="applySearch"
+            />
+            <button class="btn-search" @click="applySearch">검색</button>
+            <button
+              v-if="props.appliedSearchKeyword || searchInput"
+              class="btn-reset-search"
+              @click="resetSearch"
+            >
+              초기화
+            </button>
+          </div>
+          <div class="slider-row">
+            <span class="summary-text">총 {{ props.totalItems }}문제</span>
+            <div class="page-slider-section">
+              <div class="slider-wrapper">
+                <span class="slider-limit">1</span>
+                <div class="slider-track-container">
+                  <input
+                    type="range"
+                    :min="1"
+                    :max="props.totalPages"
+                    :value="sliderValue"
+                    class="page-slider"
+                    @input="handleSliderInput"
+                    @change="commitSliderValue"
+                  />
+                  <div class="slider-fill" :style="{ width: sliderPercentage + '%' }"></div>
+                  <div class="slider-tooltip" :style="{ left: sliderPercentage + '%' }">
+                    {{ sliderValue }}
+                  </div>
+                </div>
+                <span class="slider-limit">{{ props.totalPages }}</span>
+              </div>
+            </div>
+            <span class="range-text">{{ pageStartItem }}-{{ pageEndItem }}번째 문제 표시 중</span>
+          </div>
+        </div>
       </div>
-
-      <div v-if="props.questions.length === 0" class="no-results">
-        {{ props.appliedSearchKeyword ? '검색 조건에 맞는 문제가 없습니다.' : '해당 조건에 등록된 문제가 없습니다.' }}
-      </div>
-      <div v-else class="pagination-summary">
-        <span>총 {{ props.totalItems }}문제</span>
-         <div v-if="props.totalPages > 1" class="page-slider-container">
-           <div class="slider-wrapper">
-             <span class="slider-limit">1</span>
-             <div class="slider-track-container">
-               <input
-                 type="range"
-                 :min="1"
-                 :max="props.totalPages"
-                 :value="sliderValue"
-                 class="page-slider"
-                 @input="handleSliderInput"
-                 @change="commitSliderValue"
-               />
-               <div class="slider-fill" :style="{ width: sliderPercentage + '%' }"></div>
-               <div class="slider-tooltip" :style="{ left: sliderPercentage + '%' }">
-                 {{ sliderValue }}
-               </div>
-             </div>
-             <span class="slider-limit">{{ props.totalPages }}</span>
-           </div>
-         </div>
-        <span>{{ pageStartItem }}-{{ pageEndItem }}번째 문제 표시 중</span>
-      </div>
+    </div>
      
 
       <div v-for="q in props.questions" :key="q.question_id" class="question-item">
@@ -528,20 +533,12 @@ watch(() => props.appliedSearchKeyword, (value) => {
   transform: translateY(-2px);
 }
 
-.page-slider-container {
-  flex: 1;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  padding: 0 1rem;
-}
-
 .slider-wrapper {
   display: flex;
   align-items: center;
-  gap: 1rem;
+  gap: 0.85rem;
   width: 100%;
-  max-width: 400px;
+  max-width: none;
 }
 
 .slider-limit {
@@ -618,6 +615,97 @@ watch(() => props.appliedSearchKeyword, (value) => {
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
 }
 
+.slider-panel-border {
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 16px;
+  padding: 1rem 1.25rem;
+  background: rgba(15, 23, 42, 0.65);
+  box-shadow: 0 20px 60px -22px rgba(15, 23, 42, 1);
+  margin-bottom: 1.5rem;
+}
+
+.slider-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.search-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.search-select,
+.search-input {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 12px;
+  color: #fff;
+  padding: 0.45rem 0.75rem;
+  font-size: 0.9rem;
+}
+
+.search-select {
+  min-width: 130px;
+  height: 38px;
+}
+
+.search-input {
+  flex: 1;
+  min-width: 200px;
+  height: 38px;
+}
+
+.btn-search,
+.btn-reset-search {
+  border-radius: 10px;
+  padding: 0.5rem 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.2s;
+  height: 38px;
+}
+
+.btn-search {
+  background: #6366f1;
+  color: white;
+}
+
+.btn-search:hover {
+  background: #4f46e5;
+  transform: translateY(-1px);
+}
+
+.btn-reset-search {
+  background: rgba(255, 255, 255, 0.08);
+  color: #e2e8f0;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.slider-row {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  justify-content: space-between;
+  flex-wrap: nowrap;
+}
+
+.summary-text,
+.range-text {
+  font-size: 0.9rem;
+  color: #cbd5f5;
+  font-weight: 500;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.page-slider-section {
+  flex: 1;
+  min-width: 0;
+}
+
 .slider-tooltip::after {
   content: '';
   position: absolute;
@@ -631,7 +719,7 @@ watch(() => props.appliedSearchKeyword, (value) => {
 
 
 @media (max-width: 640px) {
-  .search-bar {
+  .search-row {
     flex-direction: column;
     align-items: stretch;
   }
@@ -643,9 +731,15 @@ watch(() => props.appliedSearchKeyword, (value) => {
     width: 100%;
   }
 
-  .pagination-summary {
+  .slider-row {
     flex-direction: column;
     align-items: flex-start;
+    gap: 0.75rem;
+  }
+
+  .slider-row .summary-text,
+  .slider-row .range-text {
+    width: 100%;
   }
 
   .question-item {

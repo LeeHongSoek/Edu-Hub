@@ -43,9 +43,9 @@ onMounted(fetchStats);
     <div class="quick-actions">
       <h3>🚀 빠른 실행</h3>
       <div class="action-buttons">
-        <button @click="navigateTo('/Questions')">새 문제 만들기</button>
-        <button @click="navigateTo('/Questions')">과제 출제하기</button>
-        <button @click="navigateTo('/Dashboard')">학생 전체 리포트</button>
+        <button @click="navigateTo('/questions')">새 문제 만들기</button>
+        <button @click="navigateTo('/questions')">과제 출제하기</button>
+        <button @click="navigateTo('/dashboard')">학생 전체 리포트</button>
       </div>
     </div>
   </div>

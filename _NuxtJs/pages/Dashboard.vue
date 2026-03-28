@@ -43,9 +43,9 @@ onMounted(() => {
           <span class="username">{{ userInfo.username }}</span>님!
           <!-- 대시보드 내 네비게이션 버튼 (타이틀 바로 뒤) -->
           <div v-if="userInfo.role_id !== 'P'" class="quick-nav">
-            <NuxtLink to="/Questions?mine=true" class="nav-btn">나의 문제목록</NuxtLink>
-            <NuxtLink to="/QuestionBooks" class="nav-btn">나의 문제집목록</NuxtLink>
-            <NuxtLink to="/Exams" class="nav-btn">나의 고사집목록</NuxtLink>
+            <NuxtLink to="/questions?mine=true" class="nav-btn">나의 문제목록</NuxtLink>
+            <NuxtLink to="/question-books" class="nav-btn">나의 문제집목록</NuxtLink>
+            <NuxtLink to="/exams" class="nav-btn">나의 고사집목록</NuxtLink>
           </div>
         </h1>
         <p class="welcome-sub">오늘도 지식을 완성하는 하루 되세요.</p>

@@ -232,12 +232,6 @@ async function bootstrap() {
                     (0, fs_1.appendFileSync)(logPath, logHeader + logReqData + logResData);
                 }
                 catch { }
-                console.log(`\n[API통신_헤더] <${logEntry.method}> ${url} (${logEntry.statusCode}) - ${logEntry.duration}`);
-                if (hasRequest) {
-                    console.log(`[API통신_데이터_요청]\n${JSON.stringify(logEntry.payload.request, null, tabSize)}`);
-                }
-                console.log(`[API통신_데이터_응답]\n${JSON.stringify(logEntry.payload.response, null, tabSize)}`);
-                console.log('-'.repeat(60));
             });
             next();
         });

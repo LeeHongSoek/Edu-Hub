@@ -6,10 +6,24 @@ const loading = ref(true);
 const itemsPerPage = 6;
 const currentPage = ref(1);
 const sliderValue = ref(1);
-const totalPages = computed(() => Math.max(1, Math.ceil(books.value.length / itemsPerPage)));
+const searchField = ref<'name' | 'description'>('name');
+const searchInput = ref('');
+const searchQuery = ref('');
+const filteredBooks = computed(() => {
+  const keyword = searchQuery.value.trim().toLowerCase();
+  if (!keyword) return books.value;
+  return books.value.filter((book) => {
+    const target = searchField.value === 'description'
+      ? (book.description || '')
+      : book.book_name;
+    return target?.toLowerCase().includes(keyword);
+  });
+});
+
+const totalPages = computed(() => Math.max(1, Math.ceil(filteredBooks.value.length / itemsPerPage)));
 const pagedBooks = computed(() => {
   const start = (currentPage.value - 1) * itemsPerPage;
-  return books.value.slice(start, start + itemsPerPage);
+  return filteredBooks.value.slice(start, start + itemsPerPage);
 });
 const pageStartItem = computed(() => {
   if (books.value.length === 0) return 0;
@@ -21,7 +35,7 @@ const sliderPercentage = computed(() => {
   return ((sliderValue.value - 1) / (totalPages.value - 1)) * 100;
 });
 
-watch(() => books.value.length, () => {
+watch(() => filteredBooks.value.length, () => {
   currentPage.value = 1;
   sliderValue.value = 1;
 });
@@ -29,6 +43,17 @@ watch(() => books.value.length, () => {
 watch(currentPage, (page) => {
   sliderValue.value = page;
 });
+
+const applySearch = () => {
+  searchQuery.value = searchInput.value.trim();
+  currentPage.value = 1;
+};
+
+const clearSearch = () => {
+  searchInput.value = '';
+  searchQuery.value = '';
+  currentPage.value = 1;
+};
 const handleSliderInput = (e: Event) => {
   sliderValue.value = Number((e.target as HTMLInputElement).value);
 };
@@ -95,36 +120,46 @@ onMounted(fetchBooks);
     <div v-else-if="books.length === 0" class="empty">생성된 문제집이 없습니다.</div>
     <div v-else>
       <div class="pagination-panel-border">
-        <div class="pagination-panel">
-          <div class="pagination-summary">
-            <span>총 {{ books.length }}개의 문제집</span>
-            <span>{{ pageStartItem }}-{{ pageEndItem }}번째 항목 표시 중</span>
+        <div class="slider-panel">
+          <div class="search-row">
+            <select v-model="searchField" class="search-select">
+              <option value="name">문제집명</option>
+              <option value="description">설명</option>
+            </select>
+            <input
+              v-model="searchInput"
+              type="text"
+              class="search-input"
+              placeholder="문제집 명이나 설명으로 검색하세요"
+              @keyup.enter="applySearch"
+            />
+            <button class="btn-search" @click="applySearch">검색</button>
+            <button v-if="searchQuery" class="btn-reset-search" @click="clearSearch">초기화</button>
           </div>
-          <div class="pagination-actions">
-            <button class="btn-nav" :disabled="currentPage <= 1" @click="prevPage">이전 페이지</button>
-            <span>페이지 {{ currentPage }} / {{ totalPages }}</span>
-            <button class="btn-nav" :disabled="currentPage >= totalPages" @click="nextPage">다음 페이지</button>
-          </div>
-          <div v-if="totalPages > 1" class="page-slider-container">
-            <div class="slider-wrapper">
-              <span class="slider-limit">1</span>
-              <div class="slider-track-container">
-                <input
-                  type="range"
-                  :min="1"
-                  :max="totalPages"
-                  :value="sliderValue"
-                  class="page-slider"
-                  @input="handleSliderInput"
-                  @change="commitSliderValue"
-                />
-                <div class="slider-fill" :style="{ width: sliderPercentage + '%' }"></div>
-                <div class="slider-tooltip" :style="{ left: sliderPercentage + '%' }">
-                  {{ sliderValue }}
+          <div class="slider-row">
+            <span class="summary-text">총 {{ filteredBooks.length }}개 문제집</span>
+            <div v-if="totalPages > 1" class="page-slider-section">
+              <div class="slider-wrapper">
+                <span class="slider-limit">1</span>
+                <div class="slider-track-container">
+                  <input
+                    type="range"
+                    :min="1"
+                    :max="totalPages"
+                    :value="sliderValue"
+                    class="page-slider"
+                    @input="handleSliderInput"
+                    @change="commitSliderValue"
+                  />
+                  <div class="slider-fill" :style="{ width: sliderPercentage + '%' }"></div>
+                  <div class="slider-tooltip" :style="{ left: sliderPercentage + '%' }">
+                    {{ sliderValue }}
+                  </div>
                 </div>
+                <span class="slider-limit">{{ totalPages }}</span>
               </div>
-              <span class="slider-limit">{{ totalPages }}</span>
             </div>
+            <span class="range-text">{{ pageStartItem }}-{{ pageEndItem }}번째 항목 표시 중</span>
           </div>
         </div>
       </div>
@@ -133,9 +168,9 @@ onMounted(fetchBooks);
           <div class="book-info">
             <h4>{{ book.book_name }}</h4>
             <p>{{ book.description || '설명 없음' }}</p>
-            <div class="book-meta">문항 수: {{ book.items?.length || 0 }}개</div>
           </div>
-          <div class="book-actions">
+          <div class="book-card-footer">
+            <span class="book-meta">문항 수: {{ book.items?.length || 0 }}개</span>
             <button class="btn-view">상세보기</button>
           </div>
         </div>
@@ -200,17 +235,33 @@ onMounted(fetchBooks);
 
 .book-info h4 { color: #f8fafc; margin: 0 0 0.5rem 0; font-size: 1.1rem; }
 .book-info p { color: #94a3b8; font-size: 0.9rem; margin-bottom: 1rem; line-height: 1.4; }
-.book-meta { font-size: 0.8rem; color: #64748b; font-weight: 600; }
+.book-meta {
+  font-size: 0.8rem;
+  color: #64748b;
+  font-weight: 600;
+  margin-right: 0.5rem;
+}
+
+.book-card-footer {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 1rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  margin-top: 0.5rem;
+}
 
 .btn-view {
-  width: 100%;
-  margin-top: 1rem;
-  padding: 0.6rem;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 0.55rem 1.5rem;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.15);
   color: #e2e8f0;
   border-radius: 8px;
   cursor: pointer;
+  font-weight: 600;
+  align-self: flex-end;
+  transition: border-color 0.2s, background 0.2s;
 }
 
 /* Modal */
@@ -248,62 +299,74 @@ onMounted(fetchBooks);
 .modal-actions { display: flex; justify-content: flex-end; gap: 1rem; margin-top: 1rem; }
 .btn-primary { background: #6366f1; border: none; color: white; padding: 0.6rem 1.5rem; border-radius: 10px; cursor: pointer; }
 
-.pagination-panel {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-  padding-bottom: 0.5rem;
-}
-
-.pagination-summary {
-  display: flex;
-  justify-content: space-between;
-  color: #cbd5f5;
+.search-select,
+.search-input {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 12px;
+  color: #fff;
+  padding: 0.45rem 0.75rem;
   font-size: 0.9rem;
 }
 
-.pagination-actions {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 0.5rem;
-  color: #e2e8f0;
-  font-size: 0.85rem;
+.search-select {
+  min-width: 130px;
+  height: 38px;
 }
 
-.btn-nav {
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  color: #e2e8f0;
-  padding: 0.4rem 0.9rem;
-  border-radius: 999px;
+.search-input {
+  flex: 1;
+  min-width: 200px;
+  height: 38px;
+}
+
+.btn-search,
+.btn-reset-search {
+  border-radius: 10px;
+  padding: 0.5rem 1rem;
   font-weight: 600;
   cursor: pointer;
-  transition: transform 0.2s;
+  transition: all 0.2s;
+  height: 38px;
 }
 
-.btn-nav:disabled {
-  opacity: 0.45;
-  cursor: not-allowed;
+.btn-search {
+  border: none;
+  background: #6366f1;
+  color: white;
 }
 
-.btn-nav:not(:disabled):hover {
+.btn-search:hover {
+  background: #4f46e5;
   transform: translateY(-1px);
 }
 
-.page-slider-container {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  padding: 0 0.75rem;
+.btn-reset-search {
+  background: rgba(255, 255, 255, 0.08);
+  color: #e2e8f0;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.summary-text,
+.range-text {
+  font-size: 0.9rem;
+  color: #cbd5f5;
+  font-weight: 500;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.page-slider-section {
+  flex: 1;
+  min-width: 0;
 }
 
 .slider-wrapper {
   display: flex;
   align-items: center;
-  gap: 1rem;
+  gap: 0.85rem;
   width: 100%;
-  max-width: 420px;
+  max-width: none;
 }
 
 .slider-limit {
@@ -333,6 +396,7 @@ onMounted(fetchBooks);
   cursor: pointer;
   z-index: 2;
   position: relative;
+  touch-action: none;
 }
 
 .page-slider::-webkit-slider-thumb {
@@ -379,13 +443,51 @@ onMounted(fetchBooks);
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
 }
 
-.loading, .empty { text-align: center; padding: 3rem; color: #64748b; }
+.slider-tooltip::after {
+  content: '';
+  position: absolute;
+  bottom: -4px;
+  left: 50%;
+  transform: translateX(-50%);
+  border-left: 4px solid transparent;
+  border-right: 4px solid transparent;
+  border-top: 4px solid #6366f1;
+}
+
+.loading, .empty {
+  text-align: center;
+  padding: 3rem;
+  color: #64748b;
+}
 
 .pagination-panel-border {
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 12px;
-  padding: 1rem 1rem 0.5rem;
-  background: rgba(15, 23, 42, 0.6);
-  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 16px;
+  padding: 1rem 1.25rem;
+  background: rgba(15, 23, 42, 0.65);
+  box-shadow: 0 20px 60px -22px rgba(15, 23, 42, 1);
+  margin-bottom: 1.5rem;
 }
+
+.slider-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.search-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.slider-row {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  justify-content: space-between;
+  flex-wrap: nowrap;
+}
+
 </style>

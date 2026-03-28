@@ -44,7 +44,7 @@ function handleLogout() {
       <nav class="nav-links">
         <template v-if="userInfo">
           <div class="nav-path-box">
-            <NuxtLink to="/Dashboard" class="path-home">
+            <NuxtLink to="/dashboard" class="path-home">
               <IconHome class="icon-home" />
               홈(대시보드)
             </NuxtLink>
@@ -55,7 +55,7 @@ function handleLogout() {
           </a>
           <NuxtLink 
             v-if="userInfo.role_id === 'S' || userInfo.role_id === 'T'" 
-            to="/Questions" 
+            to="/questions" 
             class="my-questions-link"
           >
             나의 문제목록

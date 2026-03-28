@@ -206,7 +206,7 @@ const handleLogin = async () => {
       const user = useCookie('user_info');
       user.value = JSON.stringify((data.value as any).user);
 
-      navigateTo('/Dashboard');
+      navigateTo('/dashboard');
     }
   } catch (err) {
     authError.value = '서버 연결에 실패했습니다.';
@@ -320,7 +320,7 @@ onMounted(() => {
   // 이미 로그인 상태면 문제 목록으로 리디렉트
   const authToken = useCookie('auth_token');
   if (authToken.value) {
-    navigateTo('/Dashboard');
+    navigateTo('/dashboard');
     return;
   }
 
@@ -377,7 +377,7 @@ onMounted(() => {
             <div class="nav-path-box">
               <span class="path-home"><IconHome class="icon-home" />홈</span>
               <span class="path-sep">&gt;</span>
-              <NuxtLink to="/Questions" class="path-current">문제 목록</NuxtLink>
+              <NuxtLink to="/questions" class="path-current">문제 목록</NuxtLink>
             </div>
             <a href="#" class="user-greeting" @click.prevent="showUserModal = true">
               <IconUser class="icon-user" />

@@ -6,22 +6,37 @@ const loading = ref(true);
 const pageSize = 5;
 const currentPage = ref(1);
 const sliderValue = ref(1);
-const totalPages = computed(() => Math.max(1, Math.ceil(exams.value.length / pageSize)));
+const examSearchField = ref<'name' | 'period'>('name');
+const examSearchInput = ref('');
+const examSearchQuery = ref('');
+
+const filteredExams = computed(() => {
+  const keyword = examSearchQuery.value.trim().toLowerCase();
+  if (!keyword) return exams.value;
+  return exams.value.filter((exam) => {
+    const target = examSearchField.value === 'period'
+      ? `${new Date(exam.start_time).toLocaleDateString('ko-KR')} ~ ${new Date(exam.end_time).toLocaleDateString('ko-KR')}`
+      : exam.exam_name;
+    return target.toLowerCase().includes(keyword);
+  });
+});
+
+const totalPages = computed(() => Math.max(1, Math.ceil(filteredExams.value.length / pageSize)));
 const pagedExams = computed(() => {
   const start = (currentPage.value - 1) * pageSize;
-  return exams.value.slice(start, start + pageSize);
+  return filteredExams.value.slice(start, start + pageSize);
 });
 const pageStartItem = computed(() => {
-  if (exams.value.length === 0) return 0;
+  if (filteredExams.value.length === 0) return 0;
   return (currentPage.value - 1) * pageSize + 1;
 });
-const pageEndItem = computed(() => Math.min(currentPage.value * pageSize, exams.value.length));
+const pageEndItem = computed(() => Math.min(currentPage.value * pageSize, filteredExams.value.length));
 const sliderPercentage = computed(() => {
   if (totalPages.value <= 1) return 0;
   return ((sliderValue.value - 1) / (totalPages.value - 1)) * 100;
 });
 
-watch(() => exams.value.length, () => {
+watch(() => filteredExams.value.length, () => {
   currentPage.value = 1;
   sliderValue.value = 1;
 });
@@ -62,8 +77,17 @@ const commitSliderValue = () => {
   goToPage(sliderValue.value);
 };
 
-const prevPage = () => goToPage(currentPage.value - 1);
-const nextPage = () => goToPage(currentPage.value + 1);
+const applyExamSearch = () => {
+  examSearchQuery.value = examSearchInput.value.trim();
+  currentPage.value = 1;
+};
+
+const clearExamSearch = () => {
+  examSearchInput.value = '';
+  examSearchQuery.value = '';
+  currentPage.value = 1;
+};
+
 </script>
 
 <template>
@@ -71,37 +95,49 @@ const nextPage = () => goToPage(currentPage.value + 1);
     <h3>📝 나의 고사집 목록</h3>
 
     <div v-if="loading" class="loading">불러오는 중...</div>
-    <div v-else-if="exams.length === 0" class="empty">참여 중인 고사가 없습니다.</div>
+    <div v-else-if="filteredExams.length === 0" class="empty">검색 조건에 맞는 고사집이 없습니다.</div>
     <div v-else>
-      <div class="pagination-panel">
-        <div class="pagination-summary">
-          <span>총 {{ exams.length }}개의 고사집</span>
-          <span>{{ pageStartItem }}-{{ pageEndItem }}번째 항목 표시 중</span>
-        </div>
-        <div class="pagination-actions">
-          <button class="btn-nav" :disabled="currentPage <= 1" @click="prevPage">이전 페이지</button>
-          <span>페이지 {{ currentPage }} / {{ totalPages }}</span>
-          <button class="btn-nav" :disabled="currentPage >= totalPages" @click="nextPage">다음 페이지</button>
-        </div>
-        <div v-if="totalPages > 1" class="page-slider-container">
-          <div class="slider-wrapper">
-            <span class="slider-limit">1</span>
-            <div class="slider-track-container">
-              <input
-                type="range"
-                :min="1"
-                :max="totalPages"
-                :value="sliderValue"
-                class="page-slider"
-                @input="handleSliderInput"
-                @change="commitSliderValue"
-              />
-              <div class="slider-fill" :style="{ width: sliderPercentage + '%' }"></div>
-              <div class="slider-tooltip" :style="{ left: sliderPercentage + '%' }">
-                {{ sliderValue }}
+      <div class="pagination-panel-border">
+        <div class="slider-panel">
+          <div class="search-row">
+            <select v-model="examSearchField" class="search-select">
+              <option value="name">시험 제목</option>
+              <option value="period">기간</option>
+            </select>
+            <input
+              v-model="examSearchInput"
+              type="text"
+              class="search-input"
+              placeholder="시험 제목 또는 기간으로 검색하세요"
+              @keyup.enter="applyExamSearch"
+            />
+            <button class="btn-search" @click="applyExamSearch">검색</button>
+            <button v-if="examSearchQuery" class="btn-reset-search" @click="clearExamSearch">초기화</button>
+          </div>
+          <div class="slider-row">
+            <span class="summary-text">총 {{ filteredExams.length }}개의 고사집</span>
+            <div v-if="totalPages > 1" class="page-slider-section">
+              <div class="slider-wrapper">
+                <span class="slider-limit">1</span>
+                <div class="slider-track-container">
+                  <input
+                    type="range"
+                    :min="1"
+                    :max="totalPages"
+                    :value="sliderValue"
+                    class="page-slider"
+                    @input="handleSliderInput"
+                    @change="commitSliderValue"
+                  />
+                  <div class="slider-fill" :style="{ width: sliderPercentage + '%' }"></div>
+                  <div class="slider-tooltip" :style="{ left: sliderPercentage + '%' }">
+                    {{ sliderValue }}
+                  </div>
+                </div>
+                <span class="slider-limit">{{ totalPages }}</span>
               </div>
             </div>
-            <span class="slider-limit">{{ totalPages }}</span>
+            <span class="range-text">{{ pageStartItem }}-{{ pageEndItem }}번째 항목 표시 중</span>
           </div>
         </div>
       </div>
@@ -110,11 +146,11 @@ const nextPage = () => goToPage(currentPage.value + 1);
           <div class="exam-info">
             <div class="exam-badge">고사</div>
             <h4>{{ exam.exam_name }}</h4>
-            <div class="exam-period">
-              {{ new Date(exam.start_time).toLocaleDateString() }} ~ {{ new Date(exam.end_time).toLocaleDateString() }}
-            </div>
           </div>
-          <button class="btn-start" disabled>자세히 보기 (준비중)</button>
+          <div class="exam-meta">
+            <span class="exam-period">{{ new Date(exam.start_time).toLocaleDateString('ko-KR') }} ~ {{ new Date(exam.end_time).toLocaleDateString('ko-KR') }}</span>
+            <button class="btn-start" disabled>자세히 보기 (준비중)</button>
+          </div>
         </div>
       </div>
     </div>
@@ -153,73 +189,118 @@ const nextPage = () => goToPage(currentPage.value + 1);
   font-weight: 700;
 }
 .exam-info h4 { color: #f8fafc; margin: 0; font-size: 1.1rem; }
-.exam-period { color: #64748b; font-size: 0.85rem; }
-
-.btn-start {
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+.exam-period {
+  font-size: 0.85rem;
   color: #94a3b8;
-  padding: 0.6rem 1.2rem;
-  border-radius: 10px;
-  cursor: pointer;
 }
 
-.pagination-panel {
+.exam-meta {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
-  padding-bottom: 0.5rem;
+  align-items: flex-end;
+  color: #cbd5f5;
+  gap: 0.35rem;
 }
 
-.pagination-summary {
-  display: flex;
-  justify-content: space-between;
-  color: #cbd5f5;
+.btn-start {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #e2e8f0;
+  padding: 0.55rem 1.3rem;
+  border-radius: 10px;
+  cursor: not-allowed;
+  font-weight: 600;
+}
+
+.search-select,
+.search-input {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 12px;
+  color: #fff;
+  padding: 0.45rem 0.75rem;
   font-size: 0.9rem;
 }
 
-.pagination-actions {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 0.5rem;
-  color: #e2e8f0;
-  font-size: 0.85rem;
+.search-select {
+  min-width: 130px;
+  height: 38px;
 }
 
-.btn-nav {
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  color: #e2e8f0;
-  padding: 0.4rem 0.9rem;
-  border-radius: 999px;
+.search-input {
+  flex: 1;
+  min-width: 220px;
+  height: 38px;
+}
+
+.btn-search,
+.btn-reset-search {
+  border-radius: 10px;
+  padding: 0.5rem 1rem;
   font-weight: 600;
   cursor: pointer;
-  transition: transform 0.2s;
+  transition: all 0.2s;
+  height: 38px;
 }
 
-.btn-nav:disabled {
-  opacity: 0.45;
-  cursor: not-allowed;
+.btn-search {
+  border: none;
+  background: #6366f1;
+  color: white;
 }
 
-.btn-nav:not(:disabled):hover {
+.btn-search:hover {
+  background: #4f46e5;
   transform: translateY(-1px);
 }
 
-.page-slider-container {
+.btn-reset-search {
+  background: rgba(255, 255, 255, 0.08);
+  color: #e2e8f0;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.slider-panel {
   display: flex;
-  justify-content: center;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.search-row {
+  display: flex;
   align-items: center;
-  padding: 0 0.75rem;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.slider-row {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  justify-content: space-between;
+  flex-wrap: nowrap;
+}
+
+.summary-text,
+.range-text {
+  font-size: 0.9rem;
+  color: #cbd5f5;
+  font-weight: 500;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.page-slider-section {
+  flex: 1;
+  min-width: 0;
 }
 
 .slider-wrapper {
   display: flex;
   align-items: center;
-  gap: 1rem;
+  gap: 0.85rem;
   width: 100%;
-  max-width: 420px;
+  max-width: none;
 }
 
 .slider-limit {
@@ -249,6 +330,7 @@ const nextPage = () => goToPage(currentPage.value + 1);
   cursor: pointer;
   z-index: 2;
   position: relative;
+  touch-action: none;
 }
 
 .page-slider::-webkit-slider-thumb {
@@ -295,5 +377,29 @@ const nextPage = () => goToPage(currentPage.value + 1);
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
 }
 
-.loading, .empty { text-align: center; padding: 3rem; color: #64748b; }
+.slider-tooltip::after {
+  content: '';
+  position: absolute;
+  bottom: -4px;
+  left: 50%;
+  transform: translateX(-50%);
+  border-left: 4px solid transparent;
+  border-right: 4px solid transparent;
+  border-top: 4px solid #6366f1;
+}
+
+.loading, .empty {
+  text-align: center;
+  padding: 3rem;
+  color: #64748b;
+}
+
+.pagination-panel-border {
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 16px;
+  padding: 1rem 1.25rem;
+  background: rgba(15, 23, 42, 0.65);
+  box-shadow: 0 20px 60px -22px rgba(15, 23, 42, 1);
+  margin-bottom: 1.5rem;
+}
 </style>
