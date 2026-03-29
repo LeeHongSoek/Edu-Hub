@@ -30,32 +30,19 @@ cleanup() {
     kill "${CLOUDFLARED_PID}" >/dev/null 2>&1 || true
   fi
 
-  if [[ -n "${NEST_PID:-}" ]] && kill -0 "${NEST_PID}" >/dev/null 2>&1; then
-    kill "${NEST_PID}" >/dev/null 2>&1 || true
-  fi
-
-  if [[ -n "${NUXT_PID:-}" ]] && kill -0 "${NUXT_PID}" >/dev/null 2>&1; then
-    kill "${NUXT_PID}" >/dev/null 2>&1 || true
+  if [[ -n "${DEV_WRAPPER_PID:-}" ]] && kill -0 "${DEV_WRAPPER_PID}" >/dev/null 2>&1; then
+    kill "${DEV_WRAPPER_PID}" >/dev/null 2>&1 || true
   fi
 }
 
 trap cleanup EXIT INT TERM
 
-# 백엔드는 Nest 개발 서버를 현재 env 기준 포트로 실행한다.
-echo "[Nest] port=${PORT} frontend=${FRONTEND_ORIGIN}"
-(
-  cd "${PROJECT_ROOT}/_NestJs"
-  npm run start:dev
-) > >(tee -a "${PROJECT_ROOT}/logs/nest-dev.log") 2> >(tee -a "${PROJECT_ROOT}/logs/nest-dev.log" >&2) &
-NEST_PID=$!
-
-# 프론트는 Nuxt 개발 서버를 현재 env 기준 포트로 실행한다.
-echo "[Nuxt] port=${NUXT_PORT} backend=${BACKEND_ORIGIN}"
+# Cloudflare를 붙이기 전에 로컬 Nest/Nuxt 개발 서버를 먼저 올린다.
 (
   cd "${PROJECT_ROOT}/_NuxtJs"
   npm run dev
 ) > >(tee -a "${NUXT_LOG_FILE}") 2> >(tee -a "${NUXT_LOG_FILE}" >&2) &
-NUXT_PID=$!
+DEV_WRAPPER_PID=$!
 
 echo "Nuxt 응답 대기 중..."
 for _ in $(seq 1 120); do
@@ -63,7 +50,7 @@ for _ in $(seq 1 120); do
     break
   fi
 
-  if ! kill -0 "${NUXT_PID}" >/dev/null 2>&1; then
+  if ! kill -0 "${DEV_WRAPPER_PID}" >/dev/null 2>&1; then
     echo "Nuxt 서버가 준비되기 전에 종료되었습니다. 로그: ${NUXT_LOG_FILE}" >&2
     exit 1
   fi
@@ -128,4 +115,4 @@ echo "Cloudflare URL: ${EXTERNAL_URL}"
 echo "종료하려면 Ctrl+C 를 누르세요."
 
 # 셋 중 하나가 종료되면 wait 가 풀리고, trap 이 남은 프로세스를 함께 정리한다.
-wait "${NEST_PID}" "${NUXT_PID}" "${CLOUDFLARED_PID}"
+wait "${DEV_WRAPPER_PID}" "${CLOUDFLARED_PID}"
