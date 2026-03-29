@@ -29,7 +29,7 @@ const route = useRoute();
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
-  margin-bottom: 2.5rem;
+  margin-bottom: 0.5rem;
 }
 
 .back-btn {

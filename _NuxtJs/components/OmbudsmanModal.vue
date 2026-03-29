@@ -526,7 +526,7 @@ onMounted(fetchMyReports);
   background: rgba(255, 255, 255, 0.03);
   border: 1px solid rgba(255, 255, 255, 0.05);
   border-radius: 10px;
-  padding: 0.75rem 0.9rem;
+  padding: 0.68rem 0.9rem;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -537,8 +537,8 @@ onMounted(fetchMyReports);
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 1rem;
-  margin-bottom: 0.15rem;
+  gap: 0.4rem;
+  margin-bottom: 0.05rem;
 }
 .report-content-row {
   display: flex;
@@ -559,12 +559,17 @@ onMounted(fetchMyReports);
 .category-badge.improvement { background: rgba(34, 197, 94, 0.1); color: #4ade80; }
 .category-badge.complaint { background: rgba(244, 63, 94, 0.1); color: #fb7185; }
 
-.report-title { color: #f8fafc; font-weight: 600; margin-bottom: 0; }
+.report-title {
+  color: #f8fafc;
+  font-weight: 600;
+  margin: 0;
+  line-height: 1.2;
+}
 .report-date { color: #64748b; font-size: 0.8rem; }
 
 .report-actions { display: flex; gap: 0.5rem; }
 .btn-icon {
-  background: none; border: none; font-size: 1.1rem; cursor: pointer;
+  background: none; border: none; font-size: 0.82rem; cursor: pointer;
   opacity: 0.6; transition: opacity 0.2s;
 }
 .btn-icon:hover { opacity: 1; }

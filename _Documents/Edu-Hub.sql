@@ -1,6 +1,5 @@
 /*M!999999\- enable the sandbox mode */ 
 SET FOREIGN_KEY_CHECKS=0;
-/*M!999999\- enable the sandbox mode */ 
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8mb4 */;
 CREATE TABLE `class_students` (

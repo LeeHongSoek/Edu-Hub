@@ -27,7 +27,7 @@ import ExamListManager from '~/components/dashboard/ExamListManager.vue';
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
-  margin-bottom: 1.25rem;
+  margin-bottom: 0.5rem;
 }
 
 .back-btn { color: #818cf8; text-decoration: none; font-weight: 600; font-size: 0.95rem; }

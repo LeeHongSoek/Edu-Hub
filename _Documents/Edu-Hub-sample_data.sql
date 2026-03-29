@@ -1,6 +1,5 @@
 /*M!999999\- enable the sandbox mode */ 
 SET FOREIGN_KEY_CHECKS=0;
-/*M!999999\- enable the sandbox mode */ 
 INSERT INTO `class_students` VALUES
 (1,2);
 INSERT INTO `classes` VALUES
