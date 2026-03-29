@@ -50,7 +50,7 @@ function classifySqlQuery(query) {
     return 'mutation';
 }
 async function bootstrap() {
-    const frontendOrigin = process.env.FRONTEND_ORIGIN || 'http://127.0.0.1:3000';
+    const frontendOrigin = process.env.FRONTEND_ORIGIN || 'http://127.0.0.1:0';
     const app = await core_1.NestFactory.create(app_module_1.AppModule, {
         bodyParser: true,
     });
