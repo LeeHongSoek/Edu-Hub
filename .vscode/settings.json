@@ -20,21 +20,5 @@
             "username": "root",
             "password": "leehs1181!"
         }
-        ,{
-            "name": "TiDB",
-            "driver": "MySQL",
-            "server": "gateway01.ap-northeast-1.prod.aws.tidbcloud.com",
-            "port": 4000,
-            "database": "mywork",
-            "username": "3wbry7cn6Aae17E.root",
-            "password": "eIPOu2TbTbOXtNw8",
-            "previewLimit": 50,
-            "mysqlOptions": {
-              "authProtocol": "default",
-              "ssl": {
-                "rejectUnauthorized": false
-              }
-            }
-          }
     ]
 }

@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
+import { resolve } from 'path';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { PrismaModule } from './common/prisma/prisma.module';
@@ -17,7 +18,10 @@ import { DemoModule } from './demo/demo.module';
 
 @Module({
   imports: [
-    ConfigModule.forRoot({ isGlobal: true }),
+    ConfigModule.forRoot({
+      isGlobal: true,
+      envFilePath: process.env.ENV_FILE || resolve(process.cwd(), '..', 'config', 'runtime', 'primary.env'),
+    }),
     PrismaModule,
     QuestionsModule,
     GroupsModule,

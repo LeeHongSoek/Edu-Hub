@@ -37,10 +37,9 @@ require("dotenv/config");
 const path = __importStar(require("path"));
 const fs = __importStar(require("fs"));
 const config_1 = require("prisma/config");
-const envFile = process.env.NODE_ENV === "production"
-    ? ".env.production"
-    : ".env.local";
-const envPath = path.resolve(__dirname, envFile);
+const envPath = process.env.ENV_FILE
+    ? path.resolve(process.env.ENV_FILE)
+    : path.resolve(__dirname, process.env.NODE_ENV === "production" ? ".env.production" : ".env.local");
 if (fs.existsSync(envPath)) {
     const dotenv = require("dotenv");
     dotenv.config({ path: envPath, override: true });

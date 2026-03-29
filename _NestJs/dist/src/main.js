@@ -50,6 +50,7 @@ function classifySqlQuery(query) {
     return 'mutation';
 }
 async function bootstrap() {
+    const frontendOrigin = process.env.FRONTEND_ORIGIN || 'http://127.0.0.1:3000';
     const app = await core_1.NestFactory.create(app_module_1.AppModule, {
         bodyParser: true,
     });
@@ -58,7 +59,7 @@ async function bootstrap() {
     expressApp.set('trust proxy', 1);
     app.use((req, res, next) => {
         if (req.method === 'GET' && req.path === '/') {
-            return res.redirect(302, 'http://localhost:3000');
+            return res.redirect(302, frontendOrigin);
         }
         next();
     });
@@ -277,7 +278,7 @@ async function bootstrap() {
             next();
         });
     }
-    const port = process.env.PORT ?? 4000;
+    const port = process.env.PORT ?? 0;
     await app.listen(port);
     console.log(`🚀 애플리케이션 실행 중: http://localhost:${port} 🚀`);
 }

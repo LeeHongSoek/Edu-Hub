@@ -5,7 +5,7 @@
   "scripts": {
     "build": "nuxt build",
     "dev": "nuxt dev",
-    "dev:tunnel": "bash ../scripts/nuxt-cloudflare-dev.sh",
+    "dev:tunnel": "bash ../scripts/start-all.sh",
     "generate": "nuxt generate",
     "preview": "nuxt preview",
     "postinstall": "nuxt prepare"

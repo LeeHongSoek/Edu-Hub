@@ -6,11 +6,12 @@ import * as fs from "fs";
 import { defineConfig } from "prisma/config";
 
 // NODE_ENV에 따라 올바른 .env 파일 로드
-const envFile = process.env.NODE_ENV === "production" 
-  ? ".env.production" 
-  : ".env.local";
-
-const envPath = path.resolve(__dirname, envFile);
+const envPath = process.env.ENV_FILE
+  ? path.resolve(process.env.ENV_FILE)
+  : path.resolve(
+      __dirname,
+      process.env.NODE_ENV === "production" ? ".env.production" : ".env.local",
+    );
 if (fs.existsSync(envPath)) {
   // dotenv 수동 로드
   const dotenv = require("dotenv");

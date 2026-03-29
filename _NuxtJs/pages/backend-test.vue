@@ -11,7 +11,7 @@
         {{ testing ? '⏳ 실행 중...' : '🚀 백엔드 API 호출' }}
       </button>
       <p style="color: #666; margin-top: 10px;">
-        이 버튼을 클릭하면 localhost:4000의 실제 백엔드 API를 호출합니다.
+        이 버튼을 클릭하면 {{ config.public.backendOriginLabel }} 의 실제 백엔드 API를 호출합니다.
       </p>
     </div>
 
@@ -53,6 +53,7 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 
+const config = useRuntimeConfig();
 const testing = ref(false);
 const testResults = ref<any[]>([]);
 
