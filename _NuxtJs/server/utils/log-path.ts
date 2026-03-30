@@ -1,6 +1,6 @@
 import { basename, resolve } from 'path';
 
-export function getApiRequestLogPath() {
+export function getApiRequestLogPath(fileName = 'api-front.log') {
   const cwd = process.cwd();
   const logDir = basename(cwd) === '_NuxtJs'
     ? resolve(cwd, '..', 'logs')
@@ -8,6 +8,6 @@ export function getApiRequestLogPath() {
 
   return {
     logDir,
-    logPath: resolve(logDir, 'api-requests.log'),
+    logPath: resolve(logDir, fileName),
   };
 }

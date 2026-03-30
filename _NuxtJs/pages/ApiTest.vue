@@ -35,7 +35,7 @@
     </section>
 
     <section class="hint-card">
-      <p>요청 로그는 서버의 <code>logs/api-requests.log</code> 에 쌓입니다.</p>
+      <p>요청 로그는 서버의 <code>logs/api-front.log</code> 에 쌓입니다.</p>
       <p>브라우저 콘솔에서는 이 페이지의 API 호출 결과만 확인하면 됩니다.</p>
     </section>
   </div>

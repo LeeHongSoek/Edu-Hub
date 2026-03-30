@@ -4,7 +4,7 @@ import { readBody } from 'h3';
 import { getApiRequestLogPath } from '~/server/utils/log-path';
 
 // 로그 경로 설정
-const { logDir: logsDir, logPath } = getApiRequestLogPath();
+const { logDir: logsDir, logPath } = getApiRequestLogPath('api-front.log');
 
 // 서버 시작 시 디렉토리 생성 (비동기 권장)
 if (process.dev && !existsSync(logsDir)) {

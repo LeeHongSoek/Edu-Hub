@@ -291,7 +291,7 @@ async function bootstrap() {
   if (loggerEnabled) {
     const workspaceRoot = resolve(__dirname, '..', '..', '..');
     const logsDir = resolve(workspaceRoot, 'logs');
-    const logPath = resolve(logsDir, 'api-requests.log');
+    const logPath = resolve(logsDir, 'api-back.log');
 
     try { mkdirSync(logsDir, { recursive: true }); } catch (err) { }
 
