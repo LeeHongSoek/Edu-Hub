@@ -7,6 +7,17 @@
 </template>
 
 <style>
+html,
+body,
+#__nuxt,
+.app-wrapper {
+  min-width: 1440px;
+}
+
+body {
+  overflow-x: auto;
+}
+
 /*
 body {
   user-select: none;

@@ -30,6 +30,12 @@ export default defineNuxtConfig({
   css: ['~/assets/css/index.css'],
   app: {
     head: {
+      meta: [
+        {
+          name: 'viewport',
+          content: 'width=1440, initial-scale=1'
+        }
+      ],
       link: [
         {
           rel: 'stylesheet',
