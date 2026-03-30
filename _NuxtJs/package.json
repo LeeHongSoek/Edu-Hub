@@ -5,8 +5,8 @@
   "scripts": {
     "build": "nuxt build",
     "dev": "nuxt dev",
-    "dev:app": "bash ../scripts/start-dev.sh",
-    "dev:tunnel": "bash ../scripts/start-all.sh",
+    "dev:app": "bash ../scripts/start-dev-app.sh",
+    "dev:tunnel": "bash ../scripts/start-dev-tunnel.sh",
     "generate": "nuxt generate",
     "preview": "nuxt preview",
     "postinstall": "nuxt prepare"

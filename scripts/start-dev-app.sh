@@ -8,10 +8,12 @@ NEST_LOG_FILE="${PROJECT_ROOT}/logs/nest-dev.log"
 NUXT_DIR="${PROJECT_ROOT}/_NuxtJs"
 LOG_DIR="${NUXT_DIR}/logs"
 NUXT_LOG_FILE="${LOG_DIR}/nuxt-dev.log"
+NUXT_TARGET_URL="http://localhost:${NUXT_PORT:-3000}"
 
 # 기본값은 primary.env 이고, 필요하면 다른 env 파일 경로를 첫 번째 인자로 넘길 수 있다.
 # shellcheck disable=SC1091
 source "${SCRIPT_DIR}/load-runtime-env.sh" "${1:-config/runtime/primary.env}"
+NUXT_TARGET_URL="http://localhost:${NUXT_PORT}"
 
 mkdir -p "${PROJECT_ROOT}/logs" "${LOG_DIR}"
 : > "${NEST_LOG_FILE}"
@@ -60,6 +62,14 @@ echo "[Nuxt] port=${NUXT_PORT} backend=${BACKEND_ORIGIN}"
   npm run dev
 ) > >(tee -a "${NUXT_LOG_FILE}") 2> >(tee -a "${NUXT_LOG_FILE}" >&2) &
 NUXT_PID=$!
+
+if command -v open >/dev/null 2>&1; then
+  (
+    sleep 5
+    open "${NUXT_TARGET_URL}" >/dev/null 2>&1 || true
+  ) &
+  echo "5초 후 기본 브라우저에서 ${NUXT_TARGET_URL} 을 엽니다."
+fi
 
 # 둘 중 하나가 종료되면 wait 가 풀리고, trap 이 남은 프로세스를 함께 정리한다.
 wait "${NEST_PID}" "${NUXT_PID}"
