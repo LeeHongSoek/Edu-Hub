@@ -45,17 +45,12 @@ export default defineEventHandler(async (event) => {
     return originalEnd(chunk, encoding, callback);
   };
 
-  let requestBodyPretty = '(empty)';
+  let requestBody: unknown = null;
   if (hasRequestBody) {
     try {
-      const requestBody = await readBody(event);
-      requestBodyPretty = requestBody === null
-        ? '(empty)'
-        : typeof requestBody === 'string'
-          ? requestBody
-          : JSON.stringify(requestBody, null, 2);
+      requestBody = await readBody(event);
     } catch {
-      requestBodyPretty = '(unavailable)';
+      requestBody = '(unavailable)';
     }
   }
 
@@ -76,30 +71,29 @@ export default defineEventHandler(async (event) => {
         })()
       : null;
 
-    const reqEntry = {
-      timestamp: new Date().toISOString(),
-      method: event.method,
-      url: event.path,
-      body: requestBodyPretty,
-    };
-
-    const resEntry = {
-      statusCode: event.node.res.statusCode,
-      duration: `${duration}ms`,
-      body: responseBody,
-    };
-
     try {
       // appendFile (비동기)를 사용하여 성능 저하 방지
-      const prettyLog = [
-        'REQ',
-        JSON.stringify(reqEntry, null, 2),
-        'RES',
-        JSON.stringify(resEntry, null, 2),
-        ''
-      ].join('\n');
+      const tabSize = 8;
+      const requestBodyPretty = requestBody === null
+        ? '(empty)'
+        : requestBody === '(unavailable)'
+          ? '(unavailable)'
+          : typeof requestBody === 'string'
+            ? JSON.stringify(requestBody, null, tabSize)
+            : JSON.stringify(requestBody, null, tabSize);
+      const responseBodyPretty = responseBody === null
+        ? 'null'
+        : typeof responseBody === 'string'
+          ? JSON.stringify(responseBody, null, tabSize)
+          : JSON.stringify(responseBody, null, tabSize);
+      const hasRequestBody = requestBodyPretty !== '(empty)' && requestBodyPretty !== '(unavailable)';
+      const logHeader = `[API통신_헤더] <${event.method}> ${event.path} (${event.node.res.statusCode}) - ${duration}ms\n`;
+      const logReqData = hasRequestBody
+        ? `[API통신_데이터_요청]\n${requestBodyPretty}\n`
+        : '';
+      const logResData = `[API통신_데이터_응답]\n${responseBodyPretty}\n`;
 
-      await appendFile(logPath, prettyLog + '\n');
+      await appendFile(logPath, logHeader + logReqData + logResData);
     } catch (err) {
       console.error('[API-Logger] Write Error:', err);
     }

@@ -63,6 +63,8 @@ const testResults = ref<
     dataSize: number;
     duration: number;
     payload: string;
+    requestBody: unknown;
+    responseBody: unknown;
   }>
 >([]);
 
@@ -95,24 +97,66 @@ const testApis = async () => {
   testing.value = true;
   testResults.value = [];
 
+  const printTable = () => {
+    // 테스트 결과를 콘솔에서 빠르게 훑어볼 수 있게 요약 테이블로 출력
+    console.table(
+      testResults.value.map((item) => ({
+        method: item.method.toUpperCase(),
+        url: item.url,
+        status: item.status,
+        duration: `${item.duration}ms`,
+        bytes: item.dataSize,
+        resBody: item.payload,
+      }))
+    );
+  };
+
+  const printBodyTable = (label: string, body: unknown) => {
+    console.log(label);
+
+    if (body && typeof body === 'object' && !Array.isArray(body)) {
+      console.table([body]);
+      return;
+    }
+
+    if (Array.isArray(body)) {
+      console.table(body);
+      return;
+    }
+
+    console.table([{ value: body }]);
+  };
+
   try {
     for (const test of testCases) {
       const start = performance.now();
       const res = await $fetch(test.url, test.options);
       const duration = Math.round(performance.now() - start);
+      const requestBody = test.options?.body ?? null;
 
+      // 화면 표시용 + 콘솔 표 출력용으로 응답 요약을 저장
       testResults.value.push({
         method: test.method,
         url: test.url,
         status: 200,
         dataSize: JSON.stringify(res).length,
         duration,
-        payload: JSON.stringify(res, null, 2)
+        payload: JSON.stringify(res, null, 2),
+        requestBody,
+        responseBody: res
       });
+
+      console.log(`[API통신_헤더] <${test.method.toUpperCase()}> ${test.url} (200) - ${duration}ms`);
+      if (requestBody) {
+        printBodyTable('[API통신_데이터_요청]', requestBody);
+      }
+      printBodyTable('[API통신_데이터_응답]', res);
     }
 
+    printTable();
     console.log('✅ 모든 API 테스트 완료', testResults.value);
   } catch (error) {
+    printTable();
     console.error('❌ API 테스트 실패', error);
     alert(`API 요청 중 오류가 발생했습니다: ${(error as Error).message}`);
   } finally {

@@ -339,9 +339,9 @@ async function bootstrap() {
 
         /**
          * ---------------------------------------------------------
-         *           ✨🌟✨  긴급 해결 마법 ✨🌟✨
+         *        ✨🌟✨  긴급 해결 마법 ✨🌟✨
          * 
-         *           데이터가 제대로 안 찍히는 그 순간...
+         *        데이터가 제대로 안 찍히는 그 순간...
          * 
          *   🔥 개발자 도구 (F12) 를 열고
          *   📡 Network 탭으로 이동한 뒤
@@ -371,7 +371,12 @@ async function bootstrap() {
         } catch { }
 
         // // 콘솔 출력
-        // console.log(`\n[API통신_헤더] <${logEntry.method}> ${url} (${logEntry.statusCode}) - ${logEntry.duration}`);
+        console.log(`\n[API통신_헤더] <${logEntry.method}> ${url} (${logEntry.statusCode}) - ${logEntry.duration}`);
+
+        // if (logEntry.payload.request.length > 0) {
+        //   console.table(logEntry.payload.request);
+        // }
+        // console.table(logEntry.payload.response);
 
         // // 요청 데이터가 있을 때만 콘솔에 출력
         // if (hasRequest) {
