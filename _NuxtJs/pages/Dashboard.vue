@@ -8,6 +8,7 @@ import RelationManager from '~/components/dashboard/RelationManager.vue';
 import MessageManager from '~/components/dashboard/MessageManager.vue';
 import QuestionBookManager from '~/components/dashboard/QuestionBookManager.vue';
 import ExamListManager from '~/components/dashboard/ExamListManager.vue';
+import { nextTick } from 'vue';
 
 const userCookie = useCookie('user_info');
 const userInfo = computed(() => {
@@ -20,6 +21,27 @@ const userInfo = computed(() => {
 });
 
 const activeTab = ref('stats'); // 'stats', 'relations', 'messages', 'logs', 'question-books', 'exams'
+const composeMessageTarget = ref<any | null>(null);
+const composeReturnTab = ref<'relations' | null>(null);
+
+const openMessageCompose = async (user: any) => {
+  composeMessageTarget.value = user;
+  composeReturnTab.value = 'relations';
+  activeTab.value = 'messages';
+  await nextTick();
+};
+
+const clearMessageComposeTarget = () => {
+  composeMessageTarget.value = null;
+};
+
+const handleMessageComposeDismissed = () => {
+  composeMessageTarget.value = null;
+  if (composeReturnTab.value) {
+    activeTab.value = composeReturnTab.value;
+    composeReturnTab.value = null;
+  }
+};
 
 onMounted(() => {
   if (!userInfo.value) {
@@ -90,11 +112,15 @@ onMounted(() => {
       </div>
       
       <div v-else-if="activeTab === 'relations'">
-        <RelationManager />
+        <RelationManager @compose-message="openMessageCompose" />
       </div>
       
       <div v-else-if="activeTab === 'messages'">
-        <MessageManager />
+        <MessageManager
+          :compose-target="composeMessageTarget"
+          @compose-consumed="clearMessageComposeTarget"
+          @compose-dismissed="handleMessageComposeDismissed"
+        />
       </div>
       
       <div v-else-if="activeTab === 'logs'">

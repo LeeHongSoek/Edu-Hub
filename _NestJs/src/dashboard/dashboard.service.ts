@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../common/prisma/prisma.service';
 
 @Injectable()
@@ -119,9 +119,405 @@ export class DashboardService {
     }));
   }
 
-  async getRelations(userNo: bigint) {
-    return this.prisma.userRelation.findMany({
-      where: { user_no_1: userNo },
+  async getRelations(userNo: bigint, query = '', page = 1, limit = 8) {
+    const safePage = Math.max(1, Number.isFinite(page) ? Math.floor(page) : 1);
+    const safeLimit = Math.min(Math.max(Number.isFinite(limit) ? Math.floor(limit) : 8, 1), 24);
+    const keyword = String(query || '').trim();
+
+    const where: any = {
+      user_no_1: userNo,
+    };
+
+    if (keyword) {
+      where.OR = [
+        {
+          user2: {
+            OR: [
+              {
+                username: {
+                  contains: keyword,
+                },
+              },
+              {
+                user_id: {
+                  contains: keyword,
+                },
+              },
+            ],
+          },
+        },
+        {
+          relation_type: {
+            description: {
+              contains: keyword,
+            },
+          },
+        },
+      ];
+    }
+
+    const [total, items] = await Promise.all([
+      this.prisma.userRelation.count({ where }),
+      this.prisma.userRelation.findMany({
+        where,
+        include: {
+          user2: {
+            select: {
+              user_no: true,
+              user_id: true,
+              username: true,
+              role_id: true,
+            },
+          },
+          relation_type: true,
+        },
+        orderBy: { created_at: 'desc' },
+        skip: (safePage - 1) * safeLimit,
+        take: safeLimit,
+      }),
+    ]);
+
+    return {
+      items: items.map((relation) => ({
+        ...relation,
+        relation_id: relation.relation_id.toString(),
+        user_no_1: relation.user_no_1.toString(),
+        user_no_2: relation.user_no_2.toString(),
+      })),
+      page: safePage,
+      limit: safeLimit,
+      total,
+      totalPages: Math.max(1, Math.ceil(total / safeLimit)),
+    };
+  }
+
+  async getRelationCandidates(userNo: bigint, targetRoleId: string, query: string, page: number, limit: number) {
+    const safePage = Math.max(1, Number.isFinite(page) ? Math.floor(page) : 1);
+    const safeLimit = Math.min(Math.max(Number.isFinite(limit) ? Math.floor(limit) : 6, 1), 30);
+    const keyword = String(query || '').trim();
+
+    const connectedRelations = await this.prisma.userRelation.findMany({
+      where: {
+        OR: [{ user_no_1: userNo }, { user_no_2: userNo }],
+      },
+      select: {
+        user_no_1: true,
+        user_no_2: true,
+      },
+    });
+
+    const connectedUserNos = new Set<string>();
+    for (const relation of connectedRelations) {
+      if (relation.user_no_1.toString() !== userNo.toString()) {
+        connectedUserNos.add(relation.user_no_1.toString());
+      }
+      if (relation.user_no_2.toString() !== userNo.toString()) {
+        connectedUserNos.add(relation.user_no_2.toString());
+      }
+    }
+
+    const where: any = {
+      role_id: targetRoleId,
+      user_no: { not: userNo },
+      is_withdrawn: 'N',
+    };
+
+    if (keyword) {
+      where.OR = [
+        {
+          username: {
+            contains: keyword,
+          },
+        },
+        {
+          user_id: {
+            contains: keyword,
+          },
+        },
+      ];
+    }
+
+    const [total, items] = await Promise.all([
+      this.prisma.user.count({ where }),
+      this.prisma.user.findMany({
+        where,
+        select: {
+          user_no: true,
+          user_id: true,
+          username: true,
+          role_id: true,
+          created_at: true,
+        },
+        orderBy: [
+          { username: 'asc' },
+          { created_at: 'desc' },
+        ],
+        skip: (safePage - 1) * safeLimit,
+        take: safeLimit,
+      }),
+    ]);
+
+    return {
+      items: items.map((user) => ({
+        ...user,
+        user_no: user.user_no.toString(),
+        isConnected: connectedUserNos.has(user.user_no.toString()),
+      })),
+      page: safePage,
+      limit: safeLimit,
+      total,
+      totalPages: Math.max(1, Math.ceil(total / safeLimit)),
+    };
+  }
+
+  async createRelation(userNo: bigint, targetUserNo: string | number | bigint | undefined, targetRoleId?: string) {
+    if (targetUserNo === undefined || targetUserNo === null || targetUserNo === '') {
+      throw new BadRequestException('대상 사용자가 선택되지 않았습니다.');
+    }
+
+    const targetUserNoBigInt = BigInt(targetUserNo);
+
+    if (targetUserNoBigInt === userNo) {
+      throw new BadRequestException('자기 자신과는 연결할 수 없습니다.');
+    }
+
+    const [me, target] = await Promise.all([
+      this.prisma.user.findUnique({
+        where: { user_no: userNo },
+        select: { user_no: true, role_id: true, username: true },
+      }),
+      this.prisma.user.findUnique({
+        where: { user_no: targetUserNoBigInt },
+        select: { user_no: true, role_id: true, username: true },
+      }),
+    ]);
+
+    if (!me || !target) {
+      throw new NotFoundException('사용자 정보를 찾을 수 없습니다.');
+    }
+
+    const normalizedTargetRole = String(targetRoleId || target.role_id || '').toUpperCase();
+    const relationPair = this.resolveRelationPair(me.role_id, normalizedTargetRole);
+
+    if (!relationPair) {
+      throw new BadRequestException('현재 역할 조합에서는 연결을 만들 수 없습니다.');
+    }
+
+    const existingRelation = await this.prisma.userRelation.findFirst({
+      where: {
+        OR: [
+          { user_no_1: userNo, user_no_2: targetUserNoBigInt },
+          { user_no_1: targetUserNoBigInt, user_no_2: userNo },
+        ],
+      },
+    });
+
+    if (existingRelation) {
+      throw new ConflictException('이미 연결된 사용자입니다.');
+    }
+
+    const now = new Date();
+
+    await this.prisma.$transaction([
+      this.prisma.userRelation.create({
+        data: {
+          user_no_1: userNo,
+          user_no_2: targetUserNoBigInt,
+          relation_type_id: relationPair.forward,
+          created_at: now,
+        },
+      }),
+      this.prisma.userRelation.create({
+        data: {
+          user_no_1: targetUserNoBigInt,
+          user_no_2: userNo,
+          relation_type_id: relationPair.reverse,
+          created_at: now,
+        },
+      }),
+    ]);
+
+    return {
+      ok: true,
+      message: `${target.username} 님과의 연결을 저장했습니다.`,
+    };
+  }
+
+  async deleteRelation(userNo: bigint, targetUserNo: string | number | bigint | undefined) {
+    if (targetUserNo === undefined || targetUserNo === null || targetUserNo === '') {
+      throw new BadRequestException('대상 사용자가 선택되지 않았습니다.');
+    }
+
+    const targetUserNoBigInt = BigInt(targetUserNo);
+
+    if (targetUserNoBigInt === userNo) {
+      throw new BadRequestException('자기 자신과의 관계는 해제할 수 없습니다.');
+    }
+
+    const [forward, reverse] = await Promise.all([
+      this.prisma.userRelation.findFirst({
+        where: { user_no_1: userNo, user_no_2: targetUserNoBigInt },
+        select: { relation_id: true },
+      }),
+      this.prisma.userRelation.findFirst({
+        where: { user_no_1: targetUserNoBigInt, user_no_2: userNo },
+        select: { relation_id: true },
+      }),
+    ]);
+
+    if (!forward && !reverse) {
+      throw new NotFoundException('해제할 연결을 찾을 수 없습니다.');
+    }
+
+    await this.prisma.$transaction([
+      ...(forward ? [this.prisma.userRelation.delete({ where: { relation_id: forward.relation_id } })] : []),
+      ...(reverse ? [this.prisma.userRelation.delete({ where: { relation_id: reverse.relation_id } })] : []),
+    ]);
+
+    return {
+      ok: true,
+      message: '연결을 해제했습니다.',
+    };
+  }
+
+  private resolveRelationPair(sourceRoleId: string, targetRoleId: string) {
+    const map: Record<string, Record<string, { forward: string; reverse: string }>> = {
+      S: {
+        S: { forward: 'FRIEND', reverse: 'FRIEND' },
+        P: { forward: 'CHILD_PARENT', reverse: 'PARENT_CHILD' },
+        T: { forward: 'PUPIL_TEACHER', reverse: 'TEACHER_PUPIL' },
+      },
+      P: {
+        S: { forward: 'PARENT_CHILD', reverse: 'CHILD_PARENT' },
+      },
+      T: {
+        S: { forward: 'TEACHER_PUPIL', reverse: 'PUPIL_TEACHER' },
+      },
+    };
+
+    return map[sourceRoleId]?.[targetRoleId] ?? null;
+  }
+
+  async getMessages(userNo: bigint, view = 'received', query = '', page = 1, limit = 8) {
+    const safePage = Math.max(1, Number.isFinite(page) ? Math.floor(page) : 1);
+    const safeLimit = Math.min(Math.max(Number.isFinite(limit) ? Math.floor(limit) : 8, 1), 24);
+    const keyword = String(query || '').trim();
+    const normalizedView = String(view || 'received').toLowerCase();
+
+    const where: any = {
+      ...(normalizedView === 'sent'
+        ? { sender_no: userNo }
+        : { receiver_no: userNo }),
+    };
+
+    if (keyword) {
+      where.AND = [
+        {
+          OR: [
+            {
+              content: {
+                contains: keyword,
+              },
+            },
+            {
+              sender: {
+                OR: [
+                  {
+                    username: {
+                      contains: keyword,
+                    },
+                  },
+                  {
+                    user_id: {
+                      contains: keyword,
+                    },
+                  },
+                ],
+              },
+            },
+            {
+              receiver: {
+                OR: [
+                  {
+                    username: {
+                      contains: keyword,
+                    },
+                  },
+                  {
+                    user_id: {
+                      contains: keyword,
+                    },
+                  },
+                ],
+              },
+            },
+          ],
+        },
+      ];
+    }
+
+    const [total, items] = await Promise.all([
+      this.prisma.userMessage.count({ where }),
+      this.prisma.userMessage.findMany({
+        where,
+        include: {
+          sender: {
+            select: {
+              user_no: true,
+              user_id: true,
+              username: true,
+              role_id: true,
+            },
+          },
+          receiver: {
+            select: {
+              user_no: true,
+              user_id: true,
+              username: true,
+              role_id: true,
+            },
+          },
+        },
+        orderBy: { created_at: 'desc' },
+        skip: (safePage - 1) * safeLimit,
+        take: safeLimit,
+      }),
+    ]);
+
+    return {
+      items: items.map((message) => {
+        const isSent = message.sender_no.toString() === userNo.toString();
+        const counterpart = isSent ? message.receiver : message.sender;
+
+        return {
+          message_id: message.message_id.toString(),
+          sender_no: message.sender_no.toString(),
+          receiver_no: message.receiver_no.toString(),
+          content: message.content,
+          is_read: message.is_read,
+          created_at: message.created_at,
+          direction: isSent ? 'sent' : 'received',
+          sender: message.sender,
+          receiver: message.receiver,
+          counterpart,
+        };
+      }),
+      page: safePage,
+      limit: safeLimit,
+      total,
+      totalPages: Math.max(1, Math.ceil(total / safeLimit)),
+    };
+  }
+
+  async getMessageRecipients(userNo: bigint, query = '', page = 1, limit = 6) {
+    const safePage = Math.max(1, Number.isFinite(page) ? Math.floor(page) : 1);
+    const safeLimit = Math.min(Math.max(Number.isFinite(limit) ? Math.floor(limit) : 6, 1), 24);
+    const keyword = String(query || '').trim();
+
+    const relations = await this.prisma.userRelation.findMany({
+      where: {
+        user_no_1: userNo,
+      },
       include: {
         user2: {
           select: {
@@ -131,21 +527,137 @@ export class DashboardService {
             role_id: true,
           },
         },
-        relation_type: true,
-      },
-    });
-  }
-
-  async getMessages(userNo: bigint) {
-    return this.prisma.userMessage.findMany({
-      where: {
-        OR: [{ sender_no: userNo }, { receiver_no: userNo }],
-      },
-      include: {
-        sender: { select: { username: true } },
-        receiver: { select: { username: true } },
       },
       orderBy: { created_at: 'desc' },
     });
+
+    const recipients = new Map<string, {
+      user_no: string;
+      user_id: string;
+      username: string;
+      role_id: string;
+      relation_type_id: string;
+      created_at: Date | null;
+    }>();
+
+    for (const relation of relations) {
+      const user = relation.user2;
+      const key = user.user_no.toString();
+      if (!recipients.has(key)) {
+        recipients.set(key, {
+          user_no: key,
+          user_id: user.user_id,
+          username: user.username,
+          role_id: user.role_id,
+          relation_type_id: relation.relation_type_id,
+          created_at: relation.created_at ?? null,
+        });
+      }
+    }
+
+    const filtered = Array.from(recipients.values()).filter((recipient) => {
+      if (!keyword) return true;
+      return (
+        recipient.username.includes(keyword) ||
+        recipient.user_id.includes(keyword)
+      );
+    });
+
+    const total = filtered.length;
+    const paged = filtered.slice((safePage - 1) * safeLimit, (safePage - 1) * safeLimit + safeLimit);
+
+    return {
+      items: paged,
+      page: safePage,
+      limit: safeLimit,
+      total,
+      totalPages: Math.max(1, Math.ceil(total / safeLimit)),
+    };
+  }
+
+  async sendMessage(userNo: bigint, receiverUserNo: string | number | bigint | undefined, content?: string) {
+    if (receiverUserNo === undefined || receiverUserNo === null || receiverUserNo === '') {
+      throw new BadRequestException('받는 사람을 선택해 주세요.');
+    }
+
+    const text = String(content || '').trim();
+    if (!text) {
+      throw new BadRequestException('메시지 내용을 입력해 주세요.');
+    }
+
+    const receiverNoBigInt = BigInt(receiverUserNo);
+    if (receiverNoBigInt === userNo) {
+      throw new BadRequestException('자기 자신에게는 메시지를 보낼 수 없습니다.');
+    }
+
+    const [sender, receiver, relation] = await Promise.all([
+      this.prisma.user.findUnique({
+        where: { user_no: userNo },
+        select: { user_no: true, user_id: true, username: true },
+      }),
+      this.prisma.user.findUnique({
+        where: { user_no: receiverNoBigInt },
+        select: { user_no: true, user_id: true, username: true },
+      }),
+      this.prisma.userRelation.findFirst({
+        where: {
+          user_no_1: userNo,
+          user_no_2: receiverNoBigInt,
+        },
+        select: { relation_id: true },
+      }),
+    ]);
+
+    if (!sender || !receiver) {
+      throw new NotFoundException('메시지 상대를 찾을 수 없습니다.');
+    }
+
+    if (!relation) {
+      throw new BadRequestException('연결된 사용자에게만 메시지를 보낼 수 있습니다.');
+    }
+
+    const message = await this.prisma.userMessage.create({
+      data: {
+        sender_no: userNo,
+        receiver_no: receiverNoBigInt,
+        content: text,
+        is_read: 'N',
+      },
+      include: {
+        sender: {
+          select: {
+            user_no: true,
+            user_id: true,
+            username: true,
+            role_id: true,
+          },
+        },
+        receiver: {
+          select: {
+            user_no: true,
+            user_id: true,
+            username: true,
+            role_id: true,
+          },
+        },
+      },
+    });
+
+    return {
+      ok: true,
+      message: '메시지를 전송했습니다.',
+      data: {
+        message_id: message.message_id.toString(),
+        sender_no: message.sender_no.toString(),
+        receiver_no: message.receiver_no.toString(),
+        content: message.content,
+        is_read: message.is_read,
+        created_at: message.created_at,
+        direction: 'sent',
+        sender: message.sender,
+        receiver: message.receiver,
+        counterpart: message.receiver,
+      },
+    };
   }
 }

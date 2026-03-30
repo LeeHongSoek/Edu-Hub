@@ -962,6 +962,26 @@ INSERT INTO `users` VALUES
 (2,'s','$2b$10$w0fA4tbVaov4l2Osw6lzyOiwvEUmv9dPVCwFzN4DdVVPHXE2Tdb0u','김철수','student1@edu-hub.com','S','N','2026-03-27 21:48:28'),
 (3,'p','$2b$10$w0fA4tbVaov4l2Osw6lzyOiwvEUmv9dPVCwFzN4DdVVPHXE2Tdb0u','이영희','parent1@edu-hub.com','P','N','2026-03-27 21:48:28'),
 (4,'ss','$2b$10$w0fA4tbVaov4l2Osw6lzyOiwvEUmv9dPVCwFzN4DdVVPHXE2Tdb0u','제이미','aaa@aa.aaa','S','N','2026-03-27 21:48:28'),
-(5,'x','$2b$10$w0fA4tbVaov4l2Osw6lzyOiwvEUmv9dPVCwFzN4DdVVPHXE2Tdb0u','x','x@x.c','S','N','2026-03-27 13:48:19');
+(5,'x','$2b$10$w0fA4tbVaov4l2Osw6lzyOiwvEUmv9dPVCwFzN4DdVVPHXE2Tdb0u','x','x@x.c','S','N','2026-03-27 13:48:19'),
+(6,'t2','$2b$10$w0fA4tbVaov4l2Osw6lzyOiwvEUmv9dPVCwFzN4DdVVPHXE2Tdb0u','최하늘','teacher2@edu-hub.com','T','N','2026-03-30 09:00:00'),
+(7,'t3','$2b$10$w0fA4tbVaov4l2Osw6lzyOiwvEUmv9dPVCwFzN4DdVVPHXE2Tdb0u','윤서준','teacher3@edu-hub.com','T','N','2026-03-30 09:00:00'),
+(8,'p2','$2b$10$w0fA4tbVaov4l2Osw6lzyOiwvEUmv9dPVCwFzN4DdVVPHXE2Tdb0u','한미정','parent2@edu-hub.com','P','N','2026-03-30 09:00:00'),
+(9,'p3','$2b$10$w0fA4tbVaov4l2Osw6lzyOiwvEUmv9dPVCwFzN4DdVVPHXE2Tdb0u','오지은','parent3@edu-hub.com','P','N','2026-03-30 09:00:00'),
+(10,'s2','$2b$10$w0fA4tbVaov4l2Osw6lzyOiwvEUmv9dPVCwFzN4DdVVPHXE2Tdb0u','강민준','student2@edu-hub.com','S','N','2026-03-30 09:00:00'),
+(11,'s3','$2b$10$w0fA4tbVaov4l2Osw6lzyOiwvEUmv9dPVCwFzN4DdVVPHXE2Tdb0u','서예린','student3@edu-hub.com','S','N','2026-03-30 09:00:00'),
+(12,'s4','$2b$10$w0fA4tbVaov4l2Osw6lzyOiwvEUmv9dPVCwFzN4DdVVPHXE2Tdb0u','정우진','student4@edu-hub.com','S','N','2026-03-30 09:00:00'),
+(13,'t4','$2b$10$w0fA4tbVaov4l2Osw6lzyOiwvEUmv9dPVCwFzN4DdVVPHXE2Tdb0u','김도윤','teacher4@edu-hub.com','T','N','2026-03-30 09:00:00'),
+(14,'p4','$2b$10$w0fA4tbVaov4l2Osw6lzyOiwvEUmv9dPVCwFzN4DdVVPHXE2Tdb0u','배수현','parent4@edu-hub.com','P','N','2026-03-30 09:00:00'),
+(15,'s5','$2b$10$w0fA4tbVaov4l2Osw6lzyOiwvEUmv9dPVCwFzN4DdVVPHXE2Tdb0u','이도현','student5@edu-hub.com','S','N','2026-03-30 09:00:00'),
+(16,'t5','$2b$10$w0fA4tbVaov4l2Osw6lzyOiwvEUmv9dPVCwFzN4DdVVPHXE2Tdb0u','황유진','teacher5@edu-hub.com','T','N','2026-03-30 09:00:00'),
+(17,'p5','$2b$10$w0fA4tbVaov4l2Osw6lzyOiwvEUmv9dPVCwFzN4DdVVPHXE2Tdb0u','문지후','parent5@edu-hub.com','P','N','2026-03-30 09:00:00'),
+(18,'s6','$2b$10$w0fA4tbVaov4l2Osw6lzyOiwvEUmv9dPVCwFzN4DdVVPHXE2Tdb0u','임서윤','student6@edu-hub.com','S','N','2026-03-30 09:00:00'),
+(19,'t6','$2b$10$w0fA4tbVaov4l2Osw6lzyOiwvEUmv9dPVCwFzN4DdVVPHXE2Tdb0u','장민서','teacher6@edu-hub.com','T','N','2026-03-30 09:00:00'),
+(20,'s7','$2b$10$w0fA4tbVaov4l2Osw6lzyOiwvEUmv9dPVCwFzN4DdVVPHXE2Tdb0u','홍지호','student7@edu-hub.com','S','N','2026-03-30 09:00:00'),
+(21,'p6','$2b$10$w0fA4tbVaov4l2Osw6lzyOiwvEUmv9dPVCwFzN4DdVVPHXE2Tdb0u','윤하린','parent6@edu-hub.com','P','N','2026-03-30 09:00:00'),
+(22,'s8','$2b$10$w0fA4tbVaov4l2Osw6lzyOiwvEUmv9dPVCwFzN4DdVVPHXE2Tdb0u','고서진','student8@edu-hub.com','S','N','2026-03-30 09:00:00'),
+(23,'s9','$2b$10$w0fA4tbVaov4l2Osw6lzyOiwvEUmv9dPVCwFzN4DdVVPHXE2Tdb0u','차유나','student9@edu-hub.com','S','N','2026-03-30 09:00:00'),
+(24,'t7','$2b$10$w0fA4tbVaov4l2Osw6lzyOiwvEUmv9dPVCwFzN4DdVVPHXE2Tdb0u','송태영','teacher7@edu-hub.com','T','N','2026-03-30 09:00:00'),
+(25,'p7','$2b$10$w0fA4tbVaov4l2Osw6lzyOiwvEUmv9dPVCwFzN4DdVVPHXE2Tdb0u','신가은','parent7@edu-hub.com','P','N','2026-03-30 09:00:00');
 
 SET FOREIGN_KEY_CHECKS=1;
