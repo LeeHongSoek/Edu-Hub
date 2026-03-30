@@ -48,3 +48,4 @@ EHdeploy() {
   EHtunnel
 }
 
+# source ~/.zshrc
