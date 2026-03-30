@@ -2,6 +2,7 @@ import svgLoader from 'vite-svg-loader';
 
 const frontendPort = Number(process.env.NUXT_PORT || 0);   // 실제론 0 이 되면 안된다. 300?번대 포트를 사용해야한다.
 const backendOrigin = process.env.BACKEND_ORIGIN || 'http://127.0.0.1:0'; // 실제론 0 이 되면 안된다. 400?번대 포트를 사용해야한다.
+const devtoolsEnabled = process.env.NUXT_DEVTOOLS_ENABLED !== 'false';
 
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
@@ -15,10 +16,10 @@ export default defineNuxtConfig({
     }
   },
   devtools: {
-    enabled: false,
+    enabled: devtoolsEnabled,
 
     timeline: {
-      enabled: false
+      enabled: devtoolsEnabled
     }
   },
   // If you are specifically trying to enable detailed debugging: 디버깅

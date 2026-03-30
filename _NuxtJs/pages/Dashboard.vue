@@ -43,9 +43,18 @@ onMounted(() => {
           <span class="username">{{ userInfo.username }}</span>님!
           <!-- 대시보드 내 네비게이션 버튼 (타이틀 바로 뒤) -->
           <div v-if="userInfo.role_id !== 'P'" class="quick-nav">
-            <NuxtLink to="/questions?mine=true" class="nav-btn">나의 문제목록</NuxtLink>
-            <NuxtLink to="/question-books" class="nav-btn">나의 문제집목록</NuxtLink>
-            <NuxtLink to="/exams" class="nav-btn">나의 고사집목록</NuxtLink>
+            <NuxtLink to="/questions?mine=true" class="nav-btn">
+              <span class="nav-icon">📄</span>
+              <span>나의 문제목록</span>
+            </NuxtLink>
+            <NuxtLink to="/question-books" class="nav-btn">
+              <span class="nav-icon">📚</span>
+              <span>나의 문제집목록</span>
+            </NuxtLink>
+            <NuxtLink to="/exams" class="nav-btn">
+              <span class="nav-icon">📝</span>
+              <span>나의 고사집목록</span>
+            </NuxtLink>
           </div>
         </h1>
         <p class="welcome-sub">오늘도 지식을 완성하는 하루 되세요.</p>
@@ -148,6 +157,9 @@ onMounted(() => {
 }
 
 .nav-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
   background: rgba(129, 140, 248, 0.1);
   border: 1px solid rgba(129, 140, 248, 0.2);
   color: #818cf8;
@@ -163,6 +175,11 @@ onMounted(() => {
 .nav-btn:hover {
   background: rgba(129, 140, 248, 0.2);
   transform: translateY(-2px);
+}
+
+.nav-icon {
+  font-size: 1rem;
+  line-height: 1;
 }
 
 .role-badge-inline {
