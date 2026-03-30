@@ -3,19 +3,21 @@
 import "dotenv/config";
 import * as path from "path";
 import * as fs from "fs";
-import { defineConfig } from "prisma/config";
+import { defineConfig, env } from "prisma/config";
 
-// NODE_ENV에 따라 올바른 .env 파일 로드
-const envPath = process.env.ENV_FILE
-  ? path.resolve(process.env.ENV_FILE)
-  : path.resolve(
-      __dirname,
-      process.env.NODE_ENV === "production" ? ".env.production" : ".env.local",
-    );
-if (fs.existsSync(envPath)) {
-  // dotenv 수동 로드
-  const dotenv = require("dotenv");
-  dotenv.config({ path: envPath, override: true });
+const dotenv = require("dotenv");
+
+const baseEnvPath = path.resolve(__dirname, ".env");
+if (fs.existsSync(baseEnvPath)) {
+  dotenv.config({ path: baseEnvPath });
+}
+
+if (process.env.ENV_FILE) {
+  const runtimeEnvPath = path.resolve(process.env.ENV_FILE);
+  if (fs.existsSync(runtimeEnvPath)) {
+    // 런타임 env 는 base .env 위에 덮어쓴다.
+    dotenv.config({ path: runtimeEnvPath, override: true });
+  }
 }
 
 export default defineConfig({
@@ -24,6 +26,6 @@ export default defineConfig({
     path: "prisma/migrations",
   },
   datasource: {
-    url: process.env["DATABASE_URL"] || "",
+    url: env("DATABASE_URL"),
   },
 });

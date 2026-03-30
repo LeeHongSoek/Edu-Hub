@@ -4,7 +4,6 @@ const core_1 = require("@nestjs/core");
 const app_module_1 = require("./app.module");
 const fs_1 = require("fs");
 const path_1 = require("path");
-const client_1 = require("@prisma/client");
 const prisma_service_1 = require("./common/prisma/prisma.service");
 BigInt.prototype.toJSON = function () {
     return this.toString();
@@ -49,6 +48,9 @@ function classifySqlQuery(query) {
     }
     return 'mutation';
 }
+function toPrismaModelName(delegateName) {
+    return delegateName.charAt(0).toUpperCase() + delegateName.slice(1);
+}
 async function bootstrap() {
     const frontendOrigin = process.env.FRONTEND_ORIGIN || 'http://127.0.0.1:0';
     const app = await core_1.NestFactory.create(app_module_1.AppModule, {
@@ -74,9 +76,24 @@ async function bootstrap() {
         Database: AdminJSPrisma.Database,
         Resource: AdminJSPrisma.Resource,
     });
-    const resourceNames = client_1.Prisma.dmmf.datamodel.models
-        .map((model) => model.name)
-        .filter((name) => !['ClassStudent', 'QuestionTag', 'ExamQuestion', 'UserQuestionBookItem'].includes(name));
+    const excludedResourceNames = new Set([
+        'ClassStudent',
+        'QuestionTag',
+        'ExamQuestion',
+        'UserQuestionBookItem',
+    ]);
+    const resourceNames = Object.keys(prisma)
+        .filter((key) => !key.startsWith('$') && !key.startsWith('_'))
+        .map(toPrismaModelName)
+        .filter((name) => !excludedResourceNames.has(name))
+        .filter((name) => {
+        try {
+            return Boolean(AdminJSPrisma.getModelByName(name));
+        }
+        catch {
+            return false;
+        }
+    });
     const adminEmail = process.env.ADMINJS_EMAIL || 'lhs0806@gmail.com';
     const adminPassword = process.env.ADMINJS_PASSWORD || 'Leehs1181!';
     const adminCookieSecret = process.env.ADMINJS_COOKIE_SECRET || 'edu-hub-admin-cookie-secret-change-me';
@@ -124,7 +141,7 @@ async function bootstrap() {
                     try {
                         const mode = classifySqlQuery(query);
                         if (mode === 'read') {
-                            const rows = await prisma.$queryRawUnsafe(query);
+                            const rows = (await prisma.$queryRawUnsafe(query));
                             const columns = Array.from(rows.reduce((set, row) => {
                                 Object.keys(row).forEach((key) => set.add(key));
                                 return set;

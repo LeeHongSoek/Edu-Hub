@@ -11,7 +11,7 @@ NEST_LOG_FILE="${PROJECT_ROOT}/logs/nest-dev.log"
 NUXT_DIR="${PROJECT_ROOT}/_NuxtJs"
 LOG_DIR="${NUXT_DIR}/logs"
 NUXT_LOG_FILE="${LOG_DIR}/nuxt-dev.log"
-NUXT_TARGET_URL="http://localhost:${NUXT_PORT:-3000}"
+NUXT_TARGET_URL=""
 
 # 기본값은 primary.env 이고, 필요하면 다른 env 파일 경로를 첫 번째 인자로 넘길 수 있다.
 # shellcheck disable=SC1091
@@ -54,6 +54,11 @@ assert_port_available "${NUXT_PORT}" "Nuxt"
 echo "[Nest] port=${PORT} frontend=${FRONTEND_ORIGIN}"
 (
   cd "${PROJECT_ROOT}/_NestJs"
+  PORT="${PORT}" \
+  FRONTEND_ORIGIN="${FRONTEND_ORIGIN}" \
+  BACKEND_ORIGIN="${BACKEND_ORIGIN}" \
+  API_BASE="${API_BASE}" \
+  ENV_FILE="${ENV_FILE}" \
   npm run start:dev
 ) > >(tee -a "${NEST_LOG_FILE}") 2> >(tee -a "${NEST_LOG_FILE}" >&2) &
 NEST_PID=$!
@@ -62,7 +67,11 @@ NEST_PID=$!
 echo "[Nuxt] port=${NUXT_PORT} backend=${BACKEND_ORIGIN}"
 (
   cd "${PROJECT_ROOT}/_NuxtJs"
-  npm run dev
+  NUXT_PORT="${NUXT_PORT}" \
+  PORT="${NUXT_PORT}" \
+  BACKEND_ORIGIN="${BACKEND_ORIGIN}" \
+  API_BASE="${API_BASE}" \
+  npm run dev -- --port "${NUXT_PORT}"
 ) > >(tee -a "${NUXT_LOG_FILE}") 2> >(tee -a "${NUXT_LOG_FILE}" >&2) &
 NUXT_PID=$!
 

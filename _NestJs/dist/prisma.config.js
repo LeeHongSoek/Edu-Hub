@@ -37,12 +37,16 @@ require("dotenv/config");
 const path = __importStar(require("path"));
 const fs = __importStar(require("fs"));
 const config_1 = require("prisma/config");
-const envPath = process.env.ENV_FILE
-    ? path.resolve(process.env.ENV_FILE)
-    : path.resolve(__dirname, process.env.NODE_ENV === "production" ? ".env.production" : ".env.local");
-if (fs.existsSync(envPath)) {
-    const dotenv = require("dotenv");
-    dotenv.config({ path: envPath, override: true });
+const dotenv = require("dotenv");
+const baseEnvPath = path.resolve(__dirname, ".env");
+if (fs.existsSync(baseEnvPath)) {
+    dotenv.config({ path: baseEnvPath });
+}
+if (process.env.ENV_FILE) {
+    const runtimeEnvPath = path.resolve(process.env.ENV_FILE);
+    if (fs.existsSync(runtimeEnvPath)) {
+        dotenv.config({ path: runtimeEnvPath, override: true });
+    }
 }
 exports.default = (0, config_1.defineConfig)({
     schema: "prisma/schema.prisma",
@@ -50,7 +54,7 @@ exports.default = (0, config_1.defineConfig)({
         path: "prisma/migrations",
     },
     datasource: {
-        url: process.env["DATABASE_URL"] || "",
+        url: (0, config_1.env)("DATABASE_URL"),
     },
 });
 //# sourceMappingURL=prisma.config.js.map

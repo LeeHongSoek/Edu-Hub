@@ -3,7 +3,6 @@ import { AppModule } from './app.module';
 import { appendFileSync, existsSync, mkdirSync, rmSync } from 'fs';
 import { resolve } from 'path';
 import type { NextFunction, Request, Response } from 'express';
-import { Prisma } from '@prisma/client';
 import { PrismaService } from './common/prisma/prisma.service';
 
 (BigInt.prototype as any).toJSON = function () {
@@ -60,6 +59,10 @@ function classifySqlQuery(query: string): 'read' | 'mutation' {
   return 'mutation';
 }
 
+function toPrismaModelName(delegateName: string): string {
+  return delegateName.charAt(0).toUpperCase() + delegateName.slice(1);
+}
+
 async function bootstrap() {
   const frontendOrigin = process.env.FRONTEND_ORIGIN || 'http://127.0.0.1:0'; // 실제론 0 이 되어선 안됀다.
 
@@ -81,7 +84,7 @@ async function bootstrap() {
 
   app.setGlobalPrefix('api');
 
-  const prisma = app.get(PrismaService);
+  const prisma = app.get<PrismaService>(PrismaService);
   const [{ default: AdminJS, ComponentLoader }, AdminJSExpress, AdminJSPrisma] = await Promise.all([
     import('adminjs'),
     import('@adminjs/express'),
@@ -93,9 +96,24 @@ async function bootstrap() {
     Resource: AdminJSPrisma.Resource,
   });
 
-  const resourceNames = Prisma.dmmf.datamodel.models
-    .map((model) => model.name)
-    .filter((name) => !['ClassStudent', 'QuestionTag', 'ExamQuestion', 'UserQuestionBookItem'].includes(name));
+  const excludedResourceNames = new Set([
+    'ClassStudent',
+    'QuestionTag',
+    'ExamQuestion',
+    'UserQuestionBookItem',
+  ]);
+
+  const resourceNames = Object.keys(prisma)
+    .filter((key) => !key.startsWith('$') && !key.startsWith('_'))
+    .map(toPrismaModelName)
+    .filter((name) => !excludedResourceNames.has(name))
+    .filter((name) => {
+      try {
+        return Boolean(AdminJSPrisma.getModelByName(name));
+      } catch {
+        return false;
+      }
+    });
 
   const adminEmail = process.env.ADMINJS_EMAIL || 'lhs0806@gmail.com';
   const adminPassword = process.env.ADMINJS_PASSWORD || 'Leehs1181!';
@@ -152,7 +170,7 @@ async function bootstrap() {
             const mode = classifySqlQuery(query);
 
             if (mode === 'read') {
-              const rows = await prisma.$queryRawUnsafe<Record<string, unknown>[]>(query);
+              const rows = (await prisma.$queryRawUnsafe(query)) as Record<string, unknown>[];
               const columns = Array.from(
                 rows.reduce((set, row) => {
                   Object.keys(row).forEach((key) => set.add(key));
