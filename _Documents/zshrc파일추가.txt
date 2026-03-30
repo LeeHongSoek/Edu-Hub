@@ -4,14 +4,14 @@
 EHtunnel() {
   kill -9 $(lsof -ti :4001)
   kill -9 $(lsof -ti :3001)
-  cd ~/Proj/Edu_Hub_tunnel/_NuxtJs && npm run dev:tunnel
+  cd ~/Proj/Edu_Hub_tunnel/_Client && npm run dev:tunnel
 }
 
 # Edu_Hub 로컬(개발용) 런칭함수
 EHapp() {
   kill -9 $(lsof -ti :4000)
   kill -9 $(lsof -ti :3000)
-  cd ~/Proj/Edu_Hub/_NuxtJs && npm run dev:app
+  cd ~/Proj/Edu_Hub/_Client && npm run dev:app
 }
 
 # Edu_Hub 클라우드페어 터널링 배포하기 ..나중에 mysql 리얼 데이터베이스로 변경해야함
@@ -42,10 +42,10 @@ EHdeploy() {
       echo "경고: $ENV_FILE 파일을 찾을 수 없습니다."
   fi
 
-  local NEST_ENV_FILE="$TARGET_DIR/_NestJs/.env"
+  local NEST_ENV_FILE="$TARGET_DIR/_Server/.env"
 
   if [ -f "$NEST_ENV_FILE" ]; then
-      echo "_NestJs/.env 파일의 데이터베이스를 변경합니다 (Edu-Hub -> Edu-Hub-Real)..."
+      echo "_Server/.env 파일의 데이터베이스를 변경합니다 (Edu-Hub -> Edu-Hub-Real)..."
       sed -i '' 's/DATABASE_URL="mysql:\/\/root:leehs1181!@127.0.0.1:3306\/Edu-Hub"/DATABASE_URL="mysql:\/\/root:leehs1181!@127.0.0.1:3306\/Edu-Hub-Tunnel"/g' "$NEST_ENV_FILE"
       echo "데이터베이스 변경 완료."
   else

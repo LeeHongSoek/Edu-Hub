@@ -9,7 +9,7 @@ export class PrismaService extends PrismaClient implements OnModuleInit {
 
     if (!databaseUrl) {
       throw new Error(
-        'DATABASE_URL is not defined. Check _NestJs/.env or set ENV_FILE to a runtime env file that includes DATABASE_URL.',
+        'DATABASE_URL is not defined. Check _Server/.env or set ENV_FILE to a runtime env file that includes DATABASE_URL.',
       );
     }
 

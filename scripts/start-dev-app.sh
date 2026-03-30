@@ -8,7 +8,7 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 NEST_LOG_FILE="${PROJECT_ROOT}/logs/nest-dev.log"
-NUXT_DIR="${PROJECT_ROOT}/_NuxtJs"
+NUXT_DIR="${PROJECT_ROOT}/_Client"
 LOG_DIR="${NUXT_DIR}/logs"
 NUXT_LOG_FILE="${LOG_DIR}/nuxt-dev.log"
 NUXT_TARGET_URL=""
@@ -53,7 +53,7 @@ assert_port_available "${NUXT_PORT}" "Nuxt"
 # 백엔드는 Nest 개발 서버를 현재 env 기준 포트로 실행한다.
 echo "[Nest] port=${PORT} frontend=${FRONTEND_ORIGIN}"
 (
-  cd "${PROJECT_ROOT}/_NestJs"
+  cd "${PROJECT_ROOT}/_Server"
   PORT="${PORT}" \
   FRONTEND_ORIGIN="${FRONTEND_ORIGIN}" \
   BACKEND_ORIGIN="${BACKEND_ORIGIN}" \
@@ -66,7 +66,7 @@ NEST_PID=$!
 # 프론트는 Nuxt 개발 서버를 현재 env 기준 포트로 실행한다.
 echo "[Nuxt] port=${NUXT_PORT} backend=${BACKEND_ORIGIN}"
 (
-  cd "${PROJECT_ROOT}/_NuxtJs"
+  cd "${PROJECT_ROOT}/_Client"
   NUXT_PORT="${NUXT_PORT}" \
   PORT="${NUXT_PORT}" \
   BACKEND_ORIGIN="${BACKEND_ORIGIN}" \

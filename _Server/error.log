@@ -1,14 +1,14 @@
 서버 부트스트랩 중 치명적 오류 발생: NoResourceAdapterError: There are no adapters supporting one of the resource you provided
-    at /Users/ihongseok/MyProject/Edu_Hub/_NestJs/node_modules/adminjs/lib/backend/utils/resources-factory/resources-factory.js:99:15
+    at /Users/ihongseok/MyProject/Edu_Hub/_Server/node_modules/adminjs/lib/backend/utils/resources-factory/resources-factory.js:99:15
     at Array.map (<anonymous>)
-    at ResourcesFactory._convertResources (/Users/ihongseok/MyProject/Edu_Hub/_NestJs/node_modules/adminjs/lib/backend/utils/resources-factory/resources-factory.js:93:22)
-    at ResourcesFactory.buildResources (/Users/ihongseok/MyProject/Edu_Hub/_NestJs/node_modules/adminjs/lib/backend/utils/resources-factory/resources-factory.js:48:35)
-    at new AdminJS (/Users/ihongseok/MyProject/Edu_Hub/_NestJs/node_modules/adminjs/lib/adminjs.js:114:39)
-    at AdminModule.onModuleInit (/Users/ihongseok/MyProject/Edu_Hub/_NestJs/node_modules/@adminjs/nestjs/build/admin.module.js:72:23)
-    at callModuleInitHook (/Users/ihongseok/MyProject/Edu_Hub/_NestJs/node_modules/@nestjs/core/hooks/on-module-init.hook.js:51:35)
+    at ResourcesFactory._convertResources (/Users/ihongseok/MyProject/Edu_Hub/_Server/node_modules/adminjs/lib/backend/utils/resources-factory/resources-factory.js:93:22)
+    at ResourcesFactory.buildResources (/Users/ihongseok/MyProject/Edu_Hub/_Server/node_modules/adminjs/lib/backend/utils/resources-factory/resources-factory.js:48:35)
+    at new AdminJS (/Users/ihongseok/MyProject/Edu_Hub/_Server/node_modules/adminjs/lib/adminjs.js:114:39)
+    at AdminModule.onModuleInit (/Users/ihongseok/MyProject/Edu_Hub/_Server/node_modules/@adminjs/nestjs/build/admin.module.js:72:23)
+    at callModuleInitHook (/Users/ihongseok/MyProject/Edu_Hub/_Server/node_modules/@nestjs/core/hooks/on-module-init.hook.js:51:35)
     at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
-    at async NestApplication.callInitHook (/Users/ihongseok/MyProject/Edu_Hub/_NestJs/node_modules/@nestjs/core/nest-application-context.js:252:13)
-    at async NestApplication.init (/Users/ihongseok/MyProject/Edu_Hub/_NestJs/node_modules/@nestjs/core/nest-application.js:103:9) {
+    at async NestApplication.callInitHook (/Users/ihongseok/MyProject/Edu_Hub/_Server/node_modules/@nestjs/core/nest-application-context.js:252:13)
+    at async NestApplication.init (/Users/ihongseok/MyProject/Edu_Hub/_Server/node_modules/@nestjs/core/nest-application.js:103:9) {
   resource: {
     model: {
       findUnique: [Function (anonymous)],

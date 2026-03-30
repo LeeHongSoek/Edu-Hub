@@ -9,7 +9,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 INFO_FILE="${PROJECT_ROOT}/ex_url.info"
 NEST_LOG_FILE="${PROJECT_ROOT}/logs/nest-dev.log"
-NUXT_DIR="${PROJECT_ROOT}/_NuxtJs"
+NUXT_DIR="${PROJECT_ROOT}/_Client"
 LOG_DIR="${NUXT_DIR}/logs"
 NUXT_LOG_FILE="${LOG_DIR}/nuxt-dev.log"
 CLOUDFLARED_LOG_FILE="${LOG_DIR}/cloudflared.log"
@@ -64,7 +64,7 @@ assert_port_available "${NUXT_PORT}" "Nuxt"
 # 먼저 로컬 Nest 개발 서버를 현재 env 기준 포트로 실행한다.
 echo "[Nest] port=${PORT} frontend=${FRONTEND_ORIGIN}"
 (
-  cd "${PROJECT_ROOT}/_NestJs"
+  cd "${PROJECT_ROOT}/_Server"
   npm run start:dev
 ) > >(tee -a "${NEST_LOG_FILE}") 2> >(tee -a "${NEST_LOG_FILE}" >&2) &
 NEST_PID=$!
@@ -72,7 +72,7 @@ NEST_PID=$!
 # 프론트는 Nuxt 앱 서버만 실행한다. 여기서는 중간 래퍼를 다시 부르지 않는다.
 echo "[Nuxt] port=${NUXT_PORT} backend=${BACKEND_ORIGIN}"
 (
-  cd "${PROJECT_ROOT}/_NuxtJs"
+  cd "${PROJECT_ROOT}/_Client"
   npm run dev
 ) > >(tee -a "${NUXT_LOG_FILE}") 2> >(tee -a "${NUXT_LOG_FILE}" >&2) &
 NUXT_PID=$!

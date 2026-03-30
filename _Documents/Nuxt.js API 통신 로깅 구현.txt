@@ -809,20 +809,20 @@ nuxt.config.ts (line 23)
 devServer.port: 3000 를 3001로 변경
 
 Nuxt의 API 프록시 대상 4000 -> 4001
-_NuxtJs/server/routes/api/[...path].ts (line 3)
+_Client/server/routes/api/[...path].ts (line 3)
 const API_ORIGIN = 'http://127.0.0.1:4000'; 를 4001로 변경
 
 Admin 프록시 대상도 4000 -> 4001
-_NuxtJs/server/routes/api/admin/[...path].ts (line 3)
+_Client/server/routes/api/admin/[...path].ts (line 3)
 const ADMIN_API_ORIGIN = 'http://127.0.0.1:4000'; 를 4001로 변경
 
 Nest 루트 접속시 프론트로 보내는 리다이렉트 3000 -> 3001
-_NestJs/src/main.ts (line 73)
+_Server/src/main.ts (line 73)
 res.redirect(302, 'http://localhost:3000'); 를 3001로 변경
 
 그리고 Nest 포트는 이미 환경변수 기반이라 코드 수정 없이 실행값만 맞추면 됩니다.
 
-_NestJs/src/main.ts (line 370)
+_Server/src/main.ts (line 370)
 const port = process.env.PORT ?? 4000;
 즉 배포용에서는 PORT=4001 로 실행하면 됩니다.
 추가로 같이 보면 좋은 곳입니다.
@@ -840,11 +840,11 @@ backend-test.vue (line 14)
 실행할 때는 보통 이렇게 맞추면 됩니다.
 
 # Nest
-cd _NestJs
+cd _Server
 PORT=4001 npm run start:dev
 
 # Nuxt
-cd _NuxtJs
+cd _Client
 npm run dev
 주의할 점 하나만 더 말하면, 
 dist 폴더 안에도 예전 3000/4000 문자열이 남아 있지만 소스 기준으로 다시 빌드하면 재생성되니 
