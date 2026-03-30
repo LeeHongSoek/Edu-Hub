@@ -42,32 +42,32 @@ model EnmRelationType {
 }
 
 model User {
-  user_no         BigInt           @id @default(autoincrement())
-  user_id         String           @unique(map: "user_id") @db.VarChar(10)
-  user_pw         String           @db.VarChar(255)
-  username        String           @db.VarChar(50)
-  email           String           @unique(map: "email") @db.VarChar(255)
-  role_id         String           @db.Char(1)
-  is_withdrawn    IsWithdrawn?     @default(N)
-  created_at      DateTime?        @default(now()) @db.DateTime(0)
-  student_classes ClassStudent[]
-  taught_classes  Class[]          @relation("TeacherClasses")
-  exam_results    ExamResult[]
-  created_exams   Exam[]
-  created_groups  Group[]
-  received_cmts     UserComment[]    @relation("ReceivedComments")
+  user_no           BigInt             @id @default(autoincrement())
+  user_id           String             @unique(map: "user_id") @db.VarChar(10)
+  user_pw           String             @db.VarChar(255)
+  username          String             @db.VarChar(50)
+  email             String             @unique(map: "email") @db.VarChar(255)
+  role_id           String             @db.Char(1)
+  is_withdrawn      IsWithdrawn?       @default(N)
+  created_at        DateTime?          @default(now()) @db.DateTime(0)
+  student_classes   ClassStudent[]
+  taught_classes    Class[]            @relation("TeacherClasses")
+  exam_results      ExamResult[]
+  created_exams     Exam[]
+  created_groups    Group[]
+  received_cmts     UserComment[]      @relation("ReceivedComments")
   reviews           QuestionReview[]
   created_sqs       Question[]
   solve_results     SolveResult[]
   study_logs        StudyLog[]
-  authored_cmts     UserComment[]    @relation("AuthoredComments")
+  authored_cmts     UserComment[]      @relation("AuthoredComments")
   question_books    UserQuestionBook[]
-  sent_messages     UserMessage[]    @relation("SentMessages")
-  received_messages UserMessage[]    @relation("ReceivedMessages")
-  relations_as_1    UserRelation[]   @relation("User1Relations")
-  relations_as_2    UserRelation[]   @relation("User2Relations")
+  sent_messages     UserMessage[]      @relation("SentMessages")
+  received_messages UserMessage[]      @relation("ReceivedMessages")
+  relations_as_1    UserRelation[]     @relation("User1Relations")
+  relations_as_2    UserRelation[]     @relation("User2Relations")
   ombudsman_reports OmbudsmanReport[]
-  role              EnmRole          @relation(fields: [role_id], references: [role_id], onUpdate: Restrict, map: "fk_user_role")
+  role              EnmRole            @relation(fields: [role_id], references: [role_id], onUpdate: Restrict, map: "fk_user_role")
 
   @@index([role_id], map: "fk_user_role")
   @@map("users")
@@ -114,14 +114,14 @@ model UserRelation {
 }
 
 model UserMessage {
-  message_id  BigInt       @id @default(autoincrement())
+  message_id  BigInt               @id @default(autoincrement())
   sender_no   BigInt
   receiver_no BigInt
-  content     String       @db.Text
+  content     String               @db.Text
   is_read     UserMessage_is_read? @default(N)
-  created_at  DateTime?    @default(now()) @db.DateTime(0)
-  sender      User         @relation("SentMessages", fields: [sender_no], references: [user_no], onDelete: Cascade, onUpdate: Restrict, map: "fk_msg_sender")
-  receiver    User         @relation("ReceivedMessages", fields: [receiver_no], references: [user_no], onDelete: Cascade, onUpdate: Restrict, map: "fk_msg_receiver")
+  created_at  DateTime?            @default(now()) @db.DateTime(0)
+  sender      User                 @relation("SentMessages", fields: [sender_no], references: [user_no], onDelete: Cascade, onUpdate: Restrict, map: "fk_msg_sender")
+  receiver    User                 @relation("ReceivedMessages", fields: [receiver_no], references: [user_no], onDelete: Cascade, onUpdate: Restrict, map: "fk_msg_receiver")
 
   @@index([sender_no], map: "fk_msg_sender")
   @@index([receiver_no], map: "fk_msg_receiver")
@@ -152,34 +152,34 @@ model Group {
 }
 
 model Question {
-  question_id      BigInt            @id @default(autoincrement())
+  question_id      BigInt                 @id @default(autoincrement())
   creator_no       BigInt
   group_id         BigInt?
-  question_type_id String            @default("M") @db.Char(1)
-  title            String            @db.VarChar(255)
-  question         String            @db.Text
-  content          String?           @db.Text
-  answer           String            @db.Text
-  explanation      String?           @db.Text
-  hint             String?           @db.Text
-  difficulty       Int?              @default(1) @db.TinyInt
+  question_type_id String                 @default("M") @db.Char(1)
+  title            String                 @db.VarChar(255)
+  question         String                 @db.Text
+  content          String?                @db.Text
+  answer           String                 @db.Text
+  explanation      String?                @db.Text
+  hint             String?                @db.Text
+  difficulty       Int?                   @default(1) @db.TinyInt
   // SQL 기본값은 TRUE 입니다. (서버 DDL: `is_public` BOOLEAN DEFAULT TRUE)
-  is_public        Boolean?          @default(true)
-  is_deleted       IsDeleted?        @default(N)
-  time_limit       Int?              @default(0)
-  rating           Int?              @default(0) @db.TinyInt
-  created_at       DateTime?         @default(now()) @db.DateTime(0)
+  is_public        Boolean?               @default(true)
+  is_deleted       IsDeleted?             @default(N)
+  time_limit       Int?                   @default(0)
+  rating           Int?                   @default(0) @db.TinyInt
+  created_at       DateTime?              @default(now()) @db.DateTime(0)
   exams            ExamQuestion[]
   attachments      MediaAttachment[]
   options          QuestionOption[]
   reviews          QuestionReview[]
   tags             QuestionTag[]
-  creator          User              @relation(fields: [creator_no], references: [user_no], onDelete: Cascade, onUpdate: Restrict, map: "fk_question_creator")
-  group            Group?            @relation(fields: [group_id], references: [group_id], onUpdate: Restrict, map: "fk_question_group")
-  type             EnmQuestionType   @relation(fields: [question_type_id], references: [type_id], onUpdate: Restrict, map: "fk_question_type")
+  creator          User                   @relation(fields: [creator_no], references: [user_no], onDelete: Cascade, onUpdate: Restrict, map: "fk_question_creator")
+  group            Group?                 @relation(fields: [group_id], references: [group_id], onUpdate: Restrict, map: "fk_question_group")
+  type             EnmQuestionType        @relation(fields: [question_type_id], references: [type_id], onUpdate: Restrict, map: "fk_question_type")
   solve_results    SolveResult[]
   study_logs       StudyLog[]
-  book_items        UserQuestionBookItem[]
+  book_items       UserQuestionBookItem[]
   comments         UserComment[]
   passage          QuestionPassage?
 

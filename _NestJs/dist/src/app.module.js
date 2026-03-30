@@ -32,7 +32,10 @@ exports.AppModule = AppModule = __decorate([
         imports: [
             config_1.ConfigModule.forRoot({
                 isGlobal: true,
-                envFilePath: process.env.ENV_FILE || (0, path_1.resolve)(process.cwd(), '..', 'config', 'runtime', 'primary.env'),
+                envFilePath: [
+                    process.env.ENV_FILE || (0, path_1.resolve)(process.cwd(), '..', 'config', 'runtime', 'primary.env'),
+                    (0, path_1.resolve)(process.cwd(), '.env'),
+                ],
             }),
             prisma_module_1.PrismaModule,
             questions_module_1.QuestionsModule,

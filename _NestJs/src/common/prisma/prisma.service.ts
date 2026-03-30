@@ -5,8 +5,16 @@ import { PrismaMariaDb } from '@prisma/adapter-mariadb';
 @Injectable()
 export class PrismaService extends PrismaClient implements OnModuleInit {
   constructor() {
+    const databaseUrl = process.env.DATABASE_URL;
+
+    if (!databaseUrl) {
+      throw new Error(
+        'DATABASE_URL is not defined. Check _NestJs/.env or set ENV_FILE to a runtime env file that includes DATABASE_URL.',
+      );
+    }
+
     // MariaDB 어댑터를 사용하여 Prisma 클라이언트 초기화
-    const adapter = new PrismaMariaDb(process.env.DATABASE_URL!);
+    const adapter = new PrismaMariaDb(databaseUrl);
     super({ adapter });
   }
 

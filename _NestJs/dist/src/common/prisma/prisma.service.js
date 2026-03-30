@@ -15,7 +15,11 @@ const client_1 = require("@prisma/client");
 const adapter_mariadb_1 = require("@prisma/adapter-mariadb");
 let PrismaService = class PrismaService extends client_1.PrismaClient {
     constructor() {
-        const adapter = new adapter_mariadb_1.PrismaMariaDb(process.env.DATABASE_URL);
+        const databaseUrl = process.env.DATABASE_URL;
+        if (!databaseUrl) {
+            throw new Error('DATABASE_URL is not defined. Check _NestJs/.env or set ENV_FILE to a runtime env file that includes DATABASE_URL.');
+        }
+        const adapter = new adapter_mariadb_1.PrismaMariaDb(databaseUrl);
         super({ adapter });
     }
     async onModuleInit() {

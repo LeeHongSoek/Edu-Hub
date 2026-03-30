@@ -20,7 +20,10 @@ import { DemoModule } from './demo/demo.module';
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      envFilePath: process.env.ENV_FILE || resolve(process.cwd(), '..', 'config', 'runtime', 'primary.env'),
+      envFilePath: [
+        process.env.ENV_FILE || resolve(process.cwd(), '..', 'config', 'runtime', 'primary.env'),
+        resolve(process.cwd(), '.env'),
+      ],
     }),
     PrismaModule,
     QuestionsModule,
