@@ -1,0 +1,50 @@
+# nano ~/.zshrc 
+
+# Edu_Hub 클라우드페어 터널링 배포 런칭함수
+EHtunnel() {
+  kill -9 $(lsof -ti :4001)
+  kill -9 $(lsof -ti :3001)
+  cd ~/Proj/Edu_Hub_tunnel/_NuxtJs && npm run dev:tunnel
+}
+
+# Edu_Hub 로컬(개발용) 런칭함수
+EHapp() {
+  kill -9 $(lsof -ti :4000)
+  kill -9 $(lsof -ti :3000)
+  cd ~/Proj/Edu_Hub/_NuxtJs && npm run dev:app
+}
+
+# Edu_Hub 클라우드페어 터널링 배포하기 ..나중에 mysql 리얼 데이터베이스로 변경해야함
+EHdeploy() {
+  local SOURCE_DIR="/Users/ihongseok/Proj/Edu_Hub"
+  local TARGET_DIR="/Users/ihongseok/Proj/Edu_Hub_tunnel"
+
+  echo "기존 터널 디렉토리(${TARGET_DIR})를 삭제합니다..."
+  rm -rf "$TARGET_DIR"
+
+  echo "Edu_Hub 디렉토리의 내용을 ${TARGET_DIR} 로 복사합니다..."
+
+  rsync -av \
+    --exclude='.git' \
+    --exclude='.gitignore' \
+    "$SOURCE_DIR/" "$TARGET_DIR/"
+
+  local ENV_FILE="$TARGET_DIR/config/runtime/primary.env"
+
+  if [ -f "$ENV_FILE" ]; then
+      echo "primary.env 파일의 포트를 변경합니다 (3000 -> 3001, 4000 -> 4001)..."
+      sed -i '' 's/FRONTEND_PORT=3000/FRONTEND_PORT=3001/g' "$ENV_FILE"
+      sed -i '' 's/BACKEND_PORT=4000/BACKEND_PORT=4001/g' "$ENV_FILE"
+      sed -i '' 's/=3000/=3001/g' "$ENV_FILE"
+      sed -i '' 's/=4000/=4001/g' "$ENV_FILE"
+      echo "포트 변경 완료."
+  else
+      echo "경고: $ENV_FILE 파일을 찾을 수 없습니다."
+  fi
+
+  echo "배포 터널 동기화 작업이 완료되었습니다!"
+
+  echo "EHtunnel을 시작합니다..."
+  EHtunnel
+}
+
