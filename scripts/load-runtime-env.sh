@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# 런타임 환경파일을 현재 셸에 불러오고, 로컬 개발 스크립트에서 공통으로
+# 사용하는 프론트엔드/백엔드 관련 표준 환경변수를 계산해 export 한다.
+
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"

@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# 공통 런타임 환경파일을 기준으로 로컬 Nest/Nuxt 개발 서버를 함께 실행하고,
+# 각 프로세스 로그를 프로젝트 로그 디렉터리에 기록한다.
+
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"

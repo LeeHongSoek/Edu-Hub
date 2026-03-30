@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# 로컬 Nest/Nuxt 개발 서버를 실행한 뒤, Nuxt 앱을 임시 Cloudflare Tunnel로
+# 외부에 노출하고 생성된 외부 URL 정보를 파일에 기록한다.
+
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
