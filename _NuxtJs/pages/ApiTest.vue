@@ -26,7 +26,7 @@
       <ul>
         <li v-for="(item, idx) in testResults" :key="idx">
           <div>
-            <strong>{{ item.method }} {{ item.url }}</strong>
+            <strong>{{ item.method.toUpperCase() }} {{ item.url }}</strong>
             <p class="meta">상태 {{ item.status }} · {{ item.dataSize }} bytes · {{ item.duration }}ms</p>
           </div>
           <pre>{{ item.payload }}</pre>
@@ -45,7 +45,7 @@
 import { ref } from 'vue';
 import type { NitroFetchOptions } from 'nitropack/types';
 
-type TestCaseMethod = 'GET' | 'POST';
+type TestCaseMethod = 'get' | 'post';
 
 type TestCase = {
   label: string;
@@ -69,22 +69,22 @@ const testResults = ref<
 const testCases: TestCase[] = [
   {
     label: '기본 GET',
-    method: 'GET',
+    method: 'get',
     url: '/api/demo',
-    options: { method: 'GET' }
+    options: { method: 'get' }
   },
   {
     label: '쿼리付き GET',
-    method: 'GET',
+    method: 'get',
     url: '/api/demo?id=123&type=test',
-    options: { method: 'GET' }
+    options: { method: 'get' }
   },
   {
     label: 'POST (데이터 포함)',
-    method: 'POST',
+    method: 'post',
     url: '/api/demo',
     options: {
-      method: 'POST',
+      method: 'post',
       body: { userId: 123, action: 'test', timestamp: new Date().toISOString() }
     }
   }
