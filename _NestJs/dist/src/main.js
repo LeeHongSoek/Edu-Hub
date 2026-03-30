@@ -295,7 +295,7 @@ async function bootstrap() {
             next();
         });
     }
-    const port = process.env.PORT ?? 0;
+    const port = process.env.BACKEND_PORT || process.env.PORT || 4000;
     await app.listen(port);
     console.log(`🚀 애플리케이션 실행 중: http://localhost:${port} 🚀`);
 }

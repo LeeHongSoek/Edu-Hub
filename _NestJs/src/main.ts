@@ -386,7 +386,7 @@ async function bootstrap() {
     });
   }
 
-  const port = process.env.PORT ?? 0; // 실제적으론 0 이 되어선 안된다. 400?번대 포트를 사용해야한다.
+  const port = process.env.BACKEND_PORT || process.env.PORT || 4000;
   await app.listen(port);
   console.log(`🚀 애플리케이션 실행 중: http://localhost:${port} 🚀`);
 }
