@@ -1,10 +1,9 @@
 import { appendFile, mkdir } from 'fs/promises';
-import { resolve } from 'path';
 import { existsSync } from 'fs';
+import { getApiRequestLogPath } from '~/server/utils/log-path';
 
 // 로그 경로 설정
-const logsDir = resolve('logs');
-const logPath = resolve('logs/api-requests.log');
+const { logDir: logsDir, logPath } = getApiRequestLogPath();
 
 // 서버 시작 시 디렉토리 생성 (비동기 권장)
 if (process.dev && !existsSync(logsDir)) {

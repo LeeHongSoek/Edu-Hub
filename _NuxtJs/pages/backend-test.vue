@@ -35,16 +35,10 @@
     <div style="background: #fff3e0; padding: 15px; border-radius: 5px;">
       <h3>🎯 브라우저 콘솔 명령어</h3>
       <code style="display: block; background: white; padding: 10px; margin: 5px 0; border-left: 3px solid #FF9800;">
-        // 모든 로그 보기
-        console.table(window.__API_LOGS__)
+        // 요청 로그는 서버의 logs/api-requests.log 에 저장됩니다.
       </code>
       <code style="display: block; background: white; padding: 10px; margin: 5px 0; border-left: 3px solid #FF9800;">
-        // JSON 다운로드
-        window.__API_DEBUG__.download()
-      </code>
-      <code style="display: block; background: white; padding: 10px; margin: 5px 0; border-left: 3px solid #FF9800;">
-        // 마지막 호출
-        window.__API_LOGS__[window.__API_LOGS__.length - 1]
+        // 테스트 결과는 이 페이지의 목록과 개발자도구 Network 탭에서 확인하면 됩니다.
       </code>
     </div>
   </div>
@@ -125,8 +119,7 @@ const testBackendApis = async () => {
     }
 
     console.log('%c✅ API 테스트 완료!', 'color: #4CAF50; font-weight: bold; font-size: 14px;');
-    console.log('%c📊 개발자도구 콘솔에서 다음을 실행하세요:', 'font-style: italic; color: #FF9800;');
-    console.log('   console.table(window.__API_LOGS__)');
+    console.log('%c📊 요청 로그는 서버의 logs/api-requests.log 에 저장됩니다.', 'font-style: italic; color: #FF9800;');
     
   } catch (error) {
     console.error('❌ 오류:', error);
