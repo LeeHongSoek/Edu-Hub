@@ -4,8 +4,8 @@
   "type": "module",
   "scripts": {
     "build": "nuxt build",
-    "dev": "bash ../scripts/start-dev.sh",
-    "dev:app": "nuxt dev",
+    "dev": "nuxt dev",
+    "dev:app": "bash ../scripts/start-dev.sh",
     "dev:tunnel": "bash ../scripts/start-all.sh",
     "generate": "nuxt generate",
     "preview": "nuxt preview",

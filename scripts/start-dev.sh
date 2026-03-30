@@ -17,6 +17,17 @@ mkdir -p "${PROJECT_ROOT}/logs" "${LOG_DIR}"
 : > "${NEST_LOG_FILE}"
 : > "${NUXT_LOG_FILE}"
 
+assert_port_available() {
+  local port="$1"
+  local label="$2"
+
+  if lsof -iTCP:"${port}" -sTCP:LISTEN -n -P >/dev/null 2>&1; then
+    echo "${label} 포트 ${port} 가 이미 사용 중입니다. 기존 프로세스를 종료하거나 primary.env 포트를 변경해 주세요." >&2
+    lsof -iTCP:"${port}" -sTCP:LISTEN -n -P >&2 || true
+    exit 1
+  fi
+}
+
 cleanup() {
   # 스크립트가 끝나거나 Ctrl+C 를 누르면 자식 프로세스를 모두 정리한다.
   if [[ -n "${NEST_PID:-}" ]] && kill -0 "${NEST_PID}" >/dev/null 2>&1; then
@@ -30,6 +41,10 @@ cleanup() {
 
 trap cleanup EXIT INT TERM
 
+# 시작 전에 포트 충돌을 먼저 확인해서, Nest/Nuxt가 애매하게 실패하지 않게 한다.
+assert_port_available "${PORT}" "Nest"
+assert_port_available "${NUXT_PORT}" "Nuxt"
+
 # 백엔드는 Nest 개발 서버를 현재 env 기준 포트로 실행한다.
 echo "[Nest] port=${PORT} frontend=${FRONTEND_ORIGIN}"
 (
@@ -42,7 +57,7 @@ NEST_PID=$!
 echo "[Nuxt] port=${NUXT_PORT} backend=${BACKEND_ORIGIN}"
 (
   cd "${PROJECT_ROOT}/_NuxtJs"
-  npm run dev:app
+  npm run dev
 ) > >(tee -a "${NUXT_LOG_FILE}") 2> >(tee -a "${NUXT_LOG_FILE}" >&2) &
 NUXT_PID=$!
 
