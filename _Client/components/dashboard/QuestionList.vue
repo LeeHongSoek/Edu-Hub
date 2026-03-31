@@ -104,6 +104,11 @@ const canEditQuestion = (question: Question) => {
   return String(question.creator_no) === String(props.currentUserNo);
 };
 
+const shouldShowQuestionOwner = (question: Question) => {
+  if (props.currentUserNo === undefined || props.currentUserNo === null) return true;
+  return String(question.creator_no) !== String(props.currentUserNo);
+};
+
 
 const pageStartItem = computed(() => {
   if (props.totalItems === 0) return 0;
@@ -283,9 +288,9 @@ watch(() => props.appliedSearchKeyword, (value) => {
             <h3 class="question-title">{{ q.title }} <{{ q.question_id }}></h3>
           </div>
           <!-- 문제의 그룹 경로를 표시 -->
-          <div v-if="q.creator || q.group" class="question-group-path">
-            <span v-if="q.creator?.username" class="question-owner">{{ q.creator.username }}</span>
-            <span v-if="q.creator?.username && q.group" class="question-separator">·</span>
+          <div v-if="q.group || shouldShowQuestionOwner(q)" class="question-group-path">
+            <span v-if="q.creator?.username && shouldShowQuestionOwner(q)" class="question-owner">{{ q.creator.username }}</span>
+            <span v-if="q.creator?.username && shouldShowQuestionOwner(q) && q.group" class="question-separator">·</span>
             <span v-if="q.group">{{ formatGroupPath(q.group) }}</span>
           </div>
         </div>
@@ -334,7 +339,7 @@ watch(() => props.appliedSearchKeyword, (value) => {
 .question-list {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: 0.5rem;
   max-width: 900px;
   margin: 0 auto;
 }
@@ -423,7 +428,7 @@ watch(() => props.appliedSearchKeyword, (value) => {
 .question-item {
   display: flex;
   flex-direction: column;
-  padding: 1.25rem 1.5rem;
+  padding: 1.0rem 1.5rem;
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 10px;
@@ -435,6 +440,7 @@ watch(() => props.appliedSearchKeyword, (value) => {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 1rem;
 }
 
 .question-group-path {
@@ -462,8 +468,8 @@ watch(() => props.appliedSearchKeyword, (value) => {
 .question-header {
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: 0.35rem;
+  align-items: center;
+  margin-bottom: 0.45rem;
   gap: 1rem;
 }
 
@@ -483,6 +489,9 @@ watch(() => props.appliedSearchKeyword, (value) => {
 
 .question-content {
   flex: 1;
+  display: flex;
+  align-items: center;
+  min-width: 0;
 }
 
 .question-title {
@@ -501,7 +510,7 @@ watch(() => props.appliedSearchKeyword, (value) => {
 }
 
 .question-preview {
-  margin: 0 0 1rem 0;
+  margin: 0;
   font-size: 1.25rem;
   font-weight: 700;
   color: #fff;
