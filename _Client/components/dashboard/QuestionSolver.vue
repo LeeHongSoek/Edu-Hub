@@ -228,6 +228,9 @@ const formatGroupPath = (group: any) => {
     parts.unshift(current.name);
     current = current.parent_group;
   }
+  while (parts.length < 3) {
+    parts.push('');
+  }
   return parts.join(' / ');
 };
 

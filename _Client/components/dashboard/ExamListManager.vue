@@ -150,11 +150,13 @@ const clearExamSearch = () => {
       <div class="exam-list">
         <div v-for="exam in pagedExams" :key="exam.exam_id" class="exam-card">
           <div class="exam-info">
-            <div class="exam-badge">고사</div>
+            <div class="exam-headline">
+              <div class="exam-badge">고사</div>
+              <span class="exam-period-inline">{{ new Date(exam.start_time).toLocaleDateString('ko-KR') }} ~ {{ new Date(exam.end_time).toLocaleDateString('ko-KR') }}</span>
+            </div>
             <h4><{{ exam.exam_id }}> {{ exam.exam_name }}</h4>
           </div>
           <div class="exam-meta">
-            <span class="exam-period">{{ new Date(exam.start_time).toLocaleDateString('ko-KR') }} ~ {{ new Date(exam.end_time).toLocaleDateString('ko-KR') }}</span>
             <span class="exam-meta-line">
               <span v-if="exam.creator?.username" class="exam-owner">{{ exam.creator.username }}</span>
               <span v-if="exam.creator?.username" class="exam-separator">·</span>
@@ -200,7 +202,13 @@ const clearExamSearch = () => {
   align-items: center;
 }
 
-.exam-info { display: flex; flex-direction: column; gap: 0.4rem; }
+.exam-info { display: flex; flex-direction: column; gap: 0.35rem; }
+.exam-headline {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  flex-wrap: wrap;
+}
 .exam-badge { 
   display: inline-block; 
   background: rgba(245, 158, 11, 0.1); 
@@ -221,7 +229,7 @@ const clearExamSearch = () => {
   gap: 0.3rem;
 }
 
-.exam-period {
+.exam-period-inline {
   font-size: 0.85rem;
   color: #94a3b8;
   white-space: nowrap;
