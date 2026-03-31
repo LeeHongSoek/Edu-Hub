@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
-import IconUsers from '~/assets/icons/IconUsers.svg?component';
+import { ref, onMounted } from "vue";
+import IconUsers from "~/assets/icons/IconUsers.svg?component";
 
 const childrenStats = ref<any[]>([]);
 const loading = ref(true);
@@ -10,11 +10,11 @@ const { apiBase, token, getAuthHeader } = useApi();
 const fetchStats = async () => {
   try {
     const data = await $fetch(`${apiBase.value}/dashboard/stats`, {
-      headers: getAuthHeader()
+      headers: getAuthHeader(),
     });
     childrenStats.value = data as any[];
   } catch (err) {
-    console.error('서버 통신 오류(fetch) parent stats:', err);
+    console.error("서버 통신 오류(fetch) parent stats:", err);
   } finally {
     loading.value = false;
   }
@@ -31,7 +31,11 @@ onMounted(fetchStats);
   <div v-else class="parent-stats">
     <h3><IconUsers class="section-icon" /> 자녀 학습 요약</h3>
     <div class="children-grid">
-      <div v-for="child in childrenStats" :key="child.studentNo" class="child-card">
+      <div
+        v-for="child in childrenStats"
+        :key="child.studentNo"
+        class="child-card"
+      >
         <div class="child-header">
           <span class="child-name">{{ child.studentName }}</span>
           <span class="child-status">활동 중</span>
@@ -131,7 +135,8 @@ onMounted(fetchStats);
   color: #000;
 }
 
-.loading, .empty {
+.loading,
+.empty {
   text-align: center;
   padding: 3rem;
   color: #64748b;

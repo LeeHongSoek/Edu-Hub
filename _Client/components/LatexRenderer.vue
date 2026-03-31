@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { computed } from 'vue';
-import katex from 'katex';
+import { computed } from "vue";
+import katex from "katex";
 
 const props = defineProps<{
   text: string;
@@ -8,33 +8,39 @@ const props = defineProps<{
 }>();
 
 const renderedContent = computed(() => {
-  if (!props.text) return '';
-  
+  if (!props.text) return "";
+
   let content = props.text;
   if (props.stripNewlines) {
-    content = content.replace(/\n/g, ' ');
+    content = content.replace(/\n/g, " ");
   }
-  
+
   // 블록 수식: $$ ... $$
   content = content.replace(/\$\$([\s\S]+?)\$\$/g, (match, p1) => {
     try {
-      return katex.renderToString(p1, { displayMode: true, throwOnError: false });
+      return katex.renderToString(p1, {
+        displayMode: true,
+        throwOnError: false,
+      });
     } catch (e) {
-      console.error('Katex error:', e);
+      console.error("Katex error:", e);
       return match;
     }
   });
-  
+
   // 인라인 수식: $ ... $
   content = content.replace(/\$([^\$]+)\$/g, (match, p1) => {
     try {
-      return katex.renderToString(p1, { displayMode: false, throwOnError: false });
+      return katex.renderToString(p1, {
+        displayMode: false,
+        throwOnError: false,
+      });
     } catch (e) {
-      console.error('Katex error:', e);
+      console.error("Katex error:", e);
       return match;
     }
   });
-  
+
   return content;
 });
 </script>

@@ -1,37 +1,37 @@
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from 'vue';
-import IconMessage from '~/assets/icons/IconMessage.svg?component';
-import IconSearch from '~/assets/icons/IconSearch.svg?component';
-import IconClose from '~/assets/icons/IconClose.svg?component';
+import { computed, onMounted, ref, watch } from "vue";
+import IconMessage from "~/assets/icons/IconMessage.svg?component";
+import IconSearch from "~/assets/icons/IconSearch.svg?component";
+import IconClose from "~/assets/icons/IconClose.svg?component";
 
-type MessageRoleId = 'S' | 'T' | 'P';
+type MessageRoleId = "S" | "T" | "P";
 
 const messagePageSize = 8;
 const recipientPageSize = 6;
 
 const messages = ref<any[]>([]);
 const messageLoading = ref(true);
-const messageSearchInput = ref('');
-const messageSearchQuery = ref('');
+const messageSearchInput = ref("");
+const messageSearchQuery = ref("");
 const messageCurrentPage = ref(1);
 const messageSliderValue = ref(1);
 const messageTotal = ref(0);
 const messageTotalPages = ref(1);
-const messageView = ref<'received' | 'sent'>('received');
+const messageView = ref<"received" | "sent">("received");
 
 const showComposeModal = ref(false);
 const recipientItems = ref<any[]>([]);
 const recipientLoading = ref(false);
-const recipientSearchInput = ref('');
-const recipientSearchQuery = ref('');
+const recipientSearchInput = ref("");
+const recipientSearchQuery = ref("");
 const recipientCurrentPage = ref(1);
 const recipientSliderValue = ref(1);
 const recipientTotal = ref(0);
 const recipientTotalPages = ref(1);
 const selectedRecipient = ref<any | null>(null);
-const composeContent = ref('');
+const composeContent = ref("");
 const sendingMessage = ref(false);
-const noticeMessage = ref('');
+const noticeMessage = ref("");
 const composeRecipientPreset = ref(false);
 const activeThreadTarget = ref<any | null>(null);
 
@@ -41,18 +41,18 @@ const props = defineProps<{
 }>();
 
 const emit = defineEmits<{
-  (event: 'compose-consumed'): void;
-  (event: 'compose-dismissed'): void;
-  (event: 'thread-consumed'): void;
+  (event: "compose-consumed"): void;
+  (event: "compose-dismissed"): void;
+  (event: "thread-consumed"): void;
 }>();
 
 const { apiBase, getAuthHeader } = useApi();
-const userCookie = useCookie('user_info');
+const userCookie = useCookie("user_info");
 
 const userInfo = computed(() => {
   if (!userCookie.value) return null;
   try {
-    return typeof userCookie.value === 'string'
+    return typeof userCookie.value === "string"
       ? JSON.parse(userCookie.value)
       : userCookie.value;
   } catch {
@@ -60,16 +60,19 @@ const userInfo = computed(() => {
   }
 });
 
-const userRoleId = computed<MessageRoleId | ''>(() => {
-  const role = userInfo.value?.role_id ?? userInfo.value?.role ?? '';
-  return ['S', 'T', 'P'].includes(role) ? role : '';
+const userRoleId = computed<MessageRoleId | "">(() => {
+  const role = userInfo.value?.role_id ?? userInfo.value?.role ?? "";
+  return ["S", "T", "P"].includes(role) ? role : "";
 });
 
 const messageSummary = computed(() => {
-  if (userRoleId.value === 'S') return '학생은 연결된 사람에게 메시지를 보내고 받은 내역을 확인할 수 있습니다.';
-  if (userRoleId.value === 'P') return '학부모는 연결된 자녀와 선생님에게 메시지를 보낼 수 있습니다.';
-  if (userRoleId.value === 'T') return '선생님은 연결된 학생과 학부모에게 메시지를 보낼 수 있습니다.';
-  return '메시지 기능을 사용할 수 없습니다.';
+  if (userRoleId.value === "S")
+    return "학생은 연결된 사람에게 메시지를 보내고 받은 내역을 확인할 수 있습니다.";
+  if (userRoleId.value === "P")
+    return "학부모는 연결된 자녀와 선생님에게 메시지를 보낼 수 있습니다.";
+  if (userRoleId.value === "T")
+    return "선생님은 연결된 학생과 학부모에게 메시지를 보낼 수 있습니다.";
+  return "메시지 기능을 사용할 수 없습니다.";
 });
 
 const messageIsSliderDisabled = computed(() => messageTotalPages.value <= 1);
@@ -81,50 +84,63 @@ const messagePageStartItem = computed(() => {
   if (messageTotal.value === 0) return 0;
   return (messageCurrentPage.value - 1) * messagePageSize + 1;
 });
-const messagePageEndItem = computed(() => Math.min(messageCurrentPage.value * messagePageSize, messageTotal.value));
+const messagePageEndItem = computed(() =>
+  Math.min(messageCurrentPage.value * messagePageSize, messageTotal.value),
+);
 
-const recipientIsSliderDisabled = computed(() => recipientTotalPages.value <= 1);
+const recipientIsSliderDisabled = computed(
+  () => recipientTotalPages.value <= 1,
+);
 const recipientSliderPercentage = computed(() => {
   if (recipientTotalPages.value <= 1) return 0;
-  return ((recipientSliderValue.value - 1) / (recipientTotalPages.value - 1)) * 100;
+  return (
+    ((recipientSliderValue.value - 1) / (recipientTotalPages.value - 1)) * 100
+  );
 });
 const recipientPageStartItem = computed(() => {
   if (recipientTotal.value === 0) return 0;
   return (recipientCurrentPage.value - 1) * recipientPageSize + 1;
 });
-const recipientPageEndItem = computed(() => Math.min(recipientCurrentPage.value * recipientPageSize, recipientTotal.value));
+const recipientPageEndItem = computed(() =>
+  Math.min(
+    recipientCurrentPage.value * recipientPageSize,
+    recipientTotal.value,
+  ),
+);
 
 const roleLabel = (roleId?: string) => {
-  if (roleId === 'T') return '선생님';
-  if (roleId === 'P') return '학부모';
-  if (roleId === 'S') return '학생';
-  return '미확인';
+  if (roleId === "T") return "선생님";
+  if (roleId === "P") return "학부모";
+  if (roleId === "S") return "학생";
+  return "미확인";
 };
 
 const formatDateTime = (value: string | Date | null | undefined) => {
-  if (!value) return '-';
-  return new Intl.DateTimeFormat('ko-KR', {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
+  if (!value) return "-";
+  return new Intl.DateTimeFormat("ko-KR", {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
   }).format(new Date(value));
 };
 
-const messageDirectionLabel = (message: any) => (message?.direction === 'sent' ? '보낸 메시지' : '받은 메시지');
+const messageDirectionLabel = (message: any) =>
+  message?.direction === "sent" ? "보낸 메시지" : "받은 메시지";
 
 const messageThreadTitle = computed(() => {
-  if (!activeThreadTarget.value) return '';
-  return `${activeThreadTarget.value.username || '상대방'} 님에게서 받은 메시지`;
+  if (!activeThreadTarget.value) return "";
+  return `${activeThreadTarget.value.username || "상대방"} 님에게서 받은 메시지`;
 });
 
 const loadMessages = async () => {
   try {
     messageLoading.value = true;
-    const peerUserNo = messageView.value === 'received' && activeThreadTarget.value
-      ? activeThreadTarget.value.user_no
-      : null;
+    const peerUserNo =
+      messageView.value === "received" && activeThreadTarget.value
+        ? activeThreadTarget.value.user_no
+        : null;
     const data = await $fetch(`${apiBase.value}/dashboard/messages`, {
       headers: getAuthHeader(),
       query: {
@@ -146,11 +162,12 @@ const loadMessages = async () => {
 
     messages.value = response.items ?? [];
     messageTotal.value = Number(response.total ?? 0);
-    messageCurrentPage.value = Number(response.page ?? messageCurrentPage.value) || 1;
+    messageCurrentPage.value =
+      Number(response.page ?? messageCurrentPage.value) || 1;
     messageTotalPages.value = Number(response.totalPages ?? 1) || 1;
     messageSliderValue.value = messageCurrentPage.value;
   } catch (err) {
-    console.error('서버 통신 오류(fetch) messages:', err);
+    console.error("서버 통신 오류(fetch) messages:", err);
     messages.value = [];
     messageTotal.value = 0;
     messageTotalPages.value = 1;
@@ -167,8 +184,8 @@ const applyMessageSearch = async () => {
 };
 
 const clearMessageSearch = async () => {
-  messageSearchInput.value = '';
-  messageSearchQuery.value = '';
+  messageSearchInput.value = "";
+  messageSearchQuery.value = "";
   messageCurrentPage.value = 1;
   messageSliderValue.value = 1;
   await loadMessages();
@@ -179,18 +196,21 @@ const handleMessageSliderInput = (event: Event) => {
 };
 
 const commitMessageSliderValue = async () => {
-  messageCurrentPage.value = Math.min(Math.max(messageSliderValue.value, 1), messageTotalPages.value);
+  messageCurrentPage.value = Math.min(
+    Math.max(messageSliderValue.value, 1),
+    messageTotalPages.value,
+  );
   await loadMessages();
 };
 
-const switchMessageView = async (view: 'received' | 'sent') => {
+const switchMessageView = async (view: "received" | "sent") => {
   if (messageView.value === view) return;
   messageView.value = view;
   messageCurrentPage.value = 1;
   messageSliderValue.value = 1;
-  if (view !== 'received') {
+  if (view !== "received") {
     activeThreadTarget.value = null;
-    emit('thread-consumed');
+    emit("thread-consumed");
   }
   await loadMessages();
 };
@@ -198,14 +218,17 @@ const switchMessageView = async (view: 'received' | 'sent') => {
 const loadRecipients = async () => {
   try {
     recipientLoading.value = true;
-    const data = await $fetch(`${apiBase.value}/dashboard/messages/recipients`, {
-      headers: getAuthHeader(),
-      query: {
-        q: recipientSearchQuery.value,
-        page: recipientCurrentPage.value,
-        limit: recipientPageSize,
+    const data = await $fetch(
+      `${apiBase.value}/dashboard/messages/recipients`,
+      {
+        headers: getAuthHeader(),
+        query: {
+          q: recipientSearchQuery.value,
+          page: recipientCurrentPage.value,
+          limit: recipientPageSize,
+        },
       },
-    });
+    );
 
     const response = data as {
       items: any[];
@@ -217,11 +240,12 @@ const loadRecipients = async () => {
 
     recipientItems.value = response.items ?? [];
     recipientTotal.value = Number(response.total ?? 0);
-    recipientCurrentPage.value = Number(response.page ?? recipientCurrentPage.value) || 1;
+    recipientCurrentPage.value =
+      Number(response.page ?? recipientCurrentPage.value) || 1;
     recipientTotalPages.value = Number(response.totalPages ?? 1) || 1;
     recipientSliderValue.value = recipientCurrentPage.value;
   } catch (err) {
-    console.error('서버 통신 오류(fetch) message recipients:', err);
+    console.error("서버 통신 오류(fetch) message recipients:", err);
     recipientItems.value = [];
     recipientTotal.value = 0;
     recipientTotalPages.value = 1;
@@ -231,30 +255,30 @@ const loadRecipients = async () => {
 };
 
 const openComposeModal = () => {
-  if (userRoleId.value === '') return;
+  if (userRoleId.value === "") return;
   showComposeModal.value = true;
   selectedRecipient.value = null;
-  composeContent.value = '';
-  noticeMessage.value = '';
+  composeContent.value = "";
+  noticeMessage.value = "";
   composeRecipientPreset.value = false;
-  recipientSearchInput.value = '';
-  recipientSearchQuery.value = '';
+  recipientSearchInput.value = "";
+  recipientSearchQuery.value = "";
   recipientCurrentPage.value = 1;
   recipientSliderValue.value = 1;
   void loadRecipients();
 };
 
 const openComposeWithRecipient = (user: any) => {
-  if (userRoleId.value === '') return;
+  if (userRoleId.value === "") return;
   showComposeModal.value = true;
   selectedRecipient.value = user;
-  composeContent.value = '';
-  noticeMessage.value = '';
+  composeContent.value = "";
+  noticeMessage.value = "";
   composeRecipientPreset.value = true;
   recipientItems.value = [];
   recipientLoading.value = false;
-  recipientSearchInput.value = '';
-  recipientSearchQuery.value = '';
+  recipientSearchInput.value = "";
+  recipientSearchQuery.value = "";
   recipientCurrentPage.value = 1;
   recipientSliderValue.value = 1;
   recipientTotal.value = 0;
@@ -263,7 +287,7 @@ const openComposeWithRecipient = (user: any) => {
 
 const closeComposeModal = () => {
   showComposeModal.value = false;
-  emit('compose-dismissed');
+  emit("compose-dismissed");
 };
 
 const applyRecipientSearch = async () => {
@@ -274,8 +298,8 @@ const applyRecipientSearch = async () => {
 };
 
 const clearRecipientSearch = async () => {
-  recipientSearchInput.value = '';
-  recipientSearchQuery.value = '';
+  recipientSearchInput.value = "";
+  recipientSearchQuery.value = "";
   recipientCurrentPage.value = 1;
   recipientSliderValue.value = 1;
   await loadRecipients();
@@ -286,24 +310,27 @@ const handleRecipientSliderInput = (event: Event) => {
 };
 
 const commitRecipientSliderValue = async () => {
-  recipientCurrentPage.value = Math.min(Math.max(recipientSliderValue.value, 1), recipientTotalPages.value);
+  recipientCurrentPage.value = Math.min(
+    Math.max(recipientSliderValue.value, 1),
+    recipientTotalPages.value,
+  );
   await loadRecipients();
 };
 
 const selectRecipient = (user: any) => {
   selectedRecipient.value = user;
-  noticeMessage.value = '';
+  noticeMessage.value = "";
 };
 
 const sendMessage = async () => {
   if (!selectedRecipient.value) {
-    noticeMessage.value = '받는 사람을 선택해 주세요.';
+    noticeMessage.value = "받는 사람을 선택해 주세요.";
     return;
   }
 
   const content = composeContent.value.trim();
   if (!content) {
-    noticeMessage.value = '메시지 내용을 입력해 주세요.';
+    noticeMessage.value = "메시지 내용을 입력해 주세요.";
     return;
   }
 
@@ -311,7 +338,7 @@ const sendMessage = async () => {
 
   try {
     const result = await $fetch(`${apiBase.value}/dashboard/messages`, {
-      method: 'POST',
+      method: "POST",
       headers: getAuthHeader(),
       body: {
         receiverUserNo: selectedRecipient.value.user_no,
@@ -319,16 +346,18 @@ const sendMessage = async () => {
       },
     });
 
-    noticeMessage.value = (result as { message?: string }).message || '메시지를 전송했습니다.';
-    composeContent.value = '';
+    noticeMessage.value =
+      (result as { message?: string }).message || "메시지를 전송했습니다.";
+    composeContent.value = "";
     selectedRecipient.value = null;
     await loadMessages();
     if (!composeRecipientPreset.value) {
       await loadRecipients();
     }
-    emit('compose-consumed');
+    emit("compose-consumed");
   } catch (err: any) {
-    const message = err?.data?.message || err?.message || '메시지 전송에 실패했습니다.';
+    const message =
+      err?.data?.message || err?.message || "메시지 전송에 실패했습니다.";
     noticeMessage.value = String(message);
   } finally {
     sendingMessage.value = false;
@@ -341,7 +370,7 @@ watch(
     if (!target) return;
     openComposeWithRecipient(target);
     await Promise.resolve();
-    emit('compose-consumed');
+    emit("compose-consumed");
   },
   { immediate: true },
 );
@@ -352,13 +381,13 @@ watch(
     activeThreadTarget.value = target ?? null;
     if (!target) return;
 
-    messageView.value = 'received';
-    messageSearchInput.value = '';
-    messageSearchQuery.value = '';
+    messageView.value = "received";
+    messageSearchInput.value = "";
+    messageSearchQuery.value = "";
     messageCurrentPage.value = 1;
     messageSliderValue.value = 1;
     await loadMessages();
-    emit('thread-consumed');
+    emit("thread-consumed");
   },
   { immediate: true },
 );
@@ -369,9 +398,9 @@ onMounted(() => {
 </script>
 
 <template>
-    <div class="message-manager">
-      <div class="manager-header">
-        <div class="header-copy">
+  <div class="message-manager">
+    <div class="manager-header">
+      <div class="header-copy">
         <div class="header-title-row">
           <h2><IconMessage class="section-icon" /> 메시지 함</h2>
           <div class="message-tabs">
@@ -392,9 +421,15 @@ onMounted(() => {
           </div>
         </div>
         <p class="manager-subtitle">{{ messageSummary }}</p>
-        <p v-if="messageThreadTitle" class="thread-title">{{ messageThreadTitle }}</p>
+        <p v-if="messageThreadTitle" class="thread-title">
+          {{ messageThreadTitle }}
+        </p>
       </div>
-      <button class="btn-compose" :disabled="userRoleId === ''" @click="openComposeModal">
+      <button
+        class="btn-compose"
+        :disabled="userRoleId === ''"
+        @click="openComposeModal"
+      >
         새 메시지 작성
       </button>
     </div>
@@ -412,13 +447,22 @@ onMounted(() => {
             />
           </label>
           <button class="btn-search" @click="applyMessageSearch">검색</button>
-          <button v-if="messageSearchQuery" class="btn-reset-search" @click="clearMessageSearch">초기화</button>
+          <button
+            v-if="messageSearchQuery"
+            class="btn-reset-search"
+            @click="clearMessageSearch"
+          >
+            초기화
+          </button>
         </div>
 
         <div v-if="messageTotal > 0" class="slider-row">
           <span class="summary-text">총 {{ messageTotal }}건</span>
           <div class="page-slider-section">
-            <div class="slider-wrapper" :class="{ disabled: messageIsSliderDisabled }">
+            <div
+              class="slider-wrapper"
+              :class="{ disabled: messageIsSliderDisabled }"
+            >
               <span class="slider-limit">1</span>
               <div class="slider-track-container">
                 <input
@@ -431,15 +475,24 @@ onMounted(() => {
                   @input="handleMessageSliderInput"
                   @change="commitMessageSliderValue"
                 />
-                <div class="slider-fill" :style="{ width: messageSliderPercentage + '%' }"></div>
-                <div class="slider-tooltip" :style="{ left: messageSliderPercentage + '%' }">
+                <div
+                  class="slider-fill"
+                  :style="{ width: messageSliderPercentage + '%' }"
+                ></div>
+                <div
+                  class="slider-tooltip"
+                  :style="{ left: messageSliderPercentage + '%' }"
+                >
                   {{ messageSliderValue }}
                 </div>
               </div>
               <span class="slider-limit">{{ messageTotalPages }}</span>
             </div>
           </div>
-          <span class="range-text">{{ messagePageStartItem }}-{{ messagePageEndItem }}번째 항목 표시 중</span>
+          <span class="range-text"
+            >{{ messagePageStartItem }}-{{ messagePageEndItem }}번째 항목 표시
+            중</span
+          >
         </div>
       </div>
     </div>
@@ -449,17 +502,31 @@ onMounted(() => {
       검색 결과가 없습니다.
     </div>
     <TransitionGroup v-else name="message-slide" tag="div" class="message-list">
-      <div v-for="message in messages" :key="message.message_id" class="message-item">
+      <div
+        v-for="message in messages"
+        :key="message.message_id"
+        class="message-item"
+      >
         <div class="message-top">
           <span class="message-direction" :class="message.direction">
             {{ messageDirectionLabel(message) }}
           </span>
           <div class="message-line">
-            <span class="message-name">{{ message.counterpart?.username || message.sender?.username || '알 수 없음' }}</span>
-            <span class="message-id">{{ message.counterpart?.user_id || message.sender?.user_id }}</span>
-            <span class="message-role">{{ roleLabel(message.counterpart?.role_id || message.sender?.role_id) }}</span>
+            <span class="message-name">{{
+              message.counterpart?.username ||
+              message.sender?.username ||
+              "알 수 없음"
+            }}</span>
+            <span class="message-id">{{
+              message.counterpart?.user_id || message.sender?.user_id
+            }}</span>
+            <span class="message-role">{{
+              roleLabel(message.counterpart?.role_id || message.sender?.role_id)
+            }}</span>
           </div>
-          <span class="message-date">{{ formatDateTime(message.created_at) }}</span>
+          <span class="message-date">{{
+            formatDateTime(message.created_at)
+          }}</span>
         </div>
 
         <div class="message-body">
@@ -470,12 +537,18 @@ onMounted(() => {
 
     <p v-if="noticeMessage" class="notice-message">{{ noticeMessage }}</p>
 
-    <div v-if="showComposeModal" class="modal-overlay" @click.self="closeComposeModal">
+    <div
+      v-if="showComposeModal"
+      class="modal-overlay"
+      @click.self="closeComposeModal"
+    >
       <div class="modal-card">
         <div class="modal-header">
           <div>
             <h3>새 메시지 작성</h3>
-            <p class="modal-desc">연결된 상대를 찾아 바로 메시지를 보낼 수 있습니다.</p>
+            <p class="modal-desc">
+              연결된 상대를 찾아 바로 메시지를 보낼 수 있습니다.
+            </p>
           </div>
           <button class="btn-close" @click="closeComposeModal">
             <IconClose class="close-icon" />
@@ -494,14 +567,25 @@ onMounted(() => {
                   @keyup.enter="applyRecipientSearch"
                 />
               </label>
-              <button class="btn-search" @click="applyRecipientSearch">검색</button>
-              <button v-if="recipientSearchQuery" class="btn-reset-search" @click="clearRecipientSearch">초기화</button>
+              <button class="btn-search" @click="applyRecipientSearch">
+                검색
+              </button>
+              <button
+                v-if="recipientSearchQuery"
+                class="btn-reset-search"
+                @click="clearRecipientSearch"
+              >
+                초기화
+              </button>
             </div>
 
             <div class="slider-row">
               <span class="summary-text">총 {{ recipientTotal }}명</span>
               <div class="page-slider-section">
-                <div class="slider-wrapper" :class="{ disabled: recipientIsSliderDisabled }">
+                <div
+                  class="slider-wrapper"
+                  :class="{ disabled: recipientIsSliderDisabled }"
+                >
                   <span class="slider-limit">1</span>
                   <div class="slider-track-container">
                     <input
@@ -514,25 +598,45 @@ onMounted(() => {
                       @input="handleRecipientSliderInput"
                       @change="commitRecipientSliderValue"
                     />
-                    <div class="slider-fill" :style="{ width: recipientSliderPercentage + '%' }"></div>
-                    <div class="slider-tooltip" :style="{ left: recipientSliderPercentage + '%' }">
+                    <div
+                      class="slider-fill"
+                      :style="{ width: recipientSliderPercentage + '%' }"
+                    ></div>
+                    <div
+                      class="slider-tooltip"
+                      :style="{ left: recipientSliderPercentage + '%' }"
+                    >
                       {{ recipientSliderValue }}
                     </div>
                   </div>
                   <span class="slider-limit">{{ recipientTotalPages }}</span>
                 </div>
               </div>
-              <span class="range-text">{{ recipientPageStartItem }}-{{ recipientPageEndItem }}번째 항목 표시 중</span>
+              <span class="range-text"
+                >{{ recipientPageStartItem }}-{{ recipientPageEndItem }}번째
+                항목 표시 중</span
+              >
             </div>
 
-            <div v-if="recipientLoading" class="loading compact">상대방을 찾는 중...</div>
-            <div v-else-if="recipientTotal === 0" class="empty compact">검색 결과가 없습니다.</div>
-            <TransitionGroup v-else name="recipient-slide" tag="div" class="recipient-list">
+            <div v-if="recipientLoading" class="loading compact">
+              상대방을 찾는 중...
+            </div>
+            <div v-else-if="recipientTotal === 0" class="empty compact">
+              검색 결과가 없습니다.
+            </div>
+            <TransitionGroup
+              v-else
+              name="recipient-slide"
+              tag="div"
+              class="recipient-list"
+            >
               <button
                 v-for="user in recipientItems"
                 :key="user.user_no"
                 class="recipient-item"
-                :class="{ selected: selectedRecipient?.user_no === user.user_no }"
+                :class="{
+                  selected: selectedRecipient?.user_no === user.user_no,
+                }"
                 @click="selectRecipient(user)"
               >
                 <div class="recipient-row">
@@ -540,7 +644,9 @@ onMounted(() => {
                     <span class="recipient-name">{{ user.username }}</span>
                     <span class="recipient-id">{{ user.user_id }}</span>
                   </div>
-                  <span class="recipient-role">{{ roleLabel(user.role_id) }}</span>
+                  <span class="recipient-role">{{
+                    roleLabel(user.role_id)
+                  }}</span>
                 </div>
               </button>
             </TransitionGroup>
@@ -549,7 +655,8 @@ onMounted(() => {
           <div v-else class="recipient-summary">
             <span class="recipient-summary-label">받는 사람</span>
             <span class="recipient-summary-name">
-              {{ selectedRecipient?.username }} · {{ selectedRecipient?.user_id }}
+              {{ selectedRecipient?.username }} ·
+              {{ selectedRecipient?.user_id }}
             </span>
           </div>
 
@@ -560,20 +667,25 @@ onMounted(() => {
                 <p>선택한 상대에게 보낼 메시지를 입력하세요.</p>
               </div>
               <span v-if="selectedRecipient" class="selected-chip">
-                {{ selectedRecipient.username }} · {{ selectedRecipient.user_id }}
+                {{ selectedRecipient.username }} ·
+                {{ selectedRecipient.user_id }}
               </span>
             </div>
 
-              <textarea
-                v-model="composeContent"
-                class="compose-input"
-                rows="5"
-                placeholder="메시지 내용을 입력하세요"
-              />
+            <textarea
+              v-model="composeContent"
+              class="compose-input"
+              rows="5"
+              placeholder="메시지 내용을 입력하세요"
+            />
 
             <div class="compose-actions">
-              <button class="btn-send" :disabled="sendingMessage || !selectedRecipient" @click="sendMessage">
-                {{ sendingMessage ? '전송 중...' : '전송' }}
+              <button
+                class="btn-send"
+                :disabled="sendingMessage || !selectedRecipient"
+                @click="sendMessage"
+              >
+                {{ sendingMessage ? "전송 중..." : "전송" }}
               </button>
             </div>
           </div>
@@ -664,7 +776,10 @@ onMounted(() => {
   border-radius: 10px;
   font-weight: 700;
   cursor: pointer;
-  transition: transform 0.2s, opacity 0.2s, background 0.2s;
+  transition:
+    transform 0.2s,
+    opacity 0.2s,
+    background 0.2s;
   white-space: nowrap;
 }
 
@@ -879,7 +994,7 @@ onMounted(() => {
 }
 
 .slider-tooltip::after {
-  content: '';
+  content: "";
   position: absolute;
   bottom: -4px;
   left: 50%;
@@ -1091,7 +1206,10 @@ onMounted(() => {
   padding: 0.7rem 0.8rem;
   text-align: left;
   cursor: pointer;
-  transition: transform 0.2s, border-color 0.2s, background 0.2s;
+  transition:
+    transform 0.2s,
+    border-color 0.2s,
+    background 0.2s;
 }
 
 .recipient-item:hover {
@@ -1214,7 +1332,9 @@ onMounted(() => {
 .recipient-slide-enter-active,
 .recipient-slide-leave-active,
 .recipient-slide-move {
-  transition: opacity 0.22s ease, transform 0.22s ease;
+  transition:
+    opacity 0.22s ease,
+    transform 0.22s ease;
 }
 
 .message-slide-enter-from,

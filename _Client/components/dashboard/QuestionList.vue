@@ -1,23 +1,33 @@
 <script setup lang="ts">
-import { ref, onMounted, computed, watch } from 'vue';
-import GroupHierarchy from '~/components/dashboard/GroupHierarchy.vue';
-import QuestionEditor from '~/components/dashboard/QuestionEditor.vue';
-import QuestionSolver from '~/components/dashboard/QuestionSolver.vue';
-import IconSettings from '~/assets/icons/IconSettings.svg?component';
-import { useApi } from '~/composables/useApi';
-import type { Question, Group } from '~/types';
+import { ref, onMounted, computed, watch } from "vue";
+import GroupHierarchy from "~/components/dashboard/GroupHierarchy.vue";
+import GroupManager from "~/components/dashboard/GroupManager.vue";
+import QuestionEditor from "~/components/dashboard/QuestionEditor.vue";
+import QuestionSolver from "~/components/dashboard/QuestionSolver.vue";
+import IconSettings from "~/assets/icons/IconSettings.svg?component";
+import IconArrowUp from "~/assets/icons/IconArrowUp.svg?component";
+import IconBook from "~/assets/icons/IconBook.svg?component";
+import IconPencil from "~/assets/icons/IconPencil.svg?component";
+import { useApi } from "~/composables/useApi";
+import type { Question, Group } from "~/types";
 
 const props = defineProps<{
+  listTitle?: string;
+  listSubtitle?: string | null;
+  showScopeToggle?: boolean;
+  scopeMode?: "mine" | "all";
+  showError?: boolean;
+  errorMessage?: string | null;
   questions: Question[];
   currentUserNo?: string | number | null;
   selectedGroupId: string | number | null;
-  appliedSearchField: 'title' | 'content';
+  appliedSearchField: "title" | "content";
   appliedSearchKeyword: string;
   currentPage: number;
   totalPages: number;
   totalItems: number;
   pageSize: number;
-  viewMode: 'mine' | 'all';
+  viewMode: "mine" | "all";
 }>();
 
 // API 설정 통합
@@ -27,13 +37,16 @@ const groups = ref<Group[]>([]);
 const selectedQuestionForSolve = ref<Question | null>(null);
 const selectedQuestionForEdit = ref<Question | null>(null);
 const showGroupManager = ref(false);
-const searchField = ref<'title' | 'content'>(props.appliedSearchField);
-const searchInput = ref('');
+const searchField = ref<"title" | "content">(props.appliedSearchField);
+const searchInput = ref("");
 const sliderValue = ref(props.currentPage);
 
-watch(() => props.currentPage, (val) => {
-  sliderValue.value = val;
-});
+watch(
+  () => props.currentPage,
+  (val) => {
+    sliderValue.value = val;
+  },
+);
 
 let debounceTimer: any = null;
 const handleSliderInput = (e: Event) => {
@@ -58,23 +71,28 @@ const sliderPercentage = computed(() => {
 const isSliderDisabled = computed(() => props.totalPages <= 1);
 
 const emit = defineEmits<{
-  (e: 'refresh'): void;
-  (e: 'change-group', groupId: string | number | null): void;
-  (e: 'search', payload: { field: 'title' | 'content'; keyword: string }): void;
-  (e: 'reset-search'): void;
-  (e: 'change-page', page: number): void;
-  (e: 'copy-question', question: Question): void;
+  (e: "refresh"): void;
+  (e: "change-scope", scope: "mine" | "all"): void;
+  (e: "change-group", groupId: string | number | null): void;
+  (e: "search", payload: { field: "title" | "content"; keyword: string }): void;
+  (e: "reset-search"): void;
+  (e: "change-page", page: number): void;
+  (e: "copy-question", question: Question): void;
 }>();
 
 const handleSelectGroup = (groupId: string | number | null) => {
-  emit('change-group', groupId);
+  emit("change-group", groupId);
+};
+
+const handleScopeChange = (scope: "mine" | "all") => {
+  emit("change-scope", scope);
 };
 
 const clearAllFilters = () => {
-  searchField.value = 'title';
-  searchInput.value = '';
-  emit('change-group', null);
-  emit('reset-search');
+  searchField.value = "title";
+  searchInput.value = "";
+  emit("change-group", null);
+  emit("reset-search");
 };
 
 const applySearch = () => {
@@ -85,7 +103,7 @@ const applySearch = () => {
     return;
   }
 
-  emit('search', {
+  emit("search", {
     field: searchField.value,
     keyword,
   });
@@ -100,15 +118,16 @@ const handleSolve = (question: Question) => {
 };
 
 const canEditQuestion = (question: Question) => {
-  if (props.currentUserNo === undefined || props.currentUserNo === null) return false;
+  if (props.currentUserNo === undefined || props.currentUserNo === null)
+    return false;
   return String(question.creator_no) === String(props.currentUserNo);
 };
 
 const shouldShowQuestionOwner = (question: Question) => {
-  if (props.currentUserNo === undefined || props.currentUserNo === null) return true;
+  if (props.currentUserNo === undefined || props.currentUserNo === null)
+    return true;
   return String(question.creator_no) !== String(props.currentUserNo);
 };
-
 
 const pageStartItem = computed(() => {
   if (props.totalItems === 0) return 0;
@@ -120,14 +139,15 @@ const pageEndItem = computed(() => {
 });
 
 const goToPage = (page: number) => {
-  emit('change-page', Math.min(Math.max(page, 1), props.totalPages));
+  emit("change-page", Math.min(Math.max(page, 1), props.totalPages));
 };
-
 
 // 이전/다음 문제 탐색용 로직
 const currentQuestionIndex = computed(() => {
   if (!selectedQuestionForSolve.value) return -1;
-  return props.questions.findIndex(q => q.question_id === selectedQuestionForSolve.value?.question_id);
+  return props.questions.findIndex(
+    (q) => q.question_id === selectedQuestionForSolve.value?.question_id,
+  );
 });
 
 const getPrevQuestion = () => {
@@ -138,7 +158,8 @@ const getPrevQuestion = () => {
 
 const getNextQuestion = () => {
   const idx = currentQuestionIndex.value;
-  if (idx !== -1 && idx < props.questions.length - 1) return props.questions[idx + 1];
+  if (idx !== -1 && idx < props.questions.length - 1)
+    return props.questions[idx + 1];
   return null;
 };
 
@@ -160,9 +181,9 @@ const formatGroupPath = (group: Group) => {
     current = current.parent_group;
   }
   while (parts.length < 3) {
-    parts.push('');
+    parts.push("");
   }
-  return parts.join(' / ');
+  return parts.join(" / ");
 };
 
 const fetchGroups = async () => {
@@ -170,7 +191,7 @@ const fetchGroups = async () => {
     const data = await $fetch<Group[]>(`${apiBase.value}/groups`);
     groups.value = data;
   } catch (error) {
-    console.error('서버 통신 오류(fetch) groups:', error);
+    console.error("서버 통신 오류(fetch) groups:", error);
   }
 };
 
@@ -179,137 +200,262 @@ onMounted(async () => {
   searchInput.value = props.appliedSearchKeyword;
 });
 
-watch(() => props.appliedSearchField, (value) => {
-  searchField.value = value;
-});
+watch(
+  () => props.appliedSearchField,
+  (value) => {
+    searchField.value = value;
+  },
+);
 
-watch(() => props.appliedSearchKeyword, (value) => {
-  searchInput.value = value;
-});
-
+watch(
+  () => props.appliedSearchKeyword,
+  (value) => {
+    searchInput.value = value;
+  },
+);
 </script>
 
 <template>
   <div class="question-list-container">
-    <!-- 계층형 그룹 표시 (우측 상단 오버레이) -->
-      <div v-if="groups.length > 0" class="group-overlay">
-      <div class="group-overlay-header">
-        <span>문제 그룹</span>
-        <div class="header-actions">
-          <button class="btn-manage-groups" title="그룹 관리" @click="showGroupManager = true">
-            <IconSettings class="settings-icon" />
-          </button>
-          <button v-if="props.selectedGroupId || props.appliedSearchKeyword" class="btn-clear-filter" @click="clearAllFilters">
-            전체
-          </button>
+    <div class="question-list-row">
+      <div class="group-overlay">
+        <div class="group-overlay-header">
+          <span>문제 그룹</span>
+          <div class="header-actions">
+            <button
+              class="btn-manage-groups"
+              title="그룹 관리"
+              @click="showGroupManager = true"
+            >
+              <IconSettings class="settings-icon" />
+              <span class="btn-manage-label">그룹 관리</span>
+            </button>
+            <button class="btn-clear-filter" @click="clearAllFilters">
+              전체
+            </button>
+          </div>
+        </div>
+        <GroupHierarchy
+          :groups="groups"
+          :selected-group-id="props.selectedGroupId"
+          @select-group="handleSelectGroup"
+        />
+      </div>
+
+      <div class="question-list-main">
+        <div v-if="props.showError" class="error-panel">
+          <div class="error">
+            {{
+              props.errorMessage ??
+              "문제를 불러오지 못했습니다. 백엔드 서버가 실행 중인지 확인해 주세요."
+            }}
+          </div>
+        </div>
+
+        <div v-else class="question-list-body">
+          <div v-if="props.questions.length === 0" class="no-results">
+            {{
+              props.appliedSearchKeyword
+                ? "검색 조건에 맞는 문제가 없습니다."
+                : "해당 조건에 등록된 문제가 없습니다."
+            }}
+          </div>
+          <div v-else class="question-list">
+            <div class="header-copy">
+              <div class="header-top">
+                <div class="title-row">
+                  <h3 class="question-list-title">
+                    {{ props.listTitle ?? "문제 목록" }}
+                  </h3>
+                  <div
+                    v-if="props.showScopeToggle"
+                    class="scope-toggle"
+                    role="tablist"
+                    aria-label="문제 목록 범위 선택"
+                  >
+                    <button
+                      type="button"
+                      class="scope-btn"
+                      :class="{ active: (props.scopeMode ?? 'mine') === 'mine' }"
+                      :aria-pressed="(props.scopeMode ?? 'mine') === 'mine'"
+                      @click="handleScopeChange('mine')"
+                    >
+                      나의 문제
+                    </button>
+                    <button
+                      type="button"
+                      class="scope-btn"
+                      :class="{ active: (props.scopeMode ?? 'mine') === 'all' }"
+                      :aria-pressed="(props.scopeMode ?? 'mine') === 'all'"
+                      @click="handleScopeChange('all')"
+                    >
+                      전체 문제
+                    </button>
+                  </div>
+                </div>
+                <div class="page-nav">
+                  <NuxtLink to="/dashboard" class="back-btn">
+                    <IconArrowUp class="back-icon" />
+                    대시보드
+                  </NuxtLink>
+                  <NuxtLink to="/question-books" class="quick-link">
+                    <IconBook class="quick-icon" />
+                    문제집 목록
+                  </NuxtLink>
+                  <NuxtLink to="/exams" class="quick-link">
+                    <IconPencil class="quick-icon" />
+                    고사집 목록
+                  </NuxtLink>
+                </div>
+              </div>
+              <span v-if="props.listSubtitle" class="question-list-subtitle">{{
+                props.listSubtitle
+              }}</span>
+            </div>
+
+            <div class="slider-panel-border">
+              <div class="slider-panel">
+                <div class="search-row">
+                  <select v-model="searchField" class="search-select">
+                    <option value="title">문제제목</option>
+                    <option value="content">문제내용</option>
+                  </select>
+                  <input
+                    v-model="searchInput"
+                    type="text"
+                    class="search-input"
+                    :placeholder="
+                      searchField === 'title'
+                        ? '문제 제목을 입력하세요'
+                        : '문제 내용을 입력하세요'
+                    "
+                    @keyup.enter="applySearch"
+                  />
+                  <button class="btn-search" @click="applySearch">검색</button>
+                  <button
+                    v-if="props.appliedSearchKeyword || searchInput"
+                    class="btn-reset-search"
+                    @click="resetSearch"
+                  >
+                    초기화
+                  </button>
+                </div>
+                <div class="slider-row">
+                  <span class="summary-text"
+                    >총 {{ props.totalItems }}문제</span
+                  >
+                  <div class="page-slider-section">
+                    <div
+                      class="slider-wrapper"
+                      :class="{ disabled: isSliderDisabled }"
+                    >
+                      <span class="slider-limit">1</span>
+                      <div class="slider-track-container">
+                        <input
+                          type="range"
+                          :min="1"
+                          :max="props.totalPages"
+                          :value="sliderValue"
+                          class="page-slider"
+                          @input="handleSliderInput"
+                          @change="commitSliderValue"
+                          :disabled="isSliderDisabled"
+                        />
+                        <div
+                          class="slider-fill"
+                          :style="{ width: sliderPercentage + '%' }"
+                        ></div>
+                        <div
+                          v-if="!isSliderDisabled"
+                          class="slider-tooltip"
+                          :style="{ left: sliderPercentage + '%' }"
+                        >
+                          {{ sliderValue }}
+                        </div>
+                      </div>
+                      <span class="slider-limit">{{ props.totalPages }}</span>
+                    </div>
+                  </div>
+                  <span class="range-text"
+                    >{{ pageStartItem }}-{{ pageEndItem }}번째 문제 표시
+                    중</span
+                  >
+                </div>
+              </div>
+            </div>
+
+            <div
+              v-for="q in props.questions"
+              :key="q.question_id"
+              class="question-item"
+            >
+              <div class="question-header">
+                <div class="question-title-row">
+                  <span class="badge badge-type question-type-badge">{{
+                    q.type.type_name
+                  }}</span>
+                  <h3 class="question-title">
+                    {{ q.title }} <{{ q.question_id }}>
+                  </h3>
+                </div>
+                <div
+                  v-if="q.group || shouldShowQuestionOwner(q)"
+                  class="question-group-path"
+                >
+                  <span
+                    v-if="q.creator?.username && shouldShowQuestionOwner(q)"
+                    class="question-owner"
+                    >{{ q.creator.username }}</span
+                  >
+                  <span
+                    v-if="
+                      q.creator?.username &&
+                      shouldShowQuestionOwner(q) &&
+                      q.group
+                    "
+                    class="question-separator"
+                    >·</span
+                  >
+                  <span v-if="q.group">{{ formatGroupPath(q.group) }}</span>
+                </div>
+              </div>
+
+              <div class="question-main">
+                <div class="question-content">
+                  <LatexRenderer :text="q.question" class="question-preview" />
+                </div>
+
+                <div class="question-actions">
+                  <button
+                    v-if="props.viewMode === 'all'"
+                    class="btn-copy"
+                    @click="emit('copy-question', q)"
+                  >
+                    복사 후 가져오기
+                  </button>
+                  <button
+                    v-else-if="canEditQuestion(q)"
+                    class="btn-modify"
+                    @click="selectedQuestionForEdit = q"
+                  >
+                    수정
+                  </button>
+                  <button class="btn-solve" @click="handleSolve(q)">
+                    풀기
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
-      <GroupHierarchy 
-        :groups="groups" 
-        :selected-group-id="props.selectedGroupId"
-        @select-group="handleSelectGroup" 
-      />
     </div>
-
     <!-- 그룹 관리 오버레이 -->
     <GroupManager
       v-if="showGroupManager"
       @close="showGroupManager = false"
       @updated="fetchGroups"
     />
-
-    <div class="question-list">
-    <div v-if="props.questions.length === 0" class="no-results">
-      {{ props.appliedSearchKeyword ? '검색 조건에 맞는 문제가 없습니다.' : '해당 조건에 등록된 문제가 없습니다.' }}
-    </div>
-    <div v-else>
-      <div class="slider-panel-border">
-        <div class="slider-panel">
-          <div class="search-row">
-            <select v-model="searchField" class="search-select">
-              <option value="title">문제제목</option>
-              <option value="content">문제내용</option>
-            </select>
-            <input
-              v-model="searchInput"
-              type="text"
-              class="search-input"
-              :placeholder="searchField === 'title' ? '문제 제목을 입력하세요' : '문제 내용을 입력하세요'"
-              @keyup.enter="applySearch"
-            />
-            <button class="btn-search" @click="applySearch">검색</button>
-            <button
-              v-if="props.appliedSearchKeyword || searchInput"
-              class="btn-reset-search"
-              @click="resetSearch"
-            >
-              초기화
-            </button>
-          </div>
-          <div class="slider-row">
-            <span class="summary-text">총 {{ props.totalItems }}문제</span>
-            <div class="page-slider-section">
-              <div class="slider-wrapper" :class="{ disabled: isSliderDisabled }">
-                <span class="slider-limit">1</span>
-                <div class="slider-track-container">
-                  <input
-                    type="range"
-                    :min="1"
-                    :max="props.totalPages"
-                    :value="sliderValue"
-                    class="page-slider"
-                    @input="handleSliderInput"
-                    @change="commitSliderValue"
-                    :disabled="isSliderDisabled"
-                  />
-                  <div class="slider-fill" :style="{ width: sliderPercentage + '%' }"></div>
-                  <div
-                    v-if="!isSliderDisabled"
-                    class="slider-tooltip"
-                    :style="{ left: sliderPercentage + '%' }"
-                  >
-                    {{ sliderValue }}
-                  </div>
-                </div>
-                <span class="slider-limit">{{ props.totalPages }}</span>
-              </div>
-            </div>
-            <span class="range-text">{{ pageStartItem }}-{{ pageEndItem }}번째 문제 표시 중</span>
-          </div>
-        </div>
-      </div>
-    </div>
-     
-
-      <div v-for="q in props.questions" :key="q.question_id" class="question-item">
-        <div class="question-header">
-          <div class="question-title-row">
-            <span class="badge badge-type question-type-badge">{{ q.type.type_name }}</span>
-            <h3 class="question-title">{{ q.title }} <{{ q.question_id }}></h3>
-          </div>
-          <!-- 문제의 그룹 경로를 표시 -->
-          <div v-if="q.group || shouldShowQuestionOwner(q)" class="question-group-path">
-            <span v-if="q.creator?.username && shouldShowQuestionOwner(q)" class="question-owner">{{ q.creator.username }}</span>
-            <span v-if="q.creator?.username && shouldShowQuestionOwner(q) && q.group" class="question-separator">·</span>
-            <span v-if="q.group">{{ formatGroupPath(q.group) }}</span>
-          </div>
-        </div>
-        
-        <div class="question-main">
-          <div class="question-content">
-            <!--  문제 내용, 추가 내용을 표시 -->
-            <LatexRenderer :text="q.question" class="question-preview" />
-           
-          </div>
-
-          <div class="question-actions">
-            <button v-if="props.viewMode === 'all'" class="btn-copy" @click="emit('copy-question', q)">복사 후 가져오기</button>
-            <button v-else-if="canEditQuestion(q)" class="btn-modify" @click="selectedQuestionForEdit = q">수정</button>
-            <button class="btn-solve" @click="handleSolve(q)">풀기</button>
-          </div>
-        </div>
-      </div>
-    </div>
 
     <!-- 문제 수정 오버레이 -->
     <QuestionEditor
@@ -320,8 +466,8 @@ watch(() => props.appliedSearchKeyword, (value) => {
     />
 
     <!-- 문제 풀기 오버레이 -->
-    <QuestionSolver 
-      v-if="selectedQuestionForSolve" 
+    <QuestionSolver
+      v-if="selectedQuestionForSolve"
       :key="selectedQuestionForSolve.question_id"
       :question="selectedQuestionForSolve"
       :has-prev="getPrevQuestion() !== null"
@@ -336,12 +482,212 @@ watch(() => props.appliedSearchKeyword, (value) => {
 </template>
 
 <style scoped>
+.question-list-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  width: 100%;
+  margin: 0 auto;
+}
+
+.question-list-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 0.85rem;
+  width: 100%;
+}
+
+.header-copy {
+  display: flex;
+  flex-direction: column;
+  padding: 0.1rem;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.question-list .header-copy {
+  width: 100%;
+  padding: 1rem 1.25rem;
+  margin-bottom: 0;
+  border: none;
+  background: transparent;
+  box-shadow: none;
+  border-radius: 0;
+}
+
+.header-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  min-width: 0;
+}
+
+.title-row {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  min-width: 0;
+  flex-wrap: nowrap;
+}
+
+.question-list-title {
+  font-size: 1.2rem;
+  font-weight: 800;
+  color: #f8fafc;
+  margin: 0;
+  letter-spacing: -0.03em;
+  white-space: nowrap;
+}
+
+.question-list-subtitle {
+  font-size: 0.8rem;
+  color: #94a3b8;
+  margin: 0;
+}
+
+.scope-toggle {
+  display: inline-flex;
+  gap: 0.35rem;
+  padding: 0.22rem;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.55);
+  border: 1px solid rgba(148, 163, 184, 0.14);
+  flex-shrink: 0;
+}
+
+.page-nav {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.85rem;
+  flex-wrap: nowrap;
+  margin-left: auto;
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.back-btn,
+.quick-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.3rem 0.45rem;
+  border-radius: 8px;
+  color: #94a3b8;
+  text-decoration: none;
+  font-size: 0.9rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.back-btn:hover,
+.quick-link:hover {
+  background: rgba(255, 255, 255, 0.04);
+  color: #eef2ff;
+  transform: translateY(-1px);
+}
+
+.back-icon,
+.quick-icon {
+  width: 1rem;
+  height: 1rem;
+  flex-shrink: 0;
+}
+
+.scope-btn {
+  border: none;
+  background: transparent;
+  color: #94a3b8;
+  font-size: 0.8rem;
+  font-weight: 700;
+  border-radius: 999px;
+  padding: 0.47rem 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.scope-btn.active {
+  background: linear-gradient(135deg, #6366f1, #818cf8);
+  color: #fff;
+  box-shadow: 0 8px 24px -12px rgba(99, 102, 241, 0.9);
+}
+
+.scope-btn:not(.active):hover {
+  color: #e2e8f0;
+  background: rgba(255, 255, 255, 0.04);
+}
+
 .question-list {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
-  max-width: 900px;
-  margin: 0 auto;
+  gap: 0;
+  width: 100%;
+  margin: 0;
+
+  
+}
+
+.question-list-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 1.25rem;
+  width: 100%;
+}
+
+.question-list-main {
+  display: flex;
+  flex-direction: column;
+  gap: 1.75rem;
+  flex: 1;
+  min-width: 0;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  padding: 1rem;
+  overflow: hidden;
+}
+
+.group-overlay {
+  position: relative;
+  width: 240px;
+  flex: 0 0 240px;
+  background: rgba(15, 23, 42, 0.8);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  padding: 1rem;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  z-index: 1;
+}
+
+.error-panel {
+  width: 100%;
+  padding: 0;
+}
+
+.question-list-body {
+  width: 100%;
+  padding: 0;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.question-list {
+  min-width: 0;
+  width: 100%;
+}
+
+.question-list .slider-panel-border,
+.question-list .question-item,
+.question-list .no-results {
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 .search-bar {
@@ -428,7 +774,7 @@ watch(() => props.appliedSearchKeyword, (value) => {
 .question-item {
   display: flex;
   flex-direction: column;
-  padding: 1.0rem 1.5rem;
+  padding: 1rem 1.5rem;
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 10px;
@@ -692,7 +1038,9 @@ watch(() => props.appliedSearchKeyword, (value) => {
   font-weight: 800;
   pointer-events: none;
   white-space: nowrap;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  box-shadow:
+    0 4px 6px -1px rgba(0, 0, 0, 0.1),
+    0 2px 4px -1px rgba(0, 0, 0, 0.06);
 }
 
 .slider-panel-border {
@@ -701,7 +1049,7 @@ watch(() => props.appliedSearchKeyword, (value) => {
   padding: 1rem 1.25rem;
   background: rgba(15, 23, 42, 0.65);
   box-shadow: 0 20px 60px -22px rgba(15, 23, 42, 1);
-  margin-bottom: 1.5rem;
+  margin-bottom: 0;
 }
 
 .slider-panel {
@@ -744,7 +1092,9 @@ watch(() => props.appliedSearchKeyword, (value) => {
   padding: 0.5rem 1rem;
   font-weight: 600;
   cursor: pointer;
-  transition: background 0.2s, transform 0.2s;
+  transition:
+    background 0.2s,
+    transform 0.2s;
   height: 38px;
 }
 
@@ -787,7 +1137,7 @@ watch(() => props.appliedSearchKeyword, (value) => {
 }
 
 .slider-tooltip::after {
-  content: '';
+  content: "";
   position: absolute;
   bottom: -4px;
   left: 50%;
@@ -796,7 +1146,6 @@ watch(() => props.appliedSearchKeyword, (value) => {
   border-right: 4px solid transparent;
   border-top: 4px solid #6366f1;
 }
-
 
 @media (max-width: 640px) {
   .search-row {
@@ -827,34 +1176,14 @@ watch(() => props.appliedSearchKeyword, (value) => {
     align-items: flex-start;
     gap: 1rem;
   }
-  
+
   .question-actions {
     width: 100%;
   }
-  
+
   .btn-solve {
     width: 100%;
   }
-}
-
-
-.question-list-container {
-  position: relative;
-  width: 100%;
-}
-
-.group-overlay {
-  position: absolute;
-  top: 0;
-  left: -240px;
-  width: 220px;
-  background: rgba(15, 23, 42, 0.8);
-  backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 10px;
-  padding: 1rem;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-  z-index: 100;
 }
 
 .group-overlay-header {
@@ -899,10 +1228,11 @@ watch(() => props.appliedSearchKeyword, (value) => {
   cursor: pointer;
   opacity: 0.6;
   transition: opacity 0.2s;
-  padding: 2px;
+  padding: 2px 6px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  gap: 0.35rem;
 }
 
 .btn-manage-groups:hover {
@@ -913,6 +1243,13 @@ watch(() => props.appliedSearchKeyword, (value) => {
   width: 1rem;
   height: 1rem;
   flex-shrink: 0;
+}
+
+.btn-manage-label {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: #94a3b8;
+  letter-spacing: 0.02em;
 }
 
 .no-results {
@@ -927,10 +1264,12 @@ watch(() => props.appliedSearchKeyword, (value) => {
 
 @media (max-width: 1400px) {
   .group-overlay {
-    position: static;
     width: 100%;
-    margin-bottom: 1.5rem;
-    left: auto;
+    margin-bottom: 1rem;
+  }
+
+  .question-list-row {
+    flex-direction: column;
   }
 }
 </style>

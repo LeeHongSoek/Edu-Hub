@@ -1,45 +1,95 @@
 <script setup lang="ts">
-import { ref, onMounted, computed, watch } from 'vue';
-import IconBook from '~/assets/icons/IconBook.svg?component';
+import { ref, computed, watch } from "vue";
+import IconBook from "~/assets/icons/IconBook.svg?component";
+import IconArrowUp from "~/assets/icons/IconArrowUp.svg?component";
+import IconFileText from "~/assets/icons/IconFileText.svg?component";
+import IconPencil from "~/assets/icons/IconPencil.svg?component";
+
+const props = withDefaults(
+  defineProps<{
+    showScopeToggle?: boolean;
+  }>(),
+  {
+    showScopeToggle: false,
+  },
+);
 
 const books = ref<any[]>([]);
 const loading = ref(true);
 const itemsPerPage = 6;
 const currentPage = ref(1);
 const sliderValue = ref(1);
-const searchField = ref<'name' | 'description'>('name');
-const searchInput = ref('');
-const searchQuery = ref('');
+const listScope = ref<"mine" | "all">("mine");
+const searchField = ref<"name" | "description">("name");
+const searchInput = ref("");
+const searchQuery = ref("");
+const userCookie = useCookie("user_info");
+const userInfo = computed(() => {
+  if (!userCookie.value) return null;
+  try {
+    return typeof userCookie.value === "string"
+      ? JSON.parse(userCookie.value)
+      : userCookie.value;
+  } catch {
+    return null;
+  }
+});
+
+const listTitle = computed(() =>
+  listScope.value === "all" ? "전체 문제집 목록" : "나의 문제집 목록",
+);
+const emptyText = computed(() => {
+  if (searchQuery.value) return "검색 조건에 맞는 문제집이 없습니다.";
+  return listScope.value === "all"
+    ? "등록된 문제집이 없습니다."
+    : "생성된 문제집이 없습니다.";
+});
+
+const isCurrentUserOwner = (
+  ownerUserNo: string | number | bigint | null | undefined,
+) => {
+  if (!userInfo.value || ownerUserNo === null || ownerUserNo === undefined)
+    return false;
+  return String(userInfo.value.user_no) === String(ownerUserNo);
+};
 const filteredBooks = computed(() => {
   const keyword = searchQuery.value.trim().toLowerCase();
   if (!keyword) return books.value;
   return books.value.filter((book) => {
-    const target = searchField.value === 'description'
-      ? (book.description || '')
-      : book.book_name;
+    const target =
+      searchField.value === "description"
+        ? book.description || ""
+        : book.book_name;
     return target?.toLowerCase().includes(keyword);
   });
 });
 
-const totalPages = computed(() => Math.max(1, Math.ceil(filteredBooks.value.length / itemsPerPage)));
+const totalPages = computed(() =>
+  Math.max(1, Math.ceil(filteredBooks.value.length / itemsPerPage)),
+);
 const pagedBooks = computed(() => {
   const start = (currentPage.value - 1) * itemsPerPage;
   return filteredBooks.value.slice(start, start + itemsPerPage);
 });
 const pageStartItem = computed(() => {
-  if (books.value.length === 0) return 0;
+  if (filteredBooks.value.length === 0) return 0;
   return (currentPage.value - 1) * itemsPerPage + 1;
 });
-const pageEndItem = computed(() => Math.min(currentPage.value * itemsPerPage, books.value.length));
+const pageEndItem = computed(() =>
+  Math.min(currentPage.value * itemsPerPage, filteredBooks.value.length),
+);
 const sliderPercentage = computed(() => {
   if (totalPages.value <= 1) return 0;
   return ((sliderValue.value - 1) / (totalPages.value - 1)) * 100;
 });
 
-watch(() => filteredBooks.value.length, () => {
-  currentPage.value = 1;
-  sliderValue.value = 1;
-});
+watch(
+  () => filteredBooks.value.length,
+  () => {
+    currentPage.value = 1;
+    sliderValue.value = 1;
+  },
+);
 
 watch(currentPage, (page) => {
   sliderValue.value = page;
@@ -51,8 +101,8 @@ const applySearch = () => {
 };
 
 const clearSearch = () => {
-  searchInput.value = '';
-  searchQuery.value = '';
+  searchInput.value = "";
+  searchQuery.value = "";
   currentPage.value = 1;
 };
 const handleSliderInput = (e: Event) => {
@@ -73,26 +123,28 @@ const commitSliderValue = () => {
 const prevPage = () => goToPage(currentPage.value - 1);
 const nextPage = () => goToPage(currentPage.value + 1);
 const showCreateModal = ref(false);
-const newBook = ref({ book_name: '', description: '' });
+const newBook = ref({ book_name: "", description: "" });
 
-const { apiBase, token, getAuthHeader } = useApi();
+const { apiBase, getAuthHeader } = useApi();
 const router = useRouter();
 
 const viewBookDetails = (bookId: number | string | bigint) => {
   router.push({
-    path: '/questions',
+    path: "/questions",
     query: { book: String(bookId) },
   });
 };
 
 const fetchBooks = async () => {
+  loading.value = true;
   try {
-    const data = await $fetch(`${apiBase.value}/question-books/my`, {
-      headers: getAuthHeader()
+    const data = await $fetch(`${apiBase.value}/question-books`, {
+      headers: getAuthHeader(),
+      query: { scope: listScope.value },
     });
     books.value = data as any[];
   } catch (err) {
-    console.error('서버 통신 오류(fetch) books:', err);
+    console.error("서버 통신 오류(fetch) books:", err);
   } finally {
     loading.value = false;
     currentPage.value = Math.min(currentPage.value, totalPages.value);
@@ -103,30 +155,91 @@ const fetchBooks = async () => {
 const createBook = async () => {
   try {
     await $fetch(`${apiBase.value}/question-books`, {
-      method: 'POST',
+      method: "POST",
       headers: getAuthHeader(),
-      body: newBook.value
+      body: newBook.value,
     });
     showCreateModal.value = false;
-    newBook.value = { book_name: '', description: '' };
-    fetchBooks();
+    newBook.value = { book_name: "", description: "" };
+    await fetchBooks();
   } catch (err) {
-    alert('문제집 생성 피일');
+    alert("문제집 생성 피일");
   }
 };
 
-onMounted(fetchBooks);
+watch(
+  listScope,
+  async () => {
+    currentPage.value = 1;
+    sliderValue.value = 1;
+    await fetchBooks();
+  },
+  { immediate: true },
+);
+
+const setScope = (scope: "mine" | "all") => {
+  if (listScope.value === scope) return;
+  listScope.value = scope;
+};
 </script>
 
 <template>
-    <div class="book-manager">
+  <div class="book-manager">
     <div class="manager-header">
-      <h3><IconBook class="section-icon" /> 나의 문제집 목록</h3>
-      <button class="btn-create" @click="showCreateModal = true">+ 새 문제집</button>
+      <div class="header-copy">
+        <div class="title-row">
+          <h3><IconBook class="section-icon" /> {{ listTitle }}</h3>
+          <div
+            v-if="showScopeToggle"
+            class="scope-toggle"
+            role="tablist"
+            aria-label="문제집 범위 선택"
+          >
+            <button
+              type="button"
+              class="scope-btn"
+              :class="{ active: listScope === 'mine' }"
+              :aria-pressed="listScope === 'mine'"
+              @click="setScope('mine')"
+            >
+              나의 문제집
+            </button>
+            <button
+              type="button"
+              class="scope-btn"
+              :class="{ active: listScope === 'all' }"
+              :aria-pressed="listScope === 'all'"
+              @click="setScope('all')"
+            >
+              전체 문제집
+            </button>
+          </div>
+          <button class="btn-create" @click="showCreateModal = true">
+            + 새 문제집
+          </button>
+        </div>
+      </div>
+
+      <div class="page-links">
+        <NuxtLink to="/dashboard" class="back-btn">
+          <IconArrowUp class="back-icon" />
+          대시보드
+        </NuxtLink>
+        <NuxtLink to="/questions" class="quick-link">
+          <IconFileText class="quick-icon" />
+          문제 목록
+        </NuxtLink>
+        <NuxtLink to="/exams" class="quick-link">
+          <IconPencil class="quick-icon" />
+          고사집 목록
+        </NuxtLink>
+      </div>
     </div>
 
     <div v-if="loading" class="loading">불러오는 중...</div>
-    <div v-else-if="books.length === 0" class="empty">생성된 문제집이 없습니다.</div>
+    <div v-else-if="filteredBooks.length === 0" class="empty">
+      {{ emptyText }}
+    </div>
     <div v-else>
       <div class="pagination-panel-border">
         <div class="slider-panel">
@@ -143,12 +256,23 @@ onMounted(fetchBooks);
               @keyup.enter="applySearch"
             />
             <button class="btn-search" @click="applySearch">검색</button>
-            <button v-if="searchQuery" class="btn-reset-search" @click="clearSearch">초기화</button>
+            <button
+              v-if="searchQuery"
+              class="btn-reset-search"
+              @click="clearSearch"
+            >
+              초기화
+            </button>
           </div>
           <div class="slider-row">
-            <span class="summary-text">총 {{ filteredBooks.length }}개 문제집</span>
+            <span class="summary-text"
+              >총 {{ filteredBooks.length }}개 문제집</span
+            >
             <div class="page-slider-section">
-              <div class="slider-wrapper" :class="{ disabled: totalPages <= 1 }">
+              <div
+                class="slider-wrapper"
+                :class="{ disabled: totalPages <= 1 }"
+              >
                 <span class="slider-limit">1</span>
                 <div class="slider-track-container">
                   <input
@@ -161,15 +285,23 @@ onMounted(fetchBooks);
                     @change="commitSliderValue"
                     :disabled="totalPages <= 1"
                   />
-                  <div class="slider-fill" :style="{ width: sliderPercentage + '%' }"></div>
-                  <div class="slider-tooltip" :style="{ left: sliderPercentage + '%' }">
+                  <div
+                    class="slider-fill"
+                    :style="{ width: sliderPercentage + '%' }"
+                  ></div>
+                  <div
+                    class="slider-tooltip"
+                    :style="{ left: sliderPercentage + '%' }"
+                  >
                     {{ sliderValue }}
                   </div>
                 </div>
                 <span class="slider-limit">{{ totalPages }}</span>
               </div>
             </div>
-            <span class="range-text">{{ pageStartItem }}-{{ pageEndItem }}번째 항목 표시 중</span>
+            <span class="range-text"
+              >{{ pageStartItem }}-{{ pageEndItem }}번째 항목 표시 중</span
+            >
           </div>
         </div>
       </div>
@@ -181,30 +313,57 @@ onMounted(fetchBooks);
               <span class="book-title">{{ book.book_name }}</span>
             </h4>
             <span class="book-meta">
-              <span v-if="book.creator?.username" class="book-owner">{{ book.creator.username }}</span>
-              <span v-if="book.creator?.username" class="book-separator">·</span>
+              <span
+                v-if="
+                  book.creator?.username &&
+                  !isCurrentUserOwner(book.creator.user_no)
+                "
+                class="book-owner"
+                >{{ book.creator.username }}</span
+              >
+              <span
+                v-if="
+                  book.creator?.username &&
+                  !isCurrentUserOwner(book.creator.user_no)
+                "
+                class="book-separator"
+                >·</span
+              >
               <span>문제 수: {{ book.items?.length || 0 }}개</span>
             </span>
           </div>
           <div class="book-card-body">
-            <p>{{ book.description || '설명 없음' }}</p>
-            <button class="btn-view" @click="viewBookDetails(book.book_id)">상세보기</button>
+            <p>{{ book.description || "설명 없음" }}</p>
+            <button class="btn-view" @click="viewBookDetails(book.book_id)">
+              상세보기
+            </button>
           </div>
         </div>
       </div>
     </div>
 
     <!-- 생성 모달 -->
-    <div v-if="showCreateModal" class="modal-overlay" @click.self="showCreateModal = false">
+    <div
+      v-if="showCreateModal"
+      class="modal-overlay"
+      @click.self="showCreateModal = false"
+    >
       <div class="modal-content">
         <h3>새 문제집 만들기</h3>
         <div class="form-group">
           <label>문제집 이름</label>
-          <input v-model="newBook.book_name" type="text" placeholder="예: 2024 정보처리기사 핵심문항" />
+          <input
+            v-model="newBook.book_name"
+            type="text"
+            placeholder="예: 2024 정보처리기사 핵심문항"
+          />
         </div>
         <div class="form-group">
           <label>설명</label>
-          <textarea v-model="newBook.description" placeholder="문제집에 대한 설명을 적어주세요."></textarea>
+          <textarea
+            v-model="newBook.description"
+            placeholder="문제집에 대한 설명을 적어주세요."
+          ></textarea>
         </div>
         <div class="modal-actions">
           <button @click="showCreateModal = false">취소</button>
@@ -216,8 +375,30 @@ onMounted(fetchBooks);
 </template>
 
 <style scoped>
-.book-manager { display: flex; flex-direction: column; gap: 1.5rem; }
-.manager-header { display: flex; justify-content: space-between; align-items: center; }
+.book-manager {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+.manager-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  width: 100%;
+}
+.header-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  flex: 1;
+}
+.title-row {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  flex-wrap: wrap;
+}
 .manager-header h3 {
   color: #f8fafc;
   margin: 0;
@@ -227,6 +408,76 @@ onMounted(fetchBooks);
 }
 
 .section-icon {
+  width: 1rem;
+  height: 1rem;
+  flex-shrink: 0;
+}
+
+.scope-toggle {
+  display: inline-flex;
+  gap: 0.35rem;
+  padding: 0.22rem;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.55);
+  border: 1px solid rgba(148, 163, 184, 0.14);
+}
+
+.scope-btn {
+  border: none;
+  background: transparent;
+  color: #94a3b8;
+  font-size: 0.82rem;
+  font-weight: 700;
+  border-radius: 999px;
+  padding: 0.45rem 0.85rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.scope-btn:hover {
+  color: #e2e8f0;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.scope-btn.active {
+  background: #6d6eff;
+  color: #ffffff;
+  box-shadow: 0 8px 18px rgba(109, 110, 255, 0.25);
+}
+
+.page-links {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.85rem;
+  margin-left: auto;
+  flex-wrap: nowrap;
+}
+
+.back-btn,
+.quick-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.3rem 0.45rem;
+  border-radius: 8px;
+  color: #94a3b8;
+  text-decoration: none;
+  font-size: 0.9rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.back-btn:hover,
+.quick-link:hover {
+  background: rgba(255, 255, 255, 0.04);
+  color: #eef2ff;
+  transform: translateY(-1px);
+}
+
+.back-icon,
+.quick-icon {
   width: 1rem;
   height: 1rem;
   flex-shrink: 0;
@@ -257,10 +508,15 @@ onMounted(fetchBooks);
   display: flex;
   flex-direction: column;
   gap: 0.45rem;
-  transition: border 0.3s, transform 0.3s;
+  transition:
+    border 0.3s,
+    transform 0.3s;
 }
 
-.book-card:hover { border-color: #6366f1; transform: translateY(-3px); }
+.book-card:hover {
+  border-color: #6366f1;
+  transform: translateY(-3px);
+}
 
 .book-card-head,
 .book-card-body {
@@ -324,7 +580,9 @@ onMounted(fetchBooks);
   border-radius: 8px;
   cursor: pointer;
   font-weight: 600;
-  transition: border-color 0.2s, background 0.2s;
+  transition:
+    border-color 0.2s,
+    background 0.2s;
   white-space: nowrap;
 }
 
@@ -336,7 +594,10 @@ onMounted(fetchBooks);
 /* Modal */
 .modal-overlay {
   position: fixed;
-  top: 0; left: 0; right: 0; bottom: 0;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
   background: rgba(0, 0, 0, 0.8);
   backdrop-filter: blur(4px);
   display: flex;
@@ -354,9 +615,17 @@ onMounted(fetchBooks);
   border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-.form-group { margin-bottom: 1.5rem; }
-.form-group label { display: block; color: #94a3b8; margin-bottom: 0.5rem; font-size: 0.9rem; }
-.form-group input, .form-group textarea {
+.form-group {
+  margin-bottom: 1.5rem;
+}
+.form-group label {
+  display: block;
+  color: #94a3b8;
+  margin-bottom: 0.5rem;
+  font-size: 0.9rem;
+}
+.form-group input,
+.form-group textarea {
   width: 100%;
   background: rgba(0, 0, 0, 0.2);
   border: 1px solid rgba(255, 255, 255, 0.1);
@@ -365,8 +634,20 @@ onMounted(fetchBooks);
   color: white;
 }
 
-.modal-actions { display: flex; justify-content: flex-end; gap: 1rem; margin-top: 1rem; }
-.btn-primary { background: #6366f1; border: none; color: white; padding: 0.6rem 1.5rem; border-radius: 10px; cursor: pointer; }
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+.btn-primary {
+  background: #6366f1;
+  border: none;
+  color: white;
+  padding: 0.6rem 1.5rem;
+  border-radius: 10px;
+  cursor: pointer;
+}
 
 .search-select,
 .search-input {
@@ -525,11 +806,13 @@ onMounted(fetchBooks);
   font-weight: 800;
   pointer-events: none;
   white-space: nowrap;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  box-shadow:
+    0 4px 6px -1px rgba(0, 0, 0, 0.1),
+    0 2px 4px -1px rgba(0, 0, 0, 0.06);
 }
 
 .slider-tooltip::after {
-  content: '';
+  content: "";
   position: absolute;
   bottom: -4px;
   left: 50%;
@@ -539,7 +822,8 @@ onMounted(fetchBooks);
   border-top: 4px solid #6366f1;
 }
 
-.loading, .empty {
+.loading,
+.empty {
   text-align: center;
   padding: 3rem;
   color: #64748b;
@@ -574,5 +858,4 @@ onMounted(fetchBooks);
   justify-content: space-between;
   flex-wrap: nowrap;
 }
-
 </style>

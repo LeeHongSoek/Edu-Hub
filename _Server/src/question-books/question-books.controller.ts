@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Patch, Delete, Body, Param, UseGuards, Request } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Delete, Body, Param, UseGuards, Request, Query } from '@nestjs/common';
 import { QuestionBooksService } from './question-books.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
@@ -13,6 +13,14 @@ export class QuestionBooksController {
     return this.questionBooksService.create(userNo, body);
   }
 
+  @Get()
+  async findAll(@Request() req, @Query('scope') scope?: 'mine' | 'all') {
+    const userNo = BigInt(req.user.user_no);
+    return scope === 'all'
+      ? this.questionBooksService.findAll()
+      : this.questionBooksService.findByUser(userNo);
+  }
+
   @Get('my')
   async findMyBooks(@Request() req) {
     const userNo = BigInt(req.user.user_no);
@@ -20,9 +28,8 @@ export class QuestionBooksController {
   }
 
   @Get(':id')
-  async findOne(@Request() req, @Param('id') id: string) {
-    const userNo = BigInt(req.user.user_no);
-    return this.questionBooksService.findById(BigInt(id), userNo);
+  async findOne(@Param('id') id: string) {
+    return this.questionBooksService.findById(BigInt(id));
   }
 
   @Patch(':id')

@@ -1,34 +1,18 @@
 <script setup lang="ts">
-import ExamListManager from '~/components/dashboard/ExamListManager.vue';
-import IconArrowUp from '~/assets/icons/IconArrowUp.svg?component';
-import IconFileText from '~/assets/icons/IconFileText.svg?component';
-import IconBook from '~/assets/icons/IconBook.svg?component';
+import ExamListManager from "~/components/dashboard/ExamListManager.vue";
+import IconArrowUp from "~/assets/icons/IconArrowUp.svg?component";
+import IconFileText from "~/assets/icons/IconFileText.svg?component";
+import IconBook from "~/assets/icons/IconBook.svg?component";
 </script>
 
 <template>
   <div class="page-container">
-  <div class="page-header">
-    <h1 class="page-title">고사집 목록</h1>
-    <div class="page-nav">
-      <NuxtLink to="/dashboard" class="back-btn">
-        <IconArrowUp class="back-icon" />
-        대시보드
-      </NuxtLink>
-      <div class="page-links">
-        <NuxtLink to="/questions" class="quick-link">
-          <IconFileText class="quick-icon" />
-          문제 목록
-        </NuxtLink>
-        <NuxtLink to="/question-books" class="quick-link">
-          <IconBook class="quick-icon" />
-          문제집 목록
-        </NuxtLink>
-      </div>
+    <div class="page-header">
+      <div class="page-nav"></div>
     </div>
-  </div>
-    
+
     <div class="content-box">
-      <ExamListManager />
+      <ExamListManager :show-scope-toggle="true" />
     </div>
   </div>
 </template>
@@ -46,15 +30,22 @@ import IconBook from '~/assets/icons/IconBook.svg?component';
   justify-content: space-between;
   gap: 1rem;
   margin-bottom: 0.5rem;
+  width: 100%;
 }
 
-.page-title { font-size: 2.2rem; font-weight: 800; color: #f8fafc; }
+.page-title {
+  font-size: 2.2rem;
+  font-weight: 800;
+  color: #f8fafc;
+}
 
 .page-nav {
   display: flex;
   align-items: center;
   gap: 0.75rem;
   flex-wrap: nowrap;
+  width: 100%;
+  justify-content: space-between;
 }
 
 .page-links {
@@ -62,6 +53,7 @@ import IconBook from '~/assets/icons/IconBook.svg?component';
   gap: 0.75rem;
   flex-wrap: nowrap;
   justify-content: flex-end;
+  margin-left: auto;
 }
 
 .back-btn,

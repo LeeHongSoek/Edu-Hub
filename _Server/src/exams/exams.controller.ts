@@ -1,4 +1,4 @@
-import { Controller, Get, UseGuards, Request, UnauthorizedException, Param } from '@nestjs/common';
+import { Controller, Get, UseGuards, Request, UnauthorizedException, Param, Query } from '@nestjs/common';
 import { ExamsService } from './exams.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
@@ -8,10 +8,12 @@ export class ExamsController {
   constructor(private readonly examsService: ExamsService) {}
 
   @Get()
-  async findAll(@Request() req: any) {
+  async findAll(@Request() req: any, @Query('scope') scope?: 'mine' | 'all') {
     const userNoVal = req.user?.user_no || req.user?.userNo;
     if (!userNoVal) throw new UnauthorizedException();
-    return this.examsService.findAll(BigInt(userNoVal));
+    return scope === 'all'
+      ? this.examsService.findAll()
+      : this.examsService.findAll(BigInt(userNoVal));
   }
 
   @Get(':id')

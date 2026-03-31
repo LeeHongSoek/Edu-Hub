@@ -1,19 +1,19 @@
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from 'vue';
-import IconFeedback from '~/assets/icons/IconFeedback.svg?component';
-import IconClose from '~/assets/icons/IconClose.svg?component';
-import IconSearch from '~/assets/icons/IconSearch.svg?component';
-import IconPencil from '~/assets/icons/IconPencil.svg?component';
-import IconTrash from '~/assets/icons/IconTrash.svg?component';
+import { computed, onMounted, ref, watch } from "vue";
+import IconFeedback from "~/assets/icons/IconFeedback.svg?component";
+import IconClose from "~/assets/icons/IconClose.svg?component";
+import IconSearch from "~/assets/icons/IconSearch.svg?component";
+import IconPencil from "~/assets/icons/IconPencil.svg?component";
+import IconTrash from "~/assets/icons/IconTrash.svg?component";
 
-const emit = defineEmits(['close']);
+const emit = defineEmits(["close"]);
 
 const reports = ref<any[]>([]);
 const loading = ref(true);
 const showForm = ref(false);
 const editingReport = ref<any>(null);
-const searchInput = ref('');
-const searchQuery = ref('');
+const searchInput = ref("");
+const searchQuery = ref("");
 const currentPage = ref(1);
 const pageSize = 5;
 const sliderValue = ref(1);
@@ -21,15 +21,15 @@ const sliderValue = ref(1);
 const { apiBase, getAuthHeader } = useApi();
 
 const form = ref({
-  category: 'OPINION',
-  title: '',
-  content: ''
+  category: "OPINION",
+  title: "",
+  content: "",
 });
 
 const categories = [
-  { value: 'OPINION', label: '단순 의견' },
-  { value: 'IMPROVEMENT', label: '개선 제안' },
-  { value: 'COMPLAINT', label: '불만/오류 제보' }
+  { value: "OPINION", label: "단순 의견" },
+  { value: "IMPROVEMENT", label: "개선 제안" },
+  { value: "COMPLAINT", label: "불만/오류 제보" },
 ];
 
 const normalizedSearch = computed(() => searchQuery.value.trim().toLowerCase());
@@ -38,15 +38,20 @@ const filteredReports = computed(() => {
   if (!normalizedSearch.value) return reports.value;
 
   return reports.value.filter((report) => {
-    const categoryLabel = categories.find((item) => item.value === report.category)?.label ?? '';
+    const categoryLabel =
+      categories.find((item) => item.value === report.category)?.label ?? "";
 
     return [report.title, report.content, categoryLabel]
       .filter(Boolean)
-      .some((value) => String(value).toLowerCase().includes(normalizedSearch.value));
+      .some((value) =>
+        String(value).toLowerCase().includes(normalizedSearch.value),
+      );
   });
 });
 
-const totalPages = computed(() => Math.max(1, Math.ceil(filteredReports.value.length / pageSize)));
+const totalPages = computed(() =>
+  Math.max(1, Math.ceil(filteredReports.value.length / pageSize)),
+);
 const isSliderDisabled = computed(() => totalPages.value <= 1);
 
 const paginatedReports = computed(() => {
@@ -59,7 +64,9 @@ const pageStartItem = computed(() => {
   return (currentPage.value - 1) * pageSize + 1;
 });
 
-const pageEndItem = computed(() => Math.min(currentPage.value * pageSize, filteredReports.value.length));
+const pageEndItem = computed(() =>
+  Math.min(currentPage.value * pageSize, filteredReports.value.length),
+);
 
 const sliderPercentage = computed(() => {
   if (totalPages.value <= 1) return 0;
@@ -88,8 +95,8 @@ const applySearch = () => {
 };
 
 const clearSearch = () => {
-  searchInput.value = '';
-  searchQuery.value = '';
+  searchInput.value = "";
+  searchQuery.value = "";
 };
 
 const handleSliderInput = (event: Event) => {
@@ -100,17 +107,16 @@ const commitSliderValue = () => {
   goToPage(sliderValue.value);
 };
 
-
 const fetchMyReports = async () => {
   try {
     const data = await $fetch(`${apiBase.value}/ombudsman/my`, {
-      headers: getAuthHeader()
+      headers: getAuthHeader(),
     });
     reports.value = data as any[];
     currentPage.value = 1;
     sliderValue.value = 1;
   } catch (err) {
-    console.error('서버 통신 오류(fetch) reports:', err);
+    console.error("서버 통신 오류(fetch) reports:", err);
   } finally {
     loading.value = false;
   }
@@ -119,22 +125,25 @@ const fetchMyReports = async () => {
 const submitReport = async () => {
   try {
     if (editingReport.value) {
-      await $fetch(`${apiBase.value}/ombudsman/${editingReport.value.report_id}`, {
-        method: 'PATCH',
-        headers: getAuthHeader(),
-        body: form.value
-      });
+      await $fetch(
+        `${apiBase.value}/ombudsman/${editingReport.value.report_id}`,
+        {
+          method: "PATCH",
+          headers: getAuthHeader(),
+          body: form.value,
+        },
+      );
     } else {
       await $fetch(`${apiBase.value}/ombudsman`, {
-        method: 'POST',
+        method: "POST",
         headers: getAuthHeader(),
-        body: form.value
+        body: form.value,
       });
     }
     resetForm();
     await fetchMyReports();
   } catch (err) {
-    alert('제출에 실패했습니다.');
+    alert("제출에 실패했습니다.");
   }
 };
 
@@ -143,28 +152,28 @@ const editReport = (report: any) => {
   form.value = {
     category: report.category,
     title: report.title,
-    content: report.content
+    content: report.content,
   };
   showForm.value = true;
 };
 
 const deleteReport = async (id: string) => {
-  if (!confirm('정말 삭제하시겠습니까?')) return;
+  if (!confirm("정말 삭제하시겠습니까?")) return;
   try {
     await $fetch(`${apiBase.value}/ombudsman/${id}`, {
-      method: 'DELETE',
-      headers: getAuthHeader()
+      method: "DELETE",
+      headers: getAuthHeader(),
     });
     await fetchMyReports();
   } catch (err) {
-    alert('삭제에 실패했습니다.');
+    alert("삭제에 실패했습니다.");
   }
 };
 
 const resetForm = () => {
   showForm.value = false;
   editingReport.value = null;
-  form.value = { category: 'OPINION', title: '', content: '' };
+  form.value = { category: "OPINION", title: "", content: "" };
 };
 
 onMounted(fetchMyReports);
@@ -185,7 +194,9 @@ onMounted(fetchMyReports);
           <div v-if="!showForm" key="report-list" class="list-section">
             <div class="list-header">
               <h3>나의 제보 내역</h3>
-              <button class="btn-primary" @click="showForm = true">새 제보하기</button>
+              <button class="btn-primary" @click="showForm = true">
+                새 제보하기
+              </button>
             </div>
 
             <div v-if="reports.length > 0" class="pagination-panel-border">
@@ -201,12 +212,23 @@ onMounted(fetchMyReports);
                     />
                   </label>
                   <button class="btn-search" @click="applySearch">검색</button>
-                  <button v-if="searchQuery" class="btn-reset-search" @click="clearSearch">초기화</button>
+                  <button
+                    v-if="searchQuery"
+                    class="btn-reset-search"
+                    @click="clearSearch"
+                  >
+                    초기화
+                  </button>
                 </div>
                 <div v-if="filteredReports.length > 0" class="slider-row">
-                  <span class="summary-text">총 {{ filteredReports.length }}건의 제보</span>
+                  <span class="summary-text"
+                    >총 {{ filteredReports.length }}건의 제보</span
+                  >
                   <div class="page-slider-section">
-                    <div class="slider-wrapper" :class="{ disabled: isSliderDisabled }">
+                    <div
+                      class="slider-wrapper"
+                      :class="{ disabled: isSliderDisabled }"
+                    >
                       <span class="slider-limit">1</span>
                       <div class="slider-track-container">
                         <input
@@ -219,15 +241,24 @@ onMounted(fetchMyReports);
                           @input="handleSliderInput"
                           @change="commitSliderValue"
                         />
-                        <div class="slider-fill" :style="{ width: sliderPercentage + '%' }"></div>
-                        <div class="slider-tooltip" :style="{ left: sliderPercentage + '%' }">
+                        <div
+                          class="slider-fill"
+                          :style="{ width: sliderPercentage + '%' }"
+                        ></div>
+                        <div
+                          class="slider-tooltip"
+                          :style="{ left: sliderPercentage + '%' }"
+                        >
                           {{ sliderValue }}
                         </div>
                       </div>
                       <span class="slider-limit">{{ totalPages }}</span>
                     </div>
                   </div>
-                  <span class="range-text">{{ pageStartItem }}-{{ pageEndItem }}번째 항목 표시 중</span>
+                  <span class="range-text"
+                    >{{ pageStartItem }}-{{ pageEndItem }}번째 항목 표시
+                    중</span
+                  >
                 </div>
               </div>
             </div>
@@ -240,20 +271,43 @@ onMounted(fetchMyReports);
               검색 결과가 없습니다.
             </div>
             <div v-else class="report-list-shell">
-              <TransitionGroup name="report-slide" tag="div" class="report-list">
-                <div v-for="report in paginatedReports" :key="report.report_id" class="report-item">
+              <TransitionGroup
+                name="report-slide"
+                tag="div"
+                class="report-list"
+              >
+                <div
+                  v-for="report in paginatedReports"
+                  :key="report.report_id"
+                  class="report-item"
+                >
                   <div class="report-main">
                     <div class="report-meta">
-                      <span class="category-badge" :class="report.category.toLowerCase()">
-                        {{ categories.find(c => c.value === report.category)?.label }}
+                      <span
+                        class="category-badge"
+                        :class="report.category.toLowerCase()"
+                      >
+                        {{
+                          categories.find((c) => c.value === report.category)
+                            ?.label
+                        }}
                       </span>
-                      <p class="report-date">{{ new Date(report.created_at).toLocaleDateString() }}</p>
+                      <p class="report-date">
+                        {{ new Date(report.created_at).toLocaleDateString() }}
+                      </p>
                     </div>
                     <div class="report-content-row">
                       <h4 class="report-title">{{ report.title }}</h4>
                       <div class="report-actions">
-                        <button class="btn-icon" @click="editReport(report)"><IconPencil class="action-icon" /></button>
-                        <button class="btn-icon" @click="deleteReport(report.report_id)"><IconTrash class="action-icon" /></button>
+                        <button class="btn-icon" @click="editReport(report)">
+                          <IconPencil class="action-icon" />
+                        </button>
+                        <button
+                          class="btn-icon"
+                          @click="deleteReport(report.report_id)"
+                        >
+                          <IconTrash class="action-icon" />
+                        </button>
                       </div>
                     </div>
                   </div>
@@ -263,27 +317,39 @@ onMounted(fetchMyReports);
           </div>
 
           <div v-else key="report-form" class="form-section">
-            <h3>{{ editingReport ? '제보 수정' : '새 제보 등록' }}</h3>
+            <h3>{{ editingReport ? "제보 수정" : "새 제보 등록" }}</h3>
             <div class="form-group">
               <label>분류</label>
               <select v-model="form.category">
-                <option v-for="cat in categories" :key="cat.value" :value="cat.value">
+                <option
+                  v-for="cat in categories"
+                  :key="cat.value"
+                  :value="cat.value"
+                >
                   {{ cat.label }}
                 </option>
               </select>
             </div>
             <div class="form-group">
               <label>제목</label>
-              <input v-model="form.title" type="text" placeholder="제목을 입력하세요" />
+              <input
+                v-model="form.title"
+                type="text"
+                placeholder="제목을 입력하세요"
+              />
             </div>
             <div class="form-group">
               <label>내용</label>
-              <textarea v-model="form.content" rows="6" placeholder="상세 내용을 입력하세요"></textarea>
+              <textarea
+                v-model="form.content"
+                rows="6"
+                placeholder="상세 내용을 입력하세요"
+              ></textarea>
             </div>
             <div class="form-actions">
               <button class="btn-secondary" @click="resetForm">취소</button>
               <button class="btn-primary" @click="submitReport">
-                {{ editingReport ? '수정 완료' : '제출하기' }}
+                {{ editingReport ? "수정 완료" : "제출하기" }}
               </button>
             </div>
           </div>
@@ -296,7 +362,10 @@ onMounted(fetchMyReports);
 <style scoped>
 .modal-overlay {
   position: fixed;
-  top: 0; left: 0; right: 0; bottom: 0;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
   background: rgba(0, 0, 0, 0.7);
   backdrop-filter: blur(8px);
   display: flex;
@@ -335,7 +404,8 @@ onMounted(fetchMyReports);
 }
 
 .btn-close {
-  background: none; border: none;
+  background: none;
+  border: none;
   color: #94a3b8;
   cursor: pointer;
 }
@@ -361,7 +431,10 @@ onMounted(fetchMyReports);
   margin-bottom: 0.9rem;
 }
 
-.list-header h3 { color: #94a3b8; font-size: 1rem; }
+.list-header h3 {
+  color: #94a3b8;
+  font-size: 1rem;
+}
 .pagination-panel-border {
   border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 10px;
@@ -398,7 +471,9 @@ onMounted(fetchMyReports);
   color: #e2e8f0;
   outline: none;
 }
-.search-box input::placeholder { color: #64748b; }
+.search-box input::placeholder {
+  color: #64748b;
+}
 .search-icon-svg {
   color: #94a3b8;
 }
@@ -516,10 +591,12 @@ onMounted(fetchMyReports);
   font-weight: 800;
   pointer-events: none;
   white-space: nowrap;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  box-shadow:
+    0 4px 6px -1px rgba(0, 0, 0, 0.1),
+    0 2px 4px -1px rgba(0, 0, 0, 0.06);
 }
 .slider-tooltip::after {
-  content: '';
+  content: "";
   position: absolute;
   bottom: -4px;
   left: 50%;
@@ -550,7 +627,9 @@ onMounted(fetchMyReports);
   align-items: center;
 }
 
-.report-main { width: 100%; }
+.report-main {
+  width: 100%;
+}
 .report-meta {
   display: flex;
   justify-content: space-between;
@@ -573,9 +652,18 @@ onMounted(fetchMyReports);
   display: inline-block;
 }
 
-.category-badge.opinion { background: rgba(56, 189, 248, 0.1); color: #38bdf8; }
-.category-badge.improvement { background: rgba(34, 197, 94, 0.1); color: #4ade80; }
-.category-badge.complaint { background: rgba(244, 63, 94, 0.1); color: #fb7185; }
+.category-badge.opinion {
+  background: rgba(56, 189, 248, 0.1);
+  color: #38bdf8;
+}
+.category-badge.improvement {
+  background: rgba(34, 197, 94, 0.1);
+  color: #4ade80;
+}
+.category-badge.complaint {
+  background: rgba(244, 63, 94, 0.1);
+  color: #fb7185;
+}
 
 .report-title {
   color: #f8fafc;
@@ -583,18 +671,32 @@ onMounted(fetchMyReports);
   margin: 0;
   line-height: 1.2;
 }
-.report-date { color: #64748b; font-size: 0.8rem; }
-
-.report-actions { display: flex; gap: 0.5rem; }
-.btn-icon {
-  background: none; border: none; font-size: 0.82rem; cursor: pointer;
-  opacity: 0.6; transition: opacity 0.2s;
+.report-date {
+  color: #64748b;
+  font-size: 0.8rem;
 }
-.btn-icon:hover { opacity: 1; }
+
+.report-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+.btn-icon {
+  background: none;
+  border: none;
+  font-size: 0.82rem;
+  cursor: pointer;
+  opacity: 0.6;
+  transition: opacity 0.2s;
+}
+.btn-icon:hover {
+  opacity: 1;
+}
 
 .section-slide-enter-active,
 .section-slide-leave-active {
-  transition: opacity 0.22s ease, transform 0.22s ease;
+  transition:
+    opacity 0.22s ease,
+    transform 0.22s ease;
 }
 .section-slide-enter-from,
 .section-slide-leave-to {
@@ -605,7 +707,9 @@ onMounted(fetchMyReports);
 .report-slide-enter-active,
 .report-slide-leave-active,
 .report-slide-move {
-  transition: opacity 0.22s ease, transform 0.22s ease;
+  transition:
+    opacity 0.22s ease,
+    transform 0.22s ease;
 }
 .report-slide-enter-from,
 .report-slide-leave-to {
@@ -613,12 +717,26 @@ onMounted(fetchMyReports);
   transform: translateY(10px);
 }
 
-.form-section h3 { color: #f8fafc; margin-bottom: 1.5rem; }
+.form-section h3 {
+  color: #f8fafc;
+  margin-bottom: 1.5rem;
+}
 
-.form-group { margin-bottom: 1.2rem; display: flex; flex-direction: column; gap: 0.5rem; }
-.form-group label { color: #94a3b8; font-size: 0.9rem; font-weight: 600; }
+.form-group {
+  margin-bottom: 1.2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.form-group label {
+  color: #94a3b8;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
 
-.form-group input, .form-group textarea, .form-group select {
+.form-group input,
+.form-group textarea,
+.form-group select {
   background: rgba(15, 23, 42, 0.5);
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 10px;
@@ -627,23 +745,44 @@ onMounted(fetchMyReports);
   outline: none;
 }
 
-.form-group input:focus, .form-group textarea:focus {
+.form-group input:focus,
+.form-group textarea:focus {
   border-color: #818cf8;
 }
 
-.form-actions { display: flex; justify-content: flex-end; gap: 1rem; margin-top: 2rem; }
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  margin-top: 2rem;
+}
 
 .btn-primary {
-  background: #818cf8; color: white; border: none;
-  padding: 0.6rem 1.2rem; border-radius: 10px; font-weight: 700; cursor: pointer;
+  background: #818cf8;
+  color: white;
+  border: none;
+  padding: 0.6rem 1.2rem;
+  border-radius: 10px;
+  font-weight: 700;
+  cursor: pointer;
 }
 
 .btn-secondary {
-  background: rgba(255, 255, 255, 0.05); color: #94a3b8; border: none;
-  padding: 0.6rem 1.2rem; border-radius: 10px; font-weight: 700; cursor: pointer;
+  background: rgba(255, 255, 255, 0.05);
+  color: #94a3b8;
+  border: none;
+  padding: 0.6rem 1.2rem;
+  border-radius: 10px;
+  font-weight: 700;
+  cursor: pointer;
 }
 
-.loading, .empty { text-align: center; padding: 2rem; color: #64748b; }
+.loading,
+.empty {
+  text-align: center;
+  padding: 2rem;
+  color: #64748b;
+}
 
 @media (max-width: 640px) {
   .modal-card {

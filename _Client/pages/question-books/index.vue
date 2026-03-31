@@ -1,36 +1,20 @@
 <script setup lang="ts">
-import QuestionBookManager from '~/components/dashboard/QuestionBookManager.vue';
-import IconArrowUp from '~/assets/icons/IconArrowUp.svg?component';
-import IconFileText from '~/assets/icons/IconFileText.svg?component';
-import IconPencil from '~/assets/icons/IconPencil.svg?component';
-
-const route = useRoute();
+import QuestionBookManager from "~/components/dashboard/QuestionBookManager.vue";
+import IconArrowUp from "~/assets/icons/IconArrowUp.svg?component";
+import IconFileText from "~/assets/icons/IconFileText.svg?component";
+import IconPencil from "~/assets/icons/IconPencil.svg?component";
 </script>
 
 <template>
   <div class="page-container">
     <div class="page-header">
-      <h1 class="page-title">문제집 목록</h1>
       <div class="page-nav">
-        <NuxtLink to="/dashboard" class="back-btn">
-          <IconArrowUp class="back-icon" />
-          대시보드
-        </NuxtLink>
-        <div class="page-links">
-          <NuxtLink to="/questions" class="quick-link">
-            <IconFileText class="quick-icon" />
-            문제 목록
-          </NuxtLink>
-          <NuxtLink to="/exams" class="quick-link">
-            <IconPencil class="quick-icon" />
-            고사집 목록
-          </NuxtLink>
-        </div>
+        <div class="page-links"></div>
       </div>
     </div>
-    
+
     <div class="content-box">
-      <QuestionBookManager />
+      <QuestionBookManager :show-scope-toggle="true" />
     </div>
   </div>
 </template>
@@ -48,6 +32,7 @@ const route = useRoute();
   justify-content: space-between;
   gap: 1rem;
   margin-bottom: 0.5rem;
+  width: 100%;
 }
 
 .page-title {
@@ -61,6 +46,8 @@ const route = useRoute();
   align-items: center;
   gap: 0.75rem;
   flex-wrap: nowrap;
+  width: 100%;
+  justify-content: space-between;
 }
 
 .page-links {
@@ -68,6 +55,7 @@ const route = useRoute();
   gap: 0.75rem;
   flex-wrap: nowrap;
   justify-content: flex-end;
+  margin-left: auto;
 }
 
 .back-btn,

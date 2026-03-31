@@ -1,16 +1,20 @@
 <template>
   <div v-if="!hasChecked" class="app-shell" aria-hidden="true"></div>
-  <div v-else-if="isMobileBlocked" class="mobile-blocker" role="dialog" aria-modal="true" aria-labelledby="mobile-blocker-title">
+  <div
+    v-else-if="isMobileBlocked"
+    class="mobile-blocker"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="mobile-blocker-title"
+  >
     <div class="mobile-blocker-card">
       <div class="mobile-blocker-badge">PC 전용</div>
       <h1 id="mobile-blocker-title">이 서비스는 PC에서만 이용할 수 있습니다</h1>
       <p>
-        현재 화면은 모바일 또는 작은 화면으로 감지되었습니다.
-        브라우저 창을 넓히거나 PC에서 다시 접속해주세요.
+        현재 화면은 모바일 또는 작은 화면으로 감지되었습니다. 브라우저 창을
+        넓히거나 PC에서 다시 접속해주세요.
       </p>
-      <div class="mobile-blocker-note">
-        권장 화면 너비: 1024px 이상
-      </div>
+      <div class="mobile-blocker-note">권장 화면 너비: 1024px 이상</div>
     </div>
   </div>
   <div v-else class="app-wrapper">
@@ -21,27 +25,27 @@
 </template>
 
 <script setup lang="ts">
-import { onBeforeUnmount, onMounted, ref } from 'vue';
+import { onBeforeUnmount, onMounted, ref } from "vue";
 
 const hasChecked = ref(false);
 const isMobileBlocked = ref(false);
 
 const updateDeviceMode = () => {
-  if (typeof window === 'undefined') return;
+  if (typeof window === "undefined") return;
   isMobileBlocked.value = window.innerWidth < 1024;
-  document.body.style.overflow = isMobileBlocked.value ? 'hidden' : '';
+  document.body.style.overflow = isMobileBlocked.value ? "hidden" : "";
   hasChecked.value = true;
 };
 
 onMounted(() => {
   updateDeviceMode();
-  window.addEventListener('resize', updateDeviceMode);
+  window.addEventListener("resize", updateDeviceMode);
 });
 
 onBeforeUnmount(() => {
-  if (typeof window === 'undefined') return;
-  window.removeEventListener('resize', updateDeviceMode);
-  document.body.style.overflow = '';
+  if (typeof window === "undefined") return;
+  window.removeEventListener("resize", updateDeviceMode);
+  document.body.style.overflow = "";
 });
 </script>
 

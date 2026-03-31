@@ -15,11 +15,10 @@ export class QuestionBooksService {
     });
   }
 
-  async findByUser(userNo: bigint) {
+  async findAll() {
     const books = await this.prisma.userQuestionBook.findMany({
-      where: { user_no: userNo },
       include: {
-        user: { select: { username: true } },
+        user: { select: { user_no: true, username: true } },
         items: {
           include: {
             question: true
@@ -35,11 +34,31 @@ export class QuestionBooksService {
     }));
   }
 
-  async findById(bookId: bigint, userNo: bigint) {
+  async findByUser(userNo: bigint) {
+    const books = await this.prisma.userQuestionBook.findMany({
+      where: { user_no: userNo },
+      include: {
+        user: { select: { user_no: true, username: true } },
+        items: {
+          include: {
+            question: true
+          }
+        }
+      },
+      orderBy: { created_at: 'desc' },
+    });
+
+    return books.map(({ user, ...book }) => ({
+      ...book,
+      creator: user,
+    }));
+  }
+
+  async findById(bookId: bigint) {
     const book = await this.prisma.userQuestionBook.findUnique({
       where: { book_id: bookId },
       include: {
-        user: { select: { username: true } },
+        user: { select: { user_no: true, username: true } },
         items: {
           include: {
             question: true,
@@ -49,7 +68,6 @@ export class QuestionBooksService {
     });
 
     if (!book) throw new NotFoundException('Question book not found');
-    if (book.user_no !== userNo) throw new ForbiddenException('Not authorized');
 
     const { user, ...rest } = book;
     return {

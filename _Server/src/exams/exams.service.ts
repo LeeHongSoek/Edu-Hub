@@ -1,4 +1,4 @@
-import { Injectable, ForbiddenException, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../common/prisma/prisma.service';
 
 @Injectable()
@@ -9,7 +9,7 @@ export class ExamsService {
     return this.prisma.exam.findMany({
       where: userNo ? { creator_no: userNo } : {},
       include: {
-        creator: { select: { username: true } },
+        creator: { select: { user_no: true, username: true } },
         class: true,
         _count: { select: { questions: true } }
       },
@@ -21,7 +21,7 @@ export class ExamsService {
     const exam = await this.prisma.exam.findUnique({
       where: { exam_id: examId },
       include: {
-        creator: { select: { username: true } },
+        creator: { select: { user_no: true, username: true } },
         class: true,
         questions: {
           include: {
@@ -35,7 +35,6 @@ export class ExamsService {
     });
 
     if (!exam) throw new NotFoundException('Exam not found');
-    if (userNo !== undefined && exam.creator_no !== userNo) throw new ForbiddenException('Not authorized');
 
     return exam;
   }

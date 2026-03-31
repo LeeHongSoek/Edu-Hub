@@ -1,30 +1,32 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue';
-import UserProfileModal from '~/components/UserProfileModal.vue';
-import IconHome from '~/assets/icons/IconHome.svg?component';
-import IconUser from '~/assets/icons/IconUser.svg?component';
-import IconLogout from '~/assets/icons/IconLogout.svg?component';
-import IconFeedback from '~/assets/icons/IconFeedback.svg?component';
-import OmbudsmanModal from '~/components/OmbudsmanModal.vue';
+import { ref, computed } from "vue";
+import UserProfileModal from "~/components/UserProfileModal.vue";
+import IconHome from "~/assets/icons/IconHome.svg?component";
+import IconUser from "~/assets/icons/IconUser.svg?component";
+import IconLogout from "~/assets/icons/IconLogout.svg?component";
+import IconFeedback from "~/assets/icons/IconFeedback.svg?component";
+import OmbudsmanModal from "~/components/OmbudsmanModal.vue";
 
 const showOmbudsmanModal = ref(false);
 const showUserModal = ref(false);
-const userCookie = useCookie('user_info');
+const userCookie = useCookie("user_info");
 
 const userInfo = computed(() => {
   if (!userCookie.value) return null;
   try {
-    return typeof userCookie.value === 'string'
+    return typeof userCookie.value === "string"
       ? JSON.parse(userCookie.value)
       : userCookie.value;
-  } catch { return null; }
+  } catch {
+    return null;
+  }
 });
 
 function handleLogout() {
-  const token = useCookie('auth_token');
+  const token = useCookie("auth_token");
   token.value = null;
   userCookie.value = null;
-  navigateTo('/');
+  navigateTo("/");
 }
 </script>
 
@@ -36,7 +38,12 @@ function handleLogout() {
           <span class="logo-icon">📘</span>
           <span class="logo-text">Edu<em>Hub</em></span>
         </NuxtLink>
-        <a v-if="userInfo" href="#" class="ombudsman-link" @click.prevent="showOmbudsmanModal = true">
+        <a
+          v-if="userInfo"
+          href="#"
+          class="ombudsman-link"
+          @click.prevent="showOmbudsmanModal = true"
+        >
           <IconFeedback class="icon-feedback" />
           옴브즈먼
         </a>
@@ -49,13 +56,17 @@ function handleLogout() {
               홈(대시보드)
             </NuxtLink>
           </div>
-          <a href="#" class="user-greeting" @click.prevent="showUserModal = true">
+          <a
+            href="#"
+            class="user-greeting"
+            @click.prevent="showUserModal = true"
+          >
             <IconUser class="icon-user" />
-            {{ userInfo.username }} <{{userInfo.user_no}}>님
+            {{ userInfo.username }} <{{ userInfo.user_no }}>님
           </a>
-          <NuxtLink 
-            v-if="userInfo.role_id === 'S' || userInfo.role_id === 'T'" 
-            to="/questions" 
+          <NuxtLink
+            v-if="userInfo.role_id === 'S' || userInfo.role_id === 'T'"
+            to="/questions"
             class="my-questions-link"
           >
             나의 문제목록
@@ -70,10 +81,10 @@ function handleLogout() {
     <main>
       <slot />
     </main>
-    <UserProfileModal 
-      v-if="showUserModal && userInfo" 
-      :user="userInfo" 
-      @close="showUserModal = false" 
+    <UserProfileModal
+      v-if="showUserModal && userInfo"
+      :user="userInfo"
+      @close="showUserModal = false"
     />
     <OmbudsmanModal
       v-if="showOmbudsmanModal && userInfo"
@@ -83,7 +94,7 @@ function handleLogout() {
 </template>
 
 <style scoped>
-@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800;900&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800;900&display=swap");
 
 .top-bar {
   display: flex !important;
@@ -134,7 +145,7 @@ function handleLogout() {
   gap: 1.2rem;
 }
 .nav-links a {
-  color: rgba(240,244,255,0.65);
+  color: rgba(240, 244, 255, 0.65);
   text-decoration: none;
   font-size: 0.95rem;
   font-weight: 500;
@@ -196,7 +207,7 @@ function handleLogout() {
   display: flex;
   align-items: center;
   gap: 0.3rem;
-  color: rgba(240,244,255,0.5) !important;
+  color: rgba(240, 244, 255, 0.5) !important;
   font-size: 0.85rem !important;
   font-weight: 400 !important;
   text-decoration: none;
@@ -205,7 +216,9 @@ function handleLogout() {
 .logout-link:hover {
   color: #f87171 !important;
 }
-.icon-user, .icon-logout, .icon-feedback {
+.icon-user,
+.icon-logout,
+.icon-feedback {
   width: 1.1rem;
   height: 1.1rem;
 }

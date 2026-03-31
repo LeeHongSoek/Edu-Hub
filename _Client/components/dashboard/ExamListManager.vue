@@ -1,26 +1,70 @@
 <script setup lang="ts">
-import { ref, onMounted, computed, watch } from 'vue';
-import { useRouter } from 'vue-router';
-import IconCalendar from '~/assets/icons/IconCalendar.svg?component';
+import { ref, computed, watch } from "vue";
+import { useRouter } from "vue-router";
+import IconCalendar from "~/assets/icons/IconCalendar.svg?component";
+import IconArrowUp from "~/assets/icons/IconArrowUp.svg?component";
+import IconFileText from "~/assets/icons/IconFileText.svg?component";
+import IconBook from "~/assets/icons/IconBook.svg?component";
+
+const props = withDefaults(
+  defineProps<{
+    showScopeToggle?: boolean;
+  }>(),
+  {
+    showScopeToggle: false,
+  },
+);
 
 const exams = ref<any[]>([]);
 const loading = ref(true);
 const pageSize = 5;
 const currentPage = ref(1);
 const sliderValue = ref(1);
-const examSearchInput = ref('');
-const examSearchQuery = ref('');
+const listScope = ref<"mine" | "all">("mine");
+const examSearchInput = ref("");
+const examSearchQuery = ref("");
+const userCookie = useCookie("user_info");
+const userInfo = computed(() => {
+  if (!userCookie.value) return null;
+  try {
+    return typeof userCookie.value === "string"
+      ? JSON.parse(userCookie.value)
+      : userCookie.value;
+  } catch {
+    return null;
+  }
+});
+
+const listTitle = computed(() =>
+  listScope.value === "all" ? "전체 고사집 목록" : "나의 고사집 목록",
+);
+const emptyText = computed(() => {
+  if (examSearchQuery.value) return "검색 조건에 맞는 고사집이 없습니다.";
+  return listScope.value === "all"
+    ? "등록된 고사집이 없습니다."
+    : "생성된 고사집이 없습니다.";
+});
+
+const isCurrentUserOwner = (
+  ownerUserNo: string | number | bigint | null | undefined,
+) => {
+  if (!userInfo.value || ownerUserNo === null || ownerUserNo === undefined)
+    return false;
+  return String(userInfo.value.user_no) === String(ownerUserNo);
+};
 
 const filteredExams = computed(() => {
   const keyword = examSearchQuery.value.trim().toLowerCase();
   if (!keyword) return exams.value;
   return exams.value.filter((exam) => {
-  const target = exam.exam_name;
+    const target = exam.exam_name;
     return target.toLowerCase().includes(keyword);
   });
 });
 
-const totalPages = computed(() => Math.max(1, Math.ceil(filteredExams.value.length / pageSize)));
+const totalPages = computed(() =>
+  Math.max(1, Math.ceil(filteredExams.value.length / pageSize)),
+);
 const pagedExams = computed(() => {
   const start = (currentPage.value - 1) * pageSize;
   return filteredExams.value.slice(start, start + pageSize);
@@ -29,7 +73,9 @@ const pageStartItem = computed(() => {
   if (filteredExams.value.length === 0) return 0;
   return (currentPage.value - 1) * pageSize + 1;
 });
-const pageEndItem = computed(() => Math.min(currentPage.value * pageSize, filteredExams.value.length));
+const pageEndItem = computed(() =>
+  Math.min(currentPage.value * pageSize, filteredExams.value.length),
+);
 const sliderPercentage = computed(() => {
   if (totalPages.value <= 1) return 0;
   return ((sliderValue.value - 1) / (totalPages.value - 1)) * 100;
@@ -37,39 +83,57 @@ const sliderPercentage = computed(() => {
 
 const isSliderDisabled = computed(() => totalPages.value <= 1);
 
-watch(() => filteredExams.value.length, () => {
-  currentPage.value = 1;
-  sliderValue.value = 1;
-});
+watch(
+  () => filteredExams.value.length,
+  () => {
+    currentPage.value = 1;
+    sliderValue.value = 1;
+  },
+);
 
 watch(currentPage, (page) => {
   sliderValue.value = page;
 });
 
-const { apiBase, token, getAuthHeader } = useApi();
+const { apiBase, getAuthHeader } = useApi();
 const router = useRouter();
 
 const viewExamDetails = (examId: number | string | bigint) => {
   router.push({
-    path: '/questions',
+    path: "/questions",
     query: { exam: String(examId) },
   });
 };
 
 const fetchExams = async () => {
+  loading.value = true;
   try {
     const data = await $fetch(`${apiBase.value}/exams`, {
-      headers: getAuthHeader()
+      headers: getAuthHeader(),
+      query: { scope: listScope.value },
     });
     exams.value = data as any[];
   } catch (err) {
-    console.error('서버 통신 오류(fetch) exams:', err);
+    console.error("서버 통신 오류(fetch) exams:", err);
   } finally {
     loading.value = false;
   }
 };
 
-onMounted(fetchExams);
+watch(
+  listScope,
+  async () => {
+    currentPage.value = 1;
+    sliderValue.value = 1;
+    await fetchExams();
+  },
+  { immediate: true },
+);
+
+const setScope = (scope: "mine" | "all") => {
+  if (listScope.value === scope) return;
+  listScope.value = scope;
+};
 
 const handleSliderInput = (e: Event) => {
   sliderValue.value = Number((e.target as HTMLInputElement).value);
@@ -92,37 +156,95 @@ const applyExamSearch = () => {
 };
 
 const clearExamSearch = () => {
-  examSearchInput.value = '';
-  examSearchQuery.value = '';
+  examSearchInput.value = "";
+  examSearchQuery.value = "";
   currentPage.value = 1;
 };
-
 </script>
 
 <template>
   <div class="exam-manager">
-    <h3><IconCalendar class="section-icon" /> 나의 고사집 목록</h3>
+    <div class="manager-header">
+      <div class="header-copy">
+        <div class="title-row">
+          <h3><IconCalendar class="section-icon" /> {{ listTitle }}</h3>
+          <div
+            v-if="showScopeToggle"
+            class="scope-toggle"
+            role="tablist"
+            aria-label="고사집 범위 선택"
+          >
+            <button
+              type="button"
+              class="scope-btn"
+              :class="{ active: listScope === 'mine' }"
+              :aria-pressed="listScope === 'mine'"
+              @click="setScope('mine')"
+            >
+              나의 고사집
+            </button>
+            <button
+              type="button"
+              class="scope-btn"
+              :class="{ active: listScope === 'all' }"
+              :aria-pressed="listScope === 'all'"
+              @click="setScope('all')"
+            >
+              전체 고사집
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="page-links">
+        <NuxtLink to="/dashboard" class="back-btn">
+          <IconArrowUp class="back-icon" />
+          대시보드
+        </NuxtLink>
+        <NuxtLink to="/questions" class="quick-link">
+          <IconFileText class="quick-icon" />
+          문제 목록
+        </NuxtLink>
+        <NuxtLink to="/question-books" class="quick-link">
+          <IconBook class="quick-icon" />
+          문제집 목록
+        </NuxtLink>
+      </div>
+    </div>
 
     <div v-if="loading" class="loading">불러오는 중...</div>
-    <div v-else-if="filteredExams.length === 0" class="empty">검색 조건에 맞는 고사집이 없습니다.</div>
+    <div v-else-if="filteredExams.length === 0" class="empty">
+      {{ emptyText }}
+    </div>
     <div v-else>
       <div class="pagination-panel-border">
         <div class="slider-panel">
           <div class="search-row">
-          <input
-            v-model="examSearchInput"
-            type="text"
-            class="search-input"
-            placeholder="시험 제목을 입력하세요"
-            @keyup.enter="applyExamSearch"
-          />
+            <input
+              v-model="examSearchInput"
+              type="text"
+              class="search-input"
+              placeholder="시험 제목을 입력하세요"
+              @keyup.enter="applyExamSearch"
+            />
             <button class="btn-search" @click="applyExamSearch">검색</button>
-            <button v-if="examSearchQuery" class="btn-reset-search" @click="clearExamSearch">초기화</button>
+            <button
+              v-if="examSearchQuery"
+              class="btn-reset-search"
+              @click="clearExamSearch"
+            >
+              초기화
+            </button>
           </div>
           <div class="slider-row">
-            <span class="summary-text">총 {{ filteredExams.length }}개의 고사집</span>
+            <span class="summary-text"
+              >총 {{ filteredExams.length }}개의 고사집</span
+            >
             <div class="page-slider-section">
-              <div class="slider-wrapper" :class="{ disabled: isSliderDisabled }">
+              <div
+                class="slider-wrapper"
+                :class="{ disabled: isSliderDisabled }"
+              >
                 <span class="slider-limit">1</span>
                 <div class="slider-track-container">
                   <input
@@ -135,15 +257,23 @@ const clearExamSearch = () => {
                     @change="commitSliderValue"
                     :disabled="isSliderDisabled"
                   />
-                  <div class="slider-fill" :style="{ width: sliderPercentage + '%' }"></div>
-                  <div class="slider-tooltip" :style="{ left: sliderPercentage + '%' }">
+                  <div
+                    class="slider-fill"
+                    :style="{ width: sliderPercentage + '%' }"
+                  ></div>
+                  <div
+                    class="slider-tooltip"
+                    :style="{ left: sliderPercentage + '%' }"
+                  >
                     {{ sliderValue }}
                   </div>
                 </div>
                 <span class="slider-limit">{{ totalPages }}</span>
               </div>
             </div>
-            <span class="range-text">{{ pageStartItem }}-{{ pageEndItem }}번째 항목 표시 중</span>
+            <span class="range-text"
+              >{{ pageStartItem }}-{{ pageEndItem }}번째 항목 표시 중</span
+            >
           </div>
         </div>
       </div>
@@ -152,17 +282,38 @@ const clearExamSearch = () => {
           <div class="exam-info">
             <div class="exam-headline">
               <div class="exam-badge">고사</div>
-              <span class="exam-period-inline">{{ new Date(exam.start_time).toLocaleDateString('ko-KR') }} ~ {{ new Date(exam.end_time).toLocaleDateString('ko-KR') }}</span>
+              <span class="exam-period-inline"
+                >{{ new Date(exam.start_time).toLocaleDateString("ko-KR") }} ~
+                {{ new Date(exam.end_time).toLocaleDateString("ko-KR") }}</span
+              >
             </div>
             <h4><{{ exam.exam_id }}> {{ exam.exam_name }}</h4>
           </div>
           <div class="exam-meta">
             <span class="exam-meta-line">
-              <span v-if="exam.creator?.username" class="exam-owner">{{ exam.creator.username }}</span>
-              <span v-if="exam.creator?.username" class="exam-separator">·</span>
-              <span class="exam-count">문제수 {{ exam._count?.questions ?? 0 }}문항</span>
+              <span
+                v-if="
+                  exam.creator?.username &&
+                  !isCurrentUserOwner(exam.creator.user_no)
+                "
+                class="exam-owner"
+                >{{ exam.creator.username }}</span
+              >
+              <span
+                v-if="
+                  exam.creator?.username &&
+                  !isCurrentUserOwner(exam.creator.user_no)
+                "
+                class="exam-separator"
+                >·</span
+              >
+              <span class="exam-count"
+                >문제수 {{ exam._count?.questions ?? 0 }}문항</span
+              >
             </span>
-            <button class="btn-start" @click="viewExamDetails(exam.exam_id)">상세보기</button>
+            <button class="btn-start" @click="viewExamDetails(exam.exam_id)">
+              상세보기
+            </button>
           </div>
         </div>
       </div>
@@ -171,7 +322,30 @@ const clearExamSearch = () => {
 </template>
 
 <style scoped>
-.exam-manager { display: flex; flex-direction: column; gap: 1.5rem; }
+.exam-manager {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+.manager-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  width: 100%;
+}
+.header-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  flex: 1;
+}
+.title-row {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  flex-wrap: wrap;
+}
 .exam-manager h3 {
   color: #f8fafc;
   margin: 0;
@@ -181,6 +355,76 @@ const clearExamSearch = () => {
 }
 
 .section-icon {
+  width: 1rem;
+  height: 1rem;
+  flex-shrink: 0;
+}
+
+.scope-toggle {
+  display: inline-flex;
+  gap: 0.35rem;
+  padding: 0.22rem;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.55);
+  border: 1px solid rgba(148, 163, 184, 0.14);
+}
+
+.scope-btn {
+  border: none;
+  background: transparent;
+  color: #94a3b8;
+  font-size: 0.82rem;
+  font-weight: 700;
+  border-radius: 999px;
+  padding: 0.45rem 0.85rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.scope-btn:hover {
+  color: #e2e8f0;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.scope-btn.active {
+  background: #6d6eff;
+  color: #ffffff;
+  box-shadow: 0 8px 18px rgba(109, 110, 255, 0.25);
+}
+
+.page-links {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.85rem;
+  margin-left: auto;
+  flex-wrap: nowrap;
+}
+
+.back-btn,
+.quick-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.3rem 0.45rem;
+  border-radius: 8px;
+  color: #94a3b8;
+  text-decoration: none;
+  font-size: 0.9rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.back-btn:hover,
+.quick-link:hover {
+  background: rgba(255, 255, 255, 0.04);
+  color: #eef2ff;
+  transform: translateY(-1px);
+}
+
+.back-icon,
+.quick-icon {
   width: 1rem;
   height: 1rem;
   flex-shrink: 0;
@@ -202,24 +446,32 @@ const clearExamSearch = () => {
   align-items: center;
 }
 
-.exam-info { display: flex; flex-direction: column; gap: 0.35rem; }
+.exam-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
 .exam-headline {
   display: inline-flex;
   align-items: center;
   gap: 0.55rem;
   flex-wrap: wrap;
 }
-.exam-badge { 
-  display: inline-block; 
-  background: rgba(245, 158, 11, 0.1); 
-  color: #fbbf24; 
-  font-size: 0.7rem; 
-  padding: 0.2rem 0.5rem; 
-  border-radius: 4px; 
+.exam-badge {
+  display: inline-block;
+  background: rgba(245, 158, 11, 0.1);
+  color: #fbbf24;
+  font-size: 0.7rem;
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
   width: fit-content;
   font-weight: 700;
 }
-.exam-info h4 { color: #f8fafc; margin: 0; font-size: 1.1rem; }
+.exam-info h4 {
+  color: #f8fafc;
+  margin: 0;
+  font-size: 1.1rem;
+}
 
 .exam-meta {
   display: flex;
@@ -442,11 +694,13 @@ const clearExamSearch = () => {
   font-weight: 800;
   pointer-events: none;
   white-space: nowrap;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  box-shadow:
+    0 4px 6px -1px rgba(0, 0, 0, 0.1),
+    0 2px 4px -1px rgba(0, 0, 0, 0.06);
 }
 
 .slider-tooltip::after {
-  content: '';
+  content: "";
   position: absolute;
   bottom: -4px;
   left: 50%;
@@ -456,7 +710,8 @@ const clearExamSearch = () => {
   border-top: 4px solid #6366f1;
 }
 
-.loading, .empty {
+.loading,
+.empty {
   text-align: center;
   padding: 3rem;
   color: #64748b;

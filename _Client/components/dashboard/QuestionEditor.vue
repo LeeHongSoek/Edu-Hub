@@ -1,15 +1,15 @@
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue';
-import type { Question, QuestionOption, Group } from '~/types';
-import IconClose from '~/assets/icons/IconClose.svg?component';
+import { ref, onMounted, computed } from "vue";
+import type { Question, QuestionOption, Group } from "~/types";
+import IconClose from "~/assets/icons/IconClose.svg?component";
 
 const props = defineProps<{
   question: Question;
 }>();
 
 const emit = defineEmits<{
-  (e: 'close'): void;
-  (e: 'updated'): void;
+  (e: "close"): void;
+  (e: "updated"): void;
 }>();
 
 // API 설정 통합
@@ -18,17 +18,19 @@ const { apiBase } = useApi();
 const editData = ref({
   title: props.question.title,
   question: props.question.question,
-  content: props.question.content || '',
-  passage: props.question.passage?.content_md || '',
-  question_type_id: props.question.question_type_id || 'M',
-  answer: props.question.answer || '',
-  explanation: props.question.explanation || '',
-  hint: props.question.hint || '',
+  content: props.question.content || "",
+  passage: props.question.passage?.content_md || "",
+  question_type_id: props.question.question_type_id || "M",
+  answer: props.question.answer || "",
+  explanation: props.question.explanation || "",
+  hint: props.question.hint || "",
   difficulty: props.question.difficulty || 1,
   time_limit: props.question.time_limit || 0,
   rating: props.question.rating || 1,
   group_id: props.question.group_id,
-  options: props.question.options ? JSON.parse(JSON.stringify(props.question.options)) : []
+  options: props.question.options
+    ? JSON.parse(JSON.stringify(props.question.options))
+    : [],
 });
 
 const groups = ref<Group[]>([]);
@@ -39,7 +41,7 @@ const fetchGroups = async () => {
     const data = await $fetch<Group[]>(`${apiBase.value}/groups`);
     groups.value = data;
   } catch (error) {
-    console.error('서버 통신 오류(fetch) groups:', error);
+    console.error("서버 통신 오류(fetch) groups:", error);
   }
 };
 
@@ -51,8 +53,8 @@ const addOption = () => {
   const nextNum = editData.value.options.length + 1;
   editData.value.options.push({
     option_number: nextNum,
-    content: '',
-    is_answer: false
+    content: "",
+    is_answer: false,
   });
 };
 
@@ -68,34 +70,34 @@ const handleSave = async () => {
   isSaving.value = true;
   try {
     await $fetch(`${apiBase.value}/questions/${props.question.question_id}`, {
-      method: 'PATCH',
-      body: editData.value
+      method: "PATCH",
+      body: editData.value,
     });
-    alert('수정되었습니다!');
-    emit('updated');
-    emit('close');
+    alert("수정되었습니다!");
+    emit("updated");
+    emit("close");
   } catch (error) {
-    console.error('서버 통신 오류(save) question:', error);
-    alert('저장 중 오류가 발생했습니다.');
+    console.error("서버 통신 오류(save) question:", error);
+    alert("저장 중 오류가 발생했습니다.");
   } finally {
     isSaving.value = false;
   }
 };
 
 const handleDelete = async () => {
-  if (!confirm('정말 이 문제를 삭제하시겠습니까?')) return;
-  
+  if (!confirm("정말 이 문제를 삭제하시겠습니까?")) return;
+
   isSaving.value = true;
   try {
     await $fetch(`${apiBase.value}/questions/${props.question.question_id}`, {
-      method: 'DELETE'
+      method: "DELETE",
     });
-    alert('삭제되었습니다.');
-    emit('updated');
-    emit('close');
+    alert("삭제되었습니다.");
+    emit("updated");
+    emit("close");
   } catch (error) {
-    console.error('서버 통신 오류(delete) question:', error);
-    alert('삭제 중 오류가 발생했습니다.');
+    console.error("서버 통신 오류(delete) question:", error);
+    alert("삭제 중 오류가 발생했습니다.");
   } finally {
     isSaving.value = false;
   }
@@ -120,9 +122,13 @@ const handleDelete = async () => {
           <h3>기본 정보</h3>
           <div class="form-group">
             <label>문제 제목</label>
-            <input v-model="editData.title" type="text" placeholder="제목을 입력하세요" />
+            <input
+              v-model="editData.title"
+              type="text"
+              placeholder="제목을 입력하세요"
+            />
           </div>
-          
+
           <div class="form-row">
             <div class="form-group flex-2">
               <label>문제 유형</label>
@@ -147,11 +153,16 @@ const handleDelete = async () => {
             </div>
             <div class="form-group flex-small">
               <label>제한 시간 (초)</label>
-              <input v-model.number="editData.time_limit" type="number" min="0" class="input-small" />
+              <input
+                v-model.number="editData.time_limit"
+                type="number"
+                min="0"
+                class="input-small"
+              />
             </div>
             <div class="form-group flex-small">
               <label>평점 (1-5)</label>
-                <div class="slider-field">
+              <div class="slider-field">
                 <input
                   v-model.number="editData.rating"
                   type="range"
@@ -168,13 +179,19 @@ const handleDelete = async () => {
           <div class="form-group">
             <label>소속 그룹</label>
             <select v-model="editData.group_id">
-              <optgroup v-for="g1 in groups" :key="g1.group_id" :label="g1.name">
+              <optgroup
+                v-for="g1 in groups"
+                :key="g1.group_id"
+                :label="g1.name"
+              >
                 <option :value="g1.group_id">{{ g1.name }} (L1)</option>
                 <template v-for="g2 in g1.child_groups" :key="g2.group_id">
-                  <option :value="g2.group_id">&nbsp;&nbsp;↳ {{ g2.name }} (L2)</option>
-                  <option 
-                    v-for="g3 in g2.child_groups" 
-                    :key="g3.group_id" 
+                  <option :value="g2.group_id">
+                    &nbsp;&nbsp;↳ {{ g2.name }} (L2)
+                  </option>
+                  <option
+                    v-for="g3 in g2.child_groups"
+                    :key="g3.group_id"
                     :value="g3.group_id"
                   >
                     &nbsp;&nbsp;&nbsp;&nbsp;↳ {{ g3.name }} (L3)
@@ -190,16 +207,28 @@ const handleDelete = async () => {
           <div class="form-group">
             <label>지문 (Passage - 마크다운 및 이미지 지원)</label>
             <client-only>
-              <v-md-editor v-model="editData.passage" height="400px" placeholder="독해 지문이나 긴 형식의 문제를 작성하세요"></v-md-editor>
+              <v-md-editor
+                v-model="editData.passage"
+                height="400px"
+                placeholder="독해 지문이나 긴 형식의 문제를 작성하세요"
+              ></v-md-editor>
             </client-only>
           </div>
           <div class="form-group">
             <label>질문 (Question)</label>
-            <textarea v-model="editData.question" rows="3" placeholder="질문 내용을 입력하세요 (Markdown/LaTeX 지원)"></textarea>
+            <textarea
+              v-model="editData.question"
+              rows="3"
+              placeholder="질문 내용을 입력하세요 (Markdown/LaTeX 지원)"
+            ></textarea>
           </div>
           <div class="form-group">
             <label>힌트 (Hint - 선택사항)</label>
-            <textarea v-model="editData.content" rows="4" placeholder="힌트나 부가 설명이 필요한 경우 입력하세요"></textarea>
+            <textarea
+              v-model="editData.content"
+              rows="4"
+              placeholder="힌트나 부가 설명이 필요한 경우 입력하세요"
+            ></textarea>
           </div>
         </div>
 
@@ -209,17 +238,28 @@ const handleDelete = async () => {
             <button class="btn-add-opt" @click="addOption">+ 보기 추가</button>
           </div>
           <div class="options-edit-list">
-            <div v-for="(opt, index) in editData.options" :key="index" class="option-edit-item">
+            <div
+              v-for="(opt, index) in editData.options"
+              :key="index"
+              class="option-edit-item"
+            >
               <div class="opt-num">{{ (index as number) + 1 }}</div>
-              <input v-model="opt.content" type="text" placeholder="보기 내용" class="flex-1" />
+              <input
+                v-model="opt.content"
+                type="text"
+                placeholder="보기 내용"
+                class="flex-1"
+              />
               <label class="opt-correct">
-                <input 
-                  type="checkbox" 
-                  v-model="opt.is_answer"
-                />
+                <input type="checkbox" v-model="opt.is_answer" />
                 정답
               </label>
-              <button class="btn-remove-opt" @click="removeOption(index as number)">&times;</button>
+              <button
+                class="btn-remove-opt"
+                @click="removeOption(index as number)"
+              >
+                &times;
+              </button>
             </div>
           </div>
         </div>
@@ -227,7 +267,11 @@ const handleDelete = async () => {
         <div v-else class="form-section">
           <h3>주관식 정답</h3>
           <div class="form-group">
-            <input v-model="editData.answer" type="text" placeholder="정답을 입력하세요" />
+            <input
+              v-model="editData.answer"
+              type="text"
+              placeholder="정답을 입력하세요"
+            />
           </div>
         </div>
 
@@ -245,11 +289,13 @@ const handleDelete = async () => {
       </div>
 
       <div class="editor-footer">
-        <button class="btn-delete" :disabled="isSaving" @click="handleDelete">삭제</button>
+        <button class="btn-delete" :disabled="isSaving" @click="handleDelete">
+          삭제
+        </button>
         <div class="footer-right">
           <button class="btn-secondary" @click="emit('close')">취소</button>
           <button class="btn-primary" :disabled="isSaving" @click="handleSave">
-            {{ isSaving ? '저장 중...' : '변경사항 저장' }}
+            {{ isSaving ? "저장 중..." : "변경사항 저장" }}
           </button>
         </div>
       </div>
@@ -376,9 +422,17 @@ const handleDelete = async () => {
   flex-wrap: wrap;
 }
 
-.flex-1 { flex: 1; min-width: 200px; }
-.flex-2 { flex: 2; min-width: 300px; }
-.flex-small { flex: 0 0 120px; }
+.flex-1 {
+  flex: 1;
+  min-width: 200px;
+}
+.flex-2 {
+  flex: 2;
+  min-width: 300px;
+}
+.flex-small {
+  flex: 0 0 120px;
+}
 
 .input-small {
   max-width: 120px;
@@ -402,7 +456,11 @@ const handleDelete = async () => {
 .range-input::-webkit-slider-runnable-track {
   height: 6px;
   border-radius: 999px;
-  background: linear-gradient(90deg, rgba(99, 102, 241, 0.9), rgba(129, 140, 248, 0.75));
+  background: linear-gradient(
+    90deg,
+    rgba(99, 102, 241, 0.9),
+    rgba(129, 140, 248, 0.75)
+  );
 }
 
 .range-input::-webkit-slider-thumb {
@@ -419,7 +477,11 @@ const handleDelete = async () => {
 .range-input::-moz-range-track {
   height: 6px;
   border-radius: 999px;
-  background: linear-gradient(90deg, rgba(99, 102, 241, 0.9), rgba(129, 140, 248, 0.75));
+  background: linear-gradient(
+    90deg,
+    rgba(99, 102, 241, 0.9),
+    rgba(129, 140, 248, 0.75)
+  );
 }
 
 .range-input::-moz-range-thumb {
@@ -455,7 +517,9 @@ textarea {
   transition: all 0.2s;
 }
 
-input:focus, select:focus, textarea:focus {
+input:focus,
+select:focus,
+textarea:focus {
   border-color: #6366f1;
   background: rgba(255, 255, 255, 0.08);
 }

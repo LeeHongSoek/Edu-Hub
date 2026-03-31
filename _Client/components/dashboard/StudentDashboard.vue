@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue';
-import IconCalendar from '~/assets/icons/IconCalendar.svg?component';
-import IconTarget from '~/assets/icons/IconTarget.svg?component';
-import IconPencil from '~/assets/icons/IconPencil.svg?component';
-import IconBook from '~/assets/icons/IconBook.svg?component';
+import { ref, onMounted, computed } from "vue";
+import IconCalendar from "~/assets/icons/IconCalendar.svg?component";
+import IconTarget from "~/assets/icons/IconTarget.svg?component";
+import IconPencil from "~/assets/icons/IconPencil.svg?component";
+import IconBook from "~/assets/icons/IconBook.svg?component";
 import {
   Chart as ChartJS,
   Title,
@@ -14,9 +14,9 @@ import {
   LinearScale,
   PointElement,
   LineElement,
-  ArcElement
-} from 'chart.js';
-import { Line, Bar, Pie } from 'vue-chartjs';
+  ArcElement,
+} from "chart.js";
+import { Line, Bar, Pie } from "vue-chartjs";
 
 ChartJS.register(
   Title,
@@ -27,36 +27,35 @@ ChartJS.register(
   LinearScale,
   PointElement,
   LineElement,
-  ArcElement
+  ArcElement,
 );
 
 const stats = ref<any>(null);
 const loading = ref(true);
 
 const { apiBase, token, getAuthHeader } = useApi();
-  
+
 const getDefaultDailyStats = () => {
   const dates = [];
   for (let i = 6; i >= 0; i--) {
     const d = new Date();
     d.setDate(d.getDate() - i);
     dates.push({
-      date: d.toISOString().split('T')[0],
-      count: 0
+      date: d.toISOString().split("T")[0],
+      count: 0,
     });
   }
   return dates;
 };
 
-
 const fetchStats = async () => {
   try {
-    console.log('토큰값=', token.value);
+    console.log("토큰값=", token.value);
     const data: any = await $fetch(`${apiBase.value}/dashboard/stats`, {
-      headers: getAuthHeader()
+      headers: getAuthHeader(),
     });
-    console.log('[프런트엔드:StudentDashboard.vue] 패치된 정보:', data);
-    
+    console.log("[프런트엔드:StudentDashboard.vue] 패치된 정보:", data);
+
     // 만약 data가 없거나 속성들이 비어있다면 0을 기본값으로 사용
     stats.value = {
       accuracy: data?.accuracy || 0,
@@ -65,10 +64,13 @@ const fetchStats = async () => {
       studyLogs: data?.studyLogs || 0,
       totalQuestions: data?.totalQuestions || 0,
       // 데이터가 없으면 7일치 0개 배열을 추가
-      dailyStats: data?.dailyStats && data.dailyStats.length > 0 ? data.dailyStats : getDefaultDailyStats()
+      dailyStats:
+        data?.dailyStats && data.dailyStats.length > 0
+          ? data.dailyStats
+          : getDefaultDailyStats(),
     };
   } catch (err) {
-    console.error('서버 통신 오류(fetch) stats:', err);
+    console.error("서버 통신 오류(fetch) stats:", err);
     // 에러 시에도 기본값을 넣어서 그래프와 숫자가 0으로 보이게 처리
     stats.value = {
       accuracy: 0,
@@ -76,7 +78,7 @@ const fetchStats = async () => {
       totalViewed: 0,
       totalQuestions: 0,
       studyLogs: 0,
-      dailyStats: getDefaultDailyStats()
+      dailyStats: getDefaultDailyStats(),
     };
   } finally {
     loading.value = false;
@@ -88,17 +90,19 @@ onMounted(fetchStats);
 const chartData = computed(() => {
   if (!stats.value || !stats.value.dailyStats) return null;
   return {
-    labels: stats.value.dailyStats.map((d: any) => d.date.split('-').slice(1).join('/')),
+    labels: stats.value.dailyStats.map((d: any) =>
+      d.date.split("-").slice(1).join("/"),
+    ),
     datasets: [
       {
-        label: '푼 문제 수',
-        backgroundColor: '#818cf8',
-        borderColor: '#818cf8',
+        label: "푼 문제 수",
+        backgroundColor: "#818cf8",
+        borderColor: "#818cf8",
         data: stats.value.dailyStats.map((d: any) => d.count),
         tension: 0.4,
         fill: true,
-      }
-    ]
+      },
+    ],
   };
 });
 
@@ -109,9 +113,9 @@ const chartOptions = {
     legend: { display: false },
   },
   scales: {
-    y: { beginAtZero: true, grid: { color: 'rgba(255,255,255,0.05)' } },
-    x: { grid: { display: false } }
-  }
+    y: { beginAtZero: true, grid: { color: "rgba(255,255,255,0.05)" } },
+    x: { grid: { display: false } },
+  },
 };
 </script>
 
@@ -124,7 +128,7 @@ const chartOptions = {
         <Line v-if="chartData" :data="chartData" :options="chartOptions" />
       </div>
     </div>
-    
+
     <div class="stat-card">
       <div class="stat-icon"><IconTarget class="stat-icon-svg" /></div>
       <div class="stat-info">
@@ -137,7 +141,9 @@ const chartOptions = {
       <div class="stat-icon"><IconPencil class="stat-icon-svg" /></div>
       <div class="stat-info">
         <span class="label">총 푼 문제</span>
-        <span class="value">{{ stats.totalSolved }} / {{ stats.totalViewed }}개</span>
+        <span class="value"
+          >{{ stats.totalSolved }} / {{ stats.totalViewed }}개</span
+        >
       </div>
     </div>
 

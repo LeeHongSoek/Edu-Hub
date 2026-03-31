@@ -1,27 +1,25 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue';
-import QuestionList from '~/components/dashboard/QuestionList.vue';
-import type { Question, QuestionListResponse } from '~/types';
-import IconArrowUp from '~/assets/icons/IconArrowUp.svg?component';
-import IconBook from '~/assets/icons/IconBook.svg?component';
-import IconPencil from '~/assets/icons/IconPencil.svg?component';
+import { computed, ref, watch } from "vue";
+import QuestionList from "~/components/dashboard/QuestionList.vue";
+import type { Question, QuestionListResponse } from "~/types";
 
 const { apiBase, token, getAuthHeader } = useApi();
 
 const route = useRoute();
 const router = useRouter();
-const userCookie = useCookie('user_info');
+const userCookie = useCookie("user_info");
 const userInfo = computed(() => {
   if (!userCookie.value) return null;
-  return typeof userCookie.value === 'string' ? JSON.parse(userCookie.value) : userCookie.value;
+  return typeof userCookie.value === "string"
+    ? JSON.parse(userCookie.value)
+    : userCookie.value;
 });
 
 const selectedGroupId = ref<string | number | null>(null);
-const appliedSearchField = ref<'title' | 'content'>('title');
-const appliedSearchKeyword = ref('');
+const appliedSearchField = ref<"title" | "content">("title");
+const appliedSearchKeyword = ref("");
 const currentPage = ref(1);
 const pageSize = 10;
-const hasResolvedOnce = ref(false);
 
 const activeBookId = computed<number | undefined>(() => {
   const raw = route.query.book;
@@ -38,22 +36,32 @@ const activeExamId = computed<number | undefined>(() => {
   return Number.isNaN(numeric) ? undefined : numeric;
 });
 const activeExamDetail = ref<any | null>(null);
-const questionScope = computed<'mine' | 'all'>(() => {
-  if (route.query.scope === 'all' || route.query.mine === 'false') return 'all';
-  return 'mine';
+const isSourceDetail = computed(
+  () => activeBookId.value !== undefined || activeExamId.value !== undefined,
+);
+const questionScope = computed<"mine" | "all">(() => {
+  if (isSourceDetail.value) {
+    if (route.query.scope === "mine" || route.query.mine === "true")
+      return "mine";
+    return "all";
+  }
+  if (route.query.scope === "all" || route.query.mine === "false") return "all";
+  return "mine";
 });
 
 const requestBody = computed(() => {
   const body: Record<string, string | number | boolean> = {};
 
-  if (questionScope.value === 'mine' && userInfo.value) {
-    body.creator_no = userInfo.value.user_no;
-  }
+  if (!isSourceDetail.value) {
+    if (questionScope.value === "mine" && userInfo.value) {
+      body.creator_no = userInfo.value.user_no;
+    }
 
-  if (questionScope.value === 'all') {
-    body.public_only = true;
-    if (userInfo.value) {
-      body.viewer_no = userInfo.value.user_no;
+    if (questionScope.value === "all") {
+      body.public_only = true;
+      if (userInfo.value) {
+        body.viewer_no = userInfo.value.user_no;
+      }
     }
   }
 
@@ -81,9 +89,11 @@ const requestBody = computed(() => {
 });
 
 const activeSourceLabel = computed(() => {
-  if (activeExamDetail.value?.exam_name) return `고사집: ${activeExamDetail.value.exam_name}`;
-  if (activeBookDetail.value?.book_name) return `문제집: ${activeBookDetail.value.book_name}`;
-  return '';
+  if (activeExamDetail.value?.exam_name)
+    return `고사집: ${activeExamDetail.value.exam_name}`;
+  if (activeBookDetail.value?.book_name)
+    return `문제집: ${activeBookDetail.value.book_name}`;
+  return "";
 });
 
 const loadActiveBookDetail = async (bookId?: number) => {
@@ -98,11 +108,14 @@ const loadActiveBookDetail = async (bookId?: number) => {
   }
 
   try {
-    activeBookDetail.value = await $fetch(`${apiBase.value}/question-books/${bookId}`, {
-      headers: getAuthHeader(),
-    });
+    activeBookDetail.value = await $fetch(
+      `${apiBase.value}/question-books/${bookId}`,
+      {
+        headers: getAuthHeader(),
+      },
+    );
   } catch (err) {
-    console.error('문제집 상세 조회 실패:', err);
+    console.error("문제집 상세 조회 실패:", err);
     activeBookDetail.value = null;
   }
 };
@@ -123,35 +136,34 @@ const loadActiveExamDetail = async (examId?: number) => {
       headers: getAuthHeader(),
     });
   } catch (err) {
-    console.error('고사집 상세 조회 실패:', err);
+    console.error("고사집 상세 조회 실패:", err);
     activeExamDetail.value = null;
   }
 };
 
-const { data: questionResponse, pending, error, refresh } = await useFetch<QuestionListResponse>(() => `${apiBase.value}/questions`, {
-  method: 'POST',
+const {
+  data: questionResponse,
+  pending,
+  error,
+  refresh,
+} = await useFetch<QuestionListResponse>(() => `${apiBase.value}/questions`, {
+  method: "POST",
   body: requestBody,
 });
 
 watch(
-  [questionResponse, error],
-  ([data, fetchError]) => {
-    if (data || fetchError) {
-      hasResolvedOnce.value = true;
-    }
+  requestBody,
+  () => {
+    refresh();
   },
-  { immediate: true },
+  { deep: true },
 );
-
-watch(requestBody, () => {
-  refresh();
-}, { deep: true });
 
 watch(
   () => [route.query.scope, route.query.mine],
   () => {
     currentPage.value = 1;
-  }
+  },
 );
 
 watch(
@@ -164,7 +176,7 @@ watch(
       activeBookDetail.value = null;
     }
   },
-  { immediate: true }
+  { immediate: true },
 );
 
 watch(
@@ -174,7 +186,7 @@ watch(
     activeBookDetail.value = null;
     loadActiveExamDetail(activeExamId.value);
   },
-  { immediate: true }
+  { immediate: true },
 );
 
 const handleGroupChange = (groupId: string | number | null) => {
@@ -182,15 +194,18 @@ const handleGroupChange = (groupId: string | number | null) => {
   currentPage.value = 1;
 };
 
-const handleSearch = (payload: { field: 'title' | 'content'; keyword: string }) => {
+const handleSearch = (payload: {
+  field: "title" | "content";
+  keyword: string;
+}) => {
   appliedSearchField.value = payload.field;
   appliedSearchKeyword.value = payload.keyword;
   currentPage.value = 1;
 };
 
 const handleResetSearch = () => {
-  appliedSearchField.value = 'title';
-  appliedSearchKeyword.value = '';
+  appliedSearchField.value = "title";
+  appliedSearchKeyword.value = "";
   currentPage.value = 1;
 };
 
@@ -198,11 +213,11 @@ const handlePageChange = (page: number) => {
   currentPage.value = page;
 };
 
-const setQuestionScope = async (scope: 'mine' | 'all') => {
+const setQuestionScope = async (scope: "mine" | "all") => {
   const nextQuery: Record<string, string> = {};
 
   for (const [key, value] of Object.entries(route.query)) {
-    if (typeof value === 'string') {
+    if (typeof value === "string") {
       nextQuery[key] = value;
     }
   }
@@ -215,107 +230,55 @@ const setQuestionScope = async (scope: 'mine' | 'all') => {
 
 const handleCopyQuestion = async (question: Question) => {
   if (!userInfo.value) {
-    alert('문제를 내 계정으로 가져오려면 로그인이 필요합니다.');
+    alert("문제를 내 계정으로 가져오려면 로그인이 필요합니다.");
     return;
   }
 
   try {
     await $fetch(`${apiBase.value}/questions/${question.question_id}/copy`, {
-      method: 'POST',
+      method: "POST",
       headers: getAuthHeader(),
       body: {
         user_no: userInfo.value.user_no,
       },
     });
-    alert('문제를 내 문제로 가져왔습니다.');
-    await setQuestionScope('mine');
+    alert("문제를 내 문제로 가져왔습니다.");
+    await setQuestionScope("mine");
   } catch (err) {
-    console.error('문제 복사 실패:', err);
-    alert('문제를 복사하는 중 오류가 발생했습니다.');
+    console.error("문제 복사 실패:", err);
+    alert("문제를 복사하는 중 오류가 발생했습니다.");
   }
 };
 </script>
 
 <template>
   <div class="page-container">
-
-    <div class="page-header">
-      <div class="title-wrapper">
-        <div class="title-row">
-          <h1 class="page-title">문제 목록</h1>
-          <div class="scope-toggle">
-            <button
-              type="button"
-              class="scope-btn"
-              :class="{ active: questionScope === 'mine' }"
-              @click="setQuestionScope('mine')"
-            >
-              나의 문제
-            </button>
-            <button
-              type="button"
-              class="scope-btn"
-              :class="{ active: questionScope === 'all' }"
-              @click="setQuestionScope('all')"
-            >
-              전체 문제
-            </button>
-          </div>
-        </div>
-        <span v-if="activeSourceLabel" class="page-subtitle">{{ activeSourceLabel }}</span>
-      </div>
-      <div class="page-nav">
-        <NuxtLink to="/dashboard" class="back-btn">
-          <IconArrowUp class="back-icon" />
-          대시보드
-        </NuxtLink>
-        <div class="page-links">
-          <NuxtLink to="/question-books" class="quick-link">
-            <IconBook class="quick-icon" />
-            문제집 목록
-          </NuxtLink>
-          <NuxtLink to="/exams" class="quick-link">
-            <IconPencil class="quick-icon" />
-            고사집 목록
-          </NuxtLink>
-        </div>
-      </div>
-    </div>
-    
-    <div v-if="error && !questionResponse && !pending" class="error">
-      문제를 불러오지 못했습니다. 백엔드 서버가 실행 중인지 확인해 주세요.
-      <pre>{{ error }}</pre>
-    </div>
-
-    <div v-else>
-      <div class="question-list-shell">
-        <QuestionList
-          :questions="questionResponse?.items || []"
-          :current-user-no="userInfo?.user_no ?? null"
-          :selected-group-id="selectedGroupId"
-          :applied-search-field="appliedSearchField"
-          :applied-search-keyword="appliedSearchKeyword"
-          :current-page="questionResponse?.page || 1"
-          :total-pages="questionResponse?.totalPages || 1"
-          :total-items="questionResponse?.total || 0"
-          :page-size="questionResponse?.limit || pageSize"
-          :view-mode="questionScope"
-          @refresh="refresh"
-          @change-group="handleGroupChange"
-          @search="handleSearch"
-          @reset-search="handleResetSearch"
-          @change-page="handlePageChange"
-          @copy-question="handleCopyQuestion"
-        />
-
-        <!-- <div v-if="pending" class="loading-overlay">
-          문제를 불러오는 중...
-        </div> -->
-      </div>
-
-      <div v-if="error && questionResponse" class="inline-error">
-        최신 문제 목록을 불러오지 못했습니다.
-      </div>
+    <div class="question-list-shell">
+      <QuestionList
+        :list-title="'문제 목록'"
+        :list-subtitle="activeSourceLabel"
+        :show-scope-toggle="true"
+        :scope-mode="questionScope"
+        :show-error="!!(error && !questionResponse && !pending)"
+        :error-message="'문제를 불러오지 못했습니다. 백엔드 서버가 실행 중인지 확인해 주세요.'"
+        :questions="questionResponse?.items || []"
+        :current-user-no="userInfo?.user_no ?? null"
+        :selected-group-id="selectedGroupId"
+        :applied-search-field="appliedSearchField"
+        :applied-search-keyword="appliedSearchKeyword"
+        :current-page="questionResponse?.page || 1"
+        :total-pages="questionResponse?.totalPages || 1"
+        :total-items="questionResponse?.total || 0"
+        :page-size="questionResponse?.limit || pageSize"
+        :view-mode="questionScope"
+        @refresh="refresh"
+        @change-scope="setQuestionScope"
+        @change-group="handleGroupChange"
+        @search="handleSearch"
+        @reset-search="handleResetSearch"
+        @change-page="handlePageChange"
+        @copy-question="handleCopyQuestion"
+      />
     </div>
   </div>
 </template>
@@ -356,80 +319,21 @@ const handleCopyQuestion = async (question: Question) => {
 }
 
 .page-container {
-  max-width: 1000px;
+  max-width: 1200px;
   margin: 0 auto;
-  padding: 2rem 1rem 3rem;
+  padding: 1rem 1rem 3rem;
 }
 
 .page-header {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
   gap: 1rem;
-  margin-bottom: 2rem;
-  max-width: 900px;
+  margin-bottom: 1rem;
+  max-width: 1200px;
   width: 100%;
   margin-left: auto;
   margin-right: auto;
-}
-
-.page-title {
-  font-size: 2.25rem;
-  font-weight: 700;
-  color: #f8fafc;
-  margin: 0;
-}
-
-.page-subtitle {
-  font-size: 0.85rem;
-  color: #94a3b8;
-  margin: 0.2rem 0 0;
-}
-
-.title-wrapper {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 0.45rem;
-}
-
-.title-row {
-  display: flex;
-  align-items: center;
-  gap: 0.85rem;
-  flex-wrap: wrap;
-}
-
-.scope-toggle {
-  display: inline-flex;
-  gap: 0.45rem;
-  padding: 0.2rem;
-  border-radius: 999px;
-  background: rgba(15, 23, 42, 0.55);
-  border: 1px solid rgba(148, 163, 184, 0.14);
-}
-
-.scope-btn {
-  border: none;
-  background: transparent;
-  color: #94a3b8;
-  font-size: 0.82rem;
-  font-weight: 700;
-  border-radius: 999px;
-  padding: 0.45rem 0.85rem;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.scope-btn.active {
-  background: linear-gradient(135deg, #6366f1, #818cf8);
-  color: #fff;
-  box-shadow: 0 8px 24px -12px rgba(99, 102, 241, 0.9);
-}
-
-.scope-btn:not(.active):hover {
-  color: #e2e8f0;
-  background: rgba(255, 255, 255, 0.04);
 }
 
 .back-btn {
@@ -465,6 +369,8 @@ const handleCopyQuestion = async (question: Question) => {
   align-items: center;
   gap: 0.75rem;
   flex-wrap: nowrap;
+  width: 100%;
+  justify-content: space-between;
 }
 
 .page-links {
@@ -472,6 +378,7 @@ const handleCopyQuestion = async (question: Question) => {
   gap: 0.75rem;
   flex-wrap: nowrap;
   justify-content: flex-end;
+  margin-left: auto;
 }
 
 .quick-link {
@@ -495,7 +402,8 @@ const handleCopyQuestion = async (question: Question) => {
   transform: translateY(-1px);
 }
 
-.loading, .error {
+.loading,
+.error {
   text-align: center;
   padding: 4rem;
   font-size: 1.2rem;
@@ -512,22 +420,7 @@ const handleCopyQuestion = async (question: Question) => {
 
 .question-list-shell {
   position: relative;
-}
-
-.loading-overlay {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: flex-start;
-  justify-content: center;
-  padding-top: 5rem;
-  background: rgba(15, 23, 42, 0.18);
-  backdrop-filter: blur(2px);
-  border-radius: 10px;
-  color: #cbd5e1;
-  font-size: 0.95rem;
-  font-weight: 600;
-  pointer-events: none;
+  width: 100%;
 }
 
 .inline-error {
@@ -551,6 +444,10 @@ const handleCopyQuestion = async (question: Question) => {
   .page-links {
     justify-content: flex-start;
     flex-wrap: wrap;
+  }
+
+  .question-list-shell {
+    width: 100%;
   }
 }
 </style>

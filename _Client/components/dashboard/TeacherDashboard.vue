@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
-import IconRocket from '~/assets/icons/IconRocket.svg?component';
+import { ref, onMounted } from "vue";
+import IconRocket from "~/assets/icons/IconRocket.svg?component";
 
 const stats = ref<any>(null);
 const loading = ref(true);
@@ -10,11 +10,11 @@ const { apiBase, token, getAuthHeader } = useApi();
 const fetchStats = async () => {
   try {
     const data = await $fetch(`${apiBase.value}/dashboard/stats`, {
-      headers: getAuthHeader()
+      headers: getAuthHeader(),
     });
     stats.value = data;
   } catch (err) {
-    console.error('서버 통신 오류(fetch) stats:', err);
+    console.error("서버 통신 오류(fetch) stats:", err);
   } finally {
     loading.value = false;
   }

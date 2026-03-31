@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import GroupTreeNode from '~/components/dashboard/GroupTreeNode.vue';
-import type { Group } from '~/types';
+import GroupTreeNode from "~/components/dashboard/GroupTreeNode.vue";
+import type { Group } from "~/types";
 
 const props = defineProps<{
   groups: Group[];
@@ -8,23 +8,21 @@ const props = defineProps<{
 }>();
 
 const emit = defineEmits<{
-  (e: 'select-group', groupId: string | number | null): void;
+  (e: "select-group", groupId: string | number | null): void;
 }>();
 </script>
 
 <template>
   <div class="group-hierarchy">
-    <GroupTreeNode 
-      v-for="group in groups" 
+    <GroupTreeNode
+      v-for="group in groups"
       :key="group.group_id"
       :group="group"
       :selected-group-id="selectedGroupId"
       :depth="0"
       @select-group="emit('select-group', $event)"
     />
-    <div v-if="groups.length === 0" class="no-groups">
-      그룹 정보 없음
-    </div>
+    <div v-if="groups.length === 0" class="no-groups">그룹 정보 없음</div>
   </div>
 </template>
 

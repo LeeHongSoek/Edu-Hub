@@ -5,14 +5,11 @@
         <p class="eyebrow">API Health Check</p>
         <h1>백엔드 /api/demo 연결 상태</h1>
         <p class="lede">
-          버튼을 누르면 GET, 쿼리付き GET, POST 요청을 순차적으로 보내고 결과를 하단 카드에 정리합니다.
+          버튼을 누르면 GET, 쿼리付き GET, POST 요청을 순차적으로 보내고 결과를
+          하단 카드에 정리합니다.
         </p>
       </div>
-      <button
-        class="run-btn"
-        :disabled="testing"
-        @click="testApis"
-      >
+      <button class="run-btn" :disabled="testing" @click="testApis">
         <span v-if="testing" class="button-label">
           <IconRefresh class="button-icon spinning" />
           호출 중...
@@ -33,7 +30,10 @@
         <li v-for="(item, idx) in testResults" :key="idx">
           <div>
             <strong>{{ item.method.toUpperCase() }} {{ item.url }}</strong>
-            <p class="meta">상태 {{ item.status }} · {{ item.dataSize }} bytes · {{ item.duration }}ms</p>
+            <p class="meta">
+              상태 {{ item.status }} · {{ item.dataSize }} bytes ·
+              {{ item.duration }}ms
+            </p>
           </div>
           <pre>{{ item.payload }}</pre>
         </li>
@@ -48,12 +48,12 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
-import type { NitroFetchOptions } from 'nitropack/types';
-import IconRefresh from '~/assets/icons/IconRefresh.svg?component';
-import IconPlay from '~/assets/icons/IconPlay.svg?component';
+import { ref } from "vue";
+import type { NitroFetchOptions } from "nitropack/types";
+import IconRefresh from "~/assets/icons/IconRefresh.svg?component";
+import IconPlay from "~/assets/icons/IconPlay.svg?component";
 
-type TestCaseMethod = 'get' | 'post';
+type TestCaseMethod = "get" | "post";
 
 type TestCase = {
   label: string;
@@ -78,26 +78,30 @@ const testResults = ref<
 
 const testCases: TestCase[] = [
   {
-    label: '기본 GET',
-    method: 'get',
-    url: '/api/demo',
-    options: { method: 'get' }
+    label: "기본 GET",
+    method: "get",
+    url: "/api/demo",
+    options: { method: "get" },
   },
   {
-    label: '쿼리付き GET',
-    method: 'get',
-    url: '/api/demo?id=123&type=test',
-    options: { method: 'get' }
+    label: "쿼리付き GET",
+    method: "get",
+    url: "/api/demo?id=123&type=test",
+    options: { method: "get" },
   },
   {
-    label: 'POST (데이터 포함)',
-    method: 'post',
-    url: '/api/demo',
+    label: "POST (데이터 포함)",
+    method: "post",
+    url: "/api/demo",
     options: {
-      method: 'post',
-      body: { userId: 123, action: 'test', timestamp: new Date().toISOString() }
-    }
-  }
+      method: "post",
+      body: {
+        userId: 123,
+        action: "test",
+        timestamp: new Date().toISOString(),
+      },
+    },
+  },
 ];
 
 const testApis = async () => {
@@ -115,14 +119,14 @@ const testApis = async () => {
         duration: `${item.duration}ms`,
         bytes: item.dataSize,
         resBody: item.payload,
-      }))
+      })),
     );
   };
 
   const printBodyTable = (label: string, body: unknown) => {
     console.log(label);
 
-    if (body && typeof body === 'object' && !Array.isArray(body)) {
+    if (body && typeof body === "object" && !Array.isArray(body)) {
       console.table([body]);
       return;
     }
@@ -151,21 +155,23 @@ const testApis = async () => {
         duration,
         payload: JSON.stringify(res, null, 2),
         requestBody,
-        responseBody: res
+        responseBody: res,
       });
 
-      console.log(`[API통신_헤더] <${test.method.toUpperCase()}> ${test.url} (200) - ${duration}ms`);
+      console.log(
+        `[API통신_헤더] <${test.method.toUpperCase()}> ${test.url} (200) - ${duration}ms`,
+      );
       if (requestBody) {
-        printBodyTable('[API통신_데이터_요청]', requestBody);
+        printBodyTable("[API통신_데이터_요청]", requestBody);
       }
-      printBodyTable('[API통신_데이터_응답]', res);
+      printBodyTable("[API통신_데이터_응답]", res);
     }
 
     printTable();
-    console.log('API 테스트 완료', testResults.value);
+    console.log("API 테스트 완료", testResults.value);
   } catch (error) {
     printTable();
-    console.error('API 테스트 실패', error);
+    console.error("API 테스트 실패", error);
     alert(`API 요청 중 오류가 발생했습니다: ${(error as Error).message}`);
   } finally {
     testing.value = false;
@@ -221,7 +227,9 @@ const testApis = async () => {
   color: white;
   font-weight: 600;
   cursor: pointer;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
 }
 
 .button-label {
@@ -251,8 +259,12 @@ const testApis = async () => {
 }
 
 @keyframes spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .results-card {

@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
-import IconCalendar from '~/assets/icons/IconCalendar.svg?component';
+import { ref, onMounted } from "vue";
+import IconCalendar from "~/assets/icons/IconCalendar.svg?component";
 
 const logs = ref<any[]>([]);
 const loading = ref(true);
@@ -10,11 +10,11 @@ const { apiBase, token, getAuthHeader } = useApi();
 const fetchLogs = async () => {
   try {
     const data = await $fetch(`${apiBase.value}/study-logs/my`, {
-      headers: getAuthHeader()
+      headers: getAuthHeader(),
     });
     logs.value = data as any[];
   } catch (err) {
-    console.error('서버 통신 오류(fetch) logs:', err);
+    console.error("서버 통신 오류(fetch) logs:", err);
   } finally {
     loading.value = false;
   }
@@ -23,10 +23,11 @@ const fetchLogs = async () => {
 onMounted(fetchLogs);
 
 const formatAction = (memo: string) => {
-  if (memo.startsWith('오답')) return { text: memo, class: 'action-error' };
-  if (memo === '정답') return { text: '정답', class: 'action-success' };
-  if (memo === '제한시간초과') return { text: '시간 초과', class: 'action-warning' };
-  return { text: memo, class: 'action-info' };
+  if (memo.startsWith("오답")) return { text: memo, class: "action-error" };
+  if (memo === "정답") return { text: "정답", class: "action-success" };
+  if (memo === "제한시간초과")
+    return { text: "시간 초과", class: "action-warning" };
+  return { text: memo, class: "action-info" };
 };
 </script>
 
@@ -38,15 +39,27 @@ const formatAction = (memo: string) => {
     </div>
 
     <div v-if="loading" class="loading">로그를 불러오는 중...</div>
-    <div v-else-if="logs.length === 0" class="empty">기록된 학습 활동이 없습니다.</div>
+    <div v-else-if="logs.length === 0" class="empty">
+      기록된 학습 활동이 없습니다.
+    </div>
     <div v-else class="log-list">
       <div v-for="log in logs" :key="log.log_id" class="log-item">
         <div class="log-time">
-          {{ new Date(log.last_played_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }) }}
+          {{
+            new Date(log.last_played_at).toLocaleTimeString([], {
+              hour: "2-digit",
+              minute: "2-digit",
+              second: "2-digit",
+            })
+          }}
         </div>
         <div class="log-question">
-          <span class="q-title">{{ log.question?.title || '알 수 없는 문제' }}</span>
-          <span class="q-subject" v-if="log.question?.subject">{{ log.question.subject }}</span>
+          <span class="q-title">{{
+            log.question?.title || "알 수 없는 문제"
+          }}</span>
+          <span class="q-subject" v-if="log.question?.subject">{{
+            log.question.subject
+          }}</span>
         </div>
         <div class="log-action" :class="formatAction(log.user_memo).class">
           {{ formatAction(log.user_memo).text }}
@@ -122,8 +135,14 @@ const formatAction = (memo: string) => {
   gap: 0.2rem;
 }
 
-.q-title { color: #e2e8f0; font-weight: 600; }
-.q-subject { color: #64748b; font-size: 0.75rem; }
+.q-title {
+  color: #e2e8f0;
+  font-weight: 600;
+}
+.q-subject {
+  color: #64748b;
+  font-size: 0.75rem;
+}
 
 .log-action {
   font-weight: 700;
@@ -133,10 +152,27 @@ const formatAction = (memo: string) => {
   border-radius: 6px;
 }
 
-.action-info { color: #38bdf8; background: rgba(56, 189, 248, 0.1); }
-.action-success { color: #4ade80; background: rgba(74, 222, 128, 0.1); }
-.action-error { color: #fb7185; background: rgba(251, 113, 133, 0.1); }
-.action-warning { color: #fbbf24; background: rgba(251, 191, 36, 0.1); }
+.action-info {
+  color: #38bdf8;
+  background: rgba(56, 189, 248, 0.1);
+}
+.action-success {
+  color: #4ade80;
+  background: rgba(74, 222, 128, 0.1);
+}
+.action-error {
+  color: #fb7185;
+  background: rgba(251, 113, 133, 0.1);
+}
+.action-warning {
+  color: #fbbf24;
+  background: rgba(251, 191, 36, 0.1);
+}
 
-.loading, .empty { text-align: center; padding: 3rem; color: #64748b; }
+.loading,
+.empty {
+  text-align: center;
+  padding: 3rem;
+  color: #64748b;
+}
 </style>

@@ -1,11 +1,11 @@
 <script setup lang="ts">
-import { computed, onMounted, reactive, ref } from 'vue';
-import IconUsers from '~/assets/icons/IconUsers.svg?component';
-import IconSearch from '~/assets/icons/IconSearch.svg?component';
-import IconClose from '~/assets/icons/IconClose.svg?component';
+import { computed, onMounted, reactive, ref } from "vue";
+import IconUsers from "~/assets/icons/IconUsers.svg?component";
+import IconSearch from "~/assets/icons/IconSearch.svg?component";
+import IconClose from "~/assets/icons/IconClose.svg?component";
 
-type RelationRoleId = 'S' | 'T' | 'P';
-type TargetKey = 'parents' | 'teachers' | 'students';
+type RelationRoleId = "S" | "T" | "P";
+type TargetKey = "parents" | "teachers" | "students";
 
 interface RelationTarget {
   key: TargetKey;
@@ -29,19 +29,19 @@ const pageSize = 6;
 const relationPageSize = 8;
 const relations = ref<any[]>([]);
 const relationLoading = ref(true);
-const relationSearchInput = ref('');
-const relationSearchQuery = ref('');
+const relationSearchInput = ref("");
+const relationSearchQuery = ref("");
 const relationCurrentPage = ref(1);
 const relationSliderValue = ref(1);
 const relationTotal = ref(0);
 const relationTotalPages = ref(1);
 const showConnectModal = ref(false);
-const activeTargetKey = ref<TargetKey | ''>('');
-const submittingUserId = ref<string>('');
-const feedbackMessage = ref('');
+const activeTargetKey = ref<TargetKey | "">("");
+const submittingUserId = ref<string>("");
+const feedbackMessage = ref("");
 const emit = defineEmits<{
-  (event: 'compose-message', user: any): void;
-  (event: 'open-message-thread', user: any): void;
+  (event: "compose-message", user: any): void;
+  (event: "open-message-thread", user: any): void;
 }>();
 
 const panelStates = reactive<Record<TargetKey, SearchPanelState>>({
@@ -51,12 +51,12 @@ const panelStates = reactive<Record<TargetKey, SearchPanelState>>({
 });
 
 const { apiBase, getAuthHeader } = useApi();
-const userCookie = useCookie('user_info');
+const userCookie = useCookie("user_info");
 
 const userInfo = computed(() => {
   if (!userCookie.value) return null;
   try {
-    return typeof userCookie.value === 'string'
+    return typeof userCookie.value === "string"
       ? JSON.parse(userCookie.value)
       : userCookie.value;
   } catch {
@@ -64,47 +64,47 @@ const userInfo = computed(() => {
   }
 });
 
-const userRoleId = computed<RelationRoleId | ''>(() => {
-  const role = userInfo.value?.role_id ?? userInfo.value?.role ?? '';
-  return ['S', 'T', 'P'].includes(role) ? role : '';
+const userRoleId = computed<RelationRoleId | "">(() => {
+  const role = userInfo.value?.role_id ?? userInfo.value?.role ?? "";
+  return ["S", "T", "P"].includes(role) ? role : "";
 });
 
 const relationTargets = computed<RelationTarget[]>(() => {
-  if (userRoleId.value === 'S') {
+  if (userRoleId.value === "S") {
     return [
       {
-        key: 'parents',
-        label: '학부모',
-        roleId: 'P',
-        description: '이름으로 학부모를 검색하고 바로 연결할 수 있습니다.',
+        key: "parents",
+        label: "학부모",
+        roleId: "P",
+        description: "이름으로 학부모를 검색하고 바로 연결할 수 있습니다.",
       },
       {
-        key: 'teachers',
-        label: '선생님',
-        roleId: 'T',
-        description: '이름으로 선생님을 검색하고 바로 연결할 수 있습니다.',
-      },
-    ];
-  }
-
-  if (userRoleId.value === 'P') {
-    return [
-      {
-        key: 'students',
-        label: '학생',
-        roleId: 'S',
-        description: '이름으로 학생을 검색하고 자녀 연결을 만들 수 있습니다.',
+        key: "teachers",
+        label: "선생님",
+        roleId: "T",
+        description: "이름으로 선생님을 검색하고 바로 연결할 수 있습니다.",
       },
     ];
   }
 
-  if (userRoleId.value === 'T') {
+  if (userRoleId.value === "P") {
     return [
       {
-        key: 'students',
-        label: '학생',
-        roleId: 'S',
-        description: '이름으로 학생을 검색하고 수업 대상과 연결할 수 있습니다.',
+        key: "students",
+        label: "학생",
+        roleId: "S",
+        description: "이름으로 학생을 검색하고 자녀 연결을 만들 수 있습니다.",
+      },
+    ];
+  }
+
+  if (userRoleId.value === "T") {
+    return [
+      {
+        key: "students",
+        label: "학생",
+        roleId: "S",
+        description: "이름으로 학생을 검색하고 수업 대상과 연결할 수 있습니다.",
       },
     ];
   }
@@ -112,7 +112,12 @@ const relationTargets = computed<RelationTarget[]>(() => {
   return [];
 });
 
-const activeTarget = computed(() => relationTargets.value.find((target) => target.key === activeTargetKey.value) ?? null);
+const activeTarget = computed(
+  () =>
+    relationTargets.value.find(
+      (target) => target.key === activeTargetKey.value,
+    ) ?? null,
+);
 const activePanel = computed(() => {
   if (!activeTarget.value) return null;
   return getPanelState(activeTarget.value.key);
@@ -120,10 +125,17 @@ const activePanel = computed(() => {
 
 const totalPages = computed(() => {
   if (!activePanel.value) return 1;
-  return Math.max(1, activePanel.value.totalPages || Math.ceil(activePanel.value.total / pageSize) || 1);
+  return Math.max(
+    1,
+    activePanel.value.totalPages ||
+      Math.ceil(activePanel.value.total / pageSize) ||
+      1,
+  );
 });
 
-const isSliderDisabled = computed(() => totalPages.value <= 1 || !activePanel.value);
+const isSliderDisabled = computed(
+  () => totalPages.value <= 1 || !activePanel.value,
+);
 const sliderPercentage = computed(() => {
   if (!activePanel.value || totalPages.value <= 1) return 0;
   return ((activePanel.value.sliderValue - 1) / (totalPages.value - 1)) * 100;
@@ -136,38 +148,50 @@ const pageStartItem = computed(() => {
 
 const pageEndItem = computed(() => {
   if (!activePanel.value) return 0;
-  return Math.min(activePanel.value.currentPage * pageSize, activePanel.value.total);
+  return Math.min(
+    activePanel.value.currentPage * pageSize,
+    activePanel.value.total,
+  );
 });
 
-const relationTotalPagesComputed = computed(() => Math.max(1, relationTotalPages.value));
-const relationIsSliderDisabled = computed(() => relationTotalPagesComputed.value <= 1);
+const relationTotalPagesComputed = computed(() =>
+  Math.max(1, relationTotalPages.value),
+);
+const relationIsSliderDisabled = computed(
+  () => relationTotalPagesComputed.value <= 1,
+);
 const relationSliderPercentage = computed(() => {
   if (relationTotalPagesComputed.value <= 1) return 0;
-  return ((relationSliderValue.value - 1) / (relationTotalPagesComputed.value - 1)) * 100;
+  return (
+    ((relationSliderValue.value - 1) / (relationTotalPagesComputed.value - 1)) *
+    100
+  );
 });
 const relationPageStartItem = computed(() => {
   if (relationTotal.value === 0) return 0;
   return (relationCurrentPage.value - 1) * relationPageSize + 1;
 });
-const relationPageEndItem = computed(() => Math.min(relationCurrentPage.value * relationPageSize, relationTotal.value));
+const relationPageEndItem = computed(() =>
+  Math.min(relationCurrentPage.value * relationPageSize, relationTotal.value),
+);
 
 const relationSummary = computed(() => {
-  if (userRoleId.value === 'S') {
-    return '학생은 학부모와 선생님을 이름으로 따로 찾아 연결할 수 있습니다.';
+  if (userRoleId.value === "S") {
+    return "학생은 학부모와 선생님을 이름으로 따로 찾아 연결할 수 있습니다.";
   }
-  if (userRoleId.value === 'P') {
-    return '학부모는 학생을 이름으로 찾아 연결할 수 있습니다.';
+  if (userRoleId.value === "P") {
+    return "학부모는 학생을 이름으로 찾아 연결할 수 있습니다.";
   }
-  if (userRoleId.value === 'T') {
-    return '선생님은 학생을 이름으로 찾아 연결할 수 있습니다.';
+  if (userRoleId.value === "T") {
+    return "선생님은 학생을 이름으로 찾아 연결할 수 있습니다.";
   }
-  return '연결 관리 기능을 사용할 수 없습니다.';
+  return "연결 관리 기능을 사용할 수 없습니다.";
 });
 
 function createPanelState(): SearchPanelState {
   return {
-    searchInput: '',
-    searchQuery: '',
+    searchInput: "",
+    searchQuery: "",
     currentPage: 1,
     sliderValue: 1,
     total: 0,
@@ -185,45 +209,48 @@ function getPanelState(key: TargetKey) {
 }
 
 const roleLabel = (roleId?: string) => {
-  if (roleId === 'T') return '선생님';
-  if (roleId === 'P') return '학부모';
-  if (roleId === 'S') return '학생';
-  return '미확인';
+  if (roleId === "T") return "선생님";
+  if (roleId === "P") return "학부모";
+  if (roleId === "S") return "학생";
+  return "미확인";
 };
 
 const relationBadgeLabel = (relation: any) => {
-  const otherRoleId = String(relation?.user2?.role_id || '');
-  const relationTypeId = String(relation?.relation_type_id || '');
+  const otherRoleId = String(relation?.user2?.role_id || "");
+  const relationTypeId = String(relation?.relation_type_id || "");
 
-  if (relationTypeId === 'FRIEND') {
-    return '친구';
+  if (relationTypeId === "FRIEND") {
+    return "친구";
   }
 
-  if (relationTypeId === 'PARENT_CHILD' || relationTypeId === 'CHILD_PARENT') {
-    if (userRoleId.value === 'S') return '부모';
-    if (userRoleId.value === 'P') return '자녀';
-    return otherRoleId === 'S' ? '학생' : roleLabel(otherRoleId);
+  if (relationTypeId === "PARENT_CHILD" || relationTypeId === "CHILD_PARENT") {
+    if (userRoleId.value === "S") return "부모";
+    if (userRoleId.value === "P") return "자녀";
+    return otherRoleId === "S" ? "학생" : roleLabel(otherRoleId);
   }
 
-  if (relationTypeId === 'PUPIL_TEACHER' || relationTypeId === 'TEACHER_PUPIL') {
-    if (userRoleId.value === 'S') return '선생';
-    if (userRoleId.value === 'T') return '학생';
-    return otherRoleId === 'T' ? '선생님' : roleLabel(otherRoleId);
+  if (
+    relationTypeId === "PUPIL_TEACHER" ||
+    relationTypeId === "TEACHER_PUPIL"
+  ) {
+    if (userRoleId.value === "S") return "선생";
+    if (userRoleId.value === "T") return "학생";
+    return otherRoleId === "T" ? "선생님" : roleLabel(otherRoleId);
   }
 
-  if (otherRoleId === 'T') {
-    return userRoleId.value === 'S' ? '선생' : '선생님';
+  if (otherRoleId === "T") {
+    return userRoleId.value === "S" ? "선생" : "선생님";
   }
 
-  if (otherRoleId === 'P') {
-    return userRoleId.value === 'S' ? '부모' : '학부모';
+  if (otherRoleId === "P") {
+    return userRoleId.value === "S" ? "부모" : "학부모";
   }
 
-  if (otherRoleId === 'S') {
-    return userRoleId.value === 'P' ? '자녀' : '학생';
+  if (otherRoleId === "S") {
+    return userRoleId.value === "P" ? "자녀" : "학생";
   }
 
-  return relation?.relation_type?.description || '관계 없음';
+  return relation?.relation_type?.description || "관계 없음";
 };
 
 const loadRelations = async () => {
@@ -247,11 +274,12 @@ const loadRelations = async () => {
 
     relations.value = response.items ?? [];
     relationTotal.value = Number(response.total ?? 0);
-    relationCurrentPage.value = Number(response.page ?? relationCurrentPage.value) || 1;
+    relationCurrentPage.value =
+      Number(response.page ?? relationCurrentPage.value) || 1;
     relationTotalPages.value = Number(response.totalPages ?? 1) || 1;
     relationSliderValue.value = relationCurrentPage.value;
   } catch (err) {
-    console.error('서버 통신 오류(fetch) relations:', err);
+    console.error("서버 통신 오류(fetch) relations:", err);
   } finally {
     relationLoading.value = false;
   }
@@ -265,8 +293,8 @@ const applyRelationSearch = async () => {
 };
 
 const clearRelationSearch = async () => {
-  relationSearchInput.value = '';
-  relationSearchQuery.value = '';
+  relationSearchInput.value = "";
+  relationSearchQuery.value = "";
   relationCurrentPage.value = 1;
   relationSliderValue.value = 1;
   await loadRelations();
@@ -277,7 +305,10 @@ const handleRelationSliderInput = (event: Event) => {
 };
 
 const commitRelationSliderValue = async () => {
-  relationCurrentPage.value = Math.min(Math.max(relationSliderValue.value, 1), relationTotalPagesComputed.value);
+  relationCurrentPage.value = Math.min(
+    Math.max(relationSliderValue.value, 1),
+    relationTotalPagesComputed.value,
+  );
   await loadRelations();
 };
 
@@ -290,15 +321,18 @@ const fetchCandidates = async (targetKey = activeTargetKey.value) => {
   panel.loading = true;
 
   try {
-    const data = await $fetch(`${apiBase.value}/dashboard/relations/candidates`, {
-      headers: getAuthHeader(),
-      query: {
-        role: target.roleId,
-        q: panel.searchQuery,
-        page: panel.currentPage,
-        limit: pageSize,
+    const data = await $fetch(
+      `${apiBase.value}/dashboard/relations/candidates`,
+      {
+        headers: getAuthHeader(),
+        query: {
+          role: target.roleId,
+          q: panel.searchQuery,
+          page: panel.currentPage,
+          limit: pageSize,
+        },
       },
-    });
+    );
 
     const response = data as {
       items: any[];
@@ -314,7 +348,7 @@ const fetchCandidates = async (targetKey = activeTargetKey.value) => {
     panel.totalPages = Number(response.totalPages ?? 1) || 1;
     panel.sliderValue = panel.currentPage;
   } catch (err) {
-    console.error('서버 통신 오류(fetch) relation candidates:', err);
+    console.error("서버 통신 오류(fetch) relation candidates:", err);
     panel.items = [];
     panel.total = 0;
     panel.totalPages = 1;
@@ -327,13 +361,13 @@ const openConnectModal = () => {
   if (relationTargets.value.length === 0) return;
   showConnectModal.value = true;
   activeTargetKey.value = relationTargets.value[0].key;
-  feedbackMessage.value = '';
+  feedbackMessage.value = "";
   void fetchCandidates(activeTargetKey.value);
 };
 
 const closeConnectModal = () => {
   showConnectModal.value = false;
-  feedbackMessage.value = '';
+  feedbackMessage.value = "";
 };
 
 const selectTarget = (targetKey: TargetKey) => {
@@ -356,8 +390,8 @@ const applySearch = async () => {
 const clearSearch = async () => {
   if (!activeTargetKey.value) return;
   const panel = getPanelState(activeTargetKey.value);
-  panel.searchInput = '';
-  panel.searchQuery = '';
+  panel.searchInput = "";
+  panel.searchQuery = "";
   panel.currentPage = 1;
   panel.sliderValue = 1;
   await fetchCandidates(activeTargetKey.value);
@@ -365,13 +399,18 @@ const clearSearch = async () => {
 
 const handleSliderInput = (event: Event) => {
   if (!activePanel.value) return;
-  activePanel.value.sliderValue = Number((event.target as HTMLInputElement).value);
+  activePanel.value.sliderValue = Number(
+    (event.target as HTMLInputElement).value,
+  );
 };
 
 const commitSliderValue = async () => {
   if (!activePanel.value || !activeTargetKey.value) return;
   const panel = activePanel.value;
-  panel.currentPage = Math.min(Math.max(panel.sliderValue, 1), totalPages.value);
+  panel.currentPage = Math.min(
+    Math.max(panel.sliderValue, 1),
+    totalPages.value,
+  );
   await fetchCandidates(activeTargetKey.value);
 };
 
@@ -383,7 +422,7 @@ const toggleCandidateRelation = async (user: any, event: Event) => {
   try {
     const result = checked
       ? await $fetch(`${apiBase.value}/dashboard/relations`, {
-          method: 'POST',
+          method: "POST",
           headers: getAuthHeader(),
           body: {
             targetUserNo: user.user_no,
@@ -391,33 +430,40 @@ const toggleCandidateRelation = async (user: any, event: Event) => {
           },
         })
       : await $fetch(`${apiBase.value}/dashboard/relations/${user.user_no}`, {
-          method: 'DELETE',
+          method: "DELETE",
           headers: getAuthHeader(),
         });
 
-    feedbackMessage.value = (result as { message?: string }).message || (checked
-      ? `${user.username} 님과 연결했습니다.`
-      : `${user.username} 님과의 연결을 해제했습니다.`);
+    feedbackMessage.value =
+      (result as { message?: string }).message ||
+      (checked
+        ? `${user.username} 님과 연결했습니다.`
+        : `${user.username} 님과의 연결을 해제했습니다.`);
     await loadRelations();
     await fetchCandidates(activeTarget.value.key);
   } catch (err: any) {
-    const message = err?.data?.message || err?.message || '연결에 실패했습니다.';
+    const message =
+      err?.data?.message || err?.message || "연결에 실패했습니다.";
     feedbackMessage.value = String(message);
   } finally {
-    submittingUserId.value = '';
+    submittingUserId.value = "";
   }
 };
 
-watch(relationTargets, (targets) => {
-  if (targets.length === 0) {
-    activeTargetKey.value = '';
-    return;
-  }
+watch(
+  relationTargets,
+  (targets) => {
+    if (targets.length === 0) {
+      activeTargetKey.value = "";
+      return;
+    }
 
-  if (!targets.some((target) => target.key === activeTargetKey.value)) {
-    activeTargetKey.value = targets[0].key;
-  }
-}, { immediate: true });
+    if (!targets.some((target) => target.key === activeTargetKey.value)) {
+      activeTargetKey.value = targets[0].key;
+    }
+  },
+  { immediate: true },
+);
 
 onMounted(loadRelations);
 </script>
@@ -429,7 +475,11 @@ onMounted(loadRelations);
         <h3><IconUsers class="section-icon" /> 나의 인맥 관리</h3>
         <p class="manager-subtitle">{{ relationSummary }}</p>
       </div>
-      <button class="btn-add" :disabled="relationTargets.length === 0" @click="openConnectModal">
+      <button
+        class="btn-add"
+        :disabled="relationTargets.length === 0"
+        @click="openConnectModal"
+      >
         + 연결 관리
       </button>
     </div>
@@ -447,13 +497,22 @@ onMounted(loadRelations);
             />
           </label>
           <button class="btn-search" @click="applyRelationSearch">검색</button>
-          <button v-if="relationSearchQuery" class="btn-reset-search" @click="clearRelationSearch">초기화</button>
+          <button
+            v-if="relationSearchQuery"
+            class="btn-reset-search"
+            @click="clearRelationSearch"
+          >
+            초기화
+          </button>
         </div>
 
         <div v-if="relationTotal > 0" class="slider-row">
           <span class="summary-text">총 {{ relationTotal }}건</span>
           <div class="page-slider-section">
-            <div class="slider-wrapper" :class="{ disabled: relationIsSliderDisabled }">
+            <div
+              class="slider-wrapper"
+              :class="{ disabled: relationIsSliderDisabled }"
+            >
               <span class="slider-limit">1</span>
               <div class="slider-track-container">
                 <input
@@ -466,35 +525,64 @@ onMounted(loadRelations);
                   @input="handleRelationSliderInput"
                   @change="commitRelationSliderValue"
                 />
-                <div class="slider-fill" :style="{ width: relationSliderPercentage + '%' }"></div>
-                <div class="slider-tooltip" :style="{ left: relationSliderPercentage + '%' }">
+                <div
+                  class="slider-fill"
+                  :style="{ width: relationSliderPercentage + '%' }"
+                ></div>
+                <div
+                  class="slider-tooltip"
+                  :style="{ left: relationSliderPercentage + '%' }"
+                >
                   {{ relationSliderValue }}
                 </div>
               </div>
               <span class="slider-limit">{{ relationTotalPagesComputed }}</span>
             </div>
           </div>
-          <span class="range-text">{{ relationPageStartItem }}-{{ relationPageEndItem }}번째 항목 표시 중</span>
+          <span class="range-text"
+            >{{ relationPageStartItem }}-{{ relationPageEndItem }}번째 항목 표시
+            중</span
+          >
         </div>
       </div>
     </div>
 
     <div v-if="relationLoading" class="loading">불러오는 중...</div>
     <div v-else-if="relationTotal === 0" class="empty">
-      {{ relationSearchQuery ? '검색 결과가 없습니다.' : '연결된 사용자가 없습니다. 이름으로 찾아서 바로 연결해 보세요.' }}
+      {{
+        relationSearchQuery
+          ? "검색 결과가 없습니다."
+          : "연결된 사용자가 없습니다. 이름으로 찾아서 바로 연결해 보세요."
+      }}
     </div>
-    <TransitionGroup v-else name="relation-slide" tag="div" class="relation-list">
-      <div v-for="rel in relations" :key="rel.relation_id" class="relation-item">
+    <TransitionGroup
+      v-else
+      name="relation-slide"
+      tag="div"
+      class="relation-list"
+    >
+      <div
+        v-for="rel in relations"
+        :key="rel.relation_id"
+        class="relation-item"
+      >
         <div class="relation-row">
           <div class="relation-user">
-            <button type="button" class="user-name-button" @click="emit('open-message-thread', rel.user2)">
+            <button
+              type="button"
+              class="user-name-button"
+              @click="emit('open-message-thread', rel.user2)"
+            >
               <span class="user-name">{{ rel.user2.username }}</span>
             </button>
             <span class="user-id">{{ rel.user2.user_id }}</span>
           </div>
           <div class="relation-actions">
             <span class="relation-badge">{{ relationBadgeLabel(rel) }}</span>
-            <button class="relation-message-btn" @click="emit('compose-message', rel.user2)">
+            <button
+              class="relation-message-btn"
+              @click="emit('compose-message', rel.user2)"
+            >
               메시지
             </button>
           </div>
@@ -502,7 +590,11 @@ onMounted(loadRelations);
       </div>
     </TransitionGroup>
 
-    <div v-if="showConnectModal" class="modal-overlay" @click.self="closeConnectModal">
+    <div
+      v-if="showConnectModal"
+      class="modal-overlay"
+      @click.self="closeConnectModal"
+    >
       <div class="modal-card">
         <div class="modal-header">
           <div>
@@ -528,9 +620,12 @@ onMounted(loadRelations);
         </div>
 
         <div class="modal-body">
-
           <Transition name="section-slide" mode="out-in">
-            <div v-if="activeTarget && activePanel" :key="activeTarget.key" class="target-panel">
+            <div
+              v-if="activeTarget && activePanel"
+              :key="activeTarget.key"
+              class="target-panel"
+            >
               <div class="pagination-panel-border">
                 <div class="slider-panel">
                   <div class="search-row">
@@ -543,16 +638,27 @@ onMounted(loadRelations);
                         @keyup.enter="applySearch"
                       />
                     </label>
-                    <button class="btn-search" @click="applySearch">검색</button>
-                    <button v-if="activePanel.searchQuery" class="btn-reset-search" @click="clearSearch">
+                    <button class="btn-search" @click="applySearch">
+                      검색
+                    </button>
+                    <button
+                      v-if="activePanel.searchQuery"
+                      class="btn-reset-search"
+                      @click="clearSearch"
+                    >
                       초기화
                     </button>
                   </div>
 
                   <div class="slider-row">
-                    <span class="summary-text">총 {{ activePanel.total }}명</span>
+                    <span class="summary-text"
+                      >총 {{ activePanel.total }}명</span
+                    >
                     <div class="page-slider-section">
-                      <div class="slider-wrapper" :class="{ disabled: isSliderDisabled }">
+                      <div
+                        class="slider-wrapper"
+                        :class="{ disabled: isSliderDisabled }"
+                      >
                         <span class="slider-limit">1</span>
                         <div class="slider-track-container">
                           <input
@@ -565,25 +671,45 @@ onMounted(loadRelations);
                             @input="handleSliderInput"
                             @change="commitSliderValue"
                           />
-                          <div class="slider-fill" :style="{ width: sliderPercentage + '%' }"></div>
-                          <div class="slider-tooltip" :style="{ left: sliderPercentage + '%' }">
+                          <div
+                            class="slider-fill"
+                            :style="{ width: sliderPercentage + '%' }"
+                          ></div>
+                          <div
+                            class="slider-tooltip"
+                            :style="{ left: sliderPercentage + '%' }"
+                          >
                             {{ activePanel.sliderValue }}
                           </div>
                         </div>
                         <span class="slider-limit">{{ totalPages }}</span>
                       </div>
                     </div>
-                    <span class="range-text">{{ pageStartItem }}-{{ pageEndItem }}번째 항목 표시 중</span>
+                    <span class="range-text"
+                      >{{ pageStartItem }}-{{ pageEndItem }}번째 항목 표시
+                      중</span
+                    >
                   </div>
                 </div>
               </div>
 
-              <div v-if="activePanel.loading" class="loading compact">불러오는 중...</div>
+              <div v-if="activePanel.loading" class="loading compact">
+                불러오는 중...
+              </div>
               <div v-else-if="activePanel.total === 0" class="empty compact">
                 검색 결과가 없습니다.
               </div>
-              <TransitionGroup v-else name="candidate-slide" tag="div" class="candidate-list">
-                <div v-for="user in activePanel.items" :key="user.user_no" class="candidate-item">
+              <TransitionGroup
+                v-else
+                name="candidate-slide"
+                tag="div"
+                class="candidate-list"
+              >
+                <div
+                  v-for="user in activePanel.items"
+                  :key="user.user_no"
+                  class="candidate-item"
+                >
                   <label class="candidate-row">
                     <input
                       class="relation-checkbox"
@@ -598,7 +724,9 @@ onMounted(loadRelations);
                 </div>
               </TransitionGroup>
 
-              <p v-if="feedbackMessage" class="feedback-message">{{ feedbackMessage }}</p>
+              <p v-if="feedbackMessage" class="feedback-message">
+                {{ feedbackMessage }}
+              </p>
             </div>
           </Transition>
         </div>
@@ -658,7 +786,10 @@ onMounted(loadRelations);
   border-radius: 10px;
   font-weight: 700;
   cursor: pointer;
-  transition: transform 0.2s, opacity 0.2s, background 0.2s;
+  transition:
+    transform 0.2s,
+    opacity 0.2s,
+    background 0.2s;
   white-space: nowrap;
 }
 
@@ -687,7 +818,9 @@ onMounted(loadRelations);
   align-items: center;
   justify-content: flex-start;
   gap: 0.4rem;
-  transition: transform 0.2s, border-color 0.2s;
+  transition:
+    transform 0.2s,
+    border-color 0.2s;
   min-height: 46px;
 }
 
@@ -1083,7 +1216,7 @@ onMounted(loadRelations);
 }
 
 .slider-tooltip::after {
-  content: '';
+  content: "";
   position: absolute;
   bottom: -4px;
   left: 50%;
@@ -1169,7 +1302,9 @@ onMounted(loadRelations);
 
 .section-slide-enter-active,
 .section-slide-leave-active {
-  transition: opacity 0.22s ease, transform 0.22s ease;
+  transition:
+    opacity 0.22s ease,
+    transform 0.22s ease;
 }
 
 .section-slide-enter-from,
@@ -1184,7 +1319,9 @@ onMounted(loadRelations);
 .relation-slide-enter-active,
 .relation-slide-leave-active,
 .relation-slide-move {
-  transition: opacity 0.22s ease, transform 0.22s ease;
+  transition:
+    opacity 0.22s ease,
+    transform 0.22s ease;
 }
 
 .candidate-slide-enter-from,

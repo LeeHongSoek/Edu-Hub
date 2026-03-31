@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import { ref } from 'vue';
-import type { Group } from '~/types';
-import IconArrowRight from '~/assets/icons/IconArrowRight.svg?component';
+import { ref } from "vue";
+import type { Group } from "~/types";
+import IconArrowRight from "~/assets/icons/IconArrowRight.svg?component";
 
 defineOptions({
-  name: 'GroupTreeNode',
+  name: "GroupTreeNode",
 });
 
 const props = defineProps<{
@@ -14,7 +14,7 @@ const props = defineProps<{
 }>();
 
 const emit = defineEmits<{
-  (e: 'select-group', groupId: string | number | null): void;
+  (e: "select-group", groupId: string | number | null): void;
 }>();
 
 const isExpanded = ref(false);
@@ -44,7 +44,10 @@ const toggleExpand = (event: Event) => {
       <span class="name-text">{{ group.name }}</span>
     </div>
 
-    <div v-if="isExpanded && group.child_groups && group.child_groups.length > 0" class="child-nodes">
+    <div
+      v-if="isExpanded && group.child_groups && group.child_groups.length > 0"
+      class="child-nodes"
+    >
       <GroupTreeNode
         v-for="child in group.child_groups"
         :key="child.group_id"
@@ -94,7 +97,9 @@ const toggleExpand = (event: Event) => {
 .toggle-icon {
   font-size: 0.75rem;
   color: #94a3b8;
-  transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275), color 0.2s;
+  transition:
+    transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275),
+    color 0.2s;
   display: inline-block;
   width: 1.2rem;
   text-align: center;

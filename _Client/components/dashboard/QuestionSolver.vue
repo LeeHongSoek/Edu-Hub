@@ -1,12 +1,12 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, computed } from 'vue';
-import type { Question, QuestionReview } from '~/types';
-import LatexRenderer from '~/components/LatexRenderer.vue';
-import IconClock from '~/assets/icons/IconClock.svg?component';
-import IconMessage from '~/assets/icons/IconMessage.svg?component';
-import IconCheck from '~/assets/icons/IconCheck.svg?component';
-import IconX from '~/assets/icons/IconX.svg?component';
-import IconClose from '~/assets/icons/IconClose.svg?component';
+import { ref, onMounted, onUnmounted, computed } from "vue";
+import type { Question, QuestionReview } from "~/types";
+import LatexRenderer from "~/components/LatexRenderer.vue";
+import IconClock from "~/assets/icons/IconClock.svg?component";
+import IconMessage from "~/assets/icons/IconMessage.svg?component";
+import IconCheck from "~/assets/icons/IconCheck.svg?component";
+import IconX from "~/assets/icons/IconX.svg?component";
+import IconClose from "~/assets/icons/IconClose.svg?component";
 
 const { apiBase, token, getAuthHeader } = useApi();
 
@@ -19,21 +19,21 @@ const props = defineProps<{
 }>();
 
 const emit = defineEmits<{
-  (e: 'close'): void;
-  (e: 'prev'): void;
-  (e: 'next'): void;
+  (e: "close"): void;
+  (e: "prev"): void;
+  (e: "next"): void;
 }>();
 
-const userAnswer = ref('');
+const userAnswer = ref("");
 const selectedOptionIds = ref<(string | number)[]>([]);
 const timeLeft = ref(props.question.time_limit || 0);
 const isFinished = ref(false);
 const showResult = ref(false);
 const isCorrect = ref(false);
 const showModal = ref(false);
-const modalTitle = ref('');
-const modalMessage = ref('');
-const modalType = ref<'success' | 'error' | 'warning'>('success');
+const modalTitle = ref("");
+const modalMessage = ref("");
+const modalType = ref<"success" | "error" | "warning">("success");
 const showHintTooltip = ref(false);
 let hintTooltipTimer: any = null;
 
@@ -41,7 +41,7 @@ let hintTooltipTimer: any = null;
 const showReviewModal = ref(false);
 const reviews = ref<QuestionReview[]>([]);
 const reviewsLoading = ref(false);
-const newReviewContent = ref('');
+const newReviewContent = ref("");
 const newRating = ref(5);
 const isSubmittingReview = ref(false);
 
@@ -52,15 +52,15 @@ const hasStartedSolving = ref(false);
 const logAction = async (action: string) => {
   try {
     await $fetch(`${apiBase.value}/study-logs`, {
-      method: 'POST',
+      method: "POST",
       headers: getAuthHeader(),
       body: {
         question_id: props.question.question_id.toString(),
-        user_memo: action
-      }
+        user_memo: action,
+      },
     });
   } catch (err) {
-    console.warn('서버 통신 오류(save) study-logs:', action, err);
+    console.warn("서버 통신 오류(save) study-logs:", action, err);
   }
 };
 
@@ -68,10 +68,10 @@ const logAction = async (action: string) => {
 const saveSolveResult = async (isTimeOver: boolean) => {
   try {
     // 사용자 답변 준비
-    let submittedAnswer = '';
-    if (props.question.question_type_id?.toUpperCase() === 'M') {
+    let submittedAnswer = "";
+    if (props.question.question_type_id?.toUpperCase() === "M") {
       // 객관식: 선택한 옵션 IDs를 쉼표로 구분된 문자열로 변환
-      submittedAnswer = selectedOptionIds.value.join(',');
+      submittedAnswer = selectedOptionIds.value.join(",");
     } else {
       // 주관식: 입력한 답변
       submittedAnswer = userAnswer.value.trim();
@@ -86,24 +86,25 @@ const saveSolveResult = async (isTimeOver: boolean) => {
     }
 
     // 사용한 시간 계산 (총 시간 - 남은 시간)
-    const timeTaken = props.question.time_limit ? props.question.time_limit - timeLeft.value : 0;
+    const timeTaken = props.question.time_limit
+      ? props.question.time_limit - timeLeft.value
+      : 0;
 
     await $fetch(`${apiBase.value}/solve-results`, {
-      method: 'POST',
+      method: "POST",
       headers: getAuthHeader(),
       body: {
         question_id: props.question.question_id.toString(),
         correct_answer: props.question.answer,
         submitted_answer: submittedAnswer,
         is_correct: correctStatus,
-        time_taken: timeTaken
-      }
+        time_taken: timeTaken,
+      },
     });
   } catch (err) {
-    console.error('서버 통신 오류(save) review):', err);
+    console.error("서버 통신 오류(save) review):", err);
   }
 };
-
 
 const startTimer = () => {
   if (timeLeft.value > 0) {
@@ -121,14 +122,14 @@ const startTimer = () => {
 const formatTime = (seconds: number) => {
   const m = Math.floor(seconds / 60);
   const s = seconds % 60;
-  return `${m}:${s < 10 ? '0' : ''}${s}`;
+  return `${m}:${s < 10 ? "0" : ""}${s}`;
 };
 
 const toggleOption = (id: string | number) => {
   if (isFinished.value) return;
   if (!hasStartedSolving.value) {
     hasStartedSolving.value = true;
-    logAction('문제풀기');
+    logAction("문제풀기");
   }
   const index = selectedOptionIds.value.indexOf(id);
   if (index === -1) {
@@ -141,30 +142,33 @@ const toggleOption = (id: string | number) => {
 const handleInput = () => {
   if (!hasStartedSolving.value && userAnswer.value.trim().length > 0) {
     hasStartedSolving.value = true;
-    logAction('문제풀기');
+    logAction("문제풀기");
   }
 };
 
 const handleFinish = async (isTimeOver = false) => {
   if (isFinished.value) return;
-  
+
   isFinished.value = true;
   clearInterval(timerInterval);
-  
+
   if (isTimeOver) {
     isCorrect.value = false;
   } else {
     // 채점 로직
-    if (props.question.question_type_id?.toUpperCase() === 'M') {
-      const correctOptions = props.question.options?.filter(opt => opt.is_answer) || [];
-      const correctOptionIds = correctOptions.map(opt => opt.option_id);
-      
+    if (props.question.question_type_id?.toUpperCase() === "M") {
+      const correctOptions =
+        props.question.options?.filter((opt) => opt.is_answer) || [];
+      const correctOptionIds = correctOptions.map((opt) => opt.option_id);
+
       if (correctOptionIds.length === 0) {
         // DB에 정답이 없는 경우 예외처리
         isCorrect.value = selectedOptionIds.value.length === 0;
       } else if (correctOptionIds.length === selectedOptionIds.value.length) {
         // 개수가 같고, 선택한 모든 항목이 정답 목록에 포함되는지 확인
-        isCorrect.value = selectedOptionIds.value.every(id => correctOptionIds.includes(id as NonNullable<string | number>));
+        isCorrect.value = selectedOptionIds.value.every((id) =>
+          correctOptionIds.includes(id as NonNullable<string | number>),
+        );
       } else {
         isCorrect.value = false;
       }
@@ -174,36 +178,36 @@ const handleFinish = async (isTimeOver = false) => {
       isCorrect.value = cleanUserAnswer === cleanCorrectAnswer;
     }
     if (isCorrect.value) {
-      modalType.value = 'success';
-      modalTitle.value = '정답입니다!';
-      modalMessage.value = '정말 잘하셨어요! 다음 문제도 도전해 보세요.';
-      logAction('정답확인:정답');
+      modalType.value = "success";
+      modalTitle.value = "정답입니다!";
+      modalMessage.value = "정말 잘하셨어요! 다음 문제도 도전해 보세요.";
+      logAction("정답확인:정답");
     } else {
-      modalType.value = 'error';
-      modalTitle.value = '아쉽게도 틀렸습니다.';
-      modalMessage.value = `정답은 "${props.question.answer || '해설 참조'}" 입니다. 해설을 확인해 보세요.`;
-      logAction('정답확인:오답');
+      modalType.value = "error";
+      modalTitle.value = "아쉽게도 틀렸습니다.";
+      modalMessage.value = `정답은 "${props.question.answer || "해설 참조"}" 입니다. 해설을 확인해 보세요.`;
+      logAction("정답확인:오답");
     }
-    
+
     // solve_results에 결과 저장
     await saveSolveResult(isTimeOver);
-    
   }
-  
+
   showResult.value = true;
-  
+
   if (isTimeOver) {
-    modalType.value = 'error';
-    modalTitle.value = '시간 초과!';
-    modalMessage.value = '제한 시간이 다 되어 오답 처리되었습니다. 해설을 확인해 보세요.';
-    logAction('정답확인:시간초과');
+    modalType.value = "error";
+    modalTitle.value = "시간 초과!";
+    modalMessage.value =
+      "제한 시간이 다 되어 오답 처리되었습니다. 해설을 확인해 보세요.";
+    logAction("정답확인:시간초과");
   }
   showModal.value = true;
 };
 
 const handleKeyDown = (e: KeyboardEvent) => {
-  if (e.key === 'Escape') {
-    emit('close');
+  if (e.key === "Escape") {
+    emit("close");
   }
 };
 
@@ -224,20 +228,20 @@ const scheduleHintTooltip = () => {
 };
 
 onMounted(() => {
-  console.log('Solve Screen Data:', props.question); // 데이터 검증용 로그
+  console.log("Solve Screen Data:", props.question); // 데이터 검증용 로그
   startTimer();
-  logAction('문제보기');
-  window.addEventListener('keydown', handleKeyDown);
+  logAction("문제보기");
+  window.addEventListener("keydown", handleKeyDown);
 });
 
 onUnmounted(() => {
   if (timerInterval) clearInterval(timerInterval);
   clearHintTooltip();
-  window.removeEventListener('keydown', handleKeyDown);
+  window.removeEventListener("keydown", handleKeyDown);
 });
 
 const progressWidth = computed(() => {
-  if (!props.question.time_limit) return '100%';
+  if (!props.question.time_limit) return "100%";
   return `${(timeLeft.value / props.question.time_limit) * 100}%`;
 });
 const formatGroupPath = (group: any) => {
@@ -248,9 +252,9 @@ const formatGroupPath = (group: any) => {
     current = current.parent_group;
   }
   while (parts.length < 3) {
-    parts.push('');
+    parts.push("");
   }
-  return parts.join(' / ');
+  return parts.join(" / ");
 };
 
 const openReviewModal = async () => {
@@ -261,11 +265,13 @@ const openReviewModal = async () => {
 const fetchReviews = async () => {
   reviewsLoading.value = true;
   try {
-    const data = await $fetch<QuestionReview[]>(`${apiBase.value}/questions/${props.question.question_id}/reviews`);
+    const data = await $fetch<QuestionReview[]>(
+      `${apiBase.value}/questions/${props.question.question_id}/reviews`,
+    );
     // 백엔드의 BigInt 호환 문제 처리 (JS로 받을 때 Number형 변환 등)
     reviews.value = data;
   } catch (err) {
-    console.error('서버 통신 오류(fetch) reviews:', err);
+    console.error("서버 통신 오류(fetch) reviews:", err);
   } finally {
     reviewsLoading.value = false;
   }
@@ -275,24 +281,30 @@ const submitReview = async () => {
   if (!newReviewContent.value.trim()) return;
   isSubmittingReview.value = true;
   try {
-    await $fetch(`${apiBase.value}/questions/${props.question.question_id}/reviews`, {
-      method: 'POST',
-      body: {
-        content: newReviewContent.value,
-        rating: newRating.value,
-        user_no: 2 // 임시: 김철수(2) 아이디로 전송
-      }
-    });
-    newReviewContent.value = '';
+    await $fetch(
+      `${apiBase.value}/questions/${props.question.question_id}/reviews`,
+      {
+        method: "POST",
+        body: {
+          content: newReviewContent.value,
+          rating: newRating.value,
+          user_no: 2, // 임시: 김철수(2) 아이디로 전송
+        },
+      },
+    );
+    newReviewContent.value = "";
     newRating.value = 5;
     await fetchReviews();
-    
+
     // 평균 별점 업데이트 (임시로 클라이언트 계산)
     if (props.question && reviews.value.length > 0) {
-      props.question.rating = Math.round(reviews.value.reduce((sum, r) => sum + r.rating, 0) / reviews.value.length);
+      props.question.rating = Math.round(
+        reviews.value.reduce((sum, r) => sum + r.rating, 0) /
+          reviews.value.length,
+      );
     }
   } catch (error) {
-    console.error('서버 통신 오류(submit) review:', error);
+    console.error("서버 통신 오류(submit) review:", error);
   } finally {
     isSubmittingReview.value = false;
   }
@@ -302,8 +314,8 @@ const submitReview = async () => {
 <template>
   <div class="solver-overlay">
     <div class="solver-card">
-        <div class="solver-header-compact">
-          <div class="compact-top">
+      <div class="solver-header-compact">
+        <div class="compact-top">
           <div class="compact-top-left">
             <span class="badge-type">{{ question.type.type_name }}</span>
           </div>
@@ -318,12 +330,15 @@ const submitReview = async () => {
                 <span class="timer-val">{{ formatTime(timeLeft) }}</span>
               </div>
               <div class="progress-bar compact-progress">
-                <div class="progress-fill" :style="{ width: progressWidth }"></div>
+                <div
+                  class="progress-fill"
+                  :style="{ width: progressWidth }"
+                ></div>
               </div>
             </div>
             <button class="btn-close" @click="emit('close')">&times;</button>
           </div>
-          </div>
+        </div>
         <h2
           class="solver-title"
           :class="{ 'has-hint': !!question.content }"
@@ -332,7 +347,10 @@ const submitReview = async () => {
         >
           {{ question.title }}
           <Transition name="fade">
-            <div v-if="question.content && showHintTooltip" class="question-hint-bubble">
+            <div
+              v-if="question.content && showHintTooltip"
+              class="question-hint-bubble"
+            >
               <div class="hint-bubble-label">힌트</div>
               <LatexRenderer :text="question.content" />
             </div>
@@ -344,7 +362,7 @@ const submitReview = async () => {
         <div class="question-text">
           <LatexRenderer :text="question.question" />
         </div>
-        
+
         <div v-if="question.passage" class="question-passage">
           <client-only>
             <v-md-preview :text="question.passage.content_md"></v-md-preview>
@@ -352,18 +370,27 @@ const submitReview = async () => {
         </div>
 
         <!-- 객관식 보기 영역 (M: 객관식) -->
-        <div v-if="question.question_type_id?.toUpperCase() === 'M'" class="options-list">
-          <div v-if="!question.options || question.options.length === 0" class="no-options">
+        <div
+          v-if="question.question_type_id?.toUpperCase() === 'M'"
+          class="options-list"
+        >
+          <div
+            v-if="!question.options || question.options.length === 0"
+            class="no-options"
+          >
             등록된 보기가 없습니다.
           </div>
-          <div 
-            v-for="opt in question.options" 
+          <div
+            v-for="opt in question.options"
             :key="opt.option_id"
             class="option-item"
-            :class="{ 
+            :class="{
               'is-selected': selectedOptionIds.includes(opt.option_id),
               'is-correct': showResult && opt.is_answer,
-              'is-wrong': showResult && selectedOptionIds.includes(opt.option_id) && !opt.is_answer
+              'is-wrong':
+                showResult &&
+                selectedOptionIds.includes(opt.option_id) &&
+                !opt.is_answer,
             }"
             @click="toggleOption(opt.option_id)"
           >
@@ -376,10 +403,10 @@ const submitReview = async () => {
 
         <!-- 주관식 입력 영역 -->
         <div v-else class="answer-input-container">
-          <input 
-            v-model="userAnswer" 
-            type="text" 
-            placeholder="정답을 입력하세요" 
+          <input
+            v-model="userAnswer"
+            type="text"
+            placeholder="정답을 입력하세요"
             class="answer-input"
             :disabled="isFinished"
             @keyup.enter="!isFinished && handleFinish()"
@@ -397,25 +424,30 @@ const submitReview = async () => {
             <div class="rating-container">
               <span class="rating-label">전체 평균 평점</span>
               <div class="stars readonly">
-                <span 
-                  v-for="i in 5" 
-                  :key="i" 
-                  class="star" 
+                <span
+                  v-for="i in 5"
+                  :key="i"
+                  class="star"
                   :class="{ 'is-active': i <= (question.rating || 0) }"
-                >★</span>
+                  >★</span
+                >
               </div>
               <button class="btn-inline-comment" @click="openReviewModal">
                 <IconMessage class="inline-icon" /> 의견 남기기
               </button>
             </div>
           </div>
-          <p>{{ question.explanation || '등록된 해설이 없습니다.' }}</p>
+          <p>{{ question.explanation || "등록된 해설이 없습니다." }}</p>
         </div>
-        
-        <button 
-          v-if="!isFinished" 
-          class="btn-submit" 
-          :disabled="question.question_type_id === 'M' ? selectedOptionIds.length === 0 : !userAnswer"
+
+        <button
+          v-if="!isFinished"
+          class="btn-submit"
+          :disabled="
+            question.question_type_id === 'M'
+              ? selectedOptionIds.length === 0
+              : !userAnswer
+          "
           @click="handleFinish()"
         >
           정답 확인
@@ -426,7 +458,10 @@ const submitReview = async () => {
           </button>
           <button class="btn-primary" @click="emit('close')">
             목록으로 돌아가기
-            <span v-if="currentIndex !== undefined && totalQuestions !== undefined" class="nav-count">
+            <span
+              v-if="currentIndex !== undefined && totalQuestions !== undefined"
+              class="nav-count"
+            >
               ({{ currentIndex + 1 }}/{{ totalQuestions }})
             </span>
           </button>
@@ -439,61 +474,98 @@ const submitReview = async () => {
 
     <!-- 커스텀 알림 모달 -->
     <Transition name="fade">
-      <div v-if="showModal" class="modal-overlay" @click.self="showModal = false">
-          <div class="modal-content" :class="modalType">
-            <div class="modal-icon">
+      <div
+        v-if="showModal"
+        class="modal-overlay"
+        @click.self="showModal = false"
+      >
+        <div class="modal-content" :class="modalType">
+          <div class="modal-icon">
             <IconCheck v-if="modalType === 'success'" class="modal-icon-svg" />
             <IconX v-else-if="modalType === 'error'" class="modal-icon-svg" />
             <IconClock v-else class="modal-icon-svg" />
-            </div>
+          </div>
           <h3 class="modal-title">{{ modalTitle }}</h3>
           <p class="modal-message">{{ modalMessage }}</p>
-          <button class="btn-modal-close" @click="showModal = false">확인</button>
+          <button class="btn-modal-close" @click="showModal = false">
+            확인
+          </button>
         </div>
       </div>
     </Transition>
 
     <!-- 의견(리뷰) 모달 -->
     <Transition name="fade">
-      <div v-if="showReviewModal" class="modal-overlay" @click.self="showReviewModal = false">
-          <div class="modal-content review-modal-content">
+      <div
+        v-if="showReviewModal"
+        class="modal-overlay"
+        @click.self="showReviewModal = false"
+      >
+        <div class="modal-content review-modal-content">
           <div class="modal-header">
             <h3 class="modal-title">문제 의견 및 평가</h3>
             <button class="btn-close-sm" @click="showReviewModal = false">
               <IconClose class="close-icon" />
             </button>
           </div>
-          
+
           <div class="review-form">
             <div class="rating-input">
               <span class="rating-label">내 평점:</span>
               <div class="stars">
-                <span 
-                  v-for="i in 5" 
-                  :key="i" 
-                  class="star" 
-                  :class="{'is-active': i <= newRating}" 
+                <span
+                  v-for="i in 5"
+                  :key="i"
+                  class="star"
+                  :class="{ 'is-active': i <= newRating }"
                   @click="newRating = i"
-                >★</span>
+                  >★</span
+                >
               </div>
             </div>
-            <textarea v-model="newReviewContent" placeholder="이 문제에 대한 의견을 남겨주세요. (단축키 없음, 안전하게 드래그 가능)" rows="3"></textarea>
-            <button class="btn-primary" @click="submitReview" :disabled="isSubmittingReview">
-              {{ isSubmittingReview ? '등록 중...' : '작성하기' }}
+            <textarea
+              v-model="newReviewContent"
+              placeholder="이 문제에 대한 의견을 남겨주세요. (단축키 없음, 안전하게 드래그 가능)"
+              rows="3"
+            ></textarea>
+            <button
+              class="btn-primary"
+              @click="submitReview"
+              :disabled="isSubmittingReview"
+            >
+              {{ isSubmittingReview ? "등록 중..." : "작성하기" }}
             </button>
           </div>
 
           <div class="reviews-list">
-            <div v-if="reviewsLoading" class="loading">의견을 불러오는 중...</div>
-            <div v-else-if="reviews.length === 0" class="empty-msg">아직 등록된 의견이 없어요. 첫 번째 의견을 남겨주세요!</div>
+            <div v-if="reviewsLoading" class="loading">
+              의견을 불러오는 중...
+            </div>
+            <div v-else-if="reviews.length === 0" class="empty-msg">
+              아직 등록된 의견이 없어요. 첫 번째 의견을 남겨주세요!
+            </div>
             <div v-else class="review-items">
-              <div v-for="review in reviews" :key="review.review_id" class="review-item">
+              <div
+                v-for="review in reviews"
+                :key="review.review_id"
+                class="review-item"
+              >
                 <div class="review-header">
-                  <span class="review-author">{{ review.user?.username || '익명' }}</span>
+                  <span class="review-author">{{
+                    review.user?.username || "익명"
+                  }}</span>
                   <div class="stars readonly-small">
-                    <span v-for="i in 5" :key="i" class="star-small" :class="{'is-active': i <= review.rating}">★</span>
+                    <span
+                      v-for="i in 5"
+                      :key="i"
+                      class="star-small"
+                      :class="{ 'is-active': i <= review.rating }"
+                      >★</span
+                    >
                   </div>
-                  <span class="review-date">{{ new Date(review.created_at).toLocaleDateString() }}</span>
+                  <span class="review-date">{{
+                    new Date(review.created_at).toLocaleDateString()
+                  }}</span>
                 </div>
                 <p class="review-content">{{ review.content }}</p>
               </div>
@@ -566,7 +638,7 @@ const submitReview = async () => {
   display: flex;
   align-items: baseline;
   gap: 0.4rem;
-  font-family: 'JetBrains Mono', monospace;
+  font-family: "JetBrains Mono", monospace;
   color: #a5b4fc;
 }
 
@@ -620,7 +692,7 @@ const submitReview = async () => {
   width: fit-content;
   max-width: 100%;
   margin: 0;
-  font-size: 1.0rem;
+  font-size: 1rem;
   color: #cbd5e1;
   line-height: 1.4;
   word-break: keep-all;
@@ -692,7 +764,7 @@ const submitReview = async () => {
 }
 
 .question-hint-bubble::before {
-  content: '';
+  content: "";
   position: absolute;
   top: -7px;
   left: 24px;
@@ -731,7 +803,7 @@ const submitReview = async () => {
 }
 /* v-md-editor 기본 스타일 보완 */
 .question-passage :deep(.v-md-plugin-markdown-it) {
-  font-family: 'Noto Sans KR', sans-serif;
+  font-family: "Noto Sans KR", sans-serif;
   font-size: 1.05rem;
   line-height: 1.6;
 }
@@ -973,15 +1045,18 @@ const submitReview = async () => {
   cursor: pointer;
 }
 
-.slide-down-enter-active, .slide-down-leave-active {
+.slide-down-enter-active,
+.slide-down-leave-active {
   transition: all 0.3s ease-out;
 }
-.slide-down-enter-from, .slide-down-leave-to {
+.slide-down-enter-from,
+.slide-down-leave-to {
   opacity: 0;
   transform: translateY(-10px);
 }
 
-.btn-submit, .btn-primary {
+.btn-submit,
+.btn-primary {
   width: 100%;
   padding: 1rem;
   border: none;
@@ -1137,15 +1212,23 @@ const submitReview = async () => {
 }
 
 /* 모달 타입별 강조 색상 */
-.modal-content.success { border-top: 5px solid #22c55e; }
-.modal-content.error { border-top: 5px solid #ef4444; }
-.modal-content.warning { border-top: 5px solid #f59e0b; }
+.modal-content.success {
+  border-top: 5px solid #22c55e;
+}
+.modal-content.error {
+  border-top: 5px solid #ef4444;
+}
+.modal-content.warning {
+  border-top: 5px solid #f59e0b;
+}
 
 /* 애니메이션 */
-.fade-enter-active, .fade-leave-active {
+.fade-enter-active,
+.fade-leave-active {
   transition: opacity 0.3s ease;
 }
-.fade-enter-from, .fade-leave-to {
+.fade-enter-from,
+.fade-leave-to {
   opacity: 0;
 }
 
@@ -1154,8 +1237,14 @@ const submitReview = async () => {
 }
 
 @keyframes modal-in {
-  from { transform: translateY(30px) scale(0.9); opacity: 0; }
-  to { transform: translateY(0) scale(1); opacity: 1; }
+  from {
+    transform: translateY(30px) scale(0.9);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
 }
 
 /* 의견(리뷰) 모달 스타일 */
@@ -1284,7 +1373,8 @@ const submitReview = async () => {
   margin: 0;
 }
 
-.readonly .star, .readonly-small .star-small {
+.readonly .star,
+.readonly-small .star-small {
   cursor: default;
 }
 .readonly .star:hover {
