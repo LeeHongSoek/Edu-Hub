@@ -189,7 +189,7 @@ const handlePageChange = (page: number) => {
 
     <div class="page-header">
       <div class="title-wrapper">
-        <h1 class="page-title">나의 문제목록</h1>
+        <h1 class="page-title">문제 목록</h1>
         <span v-if="activeSourceLabel" class="page-subtitle">{{ activeSourceLabel }}</span>
       </div>
       <NuxtLink to="/dashboard" class="back-btn">← 대시보드</NuxtLink>

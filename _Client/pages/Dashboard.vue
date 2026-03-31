@@ -88,15 +88,15 @@ onMounted(() => {
           <div v-if="userInfo.role_id !== 'P'" class="quick-nav">
             <NuxtLink to="/questions?mine=true" class="nav-btn">
               <IconFileText class="nav-icon" />
-              <span>나의 문제목록</span>
+              <span>문제 목록</span>
             </NuxtLink>
             <NuxtLink to="/question-books" class="nav-btn">
               <IconBook class="nav-icon" />
-              <span>나의 문제집목록</span>
+              <span>문제집 목록</span>
             </NuxtLink>
             <NuxtLink to="/exams" class="nav-btn">
               <IconPencil class="nav-icon" />
-              <span>나의 고사집목록</span>
+              <span>고사집 목록</span>
             </NuxtLink>
           </div>
         </h1>

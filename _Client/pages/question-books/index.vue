@@ -7,7 +7,7 @@ const route = useRoute();
 <template>
   <div class="page-container">
     <div class="page-header">
-      <h1 class="page-title">나의 문제집 관리</h1>
+      <h1 class="page-title">문제집 목록</h1>
       <NuxtLink to="/dashboard" class="back-btn">← 대시보드</NuxtLink>
     </div>
     

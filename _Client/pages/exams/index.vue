@@ -5,7 +5,7 @@ import ExamListManager from '~/components/dashboard/ExamListManager.vue';
 <template>
   <div class="page-container">
   <div class="page-header">
-    <h1 class="page-title">나의 고사집 목록</h1>
+    <h1 class="page-title">고사집 목록</h1>
     <NuxtLink to="/dashboard" class="back-btn">← 대시보드</NuxtLink>
   </div>
     
