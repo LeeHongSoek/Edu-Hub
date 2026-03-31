@@ -21,6 +21,8 @@ export class QuestionsService {
   // 모든 문제 목록 조회 API (필터링 지원)
   async findAll({ creatorNo, groupId, bookId, examId, publicOnly, viewerNo, searchField, searchKeyword, page = 1, limit = 10 }: FindAllParams) {
     const where: any = {};
+    // Only fetch parent questions for list view
+    where.p_question_id = null;
     if (creatorNo !== undefined) where.creator_no = creatorNo;
     else if (publicOnly) where.is_public = true;
     if (creatorNo === undefined && publicOnly && viewerNo !== undefined) {

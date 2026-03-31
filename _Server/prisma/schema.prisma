@@ -155,6 +155,7 @@ model Group {
 
 model Question {
   question_id      BigInt                 @id @default(autoincrement())
+  p_question_id    BigInt?
   creator_no       BigInt
   group_id         BigInt?
   question_type_id String                 @default("M") @db.Char(1)
@@ -176,6 +177,8 @@ model Question {
   options          QuestionOption[]
   reviews          QuestionReview[]
   tags             QuestionTag[]
+  parent           Question?              @relation("QuestionParent", fields: [p_question_id], references: [question_id], onUpdate: Restrict, map: "fk_question_p_question")
+  children         Question[]             @relation("QuestionParent")
   creator          User                   @relation(fields: [creator_no], references: [user_no], onDelete: Cascade, onUpdate: Restrict, map: "fk_question_creator")
   group            Group?                 @relation(fields: [group_id], references: [group_id], onUpdate: Restrict, map: "fk_question_group")
   type             EnmQuestionType        @relation(fields: [question_type_id], references: [type_id], onUpdate: Restrict, map: "fk_question_type")
@@ -188,6 +191,7 @@ model Question {
   @@index([creator_no], map: "fk_question_creator")
   @@index([group_id], map: "fk_question_group")
   @@index([question_type_id], map: "fk_question_type")
+  @@index([p_question_id], map: "fk_question_p_question")
   @@map("questions")
 }
 

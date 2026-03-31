@@ -213,6 +213,7 @@ CREATE TABLE `question_tags` (
 /*!40101 SET character_set_client = utf8mb4 */;
 CREATE TABLE `questions` (
   `question_id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '문제 고유 식별자 (PK)',
+  `p_question_id` bigint(20) DEFAULT NULL  COMMENT '부모 문제 고유 식별자',
   `creator_no` bigint(20) NOT NULL COMMENT '생성자(선생님/학생) 식별번호',
   `group_id` bigint(20) DEFAULT NULL COMMENT '소속 그룹 ID (외래키)',
   `question_type_id` char(1) NOT NULL DEFAULT 'M' COMMENT '문제 유형 코드 (enm_question_types 참조)',
@@ -229,6 +230,7 @@ CREATE TABLE `questions` (
   `rating` tinyint(4) DEFAULT 0 COMMENT '사용자 평점 (1~5 별점)',
   `created_at` datetime DEFAULT current_timestamp() COMMENT '문제 등록 일시',
   PRIMARY KEY (`question_id`),
+  KEY `fk_question_p_question` (`p_question_id`),
   KEY `fk_question_creator` (`creator_no`),
   KEY `fk_question_group` (`group_id`),
   KEY `fk_question_type` (`question_type_id`),
@@ -381,3 +383,66 @@ CREATE TABLE `users` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 SET FOREIGN_KEY_CHECKS=1;
+
+-- Sample English reading passages with parent/child questions
+SET @creator = 1;
+
+-- Passage 1
+INSERT INTO questions (p_question_id, creator_no, group_id, question_type_id, title, question, content, answer, explanation, hint, difficulty, is_public, is_deleted, time_limit, rating)
+VALUES (NULL, @creator, NULL, 'S', 'Reading Passage 1', 'Read the passage and answer questions 1-5.',
+'Last spring, a small neighborhood turned an empty lot into a community garden. At first, only a few residents joined. They built raised beds, planted herbs, and set up a schedule for watering. By summer, more people visited, sharing seeds and recipes. The garden did more than grow vegetables. It became a place where neighbors who had never spoken before began to talk. When a heat wave arrived, volunteers installed shade cloth and collected rainwater to keep the plants alive. The project showed how shared spaces can strengthen a community.',
+'N/A', NULL, NULL, 2, 1, 'N', 0, 0);
+SET @p1 = LAST_INSERT_ID();
+
+INSERT INTO questions (p_question_id, creator_no, group_id, question_type_id, title, question, content, answer, explanation, hint, difficulty, is_public, is_deleted, time_limit, rating)
+VALUES
+(@p1, @creator, NULL, 'M', 'Passage 1 - Q1', 'What is the main purpose of the passage?\nA. To compare different kinds of gardens\nB. To describe how a community garden changed a neighborhood\nC. To explain how to build raised beds\nD. To argue against urban farming', NULL, 'B', 'The passage focuses on the social impact of the community garden.', NULL, 2, 1, 'N', 0, 0),
+(@p1, @creator, NULL, 'M', 'Passage 1 - Q2', 'Which detail shows that the garden encouraged community interaction?\nA. Residents planted herbs\nB. People shared seeds and recipes\nC. The lot was empty\nD. Volunteers installed shade cloth', NULL, 'B', 'Sharing seeds and recipes indicates interaction among neighbors.', NULL, 2, 1, 'N', 0, 0),
+(@p1, @creator, NULL, 'M', 'Passage 1 - Q3', 'What happened when the heat wave arrived?\nA. The garden closed\nB. Volunteers added shade and collected rainwater\nC. The plants were removed\nD. Residents stopped visiting', NULL, 'B', 'The passage states volunteers installed shade cloth and collected rainwater.', NULL, 2, 1, 'N', 0, 0),
+(@p1, @creator, NULL, 'M', 'Passage 1 - Q4', 'Which word best describes the tone of the passage?\nA. Critical\nB. Celebratory\nC. Indifferent\nD. Sarcastic', NULL, 'B', 'The passage praises the positive effects of the garden.', NULL, 2, 1, 'N', 0, 0),
+(@p1, @creator, NULL, 'M', 'Passage 1 - Q5', 'What can be inferred about the neighborhood before the garden?\nA. It was already closely connected\nB. It had no available land\nC. Many neighbors did not know each other\nD. It was famous for farming', NULL, 'C', 'The passage notes neighbors who had never spoken began to talk.', NULL, 2, 1, 'N', 0, 0);
+
+-- Passage 2
+INSERT INTO questions (p_question_id, creator_no, group_id, question_type_id, title, question, content, answer, explanation, hint, difficulty, is_public, is_deleted, time_limit, rating)
+VALUES (NULL, @creator, NULL, 'S', 'Reading Passage 2', 'Read the passage and answer questions 6-10.',
+'A recent study explored how short naps affect memory. Participants learned a list of word pairs, then either stayed awake or took a 30-minute nap. Later, the napping group recalled more pairs. Researchers suggest that during light sleep the brain replays new information, helping to store it. However, the study also found that longer naps did not improve recall and sometimes left participants groggy. The findings imply that brief naps may be a practical way to boost learning without disrupting daily routines.',
+'N/A', NULL, NULL, 3, 1, 'N', 0, 0);
+SET @p2 = LAST_INSERT_ID();
+
+INSERT INTO questions (p_question_id, creator_no, group_id, question_type_id, title, question, content, answer, explanation, hint, difficulty, is_public, is_deleted, time_limit, rating)
+VALUES
+(@p2, @creator, NULL, 'M', 'Passage 2 - Q6', 'What did the study compare?\nA. Different types of memory tests\nB. People who napped and people who stayed awake\nC. Morning learning and evening learning\nD. Long naps and no naps only', NULL, 'B', 'The study compared a napping group with a staying-awake group.', NULL, 3, 1, 'N', 0, 0),
+(@p2, @creator, NULL, 'M', 'Passage 2 - Q7', 'Why might a short nap help memory, according to the researchers?\nA. It reduces hunger\nB. The brain replays new information during light sleep\nC. It increases physical strength\nD. It lowers stress permanently', NULL, 'B', 'The passage mentions replay of new information during light sleep.', NULL, 3, 1, 'N', 0, 0),
+(@p2, @creator, NULL, 'M', 'Passage 2 - Q8', 'What was a downside of longer naps in the study?\nA. They improved recall too much\nB. They had no effect and caused grogginess\nC. They caused participants to forget the words entirely\nD. They were not allowed', NULL, 'B', 'Longer naps did not improve recall and left participants groggy.', NULL, 3, 1, 'N', 0, 0),
+(@p2, @creator, NULL, 'M', 'Passage 2 - Q9', 'Which statement best summarizes the conclusion?\nA. Sleep never helps learning\nB. Long naps are better than short naps\nC. Brief naps can boost learning without major disruption\nD. Only students benefit from naps', NULL, 'C', 'The findings imply brief naps are practical and helpful.', NULL, 3, 1, 'N', 0, 0),
+(@p2, @creator, NULL, 'M', 'Passage 2 - Q10', 'What is the primary organizational pattern of the passage?\nA. Problem and solution\nB. Cause and effect\nC. Description of a study and its results\nD. Chronological biography', NULL, 'C', 'It describes the study setup and outcomes.', NULL, 3, 1, 'N', 0, 0);
+
+-- Passage 3
+INSERT INTO questions (p_question_id, creator_no, group_id, question_type_id, title, question, content, answer, explanation, hint, difficulty, is_public, is_deleted, time_limit, rating)
+VALUES (NULL, @creator, NULL, 'S', 'Reading Passage 3', 'Read the passage and answer questions 11-15.',
+'A coastal town decided to replace its aging power plant with wind turbines. Some residents worried that the turbines would spoil the ocean view, while others hoped they would create jobs. After months of debate, the town council approved a smaller project: fewer turbines placed farther offshore. The plan reduced visual impact and still provided enough electricity for public buildings. One year later, surveys showed that most residents supported the project, and local businesses reported increased tourism from visitors interested in clean energy.',
+'N/A', NULL, NULL, 3, 1, 'N', 0, 0);
+SET @p3 = LAST_INSERT_ID();
+
+INSERT INTO questions (p_question_id, creator_no, group_id, question_type_id, title, question, content, answer, explanation, hint, difficulty, is_public, is_deleted, time_limit, rating)
+VALUES
+(@p3, @creator, NULL, 'M', 'Passage 3 - Q11', 'What was the town replacing?\nA. A bridge\nB. An aging power plant\nC. A fishing port\nD. A highway', NULL, 'B', 'The passage says the town replaced its aging power plant.', NULL, 3, 1, 'N', 0, 0),
+(@p3, @creator, NULL, 'M', 'Passage 3 - Q12', 'How did the town council respond to the debate?\nA. It canceled the project\nB. It approved a smaller offshore project\nC. It built the largest possible project\nD. It delayed the decision for years', NULL, 'B', 'The council approved fewer turbines placed farther offshore.', NULL, 3, 1, 'N', 0, 0),
+(@p3, @creator, NULL, 'M', 'Passage 3 - Q13', 'What was one result after one year?\nA. Residents became less supportive\nB. Electricity prices doubled\nC. Tourism increased because of interest in clean energy\nD. The turbines were removed', NULL, 'C', 'Local businesses reported increased tourism from visitors.', NULL, 3, 1, 'N', 0, 0),
+(@p3, @creator, NULL, 'M', 'Passage 3 - Q14', 'Which concern is mentioned in the passage?\nA. Noise from trains\nB. Loss of ocean view\nC. Damage to farmland\nD. Lack of internet access', NULL, 'B', 'Residents worried the turbines would spoil the ocean view.', NULL, 2, 1, 'N', 0, 0),
+(@p3, @creator, NULL, 'M', 'Passage 3 - Q15', 'What is the main idea of the passage?\nA. Wind energy always faces opposition\nB. Compromise helped a clean energy project succeed\nC. Tourism is the town primary industry\nD. Power plants are safer than turbines', NULL, 'B', 'A smaller offshore plan balanced concerns and benefits.', NULL, 3, 1, 'N', 0, 0);
+
+-- Passage 4
+INSERT INTO questions (p_question_id, creator_no, group_id, question_type_id, title, question, content, answer, explanation, hint, difficulty, is_public, is_deleted, time_limit, rating)
+VALUES (NULL, @creator, NULL, 'S', 'Reading Passage 4', 'Read the passage and answer questions 16-20.',
+'An archive recently digitized thousands of historical letters. The project began because the paper was aging and difficult to handle. By scanning the letters and creating searchable transcripts, the archive made the collection available to researchers worldwide. The team also discovered that students were more engaged when they could read the letters online and annotate them. While the digitization required significant time and funding, the archive argued that expanding access was worth the effort.',
+'N/A', NULL, NULL, 2, 1, 'N', 0, 0);
+SET @p4 = LAST_INSERT_ID();
+
+INSERT INTO questions (p_question_id, creator_no, group_id, question_type_id, title, question, content, answer, explanation, hint, difficulty, is_public, is_deleted, time_limit, rating)
+VALUES
+(@p4, @creator, NULL, 'M', 'Passage 4 - Q16', 'Why did the archive start the digitization project?\nA. The letters were already digital\nB. The paper was aging and hard to handle\nC. Researchers requested paper copies only\nD. The archive wanted to reduce staff', NULL, 'B', 'The passage states the paper was aging and difficult to handle.', NULL, 2, 1, 'N', 0, 0),
+(@p4, @creator, NULL, 'M', 'Passage 4 - Q17', 'What new benefit did the team notice?\nA. Fewer researchers used the archive\nB. Students were more engaged with online access and annotation\nC. The letters lost their historical value\nD. The project required no funding', NULL, 'B', 'Students engaged more when they could read and annotate online.', NULL, 2, 1, 'N', 0, 0),
+(@p4, @creator, NULL, 'M', 'Passage 4 - Q18', 'Which best describes the author perspective?\nA. Skeptical about digitization\nB. Neutral but acknowledging benefits and costs\nC. Angry about technology\nD. Dismissive of researchers', NULL, 'B', 'The passage notes the effort and cost while supporting access.', NULL, 2, 1, 'N', 0, 0),
+(@p4, @creator, NULL, 'M', 'Passage 4 - Q19', 'What does the word expanding most nearly mean in this context?\nA. Reducing\nB. Limiting\nC. Increasing\nD. Hiding', NULL, 'C', 'Expanding access means increasing access.', NULL, 2, 1, 'N', 0, 0),
+(@p4, @creator, NULL, 'M', 'Passage 4 - Q20', 'What is the main idea of the passage?\nA. Digitization preserves and broadens access to historical letters\nB. Online archives are always free\nC. Students dislike reading letters\nD. Archives should stop collecting letters', NULL, 'A', 'The passage emphasizes preservation and wider access.', NULL, 2, 1, 'N', 0, 0);
