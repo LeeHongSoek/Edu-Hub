@@ -15,6 +15,9 @@ export interface QuestionOption {
 export interface Question {
   question_id: string | number; // 문제 고유 ID
   creator_no: string | number; // 생성자 고유 번호
+  creator?: {
+    username: string;
+  };
   group_id: string | number | null; // 소속 그룹 ID
   question_type_id: string; // 문제 유형 ID (M: 객관식, S: 주관식)
   title: string; // 문제 제목

@@ -1194,7 +1194,7 @@ const submitReview = async () => {
 
 .review-author {
   font-weight: 600;
-  color: #e2e8f0;
+  color: #c7d2fe;
   font-size: 0.9rem;
 }
 

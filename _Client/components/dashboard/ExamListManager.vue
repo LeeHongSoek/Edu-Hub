@@ -155,6 +155,11 @@ const clearExamSearch = () => {
           </div>
           <div class="exam-meta">
             <span class="exam-period">{{ new Date(exam.start_time).toLocaleDateString('ko-KR') }} ~ {{ new Date(exam.end_time).toLocaleDateString('ko-KR') }}</span>
+            <span class="exam-meta-line">
+              <span v-if="exam.creator?.username" class="exam-owner">{{ exam.creator.username }}</span>
+              <span v-if="exam.creator?.username" class="exam-separator">·</span>
+              <span class="exam-count">문제수 {{ exam._count?.questions ?? 0 }}문항</span>
+            </span>
             <button class="btn-start" @click="viewExamDetails(exam.exam_id)">상세보기</button>
           </div>
         </div>
@@ -207,17 +212,45 @@ const clearExamSearch = () => {
   font-weight: 700;
 }
 .exam-info h4 { color: #f8fafc; margin: 0; font-size: 1.1rem; }
-.exam-period {
-  font-size: 0.85rem;
-  color: #94a3b8;
-}
 
 .exam-meta {
   display: flex;
   flex-direction: column;
   align-items: flex-end;
   color: #cbd5f5;
+  gap: 0.3rem;
+}
+
+.exam-period {
+  font-size: 0.85rem;
+  color: #94a3b8;
+  white-space: nowrap;
+}
+
+.exam-meta-line {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: flex-end;
   gap: 0.35rem;
+  font-size: 0.85rem;
+  color: #94a3b8;
+  text-align: right;
+}
+
+.exam-owner {
+  color: #c7d2fe;
+  font-weight: 700;
+}
+
+.exam-count {
+  color: #c7d2fe;
+  font-weight: 600;
+}
+
+.exam-separator {
+  color: #64748b;
+  font-weight: 700;
 }
 
 .btn-start {

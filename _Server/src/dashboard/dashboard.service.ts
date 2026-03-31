@@ -398,17 +398,35 @@ export class DashboardService {
     return map[sourceRoleId]?.[targetRoleId] ?? null;
   }
 
-  async getMessages(userNo: bigint, view = 'received', query = '', page = 1, limit = 8) {
+  async getMessages(
+    userNo: bigint,
+    view = 'received',
+    query = '',
+    page = 1,
+    limit = 8,
+    peerUserNo?: string | number | bigint | null,
+  ) {
     const safePage = Math.max(1, Number.isFinite(page) ? Math.floor(page) : 1);
     const safeLimit = Math.min(Math.max(Number.isFinite(limit) ? Math.floor(limit) : 8, 1), 24);
     const keyword = String(query || '').trim();
     const normalizedView = String(view || 'received').toLowerCase();
+    const peerUserNoBigInt = peerUserNo === undefined || peerUserNo === null || peerUserNo === ''
+      ? null
+      : BigInt(peerUserNo);
 
     const where: any = {
       ...(normalizedView === 'sent'
         ? { sender_no: userNo }
         : { receiver_no: userNo }),
     };
+
+    if (peerUserNoBigInt !== null) {
+      if (normalizedView === 'sent') {
+        where.receiver_no = peerUserNoBigInt;
+      } else {
+        where.sender_no = peerUserNoBigInt;
+      }
+    }
 
     if (keyword) {
       where.AND = [

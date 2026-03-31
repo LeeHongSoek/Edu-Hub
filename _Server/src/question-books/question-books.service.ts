@@ -16,9 +16,10 @@ export class QuestionBooksService {
   }
 
   async findByUser(userNo: bigint) {
-    return this.prisma.userQuestionBook.findMany({
+    const books = await this.prisma.userQuestionBook.findMany({
       where: { user_no: userNo },
       include: {
+        user: { select: { username: true } },
         items: {
           include: {
             question: true
@@ -27,12 +28,18 @@ export class QuestionBooksService {
       },
       orderBy: { created_at: 'desc' },
     });
+
+    return books.map(({ user, ...book }) => ({
+      ...book,
+      creator: user,
+    }));
   }
 
   async findById(bookId: bigint, userNo: bigint) {
     const book = await this.prisma.userQuestionBook.findUnique({
       where: { book_id: bookId },
       include: {
+        user: { select: { username: true } },
         items: {
           include: {
             question: true,
@@ -44,7 +51,11 @@ export class QuestionBooksService {
     if (!book) throw new NotFoundException('Question book not found');
     if (book.user_no !== userNo) throw new ForbiddenException('Not authorized');
 
-    return book;
+    const { user, ...rest } = book;
+    return {
+      ...rest,
+      creator: user,
+    };
   }
 
   async update(bookId: bigint, userNo: bigint, data: any) {

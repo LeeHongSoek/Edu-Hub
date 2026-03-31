@@ -33,14 +33,17 @@ const composeContent = ref('');
 const sendingMessage = ref(false);
 const noticeMessage = ref('');
 const composeRecipientPreset = ref(false);
+const activeThreadTarget = ref<any | null>(null);
 
 const props = defineProps<{
   composeTarget?: any | null;
+  threadTarget?: any | null;
 }>();
 
 const emit = defineEmits<{
   (event: 'compose-consumed'): void;
   (event: 'compose-dismissed'): void;
+  (event: 'thread-consumed'): void;
 }>();
 
 const { apiBase, getAuthHeader } = useApi();
@@ -111,9 +114,17 @@ const formatDateTime = (value: string | Date | null | undefined) => {
 
 const messageDirectionLabel = (message: any) => (message?.direction === 'sent' ? '보낸 메시지' : '받은 메시지');
 
+const messageThreadTitle = computed(() => {
+  if (!activeThreadTarget.value) return '';
+  return `${activeThreadTarget.value.username || '상대방'} 님에게서 받은 메시지`;
+});
+
 const loadMessages = async () => {
   try {
     messageLoading.value = true;
+    const peerUserNo = messageView.value === 'received' && activeThreadTarget.value
+      ? activeThreadTarget.value.user_no
+      : null;
     const data = await $fetch(`${apiBase.value}/dashboard/messages`, {
       headers: getAuthHeader(),
       query: {
@@ -121,6 +132,7 @@ const loadMessages = async () => {
         q: messageSearchQuery.value,
         page: messageCurrentPage.value,
         limit: messagePageSize,
+        ...(peerUserNo ? { peerUserNo: String(peerUserNo) } : {}),
       },
     });
 
@@ -176,6 +188,10 @@ const switchMessageView = async (view: 'received' | 'sent') => {
   messageView.value = view;
   messageCurrentPage.value = 1;
   messageSliderValue.value = 1;
+  if (view !== 'received') {
+    activeThreadTarget.value = null;
+    emit('thread-consumed');
+  }
   await loadMessages();
 };
 
@@ -330,6 +346,23 @@ watch(
   { immediate: true },
 );
 
+watch(
+  () => props.threadTarget,
+  async (target) => {
+    activeThreadTarget.value = target ?? null;
+    if (!target) return;
+
+    messageView.value = 'received';
+    messageSearchInput.value = '';
+    messageSearchQuery.value = '';
+    messageCurrentPage.value = 1;
+    messageSliderValue.value = 1;
+    await loadMessages();
+    emit('thread-consumed');
+  },
+  { immediate: true },
+);
+
 onMounted(() => {
   void loadMessages();
 });
@@ -359,6 +392,7 @@ onMounted(() => {
           </div>
         </div>
         <p class="manager-subtitle">{{ messageSummary }}</p>
+        <p v-if="messageThreadTitle" class="thread-title">{{ messageThreadTitle }}</p>
       </div>
       <button class="btn-compose" :disabled="userRoleId === ''" @click="openComposeModal">
         새 메시지 작성
@@ -613,6 +647,13 @@ onMounted(() => {
   color: #94a3b8;
   margin: 0;
   font-size: 0.92rem;
+}
+
+.thread-title {
+  margin: 0;
+  color: #a5b4fc;
+  font-size: 0.85rem;
+  font-weight: 700;
 }
 
 .btn-compose {
@@ -876,7 +917,7 @@ onMounted(() => {
 
 .message-name {
   font-weight: 800;
-  color: #f8fafc;
+  color: #c7d2fe;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -1080,7 +1121,7 @@ onMounted(() => {
 }
 
 .recipient-name {
-  color: #f8fafc;
+  color: #c7d2fe;
   font-weight: 800;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -1138,7 +1179,7 @@ onMounted(() => {
   padding: 0.22rem 0.58rem;
   border-radius: 999px;
   background: rgba(168, 85, 247, 0.14);
-  color: #d8b4fe;
+  color: #c7d2fe;
   font-size: 0.78rem;
   font-weight: 700;
   white-space: nowrap;

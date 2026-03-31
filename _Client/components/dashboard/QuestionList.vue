@@ -9,6 +9,7 @@ import type { Question, Group } from '~/types';
 
 const props = defineProps<{
   questions: Question[];
+  currentUserNo?: string | number | null;
   selectedGroupId: string | number | null;
   appliedSearchField: 'title' | 'content';
   appliedSearchKeyword: string;
@@ -94,6 +95,11 @@ const resetSearch = () => {
 
 const handleSolve = (question: Question) => {
   selectedQuestionForSolve.value = question;
+};
+
+const canEditQuestion = (question: Question) => {
+  if (props.currentUserNo === undefined || props.currentUserNo === null) return false;
+  return String(question.creator_no) === String(props.currentUserNo);
 };
 
 
@@ -272,8 +278,10 @@ watch(() => props.appliedSearchKeyword, (value) => {
             <h3 class="question-title">{{ q.title }} <{{ q.question_id }}></h3>
           </div>
           <!-- 문제의 그룹 경로를 표시 -->
-          <div v-if="q.group" class="question-group-path">
-            {{ formatGroupPath(q.group) }}
+          <div v-if="q.creator || q.group" class="question-group-path">
+            <span v-if="q.creator?.username" class="question-owner">{{ q.creator.username }}</span>
+            <span v-if="q.creator?.username && q.group" class="question-separator">·</span>
+            <span v-if="q.group">{{ formatGroupPath(q.group) }}</span>
           </div>
         </div>
         
@@ -286,7 +294,7 @@ watch(() => props.appliedSearchKeyword, (value) => {
           </div>
 
           <div class="question-actions">
-            <button class="btn-modify" @click="selectedQuestionForEdit = q">수정</button>
+            <button v-if="canEditQuestion(q)" class="btn-modify" @click="selectedQuestionForEdit = q">수정</button>
             <button class="btn-solve" @click="handleSolve(q)">풀기</button>
           </div>
         </div>
@@ -430,6 +438,20 @@ watch(() => props.appliedSearchKeyword, (value) => {
   font-weight: 500;
   text-align: right;
   letter-spacing: 0.02em;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+}
+
+.question-owner {
+  color: #c7d2fe;
+  font-weight: 700;
+}
+
+.question-separator {
+  color: #475569;
+  font-weight: 700;
 }
 
 .question-header {

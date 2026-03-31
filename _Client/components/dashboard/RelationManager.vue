@@ -41,6 +41,7 @@ const submittingUserId = ref<string>('');
 const feedbackMessage = ref('');
 const emit = defineEmits<{
   (event: 'compose-message', user: any): void;
+  (event: 'open-message-thread', user: any): void;
 }>();
 
 const panelStates = reactive<Record<TargetKey, SearchPanelState>>({
@@ -486,7 +487,9 @@ onMounted(loadRelations);
       <div v-for="rel in relations" :key="rel.relation_id" class="relation-item">
         <div class="relation-row">
           <div class="relation-user">
-            <span class="user-name">{{ rel.user2.username }}</span>
+            <button type="button" class="user-name-button" @click="emit('open-message-thread', rel.user2)">
+              <span class="user-name">{{ rel.user2.username }}</span>
+            </button>
             <span class="user-id">{{ rel.user2.user_id }}</span>
           </div>
           <div class="relation-actions">
@@ -748,10 +751,23 @@ onMounted(loadRelations);
 
 .user-name {
   font-weight: 700;
-  color: #f8fafc;
+  color: #c7d2fe;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.user-name-button {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  text-align: left;
+  min-width: 0;
+}
+
+.user-name-button:hover .user-name {
+  text-decoration: underline;
 }
 
 .user-id {
@@ -1094,7 +1110,7 @@ onMounted(loadRelations);
 }
 
 .candidate-name {
-  color: #f8fafc;
+  color: #c7d2fe;
   margin: 0;
   font-size: 1rem;
   font-weight: 700;

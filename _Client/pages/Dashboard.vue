@@ -33,6 +33,7 @@ const userInfo = computed(() => {
 const activeTab = ref('stats'); // 'stats', 'relations', 'messages', 'logs', 'question-books', 'exams'
 const composeMessageTarget = ref<any | null>(null);
 const composeReturnTab = ref<'relations' | null>(null);
+const messageThreadTarget = ref<any | null>(null);
 
 const openMessageCompose = async (user: any) => {
   composeMessageTarget.value = user;
@@ -51,6 +52,16 @@ const handleMessageComposeDismissed = () => {
     activeTab.value = composeReturnTab.value;
     composeReturnTab.value = null;
   }
+};
+
+const openMessageThread = async (user: any) => {
+  messageThreadTarget.value = user;
+  activeTab.value = 'messages';
+  await nextTick();
+};
+
+const clearMessageThreadTarget = () => {
+  messageThreadTarget.value = null;
 };
 
 onMounted(() => {
@@ -122,14 +133,19 @@ onMounted(() => {
       </div>
       
       <div v-else-if="activeTab === 'relations'">
-        <RelationManager @compose-message="openMessageCompose" />
+        <RelationManager
+          @compose-message="openMessageCompose"
+          @open-message-thread="openMessageThread"
+        />
       </div>
       
       <div v-else-if="activeTab === 'messages'">
         <MessageManager
           :compose-target="composeMessageTarget"
+          :thread-target="messageThreadTarget"
           @compose-consumed="clearMessageComposeTarget"
           @compose-dismissed="handleMessageComposeDismissed"
+          @thread-consumed="clearMessageThreadTarget"
         />
       </div>
       
@@ -175,7 +191,7 @@ onMounted(() => {
 }
 
 .welcome-title .username {
-  color: #818cf8;
+  color: #c7d2fe;
 }
 
 .welcome-sub {

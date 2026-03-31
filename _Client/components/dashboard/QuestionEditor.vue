@@ -26,7 +26,7 @@ const editData = ref({
   hint: props.question.hint || '',
   difficulty: props.question.difficulty || 1,
   time_limit: props.question.time_limit || 0,
-  rating: props.question.rating || 0,
+  rating: props.question.rating || 1,
   group_id: props.question.group_id,
   options: props.question.options ? JSON.parse(JSON.stringify(props.question.options)) : []
 });
@@ -133,15 +133,35 @@ const handleDelete = async () => {
             </div>
             <div class="form-group flex-small">
               <label>난이도 (1-5)</label>
-              <input v-model.number="editData.difficulty" type="number" min="1" max="5" class="input-small" />
+              <div class="slider-field">
+                <input
+                  v-model.number="editData.difficulty"
+                  type="range"
+                  min="1"
+                  max="5"
+                  step="1"
+                  class="range-input"
+                />
+                <div class="slider-meta">{{ editData.difficulty }}</div>
+              </div>
             </div>
             <div class="form-group flex-small">
               <label>제한 시간 (초)</label>
               <input v-model.number="editData.time_limit" type="number" min="0" class="input-small" />
             </div>
             <div class="form-group flex-small">
-              <label>평점 (0-5)</label>
-              <input v-model.number="editData.rating" type="number" min="0" max="5" class="input-small" />
+              <label>평점 (1-5)</label>
+                <div class="slider-field">
+                <input
+                  v-model.number="editData.rating"
+                  type="range"
+                  min="1"
+                  max="5"
+                  step="1"
+                  class="range-input"
+                />
+                <div class="slider-meta">{{ editData.rating }}</div>
+              </div>
             </div>
           </div>
 
@@ -362,6 +382,61 @@ const handleDelete = async () => {
 
 .input-small {
   max-width: 120px;
+}
+
+.slider-field {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.range-input {
+  width: 100%;
+  margin: 0;
+  height: 1.2rem;
+  appearance: none;
+  background: transparent;
+}
+
+.range-input::-webkit-slider-runnable-track {
+  height: 6px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, rgba(99, 102, 241, 0.9), rgba(129, 140, 248, 0.75));
+}
+
+.range-input::-webkit-slider-thumb {
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #f8fafc;
+  border: 2px solid #6366f1;
+  margin-top: -5px;
+  cursor: pointer;
+}
+
+.range-input::-moz-range-track {
+  height: 6px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, rgba(99, 102, 241, 0.9), rgba(129, 140, 248, 0.75));
+}
+
+.range-input::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #f8fafc;
+  border: 2px solid #6366f1;
+  cursor: pointer;
+}
+
+.slider-meta {
+  font-size: 0.8rem;
+  color: #cbd5f5;
+  text-align: center;
+  font-weight: 700;
+  line-height: 1;
 }
 
 input[type="text"],

@@ -1374,7 +1374,7 @@ input[type="password"] {
   display: flex;
   align-items: center;
   gap: 0.4rem;
-  color: #a5b4fc !important;
+  color: #c7d2fe !important;
   font-size: 0.95rem !important;
   font-weight: 600 !important;
   margin-left: 0.5rem;

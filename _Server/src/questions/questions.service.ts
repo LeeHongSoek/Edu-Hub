@@ -89,6 +89,11 @@ export class QuestionsService {
         },
         include: {
           type: true,
+          creator: {
+            select: {
+              username: true,
+            },
+          },
           passage: true,
           options: {
             orderBy: {

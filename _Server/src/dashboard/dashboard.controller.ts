@@ -83,10 +83,18 @@ export class DashboardController {
     @Query('q') q = '',
     @Query('page') page = '1',
     @Query('limit') limit = '8',
+    @Query('peerUserNo') peerUserNo = '',
   ) {
     const userNoVal = req.user?.user_no || req.user?.userNo;
     if (!userNoVal) throw new UnauthorizedException();
-    return this.dashboardService.getMessages(BigInt(userNoVal), String(view || 'received'), q, Number(page), Number(limit));
+    return this.dashboardService.getMessages(
+      BigInt(userNoVal),
+      String(view || 'received'),
+      q,
+      Number(page),
+      Number(limit),
+      peerUserNo,
+    );
   }
 
   @Get('messages/recipients')

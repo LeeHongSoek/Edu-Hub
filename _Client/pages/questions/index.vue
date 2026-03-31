@@ -204,6 +204,7 @@ const handlePageChange = (page: number) => {
       <div class="question-list-shell">
         <QuestionList
           :questions="questionResponse?.items || []"
+          :current-user-no="userInfo?.user_no ?? null"
           :selected-group-id="selectedGroupId"
           :applied-search-field="appliedSearchField"
           :applied-search-keyword="appliedSearchKeyword"

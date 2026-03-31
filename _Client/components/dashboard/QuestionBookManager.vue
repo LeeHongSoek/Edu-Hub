@@ -176,8 +176,15 @@ onMounted(fetchBooks);
       <div class="book-grid">
         <div v-for="book in pagedBooks" :key="book.book_id" class="book-card">
           <div class="book-card-head">
-            <h4><{{ book.book_id }}> {{ book.book_name }}</h4>
-            <span class="book-meta">문항 수: {{ book.items?.length || 0 }}개</span>
+            <h4>
+              <span class="book-id"><{{ book.book_id }}></span>
+              <span class="book-title">{{ book.book_name }}</span>
+            </h4>
+            <span class="book-meta">
+              <span v-if="book.creator?.username" class="book-owner">{{ book.creator.username }}</span>
+              <span v-if="book.creator?.username" class="book-separator">·</span>
+              <span>문제 수: {{ book.items?.length || 0 }}개</span>
+            </span>
           </div>
           <div class="book-card-body">
             <p>{{ book.description || '설명 없음' }}</p>
@@ -267,6 +274,28 @@ onMounted(fetchBooks);
   color: #f8fafc;
   margin: 0;
   font-size: 1.1rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+}
+
+.book-id {
+  color: #e2e8f0;
+}
+
+.book-owner {
+  color: #c7d2fe;
+  font-weight: 700;
+}
+
+.book-separator {
+  color: #64748b;
+  font-weight: 700;
+}
+
+.book-title {
+  color: #f8fafc;
 }
 
 .book-card-body p {
@@ -278,6 +307,9 @@ onMounted(fetchBooks);
 }
 
 .book-meta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
   font-size: 0.8rem;
   color: #64748b;
   font-weight: 600;
