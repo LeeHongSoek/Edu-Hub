@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Patch, Delete, Body, Param } from '@nestjs/common';
+import { BadRequestException, Controller, Get, Post, Patch, Delete, Body, Param } from '@nestjs/common';
 import { QuestionsService } from './questions.service';
 
 @Controller('questions')
@@ -16,12 +16,16 @@ export class QuestionsController {
     @Body('limit') limit?: number,
     @Body('book_id') bookId?: string,
     @Body('exam_id') examId?: string,
+    @Body('public_only') publicOnly?: boolean | string,
+    @Body('viewer_no') viewerNo?: string,
   ) {
     return this.questionsService.findAll({
       creatorNo: (creatorNo && creatorNo !== 'undefined') ? BigInt(creatorNo) : undefined,
       groupId: (groupId && groupId !== 'undefined') ? BigInt(groupId) : undefined,
       bookId: (bookId && bookId !== 'undefined') ? BigInt(bookId) : undefined,
       examId: (examId && examId !== 'undefined') ? BigInt(examId) : undefined,
+      publicOnly: publicOnly === true || publicOnly === 'true',
+      viewerNo: (viewerNo && viewerNo !== 'undefined') ? BigInt(viewerNo) : undefined,
       searchField: searchField === 'content' ? 'content' : 'title',
       searchKeyword: searchKeyword?.trim() || undefined,
       page: page ? Number(page) : 1,
@@ -57,5 +61,14 @@ export class QuestionsController {
   @Post(':id/reviews')
   addReview(@Param('id') id: string, @Body() data: any) {
     return this.questionsService.addReview(id, data);
+  }
+
+  // 문제 복사해서 내 문제로 가져오기
+  @Post(':id/copy')
+  copy(@Param('id') id: string, @Body('user_no') userNo?: string) {
+    if (!userNo || userNo === 'undefined') {
+      throw new BadRequestException('문제를 가져올 사용자 정보가 필요합니다.');
+    }
+    return this.questionsService.copy(id, BigInt(userNo));
   }
 }

@@ -1,11 +1,12 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue';
 import QuestionList from '~/components/dashboard/QuestionList.vue';
-import type { QuestionListResponse } from '~/types';
+import type { Question, QuestionListResponse } from '~/types';
 
 const { apiBase, token, getAuthHeader } = useApi();
 
 const route = useRoute();
+const router = useRouter();
 const userCookie = useCookie('user_info');
 const userInfo = computed(() => {
   if (!userCookie.value) return null;
@@ -34,12 +35,23 @@ const activeExamId = computed<number | undefined>(() => {
   return Number.isNaN(numeric) ? undefined : numeric;
 });
 const activeExamDetail = ref<any | null>(null);
+const questionScope = computed<'mine' | 'all'>(() => {
+  if (route.query.scope === 'all' || route.query.mine === 'false') return 'all';
+  return 'mine';
+});
 
 const requestBody = computed(() => {
-  const body: Record<string, string | number> = {};
+  const body: Record<string, string | number | boolean> = {};
 
-  if (route.query.mine === 'true' && userInfo.value) {
+  if (questionScope.value === 'mine' && userInfo.value) {
     body.creator_no = userInfo.value.user_no;
+  }
+
+  if (questionScope.value === 'all') {
+    body.public_only = true;
+    if (userInfo.value) {
+      body.viewer_no = userInfo.value.user_no;
+    }
   }
 
   if (selectedGroupId.value !== null) {
@@ -133,7 +145,7 @@ watch(requestBody, () => {
 }, { deep: true });
 
 watch(
-  () => route.query.mine,
+  () => [route.query.scope, route.query.mine],
   () => {
     currentPage.value = 1;
   }
@@ -182,6 +194,43 @@ const handleResetSearch = () => {
 const handlePageChange = (page: number) => {
   currentPage.value = page;
 };
+
+const setQuestionScope = async (scope: 'mine' | 'all') => {
+  const nextQuery: Record<string, string> = {};
+
+  for (const [key, value] of Object.entries(route.query)) {
+    if (typeof value === 'string') {
+      nextQuery[key] = value;
+    }
+  }
+
+  nextQuery.scope = scope;
+  delete nextQuery.mine;
+  currentPage.value = 1;
+  await router.replace({ query: nextQuery });
+};
+
+const handleCopyQuestion = async (question: Question) => {
+  if (!userInfo.value) {
+    alert('문제를 내 계정으로 가져오려면 로그인이 필요합니다.');
+    return;
+  }
+
+  try {
+    await $fetch(`${apiBase.value}/questions/${question.question_id}/copy`, {
+      method: 'POST',
+      headers: getAuthHeader(),
+      body: {
+        user_no: userInfo.value.user_no,
+      },
+    });
+    alert('문제를 내 문제로 가져왔습니다.');
+    await setQuestionScope('mine');
+  } catch (err) {
+    console.error('문제 복사 실패:', err);
+    alert('문제를 복사하는 중 오류가 발생했습니다.');
+  }
+};
 </script>
 
 <template>
@@ -189,7 +238,27 @@ const handlePageChange = (page: number) => {
 
     <div class="page-header">
       <div class="title-wrapper">
-        <h1 class="page-title">문제 목록</h1>
+        <div class="title-row">
+          <h1 class="page-title">문제 목록</h1>
+          <div class="scope-toggle">
+            <button
+              type="button"
+              class="scope-btn"
+              :class="{ active: questionScope === 'mine' }"
+              @click="setQuestionScope('mine')"
+            >
+              나의 문제
+            </button>
+            <button
+              type="button"
+              class="scope-btn"
+              :class="{ active: questionScope === 'all' }"
+              @click="setQuestionScope('all')"
+            >
+              전체 문제
+            </button>
+          </div>
+        </div>
         <span v-if="activeSourceLabel" class="page-subtitle">{{ activeSourceLabel }}</span>
       </div>
       <NuxtLink to="/dashboard" class="back-btn">← 대시보드</NuxtLink>
@@ -212,11 +281,13 @@ const handlePageChange = (page: number) => {
           :total-pages="questionResponse?.totalPages || 1"
           :total-items="questionResponse?.total || 0"
           :page-size="questionResponse?.limit || pageSize"
+          :view-mode="questionScope"
           @refresh="refresh"
           @change-group="handleGroupChange"
           @search="handleSearch"
           @reset-search="handleResetSearch"
           @change-page="handlePageChange"
+          @copy-question="handleCopyQuestion"
         />
 
         <!-- <div v-if="pending" class="loading-overlay">
@@ -299,8 +370,48 @@ const handlePageChange = (page: number) => {
 
 .title-wrapper {
   display: flex;
-  align-items: flex-end;
-  gap: 0.6rem;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.45rem;
+}
+
+.title-row {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  flex-wrap: wrap;
+}
+
+.scope-toggle {
+  display: inline-flex;
+  gap: 0.45rem;
+  padding: 0.2rem;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.55);
+  border: 1px solid rgba(148, 163, 184, 0.14);
+}
+
+.scope-btn {
+  border: none;
+  background: transparent;
+  color: #94a3b8;
+  font-size: 0.82rem;
+  font-weight: 700;
+  border-radius: 999px;
+  padding: 0.45rem 0.85rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.scope-btn.active {
+  background: linear-gradient(135deg, #6366f1, #818cf8);
+  color: #fff;
+  box-shadow: 0 8px 24px -12px rgba(99, 102, 241, 0.9);
+}
+
+.scope-btn:not(.active):hover {
+  color: #e2e8f0;
+  background: rgba(255, 255, 255, 0.04);
 }
 
 .back-btn {

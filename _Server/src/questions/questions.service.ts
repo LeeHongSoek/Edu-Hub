@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../common/prisma/prisma.service';
 
 type FindAllParams = {
@@ -6,6 +6,8 @@ type FindAllParams = {
   groupId?: bigint;
   bookId?: bigint;
   examId?: bigint;
+  publicOnly?: boolean;
+  viewerNo?: bigint;
   searchField?: 'title' | 'content';
   searchKeyword?: string;
   page?: number;
@@ -17,9 +19,13 @@ export class QuestionsService {
   constructor(private prisma: PrismaService) {}
 
   // 모든 문제 목록 조회 API (필터링 지원)
-  async findAll({ creatorNo, groupId, bookId, examId, searchField, searchKeyword, page = 1, limit = 10 }: FindAllParams) {
+  async findAll({ creatorNo, groupId, bookId, examId, publicOnly, viewerNo, searchField, searchKeyword, page = 1, limit = 10 }: FindAllParams) {
     const where: any = {};
     if (creatorNo !== undefined) where.creator_no = creatorNo;
+    else if (publicOnly) where.is_public = true;
+    if (creatorNo === undefined && publicOnly && viewerNo !== undefined) {
+      where.creator_no = { not: viewerNo };
+    }
 
     if (groupId !== undefined) {
       const descendantGroupIds = await this.getDescendantGroupIds(groupId);
@@ -195,6 +201,128 @@ export class QuestionsService {
       });
       return question;
     });
+  }
+
+  // 문제 복사해서 새 문제로 저장
+  async copy(id: string | number, targetUserNo: bigint) {
+    const questionId = typeof id === 'string' ? BigInt(id) : BigInt(id);
+    const source = await this.prisma.question.findUnique({
+      where: { question_id: questionId },
+      include: {
+        passage: true,
+        options: {
+          orderBy: {
+            option_number: 'asc',
+          },
+        },
+        attachments: {
+          orderBy: {
+            sort_order: 'asc',
+          },
+        },
+        tags: true,
+      },
+    });
+
+    if (!source) {
+      throw new NotFoundException('복사할 문제를 찾을 수 없습니다.');
+    }
+
+    const copiedQuestion = await this.prisma.$transaction(async (tx) => {
+      const created = await tx.question.create({
+        data: {
+          creator_no: targetUserNo,
+          group_id: source.group_id,
+          question_type_id: source.question_type_id,
+          title: source.title,
+          question: source.question,
+          content: source.content,
+          answer: source.answer,
+          explanation: source.explanation,
+          hint: source.hint,
+          difficulty: source.difficulty,
+          is_public: source.is_public,
+          is_deleted: 'N',
+          time_limit: source.time_limit,
+          rating: source.rating,
+          passage: source.passage
+            ? {
+                create: {
+                  content_md: source.passage.content_md,
+                },
+              }
+            : undefined,
+          options: source.options.length
+            ? {
+                create: source.options.map((opt: any) => ({
+                  option_number: opt.option_number,
+                  content: opt.content,
+                  is_answer: opt.is_answer,
+                })),
+              }
+            : undefined,
+        },
+      });
+
+      if (source.attachments.length > 0) {
+        await tx.mediaAttachment.createMany({
+          data: source.attachments.map((attachment) => ({
+            question_id: created.question_id,
+            media_type_id: attachment.media_type_id,
+            media_url: attachment.media_url,
+            sort_order: attachment.sort_order,
+          })),
+        });
+      }
+
+      if (source.tags.length > 0) {
+        await tx.questionTag.createMany({
+          data: source.tags.map((tagLink) => ({
+            question_id: created.question_id,
+            tag_id: tagLink.tag_id,
+          })),
+        });
+      }
+
+      return tx.question.findUnique({
+        where: { question_id: created.question_id },
+        include: {
+          type: true,
+          creator: {
+            select: {
+              username: true,
+            },
+          },
+          passage: true,
+          options: {
+            orderBy: {
+              option_number: 'asc',
+            },
+          },
+          attachments: {
+            orderBy: {
+              sort_order: 'asc',
+            },
+          },
+          group: {
+            include: {
+              parent_group: {
+                include: {
+                  parent_group: true,
+                },
+              },
+            },
+          },
+          tags: {
+            include: {
+              tag: true,
+            },
+          },
+        },
+      });
+    });
+
+    return copiedQuestion;
   }
 
   // 문제 수정

@@ -17,6 +17,7 @@ const props = defineProps<{
   totalPages: number;
   totalItems: number;
   pageSize: number;
+  viewMode: 'mine' | 'all';
 }>();
 
 // API 설정 통합
@@ -62,6 +63,7 @@ const emit = defineEmits<{
   (e: 'search', payload: { field: 'title' | 'content'; keyword: string }): void;
   (e: 'reset-search'): void;
   (e: 'change-page', page: number): void;
+  (e: 'copy-question', question: Question): void;
 }>();
 
 const handleSelectGroup = (groupId: string | number | null) => {
@@ -297,7 +299,8 @@ watch(() => props.appliedSearchKeyword, (value) => {
           </div>
 
           <div class="question-actions">
-            <button v-if="canEditQuestion(q)" class="btn-modify" @click="selectedQuestionForEdit = q">수정</button>
+            <button v-if="props.viewMode === 'all'" class="btn-copy" @click="emit('copy-question', q)">문제복사후 가져오기</button>
+            <button v-else-if="canEditQuestion(q)" class="btn-modify" @click="selectedQuestionForEdit = q">수정</button>
             <button class="btn-solve" @click="handleSolve(q)">풀기</button>
           </div>
         </div>
@@ -563,6 +566,18 @@ watch(() => props.appliedSearchKeyword, (value) => {
   transition: all 0.2s;
 }
 
+.btn-copy {
+  padding: 0.6rem 1.1rem;
+  background: rgba(99, 102, 241, 0.12);
+  color: #c7d2fe;
+  border: 1px solid rgba(99, 102, 241, 0.28);
+  border-radius: 10px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
 .btn-solve:hover {
   background: #4f46e5;
   transform: translateY(-2px);
@@ -572,6 +587,13 @@ watch(() => props.appliedSearchKeyword, (value) => {
   background: rgba(255, 255, 255, 0.1);
   color: #fff;
   border-color: rgba(255, 255, 255, 0.2);
+  transform: translateY(-2px);
+}
+
+.btn-copy:hover {
+  background: rgba(99, 102, 241, 0.2);
+  color: #fff;
+  border-color: rgba(99, 102, 241, 0.42);
   transform: translateY(-2px);
 }
 
