@@ -2,6 +2,9 @@
 import { computed, ref, watch } from 'vue';
 import QuestionList from '~/components/dashboard/QuestionList.vue';
 import type { Question, QuestionListResponse } from '~/types';
+import IconArrowUp from '~/assets/icons/IconArrowUp.svg?component';
+import IconBook from '~/assets/icons/IconBook.svg?component';
+import IconPencil from '~/assets/icons/IconPencil.svg?component';
 
 const { apiBase, token, getAuthHeader } = useApi();
 
@@ -261,7 +264,22 @@ const handleCopyQuestion = async (question: Question) => {
         </div>
         <span v-if="activeSourceLabel" class="page-subtitle">{{ activeSourceLabel }}</span>
       </div>
-      <NuxtLink to="/dashboard" class="back-btn">← 대시보드</NuxtLink>
+      <div class="page-nav">
+        <NuxtLink to="/dashboard" class="back-btn">
+          <IconArrowUp class="back-icon" />
+          대시보드
+        </NuxtLink>
+        <div class="page-links">
+          <NuxtLink to="/question-books" class="quick-link">
+            <IconBook class="quick-icon" />
+            문제집 목록
+          </NuxtLink>
+          <NuxtLink to="/exams" class="quick-link">
+            <IconPencil class="quick-icon" />
+            고사집 목록
+          </NuxtLink>
+        </div>
+      </div>
     </div>
     
     <div v-if="error && !questionResponse && !pending" class="error">
@@ -415,10 +433,66 @@ const handleCopyQuestion = async (question: Question) => {
 }
 
 .back-btn {
-  color: #818cf8;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  color: #94a3b8;
   text-decoration: none;
-  font-weight: 600;
-  font-size: 0.95rem;
+  font-weight: 500;
+  font-size: 0.9rem;
+  padding: 0.35rem 0.55rem;
+  border-radius: 8px;
+  background: transparent;
+  border: none;
+  transition: all 0.2s;
+}
+
+.back-btn:hover {
+  background: rgba(255, 255, 255, 0.04);
+  color: #eef2ff;
+  transform: translateY(-1px);
+}
+
+.back-icon,
+.quick-icon {
+  width: 1rem;
+  height: 1rem;
+  flex-shrink: 0;
+}
+
+.page-nav {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: nowrap;
+}
+
+.page-links {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: nowrap;
+  justify-content: flex-end;
+}
+
+.quick-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.35rem 0.55rem;
+  border-radius: 8px;
+  background: transparent;
+  border: none;
+  color: #94a3b8;
+  text-decoration: none;
+  font-weight: 500;
+  font-size: 0.9rem;
+  transition: all 0.2s;
+}
+
+.quick-link:hover {
+  background: rgba(255, 255, 255, 0.04);
+  color: #eef2ff;
+  transform: translateY(-1px);
 }
 
 .loading, .error {
@@ -461,5 +535,22 @@ const handleCopyQuestion = async (question: Question) => {
   text-align: center;
   color: #fca5a5;
   font-size: 0.9rem;
+}
+
+@media (max-width: 900px) {
+  .page-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .page-nav {
+    align-items: flex-start;
+    width: 100%;
+  }
+
+  .page-links {
+    justify-content: flex-start;
+    flex-wrap: wrap;
+  }
 }
 </style>
