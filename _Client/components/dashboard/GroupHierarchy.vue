@@ -5,6 +5,8 @@ import type { Group } from "~/types";
 const props = defineProps<{
   groups: Group[];
   selectedGroupId?: string | number | null;
+  expandedIds?: Set<string | number> | null;
+  currentUserNo?: string | number | null;
 }>();
 
 const emit = defineEmits<{
@@ -19,6 +21,8 @@ const emit = defineEmits<{
       :key="group.group_id"
       :group="group"
       :selected-group-id="selectedGroupId"
+      :expanded-ids="expandedIds"
+      :current-user-no="currentUserNo"
       :depth="0"
       @select-group="emit('select-group', $event)"
     />

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from "vue";
+import { ref, watchEffect, computed } from "vue";
 import type { Group } from "~/types";
 import IconArrowRight from "~/assets/icons/IconArrowRight.svg?component";
 
@@ -11,6 +11,9 @@ const props = defineProps<{
   group: Group;
   selectedGroupId?: string | number | null;
   depth: number;
+  expandedIds?: Set<string | number> | null;
+  currentUserNo?: string | number | null;
+  inheritedOwned?: boolean;
 }>();
 
 const emit = defineEmits<{
@@ -18,6 +21,24 @@ const emit = defineEmits<{
 }>();
 
 const isExpanded = ref(false);
+const isOwned = computed(() => {
+  const selfOwned =
+    props.currentUserNo !== null && props.currentUserNo !== undefined
+      ? String(props.group.creator_no) === String(props.currentUserNo)
+      : false;
+  return Boolean(props.inheritedOwned) || selfOwned;
+});
+
+watchEffect(() => {
+  if (!props.expandedIds) return;
+  const groupKey = String(props.group.group_id);
+  if (
+    props.expandedIds.has(groupKey) ||
+    props.expandedIds.has(props.group.group_id)
+  ) {
+    isExpanded.value = true;
+  }
+});
 
 const toggleExpand = (event: Event) => {
   event.stopPropagation();
@@ -29,7 +50,10 @@ const toggleExpand = (event: Event) => {
   <div class="tree-node" :style="{ paddingLeft: `${depth * 0.5}rem` }">
     <div
       class="node-content"
-      :class="{ 'is-selected': group.group_id === selectedGroupId }"
+      :class="{
+        'is-selected': group.group_id === selectedGroupId,
+        'is-owned': isOwned,
+      }"
       @click="emit('select-group', group.group_id)"
     >
       <span
@@ -54,6 +78,9 @@ const toggleExpand = (event: Event) => {
         :group="child"
         :selected-group-id="selectedGroupId"
         :depth="depth + 1"
+        :current-user-no="currentUserNo"
+        :expanded-ids="expandedIds"
+        :inherited-owned="isOwned"
         @select-group="emit('select-group', $event)"
       />
     </div>
@@ -75,7 +102,7 @@ const toggleExpand = (event: Event) => {
   background: rgba(255, 255, 255, 0.03);
   transition: all 0.2s;
   cursor: pointer;
-  border: 1px solid transparent;
+  border: 1px solid rgba(255, 255, 255, 0.08);
   margin-bottom: 0.25rem;
 }
 
@@ -87,6 +114,16 @@ const toggleExpand = (event: Event) => {
 .node-content.is-selected {
   background: rgba(99, 102, 241, 0.15);
   border-color: #6366f1;
+}
+
+.node-content.is-owned {
+  background: rgba(99, 102, 241, 0.15);
+  border-color: #6366f1;
+}
+
+.node-content.is-owned .name-text {
+  color: #fff;
+  font-weight: 600;
 }
 
 .node-content.is-selected .name-text {
@@ -108,11 +145,12 @@ const toggleExpand = (event: Event) => {
 .toggle-icon-svg {
   width: 0.75rem;
   height: 0.75rem;
+  transition: transform 0.2s ease;
 }
 
 .toggle-icon:hover {
   color: #ababc6;
-  transform: scale(1.7);
+  transform: scale(1.4);
 }
 
 .toggle-icon.is-expanded {
@@ -126,8 +164,11 @@ const toggleExpand = (event: Event) => {
 .bullet {
   color: #6366f1;
   font-size: 0.85rem;
-  display: inline-block;
-  width: 1rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.2rem;
+  height: 1.2rem;
   text-align: center;
 }
 
@@ -141,5 +182,7 @@ const toggleExpand = (event: Event) => {
 .child-nodes {
   display: flex;
   flex-direction: column;
+  gap: 0.25rem;
+  margin-top: 0.25rem;
 }
 </style>

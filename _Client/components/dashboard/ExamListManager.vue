@@ -352,11 +352,14 @@ const clearExamSearch = () => {
   display: flex;
   align-items: center;
   gap: 0.35rem;
+  font-size: 1.35rem;
+  line-height: 1.2;
+  font-weight: 800;
 }
 
 .section-icon {
-  width: 1rem;
-  height: 1rem;
+  width: 1.4rem;
+  height: 1.4rem;
   flex-shrink: 0;
 }
 
@@ -373,11 +376,16 @@ const clearExamSearch = () => {
   border: none;
   background: transparent;
   color: #94a3b8;
-  font-size: 0.82rem;
+  font-size: 0.9rem;
   font-weight: 700;
   border-radius: 999px;
-  padding: 0.45rem 0.85rem;
+  padding: 0 0.85rem;
+  height: 32px;
+  line-height: 32px;
   cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
   transition: all 0.2s ease;
 }
 
@@ -390,6 +398,12 @@ const clearExamSearch = () => {
   background: #6d6eff;
   color: #ffffff;
   box-shadow: 0 8px 18px rgba(109, 110, 255, 0.25);
+}
+
+.scope-icon {
+  width: 0.95rem;
+  height: 0.95rem;
+  flex-shrink: 0;
 }
 
 .page-links {

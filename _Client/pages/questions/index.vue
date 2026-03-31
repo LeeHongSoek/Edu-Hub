@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, ref, watch } from "vue";
-import QuestionList from "~/components/dashboard/QuestionList.vue";
+import QuestionListManager from "~/components/dashboard/QuestionListManager.vue";
 import type { Question, QuestionListResponse } from "~/types";
 
 const { apiBase, token, getAuthHeader } = useApi();
@@ -253,8 +253,8 @@ const handleCopyQuestion = async (question: Question) => {
 
 <template>
   <div class="page-container">
-    <div class="question-list-shell">
-      <QuestionList
+    <div class="content-box">
+      <QuestionListManager
         :list-title="'문제 목록'"
         :list-subtitle="activeSourceLabel"
         :show-scope-toggle="true"
@@ -418,11 +418,6 @@ const handleCopyQuestion = async (question: Question) => {
   border-color: rgba(248, 113, 113, 0.2);
 }
 
-.question-list-shell {
-  position: relative;
-  width: 100%;
-}
-
 .inline-error {
   margin-top: 1rem;
   text-align: center;
@@ -446,8 +441,5 @@ const handleCopyQuestion = async (question: Question) => {
     flex-wrap: wrap;
   }
 
-  .question-list-shell {
-    width: 100%;
-  }
 }
 </style>

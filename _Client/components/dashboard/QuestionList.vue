@@ -5,9 +5,11 @@ import GroupManager from "~/components/dashboard/GroupManager.vue";
 import QuestionEditor from "~/components/dashboard/QuestionEditor.vue";
 import QuestionSolver from "~/components/dashboard/QuestionSolver.vue";
 import IconSettings from "~/assets/icons/IconSettings.svg?component";
+import IconUsers from "~/assets/icons/IconUsers.svg?component";
 import IconArrowUp from "~/assets/icons/IconArrowUp.svg?component";
 import IconBook from "~/assets/icons/IconBook.svg?component";
 import IconPencil from "~/assets/icons/IconPencil.svg?component";
+import IconFileText from "~/assets/icons/IconFileText.svg?component";
 import { useApi } from "~/composables/useApi";
 import type { Question, Group } from "~/types";
 
@@ -91,6 +93,7 @@ const handleScopeChange = (scope: "mine" | "all") => {
 const clearAllFilters = () => {
   searchField.value = "title";
   searchInput.value = "";
+  groupSearchInput.value = "";
   emit("change-group", null);
   emit("reset-search");
 };
@@ -186,6 +189,105 @@ const formatGroupPath = (group: Group) => {
   return parts.join(" / ");
 };
 
+const findGroupPath = (
+  list: Group[],
+  targetId: string | number,
+  trail: string[] = [],
+): string[] | null => {
+  for (const group of list) {
+    const nextTrail = [...trail, group.name];
+    if (String(group.group_id) === String(targetId)) {
+      return nextTrail;
+    }
+    if (group.child_groups && group.child_groups.length > 0) {
+      const found = findGroupPath(group.child_groups, targetId, nextTrail);
+      if (found) return found;
+    }
+  }
+  return null;
+};
+
+const selectedGroupBreadcrumb = computed(() => {
+  if (props.selectedGroupId === null || props.selectedGroupId === undefined) {
+    return " / / ";
+  }
+  const path = findGroupPath(groups.value, props.selectedGroupId);
+  if (!path) return " / / ";
+  const padded = [...path];
+  while (padded.length < 3) padded.push("");
+  return `${padded[0]} / ${padded[1]} / ${padded[2]}`.trimStart();
+});
+
+const groupSearchInput = ref("");
+
+const filterGroupsByOwner = (
+  list: Group[],
+  ownerNo: string | number,
+): Group[] => {
+  const matches = (group: Group) =>
+    String(group.creator_no) === String(ownerNo);
+  const result: Group[] = [];
+  for (const group of list) {
+    if (!matches(group)) continue;
+    const childGroups = group.child_groups
+      ? filterGroupsByOwner(group.child_groups, ownerNo)
+      : [];
+    result.push({ ...group, child_groups: childGroups });
+  }
+  return result;
+};
+
+const visibleGroups = computed(() => {
+  const scope = props.scopeMode ?? "mine";
+  if (scope !== "mine") return groups.value;
+  if (props.currentUserNo === null || props.currentUserNo === undefined)
+    return groups.value;
+  return filterGroupsByOwner(groups.value, props.currentUserNo);
+});
+
+const filterGroupsBySearch = (list: Group[], query: string) => {
+  const expandIds = new Set<string>();
+
+  const visit = (group: Group, ancestors: Group[]): Group | null => {
+    const nameMatch = group.name.toLowerCase().includes(query);
+    const children = group.child_groups
+      ? group.child_groups
+          .map((child) => visit(child, [...ancestors, group]))
+          .filter((child): child is Group => Boolean(child))
+      : [];
+
+    if (!nameMatch && children.length === 0) return null;
+
+    if (nameMatch) {
+      for (const ancestor of ancestors) {
+        expandIds.add(String(ancestor.group_id));
+      }
+      expandIds.add(String(group.group_id));
+    }
+
+    if (children.length > 0) {
+      expandIds.add(String(group.group_id));
+    }
+
+    return { ...group, child_groups: children };
+  };
+
+  const filtered = list
+    .map((group) => visit(group, []))
+    .filter((group): group is Group => Boolean(group));
+
+  return { filtered, expandIds };
+};
+
+const searchedGroups = computed(() => {
+  const query = groupSearchInput.value.trim().toLowerCase();
+  if (!query) {
+    return { groups: visibleGroups.value, expandedIds: new Set<string>() };
+  }
+  const { filtered, expandIds } = filterGroupsBySearch(visibleGroups.value, query);
+  return { groups: filtered, expandedIds: expandIds };
+});
+
 const fetchGroups = async () => {
   try {
     const data = await $fetch<Group[]>(`${apiBase.value}/groups`);
@@ -231,15 +333,40 @@ watch(
               <span class="btn-manage-label">그룹 관리</span>
             </button>
             <button class="btn-clear-filter" @click="clearAllFilters">
+              <IconUsers class="filter-icon" />
               전체
+            </button>
+          </div>
+          <div class="group-breadcrumb">{{ selectedGroupBreadcrumb }}</div>
+          <div class="group-search">
+            <input
+              v-model="groupSearchInput"
+              type="text"
+              class="group-search-input"
+              placeholder="그룹명 검색"
+            />
+            <button
+              v-if="groupSearchInput"
+              class="group-search-clear"
+              @click="groupSearchInput = ''"
+            >
+              초기화
             </button>
           </div>
         </div>
         <GroupHierarchy
-          :groups="groups"
+          :groups="searchedGroups.groups"
           :selected-group-id="props.selectedGroupId"
+          :expanded-ids="searchedGroups.expandedIds"
+          :current-user-no="props.currentUserNo"
           @select-group="handleSelectGroup"
         />
+        <div
+          v-if="groupSearchInput && searchedGroups.groups.length === 0"
+          class="group-search-empty"
+        >
+          검색 결과가 없습니다.
+        </div>
       </div>
 
       <div class="question-list-main">
@@ -253,6 +380,131 @@ watch(
         </div>
 
         <div v-else class="question-list-body">
+          <div class="manager-header">
+            <div class="header-copy">
+              <div class="title-row">
+                <h3 class="question-list-title">
+                  <IconFileText class="section-icon" />
+                  {{ props.listTitle ?? "문제 목록" }}
+                </h3>
+                <div
+                  v-if="props.showScopeToggle"
+                  class="scope-toggle"
+                  role="tablist"
+                  aria-label="문제 목록 범위 선택"
+                >
+                  <button
+                    type="button"
+                    class="scope-btn"
+                    :class="{ active: (props.scopeMode ?? 'mine') === 'mine' }"
+                    :aria-pressed="(props.scopeMode ?? 'mine') === 'mine'"
+                    @click="handleScopeChange('mine')"
+                  >
+                    나의 문제
+                  </button>
+                  <button
+                    type="button"
+                    class="scope-btn"
+                    :class="{ active: (props.scopeMode ?? 'mine') === 'all' }"
+                    :aria-pressed="(props.scopeMode ?? 'mine') === 'all'"
+                    @click="handleScopeChange('all')"
+                  >
+                    전체 문제
+                  </button>
+                </div>
+              </div>
+              <span v-if="props.listSubtitle" class="question-list-subtitle">{{
+                props.listSubtitle
+              }}</span>
+            </div>
+
+            <div class="page-links">
+              <NuxtLink to="/dashboard" class="back-btn">
+                <IconArrowUp class="back-icon" />
+                대시보드
+              </NuxtLink>
+              <NuxtLink to="/question-books" class="quick-link">
+                <IconBook class="quick-icon" />
+                문제집 목록
+              </NuxtLink>
+              <NuxtLink to="/exams" class="quick-link">
+                <IconPencil class="quick-icon" />
+                고사집 목록
+              </NuxtLink>
+            </div>
+          </div>
+
+          <div class="pagination-panel-border">
+            <div class="slider-panel">
+              <div class="search-row">
+                <select v-model="searchField" class="search-select">
+                  <option value="title">문제제목</option>
+                  <option value="content">문제내용</option>
+                </select>
+                <input
+                  v-model="searchInput"
+                  type="text"
+                  class="search-input"
+                  :placeholder="
+                    searchField === 'title'
+                      ? '문제 제목을 입력하세요'
+                      : '문제 내용을 입력하세요'
+                  "
+                  @keyup.enter="applySearch"
+                />
+                <button class="btn-search" @click="applySearch">검색</button>
+                <button
+                  v-if="props.appliedSearchKeyword || searchInput"
+                  class="btn-reset-search"
+                  @click="resetSearch"
+                >
+                  초기화
+                </button>
+              </div>
+              <div class="slider-row">
+                <span class="summary-text"
+                  >총 {{ props.totalItems }}문제</span
+                >
+                <div class="page-slider-section">
+                  <div
+                    class="slider-wrapper"
+                    :class="{ disabled: isSliderDisabled }"
+                  >
+                    <span class="slider-limit">1</span>
+                    <div class="slider-track-container">
+                      <input
+                        type="range"
+                        :min="1"
+                        :max="props.totalPages"
+                        :value="sliderValue"
+                        class="page-slider"
+                        @input="handleSliderInput"
+                        @change="commitSliderValue"
+                        :disabled="isSliderDisabled"
+                      />
+                      <div
+                        class="slider-fill"
+                        :style="{ width: sliderPercentage + '%' }"
+                      ></div>
+                      <div
+                        v-if="!isSliderDisabled"
+                        class="slider-tooltip"
+                        :style="{ left: sliderPercentage + '%' }"
+                      >
+                        {{ sliderValue }}
+                      </div>
+                    </div>
+                    <span class="slider-limit">{{ props.totalPages }}</span>
+                  </div>
+                </div>
+                <span class="range-text"
+                  >{{ pageStartItem }}-{{ pageEndItem }}번째 문제 표시
+                  중</span
+                >
+              </div>
+            </div>
+          </div>
+
           <div v-if="props.questions.length === 0" class="no-results">
             {{
               props.appliedSearchKeyword
@@ -261,129 +513,6 @@ watch(
             }}
           </div>
           <div v-else class="question-list">
-            <div class="header-copy">
-              <div class="header-top">
-                <div class="title-row">
-                  <h3 class="question-list-title">
-                    {{ props.listTitle ?? "문제 목록" }}
-                  </h3>
-                  <div
-                    v-if="props.showScopeToggle"
-                    class="scope-toggle"
-                    role="tablist"
-                    aria-label="문제 목록 범위 선택"
-                  >
-                    <button
-                      type="button"
-                      class="scope-btn"
-                      :class="{ active: (props.scopeMode ?? 'mine') === 'mine' }"
-                      :aria-pressed="(props.scopeMode ?? 'mine') === 'mine'"
-                      @click="handleScopeChange('mine')"
-                    >
-                      나의 문제
-                    </button>
-                    <button
-                      type="button"
-                      class="scope-btn"
-                      :class="{ active: (props.scopeMode ?? 'mine') === 'all' }"
-                      :aria-pressed="(props.scopeMode ?? 'mine') === 'all'"
-                      @click="handleScopeChange('all')"
-                    >
-                      전체 문제
-                    </button>
-                  </div>
-                </div>
-                <div class="page-nav">
-                  <NuxtLink to="/dashboard" class="back-btn">
-                    <IconArrowUp class="back-icon" />
-                    대시보드
-                  </NuxtLink>
-                  <NuxtLink to="/question-books" class="quick-link">
-                    <IconBook class="quick-icon" />
-                    문제집 목록
-                  </NuxtLink>
-                  <NuxtLink to="/exams" class="quick-link">
-                    <IconPencil class="quick-icon" />
-                    고사집 목록
-                  </NuxtLink>
-                </div>
-              </div>
-              <span v-if="props.listSubtitle" class="question-list-subtitle">{{
-                props.listSubtitle
-              }}</span>
-            </div>
-
-            <div class="slider-panel-border">
-              <div class="slider-panel">
-                <div class="search-row">
-                  <select v-model="searchField" class="search-select">
-                    <option value="title">문제제목</option>
-                    <option value="content">문제내용</option>
-                  </select>
-                  <input
-                    v-model="searchInput"
-                    type="text"
-                    class="search-input"
-                    :placeholder="
-                      searchField === 'title'
-                        ? '문제 제목을 입력하세요'
-                        : '문제 내용을 입력하세요'
-                    "
-                    @keyup.enter="applySearch"
-                  />
-                  <button class="btn-search" @click="applySearch">검색</button>
-                  <button
-                    v-if="props.appliedSearchKeyword || searchInput"
-                    class="btn-reset-search"
-                    @click="resetSearch"
-                  >
-                    초기화
-                  </button>
-                </div>
-                <div class="slider-row">
-                  <span class="summary-text"
-                    >총 {{ props.totalItems }}문제</span
-                  >
-                  <div class="page-slider-section">
-                    <div
-                      class="slider-wrapper"
-                      :class="{ disabled: isSliderDisabled }"
-                    >
-                      <span class="slider-limit">1</span>
-                      <div class="slider-track-container">
-                        <input
-                          type="range"
-                          :min="1"
-                          :max="props.totalPages"
-                          :value="sliderValue"
-                          class="page-slider"
-                          @input="handleSliderInput"
-                          @change="commitSliderValue"
-                          :disabled="isSliderDisabled"
-                        />
-                        <div
-                          class="slider-fill"
-                          :style="{ width: sliderPercentage + '%' }"
-                        ></div>
-                        <div
-                          v-if="!isSliderDisabled"
-                          class="slider-tooltip"
-                          :style="{ left: sliderPercentage + '%' }"
-                        >
-                          {{ sliderValue }}
-                        </div>
-                      </div>
-                      <span class="slider-limit">{{ props.totalPages }}</span>
-                    </div>
-                  </div>
-                  <span class="range-text"
-                    >{{ pageStartItem }}-{{ pageEndItem }}번째 문제 표시
-                    중</span
-                  >
-                </div>
-              </div>
-            </div>
-
             <div
               v-for="q in props.questions"
               :key="q.question_id"
@@ -498,10 +627,19 @@ watch(
   width: 100%;
 }
 
+.manager-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  width: 100%;
+}
+
 .header-copy {
   display: flex;
   flex-direction: column;
-  padding: 0.1rem;
+  gap: 0.125rem;
+  padding: 0;
   width: 100%;
   min-width: 0;
   max-width: 100%;
@@ -510,7 +648,7 @@ watch(
 
 .question-list .header-copy {
   width: 100%;
-  padding: 1rem 1.25rem;
+  padding: 0;
   margin-bottom: 0;
   border: none;
   background: transparent;
@@ -535,12 +673,22 @@ watch(
 }
 
 .question-list-title {
-  font-size: 1.2rem;
+  font-size: 1.35rem;
+  line-height: 1.2;
   font-weight: 800;
   color: #f8fafc;
   margin: 0;
   letter-spacing: -0.03em;
   white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.question-list-title .section-icon {
+  width: 1.4rem;
+  height: 1.4rem;
+  flex-shrink: 0;
 }
 
 .question-list-subtitle {
@@ -559,7 +707,8 @@ watch(
   flex-shrink: 0;
 }
 
-.page-nav {
+.page-nav,
+.page-links {
   display: flex;
   align-items: center;
   justify-content: flex-end;
@@ -609,6 +758,9 @@ watch(
   border-radius: 999px;
   padding: 0.47rem 0.9rem;
   cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
   transition: all 0.2s ease;
 }
 
@@ -616,6 +768,12 @@ watch(
   background: linear-gradient(135deg, #6366f1, #818cf8);
   color: #fff;
   box-shadow: 0 8px 24px -12px rgba(99, 102, 241, 0.9);
+}
+
+.scope-icon {
+  width: 0.95rem;
+  height: 0.95rem;
+  flex-shrink: 0;
 }
 
 .scope-btn:not(.active):hover {
@@ -626,7 +784,7 @@ watch(
 .question-list {
   display: flex;
   flex-direction: column;
-  gap: 0;
+  gap: 0.5rem;
   width: 100%;
   margin: 0;
 
@@ -643,7 +801,7 @@ watch(
 .question-list-main {
   display: flex;
   flex-direction: column;
-  gap: 1.75rem;
+  gap: 0.75rem;
   flex: 1;
   min-width: 0;
   border: 1px solid rgba(255, 255, 255, 0.1);
@@ -675,6 +833,9 @@ watch(
   padding: 0;
   min-width: 0;
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
 }
 
 .question-list {
@@ -688,6 +849,14 @@ watch(
   width: 100%;
   max-width: 100%;
   box-sizing: border-box;
+}
+
+.pagination-panel-border {
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 10px;
+  padding: 1rem 1.25rem;
+  background: rgba(15, 23, 42, 0.65);
+  box-shadow: 0 20px 60px -22px rgba(15, 23, 42, 1);
 }
 
 .search-bar {
@@ -1190,6 +1359,7 @@ watch(
   display: flex;
   justify-content: space-between;
   align-items: center;
+  flex-wrap: wrap;
   font-size: 0.75rem;
   font-weight: 700;
   color: #94a3b8;
@@ -1209,11 +1379,20 @@ watch(
   font-size: 0.65rem;
   cursor: pointer;
   transition: all 0.2s;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
 }
 
 .btn-clear-filter:hover {
   background: rgba(99, 102, 241, 0.3);
   color: #fff;
+}
+
+.filter-icon {
+  width: 0.85rem;
+  height: 0.85rem;
+  flex-shrink: 0;
 }
 
 .header-actions {
@@ -1222,33 +1401,98 @@ watch(
   align-items: center;
 }
 
+.group-breadcrumb {
+  width: 100%;
+  margin-top: 0.35rem;
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: #94a3b8;
+  text-transform: none;
+  letter-spacing: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.group-search {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin-top: 0.45rem;
+}
+
+.group-search-input {
+  flex: 1;
+  min-width: 0;
+  height: 28px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(15, 23, 42, 0.45);
+  color: #e2e8f0;
+  padding: 0 0.5rem;
+  font-size: 0.72rem;
+}
+
+.group-search-input:focus {
+  outline: none;
+  border-color: rgba(99, 102, 241, 0.45);
+  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.15);
+}
+
+.group-search-clear {
+  height: 28px;
+  padding: 0 0.5rem;
+  border-radius: 8px;
+  border: 1px solid rgba(99, 102, 241, 0.3);
+  background: rgba(99, 102, 241, 0.15);
+  color: #c7d2fe;
+  font-size: 0.7rem;
+  cursor: pointer;
+}
+
+.group-search-clear:hover {
+  background: rgba(99, 102, 241, 0.25);
+  color: #fff;
+}
+
+.group-search-empty {
+  margin-top: 0.5rem;
+  font-size: 0.7rem;
+  color: #64748b;
+}
+
 .btn-manage-groups {
-  background: none;
-  border: none;
+  background: rgba(99, 102, 241, 0.2);
+  border: 1px solid rgba(99, 102, 241, 0.4);
   cursor: pointer;
   opacity: 0.6;
   transition: opacity 0.2s;
-  padding: 2px 6px;
+  padding: 0.2rem 0.5rem;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 0.35rem;
+  border-radius: 4px;
 }
 
 .btn-manage-groups:hover {
   opacity: 1;
+  background: rgba(99, 102, 241, 0.3);
+  color: #fff;
 }
 
 .settings-icon {
   width: 1rem;
   height: 1rem;
   flex-shrink: 0;
+  color: #a5b4fc;
 }
 
 .btn-manage-label {
   font-size: 0.7rem;
   font-weight: 600;
-  color: #94a3b8;
+  color: #a5b4fc;
   letter-spacing: 0.02em;
 }
 

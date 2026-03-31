@@ -1,18 +1,9 @@
 <script setup lang="ts">
 import QuestionBookManager from "~/components/dashboard/QuestionBookManager.vue";
-import IconArrowUp from "~/assets/icons/IconArrowUp.svg?component";
-import IconFileText from "~/assets/icons/IconFileText.svg?component";
-import IconPencil from "~/assets/icons/IconPencil.svg?component";
 </script>
 
 <template>
   <div class="page-container">
-    <div class="page-header">
-      <div class="page-nav">
-        <div class="page-links"></div>
-      </div>
-    </div>
-
     <div class="content-box">
       <QuestionBookManager :show-scope-toggle="true" />
     </div>
@@ -102,14 +93,6 @@ import IconPencil from "~/assets/icons/IconPencil.svg?component";
   width: 1rem;
   height: 1rem;
   flex-shrink: 0;
-}
-
-.content-box {
-  background: rgba(30, 41, 59, 0.5);
-  border-radius: 10px;
-  border: 1px solid rgba(255, 255, 255, 0.05);
-  padding: 1rem 1rem;
-  min-height: 430px;
 }
 
 @media (max-width: 900px) {
