@@ -13,8 +13,14 @@
         :disabled="testing"
         @click="testApis"
       >
-        <span v-if="testing">🔄 호출 중...</span>
-        <span v-else>▶️ 테스트 실행</span>
+        <span v-if="testing" class="button-label">
+          <IconRefresh class="button-icon spinning" />
+          호출 중...
+        </span>
+        <span v-else class="button-label">
+          <IconPlay class="button-icon" />
+          테스트 실행
+        </span>
       </button>
     </section>
 
@@ -44,6 +50,8 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import type { NitroFetchOptions } from 'nitropack/types';
+import IconRefresh from '~/assets/icons/IconRefresh.svg?component';
+import IconPlay from '~/assets/icons/IconPlay.svg?component';
 
 type TestCaseMethod = 'get' | 'post';
 
@@ -154,10 +162,10 @@ const testApis = async () => {
     }
 
     printTable();
-    console.log('✅ 모든 API 테스트 완료', testResults.value);
+    console.log('API 테스트 완료', testResults.value);
   } catch (error) {
     printTable();
-    console.error('❌ API 테스트 실패', error);
+    console.error('API 테스트 실패', error);
     alert(`API 요청 중 오류가 발생했습니다: ${(error as Error).message}`);
   } finally {
     testing.value = false;
@@ -216,6 +224,22 @@ const testApis = async () => {
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
+.button-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.button-icon {
+  width: 1rem;
+  height: 1rem;
+  flex-shrink: 0;
+}
+
+.spinning {
+  animation: spin 1s linear infinite;
+}
+
 .run-btn:disabled {
   opacity: 0.6;
   cursor: progress;
@@ -224,6 +248,11 @@ const testApis = async () => {
 .run-btn:not(:disabled):hover {
   transform: translateY(-2px);
   box-shadow: 0 10px 40px rgba(155, 101, 255, 0.3);
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
 }
 
 .results-card {

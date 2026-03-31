@@ -1,5 +1,10 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue';
+import IconFeedback from '~/assets/icons/IconFeedback.svg?component';
+import IconClose from '~/assets/icons/IconClose.svg?component';
+import IconSearch from '~/assets/icons/IconSearch.svg?component';
+import IconPencil from '~/assets/icons/IconPencil.svg?component';
+import IconTrash from '~/assets/icons/IconTrash.svg?component';
 
 const emit = defineEmits(['close']);
 
@@ -169,8 +174,10 @@ onMounted(fetchMyReports);
   <div class="modal-overlay" @click.self="emit('close')">
     <div class="modal-card">
       <div class="modal-header">
-        <h2>📢 옴브즈먼 (사이트 피드백)</h2>
-        <button class="btn-close" @click="emit('close')">&times;</button>
+        <h2><IconFeedback class="header-icon" /> 옴브즈먼 (사이트 피드백)</h2>
+        <button class="btn-close" @click="emit('close')">
+          <IconClose class="close-icon" />
+        </button>
       </div>
 
       <div class="modal-body">
@@ -185,7 +192,7 @@ onMounted(fetchMyReports);
               <div class="slider-panel">
                 <div class="search-row">
                   <label class="search-box">
-                    <span class="search-icon">⌕</span>
+                    <IconSearch class="search-icon-svg" />
                     <input
                       v-model="searchInput"
                       type="search"
@@ -245,8 +252,8 @@ onMounted(fetchMyReports);
                     <div class="report-content-row">
                       <h4 class="report-title">{{ report.title }}</h4>
                       <div class="report-actions">
-                        <button class="btn-icon" @click="editReport(report)">✏️</button>
-                        <button class="btn-icon" @click="deleteReport(report.report_id)">🗑️</button>
+                        <button class="btn-icon" @click="editReport(report)"><IconPencil class="action-icon" /></button>
+                        <button class="btn-icon" @click="deleteReport(report.report_id)"><IconTrash class="action-icon" /></button>
                       </div>
                     </div>
                   </div>
@@ -322,12 +329,24 @@ onMounted(fetchMyReports);
   font-size: 1.25rem;
   color: #f8fafc;
   font-weight: 800;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
 }
 
 .btn-close {
   background: none; border: none;
-  color: #94a3b8; font-size: 2rem;
+  color: #94a3b8;
   cursor: pointer;
+}
+
+.header-icon,
+.close-icon,
+.search-icon-svg,
+.action-icon {
+  width: 1rem;
+  height: 1rem;
+  flex-shrink: 0;
 }
 
 .modal-body {
@@ -380,9 +399,8 @@ onMounted(fetchMyReports);
   outline: none;
 }
 .search-box input::placeholder { color: #64748b; }
-.search-icon {
+.search-icon-svg {
   color: #94a3b8;
-  font-size: 0.9rem;
 }
 .result-count {
   color: #94a3b8;

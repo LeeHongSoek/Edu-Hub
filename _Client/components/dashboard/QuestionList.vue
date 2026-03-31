@@ -3,6 +3,7 @@ import { ref, onMounted, computed, watch } from 'vue';
 import GroupHierarchy from '~/components/dashboard/GroupHierarchy.vue';
 import QuestionEditor from '~/components/dashboard/QuestionEditor.vue';
 import QuestionSolver from '~/components/dashboard/QuestionSolver.vue';
+import IconSettings from '~/assets/icons/IconSettings.svg?component';
 import { useApi } from '~/composables/useApi';
 import type { Question, Group } from '~/types';
 
@@ -179,7 +180,9 @@ watch(() => props.appliedSearchKeyword, (value) => {
       <div class="group-overlay-header">
         <span>문제 그룹</span>
         <div class="header-actions">
-          <button class="btn-manage-groups" title="그룹 관리" @click="showGroupManager = true">⚙️</button>
+          <button class="btn-manage-groups" title="그룹 관리" @click="showGroupManager = true">
+            <IconSettings class="settings-icon" />
+          </button>
           <button v-if="props.selectedGroupId || props.appliedSearchKeyword" class="btn-clear-filter" @click="clearAllFilters">
             전체
           </button>
@@ -838,15 +841,23 @@ watch(() => props.appliedSearchKeyword, (value) => {
 .btn-manage-groups {
   background: none;
   border: none;
-  font-size: 0.9rem;
   cursor: pointer;
   opacity: 0.6;
   transition: opacity 0.2s;
   padding: 2px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .btn-manage-groups:hover {
   opacity: 1;
+}
+
+.settings-icon {
+  width: 1rem;
+  height: 1rem;
+  flex-shrink: 0;
 }
 
 .no-results {

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
+import IconRocket from '~/assets/icons/IconRocket.svg?component';
 
 const stats = ref<any>(null);
 const loading = ref(true);
@@ -41,7 +42,7 @@ onMounted(fetchStats);
     </div>
 
     <div class="quick-actions">
-      <h3>🚀 빠른 실행</h3>
+      <h3><IconRocket class="section-icon" /> 빠른 실행</h3>
       <div class="action-buttons">
         <button @click="navigateTo('/questions')">새 문제 만들기</button>
         <button @click="navigateTo('/questions')">과제 출제하기</button>
@@ -89,6 +90,15 @@ onMounted(fetchStats);
 .quick-actions h3 {
   margin-bottom: 1rem;
   color: #f8fafc;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.section-icon {
+  width: 1rem;
+  height: 1rem;
+  flex-shrink: 0;
 }
 
 .action-buttons {

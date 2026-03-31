@@ -1,6 +1,9 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
 import type { Group } from '~/types';
+import IconClose from '~/assets/icons/IconClose.svg?component';
+import IconPencil from '~/assets/icons/IconPencil.svg?component';
+import IconTrash from '~/assets/icons/IconTrash.svg?component';
 
 const { apiBase, token, getAuthHeader } = useApi();
 
@@ -106,7 +109,9 @@ const handleDelete = async (group: Group) => {
     <div class="manager-card">
       <div class="manager-header">
         <h3>전체 그룹 관리</h3>
-        <button class="btn-close" @click="emit('close')">&times;</button>
+        <button class="btn-close" @click="emit('close')">
+          <IconClose class="close-icon" />
+        </button>
       </div>
 
       <div class="manager-body">
@@ -130,8 +135,8 @@ const handleDelete = async (group: Group) => {
               <span class="depth-badge l1">L1</span>
               <span class="item-name">{{ g1.name }}</span>
               <div class="item-actions">
-                <button @click="handleRename(g1)">✏️</button>
-                <button @click="handleDelete(g1)">🗑️</button>
+                <button @click="handleRename(g1)"><IconPencil class="action-icon" /></button>
+                <button @click="handleDelete(g1)"><IconTrash class="action-icon" /></button>
               </div>
             </div>
             
@@ -140,8 +145,8 @@ const handleDelete = async (group: Group) => {
                 <span class="depth-badge l2">L2</span>
                 <span class="item-name">{{ g2.name }}</span>
                 <div class="item-actions">
-                  <button @click="handleRename(g2)">✏️</button>
-                  <button @click="handleDelete(g2)">🗑️</button>
+                  <button @click="handleRename(g2)"><IconPencil class="action-icon" /></button>
+                  <button @click="handleDelete(g2)"><IconTrash class="action-icon" /></button>
                 </div>
               </div>
 
@@ -150,8 +155,8 @@ const handleDelete = async (group: Group) => {
                   <span class="depth-badge l3">L3</span>
                   <span class="item-name">{{ g3.name }}</span>
                   <div class="item-actions">
-                    <button @click="handleRename(g3)">✏️</button>
-                    <button @click="handleDelete(g3)">🗑️</button>
+                    <button @click="handleRename(g3)"><IconPencil class="action-icon" /></button>
+                    <button @click="handleDelete(g3)"><IconTrash class="action-icon" /></button>
                   </div>
                 </div>
               </div>
@@ -203,14 +208,23 @@ const handleDelete = async (group: Group) => {
   margin: 0;
   font-size: 1.1rem;
   color: #fff;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
 }
 
 .btn-close {
   background: none;
   border: none;
   color: #94a3b8;
-  font-size: 1.5rem;
   cursor: pointer;
+}
+
+.close-icon,
+.action-icon {
+  width: 1rem;
+  height: 1rem;
+  flex-shrink: 0;
 }
 
 .manager-body {
@@ -281,6 +295,9 @@ const handleDelete = async (group: Group) => {
   cursor: pointer;
   filter: grayscale(1);
   transition: filter 0.2s;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .item-actions button:hover {

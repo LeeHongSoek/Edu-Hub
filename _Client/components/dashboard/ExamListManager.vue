@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted, computed, watch } from 'vue';
 import { useRouter } from 'vue-router';
+import IconCalendar from '~/assets/icons/IconCalendar.svg?component';
 
 const exams = ref<any[]>([]);
 const loading = ref(true);
@@ -100,7 +101,7 @@ const clearExamSearch = () => {
 
 <template>
   <div class="exam-manager">
-    <h3>📝 나의 고사집 목록</h3>
+    <h3><IconCalendar class="section-icon" /> 나의 고사집 목록</h3>
 
     <div v-if="loading" class="loading">불러오는 중...</div>
     <div v-else-if="filteredExams.length === 0" class="empty">검색 조건에 맞는 고사집이 없습니다.</div>
@@ -164,7 +165,19 @@ const clearExamSearch = () => {
 
 <style scoped>
 .exam-manager { display: flex; flex-direction: column; gap: 1.5rem; }
-.exam-manager h3 { color: #f8fafc; margin: 0; }
+.exam-manager h3 {
+  color: #f8fafc;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.section-icon {
+  width: 1rem;
+  height: 1rem;
+  flex-shrink: 0;
+}
 
 .exam-list {
   display: flex;

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
+import IconCalendar from '~/assets/icons/IconCalendar.svg?component';
 
 const logs = ref<any[]>([]);
 const loading = ref(true);
@@ -23,8 +24,8 @@ onMounted(fetchLogs);
 
 const formatAction = (memo: string) => {
   if (memo.startsWith('오답')) return { text: memo, class: 'action-error' };
-  if (memo === '정답') return { text: '정답 🎉', class: 'action-success' };
-  if (memo === '제한시간초과') return { text: '시간 초과 ⏰', class: 'action-warning' };
+  if (memo === '정답') return { text: '정답', class: 'action-success' };
+  if (memo === '제한시간초과') return { text: '시간 초과', class: 'action-warning' };
   return { text: memo, class: 'action-info' };
 };
 </script>
@@ -32,7 +33,7 @@ const formatAction = (memo: string) => {
 <template>
   <div class="log-viewer">
     <div class="header-row">
-      <h3>📅 최근 학습 활동 내역</h3>
+      <h3><IconCalendar class="section-icon" /> 최근 학습 활동 내역</h3>
       <button class="btn-refresh" @click="fetchLogs">새로고침</button>
     </div>
 
@@ -68,7 +69,19 @@ const formatAction = (memo: string) => {
   align-items: center;
 }
 
-.header-row h3 { color: #f8fafc; margin: 0; }
+.header-row h3 {
+  color: #f8fafc;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.section-icon {
+  width: 1rem;
+  height: 1rem;
+  flex-shrink: 0;
+}
 
 .btn-refresh {
   background: rgba(255, 255, 255, 0.05);

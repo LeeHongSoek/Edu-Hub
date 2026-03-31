@@ -2,6 +2,13 @@
 import { ref, onMounted, onUnmounted, computed } from 'vue';
 import type { QuestionListResponse } from '~/types';
 import LatexRenderer from '~/components/LatexRenderer.vue';
+import IconShield from '~/assets/icons/IconShield.svg?component';
+import IconCheck from '~/assets/icons/IconCheck.svg?component';
+import IconSparkle from '~/assets/icons/IconSparkle.svg?component';
+import IconCamera from '~/assets/icons/IconCamera.svg?component';
+import IconRobot from '~/assets/icons/IconRobot.svg?component';
+import IconMail from '~/assets/icons/IconMail.svg?component';
+import IconRocket from '~/assets/icons/IconRocket.svg?component';
 import IconHome from '~/assets/icons/IconHome.svg?component';
 import IconUser from '~/assets/icons/IconUser.svg?component';
 import IconLogout from '~/assets/icons/IconLogout.svg?component';
@@ -437,7 +444,7 @@ onMounted(() => {
                       <span class="t-id">#{{ q.question_id }}</span>
                       <LatexRenderer 
                         class="t-text" 
-                        :text="q.content?.trim() || q.explanation?.trim() || q.answer?.trim() || '지식을 완성하는 문제 ✏️'" 
+                        :text="q.content?.trim() || q.explanation?.trim() || q.answer?.trim() || '지식을 완성하는 문제'" 
                         :strip-newlines="true"
                       />
                       <span class="t-new">NEW</span>
@@ -538,9 +545,9 @@ onMounted(() => {
             </p>
 
             <div class="badge-row">
-              <span>🔒 SSL 보안</span>
-              <span>✅ 개인정보보호</span>
-              <span>🆓 무료 플랜</span>
+              <span><IconShield class="badge-icon" /> SSL 보안</span>
+              <span><IconCheck class="badge-icon" /> 개인정보보호</span>
+              <span><IconSparkle class="badge-icon" /> 무료 플랜</span>
             </div>
           </div>
         </aside>
@@ -560,7 +567,7 @@ onMounted(() => {
           </button>
 
           <div class="modal-header">
-            <span class="modal-badge">📚 AI Edu-Hub 소개</span>
+            <span class="modal-badge"><IconBook class="badge-icon" /> AI Edu-Hub 소개</span>
             <h2 class="modal-title">사진 한 장으로 시작하는<br><em>우리 반 맞춤형 스마트 학습지</em></h2>
             <p class="modal-lead">안녕하세요! AI Edu-Hub는 선생님의 문제 출제를 도와주고, 여러분에게는 나만의 AI 튜터를 부모님께는 학습 리포트를 제공하는 스마트 학습 플랫폼이에요!</p>
           </div>
@@ -568,21 +575,21 @@ onMounted(() => {
           <div class="modal-grid">
             <div class="modal-features">
               <div class="feat-card">
-                <div class="feat-icon">📸</div>
+                <div class="feat-icon"><IconCamera class="feat-icon-svg" /></div>
                 <div class="feat-body">
                   <h3>1초 문제 등록</h3>
                   <p>선생님이 문제집 사진을 찍으면, AI가 읽어서 바로 디지털 문제로 바꿔줘요. 타이핑 없이 쉽게 시험지를 만들 수 있어요!</p>
                 </div>
               </div>
               <div class="feat-card">
-                <div class="feat-icon">🤖</div>
+                <div class="feat-icon"><IconRobot class="feat-icon-svg" /></div>
                 <div class="feat-body">
                   <h3>포기 없는 학습</h3>
                   <p>AI가 즉시 채점하고 틀린 이유를 설명해줘요. 복습까지 확실히 도와주니 성적이 쑥쑥!</p>
                 </div>
               </div>
               <div class="feat-card">
-                <div class="feat-icon">📧</div>
+                <div class="feat-icon"><IconMail class="feat-icon-svg" /></div>
                 <div class="feat-body">
                   <h3>부모님 안심 리포트</h3>
                   <p>시험이 끝나면 점수와 분석 리포트가 부모님께 자동 발송되어 어떤 부분이 약한지 한눈에 보여줍니다.</p>
@@ -591,7 +598,7 @@ onMounted(() => {
             </div>
 
             <div class="modal-steps">
-              <h3 class="steps-title">🚀 이렇게 사용해요!</h3>
+              <h3 class="steps-title"><IconRocket class="steps-title-icon" /> 이렇게 사용해요!</h3>
               <div class="steps-list">
                 <div class="step-item">
                   <span class="step-num">1</span>
@@ -603,14 +610,14 @@ onMounted(() => {
                 </div>
                 <div class="step-item">
                   <span class="step-num">3</span>
-                  <div><strong>부모님</strong>은 리포트를 보고 따뜻한 격려를 건네요. 😊</div>
+                  <div><strong>부모님</strong>은 리포트를 보고 따뜻한 격려를 건네요.</div>
                 </div>
               </div>
             </div>
           </div>
 
           <div class="modal-footer">
-            <p class="modal-slogan">AI Edu-Hub와 함께라면 공부가 더 이상 숙제가 아닌 <strong>즐거운 경험</strong>이 됩니다! 🌟</p>
+            <p class="modal-slogan">AI Edu-Hub와 함께라면 공부가 더 이상 숙제가 아닌 <strong>즐거운 경험</strong>이 됩니다!</p>
           </div>
 
         </div>
@@ -628,7 +635,7 @@ onMounted(() => {
           </button>
 
           <div class="modal-header">
-            <span class="modal-badge">✨ 환영합니다</span>
+            <span class="modal-badge"><IconSparkle class="badge-icon" /> 환영합니다</span>
             <h2 class="modal-title">EduHub 회원가입</h2>
             <p class="modal-lead">쉽고 빠른 가입으로 스마트한 학습을 시작하세요.</p>
           </div>
@@ -815,7 +822,11 @@ onMounted(() => {
   font-weight: 900;
   letter-spacing: -0.03em;
 }
-.logo-icon { font-size: 1.6rem; }
+.logo-icon {
+  width: 1.6rem;
+  height: 1.6rem;
+  color: #fbbf24;
+}
 .logo-text em {
   font-style: normal;
   background: linear-gradient(135deg, #818cf8, #c084fc);
@@ -1530,6 +1541,15 @@ input[type="password"] {
   font-size: 0.7rem;
   color: #334155;
   font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.badge-icon {
+  width: 0.9rem;
+  height: 0.9rem;
+  flex-shrink: 0;
 }
 
 /* ─── 스크롤 인디케이터 ─── */
@@ -1670,7 +1690,9 @@ input[type="password"] {
 }
 
 .modal-badge {
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
   background: linear-gradient(135deg, rgba(79,70,229,0.3), rgba(124,58,237,0.3));
   border: 1px solid rgba(165,180,252,0.25);
   border-radius: 10px;
@@ -1728,6 +1750,11 @@ input[type="password"] {
   margin-top: 0.1rem;
 }
 
+.feat-icon-svg {
+  width: 1.35rem;
+  height: 1.35rem;
+}
+
 .feat-body h3 {
   font-size: 1rem;
   font-weight: 700;
@@ -1746,6 +1773,15 @@ input[type="password"] {
   color: #a5b4fc;
   margin-bottom: 1rem;
   letter-spacing: -0.01em;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.steps-title-icon {
+  width: 1rem;
+  height: 1rem;
+  flex-shrink: 0;
 }
 
 .steps-list {

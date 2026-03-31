@@ -8,6 +8,16 @@ import RelationManager from '~/components/dashboard/RelationManager.vue';
 import MessageManager from '~/components/dashboard/MessageManager.vue';
 import QuestionBookManager from '~/components/dashboard/QuestionBookManager.vue';
 import ExamListManager from '~/components/dashboard/ExamListManager.vue';
+import IconGraduationCap from '~/assets/icons/IconGraduationCap.svg?component';
+import IconBoard from '~/assets/icons/IconBoard.svg?component';
+import IconHome from '~/assets/icons/IconHome.svg?component';
+import IconFileText from '~/assets/icons/IconFileText.svg?component';
+import IconBook from '~/assets/icons/IconBook.svg?component';
+import IconPencil from '~/assets/icons/IconPencil.svg?component';
+import IconChart from '~/assets/icons/IconChart.svg?component';
+import IconUsers from '~/assets/icons/IconUsers.svg?component';
+import IconMessage from '~/assets/icons/IconMessage.svg?component';
+import IconCalendar from '~/assets/icons/IconCalendar.svg?component';
 import { nextTick } from 'vue';
 
 const userCookie = useCookie('user_info');
@@ -57,24 +67,24 @@ onMounted(() => {
         <h1 class="welcome-title">
           안녕하세요,
           <span class="role-badge-inline" :class="'role-' + userInfo.role">
-            <span v-if="userInfo.role === 'S'">🎓</span>
-            <span v-else-if="userInfo.role === 'T'">👨‍🏫</span>
-            <span v-else>🏠</span>
+            <IconGraduationCap v-if="userInfo.role === 'S'" class="role-icon" />
+            <IconBoard v-else-if="userInfo.role === 'T'" class="role-icon" />
+            <IconHome v-else class="role-icon" />
             {{ userInfo.role === 'T' ? '선생님' : userInfo.role === 'P' ? '학부모' : '학생' }}
           </span>
           <span class="username">{{ userInfo.username }}</span>님!
           <!-- 대시보드 내 네비게이션 버튼 (타이틀 바로 뒤) -->
           <div v-if="userInfo.role_id !== 'P'" class="quick-nav">
             <NuxtLink to="/questions?mine=true" class="nav-btn">
-              <span class="nav-icon">📄</span>
+              <IconFileText class="nav-icon" />
               <span>나의 문제목록</span>
             </NuxtLink>
             <NuxtLink to="/question-books" class="nav-btn">
-              <span class="nav-icon">📚</span>
+              <IconBook class="nav-icon" />
               <span>나의 문제집목록</span>
             </NuxtLink>
             <NuxtLink to="/exams" class="nav-btn">
-              <span class="nav-icon">📝</span>
+              <IconPencil class="nav-icon" />
               <span>나의 고사집목록</span>
             </NuxtLink>
           </div>
@@ -88,20 +98,20 @@ onMounted(() => {
       <button 
         :class="{ active: activeTab === 'stats' }" 
         @click="activeTab = 'stats'"
-      >📊 요약 통계</button>
+      ><IconChart class="tab-icon" /> 요약 통계</button>
       <button 
         :class="{ active: activeTab === 'relations' }" 
         @click="activeTab = 'relations'"
-      >👥 관계 관리</button>
+      ><IconUsers class="tab-icon" /> 관계 관리</button>
       <button 
         :class="{ active: activeTab === 'messages' }" 
         @click="activeTab = 'messages'"
-      >💬 메시지 함</button>
+      ><IconMessage class="tab-icon" /> 메시지 함</button>
       <button 
         v-if="userInfo.role_id === 'S'"
         :class="{ active: activeTab === 'logs' }" 
         @click="activeTab = 'logs'"
-      >🕒 학습 활동 로그</button>
+      ><IconCalendar class="tab-icon" /> 학습 활동 로그</button>
     </div>
 
     <div class="dashboard-content">
@@ -204,8 +214,21 @@ onMounted(() => {
 }
 
 .nav-icon {
-  font-size: 1rem;
-  line-height: 1;
+  width: 1rem;
+  height: 1rem;
+  flex-shrink: 0;
+}
+
+.tab-icon {
+  width: 1rem;
+  height: 1rem;
+  flex-shrink: 0;
+}
+
+.role-icon {
+  width: 1rem;
+  height: 1rem;
+  flex-shrink: 0;
 }
 
 .role-badge-inline {
@@ -246,6 +269,9 @@ onMounted(() => {
   padding: 0.5rem 1rem;
   transition: all 0.2s;
   border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
 }
 
 .dashboard-tabs button:hover {

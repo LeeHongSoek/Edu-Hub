@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import type { Group } from '~/types';
+import IconArrowRight from '~/assets/icons/IconArrowRight.svg?component';
 
 defineOptions({
   name: 'GroupTreeNode',
@@ -37,7 +38,7 @@ const toggleExpand = (event: Event) => {
         :class="{ 'is-expanded': isExpanded }"
         @click="toggleExpand"
       >
-        ▶
+        <IconArrowRight class="toggle-icon-svg" />
       </span>
       <span v-else class="bullet">•</span>
       <span class="name-text">{{ group.name }}</span>
@@ -97,6 +98,11 @@ const toggleExpand = (event: Event) => {
   display: inline-block;
   width: 1.2rem;
   text-align: center;
+}
+
+.toggle-icon-svg {
+  width: 0.75rem;
+  height: 0.75rem;
 }
 
 .toggle-icon:hover {

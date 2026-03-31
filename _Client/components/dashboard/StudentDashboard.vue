@@ -1,5 +1,9 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue';
+import IconCalendar from '~/assets/icons/IconCalendar.svg?component';
+import IconTarget from '~/assets/icons/IconTarget.svg?component';
+import IconPencil from '~/assets/icons/IconPencil.svg?component';
+import IconBook from '~/assets/icons/IconBook.svg?component';
 import {
   Chart as ChartJS,
   Title,
@@ -115,14 +119,14 @@ const chartOptions = {
   <div v-if="loading" class="loading">통계를 불러오는 중...</div>
   <div v-else-if="stats" class="stats-grid">
     <div class="stat-card main-chart">
-      <h3>📅 최근 7일 학습 현황</h3>
+      <h3><IconCalendar class="section-icon" /> 최근 7일 학습 현황</h3>
       <div class="chart-container">
         <Line v-if="chartData" :data="chartData" :options="chartOptions" />
       </div>
     </div>
     
     <div class="stat-card">
-      <div class="stat-icon">🎯</div>
+      <div class="stat-icon"><IconTarget class="stat-icon-svg" /></div>
       <div class="stat-info">
         <span class="label">평균 정답률 (정답 / 푼 문제)</span>
         <span class="value">{{ stats.accuracy }}%</span>
@@ -130,7 +134,7 @@ const chartOptions = {
     </div>
 
     <div class="stat-card">
-      <div class="stat-icon">📝</div>
+      <div class="stat-icon"><IconPencil class="stat-icon-svg" /></div>
       <div class="stat-info">
         <span class="label">총 푼 문제</span>
         <span class="value">{{ stats.totalSolved }} / {{ stats.totalViewed }}개</span>
@@ -138,7 +142,7 @@ const chartOptions = {
     </div>
 
     <div class="stat-card">
-      <div class="stat-icon">📚</div>
+      <div class="stat-icon"><IconBook class="stat-icon-svg" /></div>
       <div class="stat-info">
         <span class="label">오답 노트 수</span>
         <span class="value">{{ stats.studyLogs }}개</span>
@@ -173,6 +177,15 @@ const chartOptions = {
   margin-bottom: 1.5rem;
   color: #94a3b8;
   font-size: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.section-icon {
+  width: 1rem;
+  height: 1rem;
+  flex-shrink: 0;
 }
 
 .chart-container {
@@ -188,6 +201,11 @@ const chartOptions = {
   align-items: center;
   justify-content: center;
   border-radius: 10px;
+}
+
+.stat-icon-svg {
+  width: 1.4rem;
+  height: 1.4rem;
 }
 
 .stat-info {

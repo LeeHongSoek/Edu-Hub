@@ -1,5 +1,8 @@
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref } from 'vue';
+import IconUsers from '~/assets/icons/IconUsers.svg?component';
+import IconSearch from '~/assets/icons/IconSearch.svg?component';
+import IconClose from '~/assets/icons/IconClose.svg?component';
 
 type RelationRoleId = 'S' | 'T' | 'P';
 type TargetKey = 'parents' | 'teachers' | 'students';
@@ -422,7 +425,7 @@ onMounted(loadRelations);
   <div class="relation-manager">
     <div class="manager-header">
       <div class="header-copy">
-        <h3>👥 나의 인맥 관리</h3>
+        <h3><IconUsers class="section-icon" /> 나의 인맥 관리</h3>
         <p class="manager-subtitle">{{ relationSummary }}</p>
       </div>
       <button class="btn-add" :disabled="relationTargets.length === 0" @click="openConnectModal">
@@ -434,7 +437,7 @@ onMounted(loadRelations);
       <div class="slider-panel">
         <div class="search-row">
           <label class="search-box">
-            <span class="search-icon">⌕</span>
+            <IconSearch class="search-icon-svg" />
             <input
               v-model="relationSearchInput"
               type="search"
@@ -515,7 +518,9 @@ onMounted(loadRelations);
                 {{ target.label }}
               </button>
             </div>
-            <button class="btn-close" @click="closeConnectModal">&times;</button>
+            <button class="btn-close" @click="closeConnectModal">
+              <IconClose class="close-icon" />
+            </button>
           </div>
         </div>
 
@@ -623,6 +628,17 @@ onMounted(loadRelations);
   color: #f8fafc;
   margin: 0;
   font-size: 1.25rem;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.section-icon,
+.search-icon-svg,
+.close-icon {
+  width: 1rem;
+  height: 1rem;
+  flex-shrink: 0;
 }
 
 .manager-subtitle {
@@ -912,7 +928,7 @@ onMounted(loadRelations);
   color: #64748b;
 }
 
-.search-icon {
+.search-icon-svg {
   color: #94a3b8;
 }
 

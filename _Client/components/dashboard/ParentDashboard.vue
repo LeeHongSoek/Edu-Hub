@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
+import IconUsers from '~/assets/icons/IconUsers.svg?component';
 
 const childrenStats = ref<any[]>([]);
 const loading = ref(true);
@@ -28,7 +29,7 @@ onMounted(fetchStats);
     연결된 자녀가 없습니다. 학생 계정을 자녀로 등록해 주세요.
   </div>
   <div v-else class="parent-stats">
-    <h3>👦 자녀 학습 요약</h3>
+    <h3><IconUsers class="section-icon" /> 자녀 학습 요약</h3>
     <div class="children-grid">
       <div v-for="child in childrenStats" :key="child.studentNo" class="child-card">
         <div class="child-header">
@@ -51,6 +52,15 @@ onMounted(fetchStats);
 .parent-stats h3 {
   margin-bottom: 1.5rem;
   color: #f8fafc;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.section-icon {
+  width: 1rem;
+  height: 1rem;
+  flex-shrink: 0;
 }
 
 .children-grid {

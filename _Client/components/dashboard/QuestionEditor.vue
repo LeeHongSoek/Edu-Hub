@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue';
 import type { Question, QuestionOption, Group } from '~/types';
+import IconClose from '~/assets/icons/IconClose.svg?component';
 
 const props = defineProps<{
   question: Question;
@@ -70,12 +71,12 @@ const handleSave = async () => {
       method: 'PATCH',
       body: editData.value
     });
-    alert('수정되었습니다! ✨');
+    alert('수정되었습니다!');
     emit('updated');
     emit('close');
   } catch (error) {
     console.error('서버 통신 오류(save) question:', error);
-    alert('저장 중 오류가 발생했습니다. 😢');
+    alert('저장 중 오류가 발생했습니다.');
   } finally {
     isSaving.value = false;
   }
@@ -109,7 +110,9 @@ const handleDelete = async () => {
           <span class="badge">문제 수정</span>
           <h2 class="editor-title">{{ question.title }}</h2>
         </div>
-        <button class="btn-close" @click="emit('close')">&times;</button>
+        <button class="btn-close" @click="emit('close')">
+          <IconClose class="close-icon" />
+        </button>
       </div>
 
       <div class="editor-body">

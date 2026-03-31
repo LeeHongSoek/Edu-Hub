@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted, computed, watch } from 'vue';
+import IconBook from '~/assets/icons/IconBook.svg?component';
 
 const books = ref<any[]>([]);
 const loading = ref(true);
@@ -118,9 +119,9 @@ onMounted(fetchBooks);
 </script>
 
 <template>
-  <div class="book-manager">
+    <div class="book-manager">
     <div class="manager-header">
-      <h3>📚 나의 문제집 목록</h3>
+      <h3><IconBook class="section-icon" /> 나의 문제집 목록</h3>
       <button class="btn-create" @click="showCreateModal = true">+ 새 문제집</button>
     </div>
 
@@ -210,7 +211,19 @@ onMounted(fetchBooks);
 <style scoped>
 .book-manager { display: flex; flex-direction: column; gap: 1.5rem; }
 .manager-header { display: flex; justify-content: space-between; align-items: center; }
-.manager-header h3 { color: #f8fafc; margin: 0; }
+.manager-header h3 {
+  color: #f8fafc;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.section-icon {
+  width: 1rem;
+  height: 1rem;
+  flex-shrink: 0;
+}
 
 .btn-create {
   background: #6366f1;

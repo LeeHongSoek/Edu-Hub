@@ -1,5 +1,8 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue';
+import IconMessage from '~/assets/icons/IconMessage.svg?component';
+import IconSearch from '~/assets/icons/IconSearch.svg?component';
+import IconClose from '~/assets/icons/IconClose.svg?component';
 
 type MessageRoleId = 'S' | 'T' | 'P';
 
@@ -337,7 +340,7 @@ onMounted(() => {
       <div class="manager-header">
         <div class="header-copy">
         <div class="header-title-row">
-          <h2>💬 메시지 함</h2>
+          <h2><IconMessage class="section-icon" /> 메시지 함</h2>
           <div class="message-tabs">
             <button
               class="message-tab"
@@ -366,7 +369,7 @@ onMounted(() => {
       <div class="slider-panel">
         <div class="search-row">
           <label class="search-box">
-            <span class="search-icon">⌕</span>
+            <IconSearch class="search-icon-svg" />
             <input
               v-model="messageSearchInput"
               type="search"
@@ -440,14 +443,16 @@ onMounted(() => {
             <h3>새 메시지 작성</h3>
             <p class="modal-desc">연결된 상대를 찾아 바로 메시지를 보낼 수 있습니다.</p>
           </div>
-          <button class="btn-close" @click="closeComposeModal">&times;</button>
+          <button class="btn-close" @click="closeComposeModal">
+            <IconClose class="close-icon" />
+          </button>
         </div>
 
         <div class="modal-body">
           <div v-if="!composeRecipientPreset" class="recipient-panel">
             <div class="recipient-search-row">
               <label class="search-box">
-                <span class="search-icon">⌕</span>
+                <IconSearch class="search-icon-svg" />
                 <input
                   v-model="recipientSearchInput"
                   type="search"
@@ -569,6 +574,9 @@ onMounted(() => {
   color: #f8fafc;
   margin: 0;
   font-weight: 800;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
 }
 
 .header-title-row {
@@ -675,8 +683,16 @@ onMounted(() => {
   color: #64748b;
 }
 
-.search-icon {
+.search-icon-svg {
   color: #94a3b8;
+}
+
+.section-icon,
+.search-icon-svg,
+.close-icon {
+  width: 1rem;
+  height: 1rem;
+  flex-shrink: 0;
 }
 
 .btn-search,

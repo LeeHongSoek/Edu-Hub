@@ -3,6 +3,10 @@ import { ref, onMounted, onUnmounted, computed } from 'vue';
 import type { Question, QuestionReview } from '~/types';
 import LatexRenderer from '~/components/LatexRenderer.vue';
 import IconClock from '~/assets/icons/IconClock.svg?component';
+import IconMessage from '~/assets/icons/IconMessage.svg?component';
+import IconCheck from '~/assets/icons/IconCheck.svg?component';
+import IconX from '~/assets/icons/IconX.svg?component';
+import IconClose from '~/assets/icons/IconClose.svg?component';
 
 const { apiBase, token, getAuthHeader } = useApi();
 
@@ -169,12 +173,12 @@ const handleFinish = async (isTimeOver = false) => {
     }
     if (isCorrect.value) {
       modalType.value = 'success';
-      modalTitle.value = '정답입니다! 🎉';
+      modalTitle.value = '정답입니다!';
       modalMessage.value = '정말 잘하셨어요! 다음 문제도 도전해 보세요.';
       logAction('정답확인:정답');
     } else {
       modalType.value = 'error';
-      modalTitle.value = '아쉽게도 틀렸습니다. 😢';
+      modalTitle.value = '아쉽게도 틀렸습니다.';
       modalMessage.value = `정답은 "${props.question.answer || '해설 참조'}" 입니다. 해설을 확인해 보세요.`;
       logAction('정답확인:오답');
     }
@@ -188,7 +192,7 @@ const handleFinish = async (isTimeOver = false) => {
   
   if (isTimeOver) {
     modalType.value = 'error';
-    modalTitle.value = '시간 초과! ⏰';
+    modalTitle.value = '시간 초과!';
     modalMessage.value = '제한 시간이 다 되어 오답 처리되었습니다. 해설을 확인해 보세요.';
     logAction('정답확인:시간초과');
   }
@@ -370,7 +374,7 @@ const submitReview = async () => {
                 >★</span>
               </div>
               <button class="btn-inline-comment" @click="openReviewModal">
-                💬 의견 남기기
+                <IconMessage class="inline-icon" /> 의견 남기기
               </button>
             </div>
           </div>
@@ -405,12 +409,12 @@ const submitReview = async () => {
     <!-- 커스텀 알림 모달 -->
     <Transition name="fade">
       <div v-if="showModal" class="modal-overlay" @click.self="showModal = false">
-        <div class="modal-content" :class="modalType">
-          <div class="modal-icon">
-            <span v-if="modalType === 'success'">✅</span>
-            <span v-else-if="modalType === 'error'">❌</span>
-            <span v-else>⏰</span>
-          </div>
+          <div class="modal-content" :class="modalType">
+            <div class="modal-icon">
+            <IconCheck v-if="modalType === 'success'" class="modal-icon-svg" />
+            <IconX v-else-if="modalType === 'error'" class="modal-icon-svg" />
+            <IconClock v-else class="modal-icon-svg" />
+            </div>
           <h3 class="modal-title">{{ modalTitle }}</h3>
           <p class="modal-message">{{ modalMessage }}</p>
           <button class="btn-modal-close" @click="showModal = false">확인</button>
@@ -421,10 +425,12 @@ const submitReview = async () => {
     <!-- 의견(리뷰) 모달 -->
     <Transition name="fade">
       <div v-if="showReviewModal" class="modal-overlay" @click.self="showReviewModal = false">
-        <div class="modal-content review-modal-content">
+          <div class="modal-content review-modal-content">
           <div class="modal-header">
             <h3 class="modal-title">문제 의견 및 평가</h3>
-            <button class="btn-close-sm" @click="showReviewModal = false">&times;</button>
+            <button class="btn-close-sm" @click="showReviewModal = false">
+              <IconClose class="close-icon" />
+            </button>
           </div>
           
           <div class="review-form">
@@ -789,6 +795,9 @@ const submitReview = async () => {
 }
 
 .btn-inline-comment {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
   background: rgba(99, 102, 241, 0.1);
   border: 1px solid rgba(99, 102, 241, 0.2);
   color: #818cf8;
@@ -804,6 +813,14 @@ const submitReview = async () => {
   background: rgba(99, 102, 241, 0.2);
   border-color: rgba(99, 102, 241, 0.4);
   color: #fff;
+}
+
+.inline-icon,
+.modal-icon-svg,
+.close-icon {
+  width: 1rem;
+  height: 1rem;
+  flex-shrink: 0;
 }
 
 .explanation-box h4 {
@@ -1094,7 +1111,6 @@ const submitReview = async () => {
   background: none;
   border: none;
   color: #94a3b8;
-  font-size: 1.75rem;
   cursor: pointer;
   padding: 0;
   line-height: 1;

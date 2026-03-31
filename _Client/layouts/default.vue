@@ -116,7 +116,11 @@ function handleLogout() {
   color: #f0f4ff;
   white-space: nowrap;
 }
-.logo-icon { font-size: 1.6rem; }
+.logo-icon {
+  width: 1.6rem;
+  height: 1.6rem;
+  color: #fbbf24;
+}
 .logo-text em {
   font-style: normal;
   background: linear-gradient(135deg, #818cf8, #c084fc);
