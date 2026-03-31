@@ -49,6 +49,7 @@ export interface QuestionListResponse {
 
 export interface Group {
   group_id: string | number; // 그룹 고유 ID
+  creator_no: string | number; // 생성자 고유 번호
   name: string; // 그룹 이름
   description: string | null; // 그룹 설명
   parent_group_id: string | number | null; // 상위 그룹 ID

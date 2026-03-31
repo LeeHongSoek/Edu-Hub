@@ -198,8 +198,8 @@ const handleDelete = async () => {
             <textarea v-model="editData.question" rows="3" placeholder="질문 내용을 입력하세요 (Markdown/LaTeX 지원)"></textarea>
           </div>
           <div class="form-group">
-            <label>지문 (Content - 선택사항)</label>
-            <textarea v-model="editData.content" rows="4" placeholder="지문이나 부가 설명이 필요한 경우 입력하세요"></textarea>
+            <label>힌트 (Hint - 선택사항)</label>
+            <textarea v-model="editData.content" rows="4" placeholder="힌트나 부가 설명이 필요한 경우 입력하세요"></textarea>
           </div>
         </div>
 

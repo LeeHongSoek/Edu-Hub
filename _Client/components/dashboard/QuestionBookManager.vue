@@ -243,8 +243,8 @@ onMounted(fetchBooks);
 }
 
 .book-grid {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 1rem;
   margin-top: 1rem;
 }
@@ -415,6 +415,12 @@ onMounted(fetchBooks);
   background: rgba(255, 255, 255, 0.08);
   color: #e2e8f0;
   border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+@media (max-width: 1024px) {
+  .book-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 .summary-text,

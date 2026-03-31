@@ -34,6 +34,8 @@ const showModal = ref(false);
 const modalTitle = ref('');
 const modalMessage = ref('');
 const modalType = ref<'success' | 'error' | 'warning'>('success');
+const showHintTooltip = ref(false);
+let hintTooltipTimer: any = null;
 
 // 리뷰 관련 상태
 const showReviewModal = ref(false);
@@ -205,6 +207,22 @@ const handleKeyDown = (e: KeyboardEvent) => {
   }
 };
 
+const clearHintTooltip = () => {
+  showHintTooltip.value = false;
+  if (hintTooltipTimer) {
+    clearTimeout(hintTooltipTimer);
+    hintTooltipTimer = null;
+  }
+};
+
+const scheduleHintTooltip = () => {
+  if (!props.question.content) return;
+  if (hintTooltipTimer) clearTimeout(hintTooltipTimer);
+  hintTooltipTimer = setTimeout(() => {
+    showHintTooltip.value = true;
+  }, 1000);
+};
+
 onMounted(() => {
   console.log('Solve Screen Data:', props.question); // 데이터 검증용 로그
   startTimer();
@@ -214,6 +232,7 @@ onMounted(() => {
 
 onUnmounted(() => {
   if (timerInterval) clearInterval(timerInterval);
+  clearHintTooltip();
   window.removeEventListener('keydown', handleKeyDown);
 });
 
@@ -283,8 +302,8 @@ const submitReview = async () => {
 <template>
   <div class="solver-overlay">
     <div class="solver-card">
-      <div class="solver-header-compact">
-        <div class="compact-top">
+        <div class="solver-header-compact">
+          <div class="compact-top">
           <div class="compact-top-left">
             <span class="badge-type">{{ question.type.type_name }}</span>
           </div>
@@ -304,8 +323,21 @@ const submitReview = async () => {
             </div>
             <button class="btn-close" @click="emit('close')">&times;</button>
           </div>
-        </div>
-        <h2 class="solver-title">{{ question.title }}</h2>
+          </div>
+        <h2
+          class="solver-title"
+          :class="{ 'has-hint': !!question.content }"
+          @mouseenter="scheduleHintTooltip"
+          @mouseleave="clearHintTooltip"
+        >
+          {{ question.title }}
+          <Transition name="fade">
+            <div v-if="question.content && showHintTooltip" class="question-hint-bubble">
+              <div class="hint-bubble-label">힌트</div>
+              <LatexRenderer :text="question.content" />
+            </div>
+          </Transition>
+        </h2>
       </div>
 
       <div class="solver-body">
@@ -317,10 +349,6 @@ const submitReview = async () => {
           <client-only>
             <v-md-preview :text="question.passage.content_md"></v-md-preview>
           </client-only>
-        </div>
-
-        <div v-if="question.content" class="question-content">
-          <LatexRenderer :text="question.content" />
         </div>
 
         <!-- 객관식 보기 영역 (M: 객관식) -->
@@ -588,6 +616,9 @@ const submitReview = async () => {
 }
 
 .solver-title {
+  position: relative;
+  width: fit-content;
+  max-width: 100%;
   margin: 0;
   font-size: 1.0rem;
   color: #cbd5e1;
@@ -637,11 +668,57 @@ const submitReview = async () => {
 }
 
 .question-text {
+  position: relative;
   font-size: 1.25rem;
   font-weight: 600;
   color: #fff;
   line-height: 1.5;
   margin-bottom: 1.5rem;
+}
+
+.question-hint-bubble {
+  position: absolute;
+  left: 0;
+  top: calc(100% + 12px);
+  z-index: 20;
+  max-width: min(760px, 100%);
+  min-width: 320px;
+  padding: 0.85rem 1rem;
+  border-radius: 14px;
+  background: rgba(15, 23, 42, 0.98);
+  border: 1px solid rgba(99, 102, 241, 0.28);
+  box-shadow: 0 20px 45px -18px rgba(0, 0, 0, 0.65);
+  color: #dbeafe;
+}
+
+.question-hint-bubble::before {
+  content: '';
+  position: absolute;
+  top: -7px;
+  left: 24px;
+  width: 14px;
+  height: 14px;
+  background: rgba(15, 23, 42, 0.98);
+  border-left: 1px solid rgba(99, 102, 241, 0.28);
+  border-top: 1px solid rgba(99, 102, 241, 0.28);
+  transform: rotate(45deg);
+}
+
+.hint-bubble-label {
+  display: inline-flex;
+  align-items: center;
+  margin-bottom: 0.4rem;
+  padding: 0.16rem 0.55rem;
+  border-radius: 999px;
+  background: rgba(99, 102, 241, 0.18);
+  color: #c7d2fe;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+}
+
+.question-hint-bubble :deep(*) {
+  margin: 0;
 }
 
 .question-passage {
@@ -651,13 +728,6 @@ const submitReview = async () => {
   padding: 1.5rem;
   margin-bottom: 1.5rem;
   box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-}
-
-.question-content {
-  margin-bottom: 1.5rem;
-  font-size: 1.05rem;
-  color: #cbd5e1;
-  line-height: 1.6;
 }
 /* v-md-editor 기본 스타일 보완 */
 .question-passage :deep(.v-md-plugin-markdown-it) {

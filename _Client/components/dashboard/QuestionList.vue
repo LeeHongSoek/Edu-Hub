@@ -294,12 +294,11 @@ watch(() => props.appliedSearchKeyword, (value) => {
           <div class="question-content">
             <!--  문제 내용, 추가 내용을 표시 -->
             <LatexRenderer :text="q.question" class="question-preview" />
-            <LatexRenderer v-if="q.content" :text="q.content" class="question-secondary" />
-
+           
           </div>
 
           <div class="question-actions">
-            <button v-if="props.viewMode === 'all'" class="btn-copy" @click="emit('copy-question', q)">문제복사후 가져오기</button>
+            <button v-if="props.viewMode === 'all'" class="btn-copy" @click="emit('copy-question', q)">복사 후 가져오기</button>
             <button v-else-if="canEditQuestion(q)" class="btn-modify" @click="selectedQuestionForEdit = q">수정</button>
             <button class="btn-solve" @click="handleSolve(q)">풀기</button>
           </div>
