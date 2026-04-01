@@ -76,6 +76,9 @@ const currentRoleId = computed(() => userInfo.value?.role_id || userInfo.value?.
 const shouldShowClassList = computed(
   () => currentRoleId.value === "S" || currentRoleId.value === "T",
 );
+const classTabLabel = computed(() =>
+  currentRoleId.value === "T" ? "담당 클래스" : "소속 클래스",
+);
 const classListTitle = computed(() =>
   currentRoleId.value === "T" ? "내 클래스 목록" : "소속 클래스 목록",
 );
@@ -225,7 +228,7 @@ onMounted(() => {
           :aria-pressed="activeTab === 'classes'"
           @click="activeTab = 'classes'"
         >
-          <IconClassRoom class="tab-icon" /> 소속 클래스
+          <IconClassRoom class="tab-icon" /> {{ classTabLabel }}
         </button>
 
         <button
@@ -294,7 +297,7 @@ onMounted(() => {
                   담당 선생님:
                   {{ item.teacherName || `#${item.teacherNo ?? "-"}` }}
                 </p>
-                <p v-else class="class-card-meta">연결된 고사 수: {{ item.examCount }}개</p>
+                <p v-else class="class-card-meta">수강생 수: {{ item.studentCount }}명</p>
               </article>
             </div>
           </section>

@@ -9,14 +9,25 @@ import IconFeedback from "~/assets/icons/IconFeedback.svg?component";
 import OmbudsmanModal from "~/components/OmbudsmanModal.vue";
 import { useApi } from "~/composables/useApi";
 
+type UserCookiePayload = {
+  user_no: string;
+  userId?: string;
+  user_id?: string;
+  username?: string;
+  role?: string;
+  role_id?: string;
+  msgAlert?: string;
+};
+
 const showOmbudsmanModal = ref(false);
 const showUserModal = ref(false);
 const showMessagePopover = ref(false);
 const messageList = ref<any[]>([]);
 const messageLoading = ref(false);
 const messageError = ref("");
+const currentRootUrl = ref("");
 let messageHideTimer: ReturnType<typeof setTimeout> | null = null;
-const userCookie = useCookie("user_info");
+const userCookie = useCookie<UserCookiePayload | string | null>("user_info");
 const { apiBase, getAuthHeader } = useApi();
 
 const userInfo = computed(() => {
@@ -65,7 +76,7 @@ const openMessagePopover = async (
     reason === "click" ||
     (
       reason === "mount" &&
-      userInfo.value.msgAlert === "none"
+      userInfo.value?.msgAlert === "none"
     )
   ) {
 
@@ -89,13 +100,10 @@ const openMessagePopover = async (
 
 
 const setMsgAlertConfirm = () => {
-  if (!userCookie.value) return;
-  const next =
-    typeof userCookie.value === "string"
-      ? { ...(JSON.parse(userCookie.value) as any) }
-      : { ...userCookie.value };
+  if (!userInfo.value) return;
+  const next = { ...userInfo.value };
   next.msgAlert = "confirm";
-  userCookie.value = next as any;
+  userCookie.value = next;
 };
 
 const handleMessageBadgeClick = async (reason: "mount" | "click" = "click") => {  
@@ -115,6 +123,8 @@ const closeMessagePopover = () => {
 };
 
 onMounted(() => {
+  currentRootUrl.value = window.location.origin;
+
   if (userInfo.value) {
     handleMessageBadgeClick("mount");
     return;
@@ -139,6 +149,7 @@ onMounted(() => {
           <IconFeedback class="icon-feedback" />
           옴브즈먼
         </a>
+        <span v-if="currentRootUrl" class="root-url">{{ currentRootUrl }}</span>
       </div>
       <nav class="nav-links">
         <template v-if="userInfo">
@@ -507,6 +518,19 @@ onMounted(() => {
 
 .ombudsman-link:hover {
   color: #818cf8 !important;
+}
+
+.root-url {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.3rem 0.65rem;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: #94a3b8;
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
 }
 
 .my-questions-link {
