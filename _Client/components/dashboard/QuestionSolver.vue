@@ -22,6 +22,7 @@ const emit = defineEmits<{
   (e: "close"): void;
   (e: "prev"): void;
   (e: "next"): void;
+  (e: "solve-child", question: Question): void;
 }>();
 
 const userAnswer = ref("");
@@ -244,6 +245,8 @@ const progressWidth = computed(() => {
   if (!props.question.time_limit) return "100%";
   return `${(timeLeft.value / props.question.time_limit) * 100}%`;
 });
+const isParentQuestion = computed(() => props.question.p_question_id == null);
+const childQuestions = computed(() => props.question.children || []);
 const formatGroupPath = (group: any) => {
   const parts: string[] = [];
   let current = group;
@@ -369,6 +372,60 @@ const submitReview = async () => {
           </client-only>
         </div>
 
+        <div
+          v-if="isParentQuestion && childQuestions.length > 0"
+          class="child-questions"
+        >
+          <div class="child-questions-title">세부연계 문제</div>
+          <div
+            v-for="(child, idx) in childQuestions"
+            :key="child.question_id"
+            class="child-question-card"
+          >
+            <div class="child-question-header">
+              <div class="child-question-meta">
+                <span class="child-number">Q{{ idx + 1 }}</span>
+                <span class="child-type">{{ child.type?.type_name }}</span>
+              </div>
+              <div class="child-question-actions">
+                <button
+                  type="button"
+                  class="child-action-btn child-action-solve"
+                  @click="emit('solve-child', child)"
+                >
+                  풀기
+                </button>
+              </div>
+            </div>
+            <div class="child-question-text">
+              <LatexRenderer :text="child.question" />
+            </div>
+            <div v-if="child.passage" class="child-question-passage">
+              <client-only>
+                <v-md-preview :text="child.passage.content_md"></v-md-preview>
+              </client-only>
+            </div>
+            <div
+              v-if="child.question_type_id?.toUpperCase() === 'M'"
+              class="child-options"
+            >
+              <div
+                v-for="opt in child.options || []"
+                :key="opt.option_id"
+                class="child-option"
+              >
+                <span class="child-option-number">{{ opt.option_number }}</span>
+                <span class="child-option-text">
+                  <LatexRenderer :text="opt.content" />
+                </span>
+              </div>
+            </div>
+            <div v-else class="child-answer-note">
+              주관식 문제입니다. 답을 입력해 주세요.
+            </div>
+          </div>
+        </div>
+
         <!-- 객관식 보기 영역 (M: 객관식) -->
         <div
           v-if="question.question_type_id?.toUpperCase() === 'M'"
@@ -402,7 +459,7 @@ const submitReview = async () => {
         </div>
 
         <!-- 주관식 입력 영역 -->
-        <div v-else class="answer-input-container">
+        <div v-else-if="!isParentQuestion" class="answer-input-container">
           <input
             v-model="userAnswer"
             type="text"
@@ -441,7 +498,7 @@ const submitReview = async () => {
         </div>
 
         <button
-          v-if="!isFinished"
+          v-if="!isFinished && !isParentQuestion"
           class="btn-submit"
           :disabled="
             question.question_type_id === 'M'
@@ -613,6 +670,124 @@ const submitReview = async () => {
   display: flex;
   flex-direction: column;
   gap: 0.8rem;
+}
+
+.child-questions {
+  margin: 1.2rem 0 1.6rem;
+  padding: 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  background: rgba(15, 23, 42, 0.35);
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+
+.child-questions-title {
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: #f8fafc;
+  letter-spacing: 0.02em;
+}
+
+.child-question-card {
+  padding: 0.9rem 1rem;
+  border-radius: 10px;
+  background: rgba(30, 41, 59, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.child-question-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.5rem;
+  color: #cbd5f5;
+  font-size: 0.85rem;
+}
+
+.child-question-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  min-width: 0;
+}
+
+.child-number {
+  font-weight: 700;
+  color: #e2e8f0;
+}
+
+.child-type {
+  font-size: 0.8rem;
+  opacity: 0.8;
+}
+
+.child-question-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  flex-shrink: 0;
+}
+
+.child-action-btn {
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 999px;
+  padding: 0.35rem 0.8rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.child-action-solve {
+  background: rgba(99, 102, 241, 0.18);
+  color: #c7d2fe;
+  border-color: rgba(99, 102, 241, 0.35);
+}
+
+.child-action-solve:hover {
+  background: rgba(99, 102, 241, 0.28);
+  border-color: rgba(129, 140, 248, 0.55);
+  color: #eef2ff;
+}
+
+.child-question-text {
+  margin-bottom: 0.6rem;
+}
+
+.child-question-passage {
+  margin-bottom: 0.6rem;
+}
+
+.child-options {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.child-option {
+  display: flex;
+  gap: 0.6rem;
+  padding: 0.55rem 0.7rem;
+  border-radius: 8px;
+  background: rgba(15, 23, 42, 0.45);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.child-option-number {
+  font-weight: 700;
+  color: #e2e8f0;
+}
+
+.child-option-text {
+  color: #e2e8f0;
+}
+
+.child-answer-note {
+  font-size: 0.85rem;
+  color: #cbd5f5;
 }
 
 .compact-top {
@@ -883,6 +1058,16 @@ const submitReview = async () => {
 @media (max-width: 640px) {
   .options-list {
     grid-template-columns: 1fr;
+  }
+
+  .child-question-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .child-question-actions {
+    width: 100%;
+    justify-content: flex-end;
   }
 }
 
@@ -1373,7 +1558,7 @@ const submitReview = async () => {
   margin: 0;
 }
 
-.readonly .star,
+.readonly .star,  
 .readonly-small .star-small {
   cursor: default;
 }

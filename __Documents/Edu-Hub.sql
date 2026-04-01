@@ -1,5 +1,15 @@
 /*M!999999\- enable the sandbox mode */ 
-SET FOREIGN_KEY_CHECKS=0;
+
+/*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
+/*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
+/*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
+/*!40101 SET NAMES utf8mb4 */;
+/*!40103 SET @OLD_TIME_ZONE=@@TIME_ZONE */;
+/*!40103 SET TIME_ZONE='+00:00' */;
+/*!40014 SET @OLD_UNIQUE_CHECKS=@@UNIQUE_CHECKS, UNIQUE_CHECKS=0 */;
+/*!40014 SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0 */;
+/*!40101 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='NO_AUTO_VALUE_ON_ZERO' */;
+/*M!100616 SET @OLD_NOTE_VERBOSITY=@@NOTE_VERBOSITY, NOTE_VERBOSITY=0 */;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8mb4 */;
 CREATE TABLE `class_students` (
@@ -125,7 +135,7 @@ CREATE TABLE `groups` (
   KEY `fk_group_parent` (`parent_group_id`),
   CONSTRAINT `fk_group_creator` FOREIGN KEY (`creator_no`) REFERENCES `users` (`user_no`) ON DELETE CASCADE,
   CONSTRAINT `fk_group_parent` FOREIGN KEY (`parent_group_id`) REFERENCES `groups` (`group_id`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=26 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci COMMENT='문제 분류 그룹 계층형 테이블';
+) ENGINE=InnoDB AUTO_INCREMENT=54 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci COMMENT='문제 분류 그룹 계층형 테이블';
 /*!40101 SET character_set_client = @saved_cs_client */;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8mb4 */;
@@ -169,7 +179,7 @@ CREATE TABLE `question_options` (
   PRIMARY KEY (`option_id`),
   KEY `fk_option_q` (`question_id`),
   CONSTRAINT `fk_option_q` FOREIGN KEY (`question_id`) REFERENCES `questions` (`question_id`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=492 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci COMMENT='객관식 문제 보기 데이터';
+) ENGINE=InnoDB AUTO_INCREMENT=585 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci COMMENT='객관식 문제 보기 데이터';
 /*!40101 SET character_set_client = @saved_cs_client */;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8mb4 */;
@@ -196,7 +206,7 @@ CREATE TABLE `question_reviews` (
   KEY `fk_review_u` (`user_no`),
   CONSTRAINT `fk_review_q` FOREIGN KEY (`question_id`) REFERENCES `questions` (`question_id`) ON DELETE CASCADE,
   CONSTRAINT `fk_review_u` FOREIGN KEY (`user_no`) REFERENCES `users` (`user_no`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci COMMENT='문제에 대한 평점 및 의견 테이블';
+) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci COMMENT='문제에 대한 평점 및 의견 테이블';
 /*!40101 SET character_set_client = @saved_cs_client */;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8mb4 */;
@@ -213,7 +223,7 @@ CREATE TABLE `question_tags` (
 /*!40101 SET character_set_client = utf8mb4 */;
 CREATE TABLE `questions` (
   `question_id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '문제 고유 식별자 (PK)',
-  `p_question_id` bigint(20) DEFAULT NULL  COMMENT '부모 문제 고유 식별자',
+  `p_question_id` bigint(20) DEFAULT NULL COMMENT '부모 문제 고유 식별자',
   `creator_no` bigint(20) NOT NULL COMMENT '생성자(선생님/학생) 식별번호',
   `group_id` bigint(20) DEFAULT NULL COMMENT '소속 그룹 ID (외래키)',
   `question_type_id` char(1) NOT NULL DEFAULT 'M' COMMENT '문제 유형 코드 (enm_question_types 참조)',
@@ -230,14 +240,14 @@ CREATE TABLE `questions` (
   `rating` tinyint(4) DEFAULT 0 COMMENT '사용자 평점 (1~5 별점)',
   `created_at` datetime DEFAULT current_timestamp() COMMENT '문제 등록 일시',
   PRIMARY KEY (`question_id`),
-  KEY `fk_question_p_question` (`p_question_id`),
   KEY `fk_question_creator` (`creator_no`),
   KEY `fk_question_group` (`group_id`),
   KEY `fk_question_type` (`question_type_id`),
+  KEY `fk_question_p_question` (`p_question_id`),
   CONSTRAINT `fk_question_creator` FOREIGN KEY (`creator_no`) REFERENCES `users` (`user_no`) ON DELETE CASCADE,
   CONSTRAINT `fk_question_group` FOREIGN KEY (`group_id`) REFERENCES `groups` (`group_id`) ON DELETE SET NULL,
   CONSTRAINT `fk_question_type` FOREIGN KEY (`question_type_id`) REFERENCES `enm_question_types` (`type_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=108 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci COMMENT='문제 은행 메인 테이블';
+) ENGINE=InnoDB AUTO_INCREMENT=134 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci COMMENT='문제 은행 메인 테이블';
 /*!40101 SET character_set_client = @saved_cs_client */;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8mb4 */;
@@ -258,7 +268,7 @@ CREATE TABLE `solve_results` (
   CONSTRAINT `fk_result_exam` FOREIGN KEY (`exam_id`) REFERENCES `exams` (`exam_id`) ON DELETE CASCADE,
   CONSTRAINT `fk_result_q` FOREIGN KEY (`question_id`) REFERENCES `questions` (`question_id`) ON DELETE CASCADE,
   CONSTRAINT `fk_result_user` FOREIGN KEY (`user_no`) REFERENCES `users` (`user_no`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=13 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci COMMENT='사용자별 문제 풀이 결과';
+) ENGINE=InnoDB AUTO_INCREMENT=17 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci COMMENT='사용자별 문제 풀이 결과';
 /*!40101 SET character_set_client = @saved_cs_client */;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8mb4 */;
@@ -276,7 +286,7 @@ CREATE TABLE `study_logs` (
   KEY `fk_log_q` (`question_id`),
   CONSTRAINT `fk_log_q` FOREIGN KEY (`question_id`) REFERENCES `questions` (`question_id`) ON DELETE CASCADE,
   CONSTRAINT `fk_log_user` FOREIGN KEY (`user_no`) REFERENCES `users` (`user_no`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=20 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci COMMENT='개인별 문제 풀이 기록 및 오답 노트';
+) ENGINE=InnoDB AUTO_INCREMENT=63 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci COMMENT='개인별 문제 풀이 기록 및 오답 노트';
 /*!40101 SET character_set_client = @saved_cs_client */;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8mb4 */;
@@ -320,7 +330,7 @@ CREATE TABLE `user_messages` (
   KEY `fk_msg_receiver` (`receiver_no`),
   CONSTRAINT `fk_msg_receiver` FOREIGN KEY (`receiver_no`) REFERENCES `users` (`user_no`) ON DELETE CASCADE,
   CONSTRAINT `fk_msg_sender` FOREIGN KEY (`sender_no`) REFERENCES `users` (`user_no`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci COMMENT='사용자 간 다이렉트 메시지 테이블';
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci COMMENT='사용자 간 다이렉트 메시지 테이블';
 /*!40101 SET character_set_client = @saved_cs_client */;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8mb4 */;
@@ -361,7 +371,7 @@ CREATE TABLE `user_relations` (
   CONSTRAINT `fk_rel_type` FOREIGN KEY (`relation_type_id`) REFERENCES `enm_relation_types` (`relation_type_id`),
   CONSTRAINT `fk_rel_user1` FOREIGN KEY (`user_no_1`) REFERENCES `users` (`user_no`) ON DELETE CASCADE,
   CONSTRAINT `fk_rel_user2` FOREIGN KEY (`user_no_2`) REFERENCES `users` (`user_no`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci COMMENT='사용자 간 관계 매핑 테이블';
+) ENGINE=InnoDB AUTO_INCREMENT=21 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci COMMENT='사용자 간 관계 매핑 테이블';
 /*!40101 SET character_set_client = @saved_cs_client */;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8mb4 */;
@@ -379,70 +389,15 @@ CREATE TABLE `users` (
   UNIQUE KEY `email` (`email`),
   KEY `fk_user_role` (`role_id`),
   CONSTRAINT `fk_user_role` FOREIGN KEY (`role_id`) REFERENCES `enm_roles` (`role_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci COMMENT='사용자 정보 테이블';
+) ENGINE=InnoDB AUTO_INCREMENT=26 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci COMMENT='사용자 정보 테이블';
 /*!40101 SET character_set_client = @saved_cs_client */;
+/*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 
-SET FOREIGN_KEY_CHECKS=1;
+/*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
+/*!40014 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS */;
+/*!40014 SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS */;
+/*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
+/*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
+/*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
+/*M!100616 SET NOTE_VERBOSITY=@OLD_NOTE_VERBOSITY */;
 
--- Sample English reading passages with parent/child questions
-SET @creator = 1;
-
--- Passage 1
-INSERT INTO questions (p_question_id, creator_no, group_id, question_type_id, title, question, content, answer, explanation, hint, difficulty, is_public, is_deleted, time_limit, rating)
-VALUES (NULL, @creator, NULL, 'S', 'Reading Passage 1', 'Read the passage and answer questions 1-5.',
-'Last spring, a small neighborhood turned an empty lot into a community garden. At first, only a few residents joined. They built raised beds, planted herbs, and set up a schedule for watering. By summer, more people visited, sharing seeds and recipes. The garden did more than grow vegetables. It became a place where neighbors who had never spoken before began to talk. When a heat wave arrived, volunteers installed shade cloth and collected rainwater to keep the plants alive. The project showed how shared spaces can strengthen a community.',
-'N/A', NULL, NULL, 2, 1, 'N', 0, 0);
-SET @p1 = LAST_INSERT_ID();
-
-INSERT INTO questions (p_question_id, creator_no, group_id, question_type_id, title, question, content, answer, explanation, hint, difficulty, is_public, is_deleted, time_limit, rating)
-VALUES
-(@p1, @creator, NULL, 'M', 'Passage 1 - Q1', 'What is the main purpose of the passage?\nA. To compare different kinds of gardens\nB. To describe how a community garden changed a neighborhood\nC. To explain how to build raised beds\nD. To argue against urban farming', NULL, 'B', 'The passage focuses on the social impact of the community garden.', NULL, 2, 1, 'N', 0, 0),
-(@p1, @creator, NULL, 'M', 'Passage 1 - Q2', 'Which detail shows that the garden encouraged community interaction?\nA. Residents planted herbs\nB. People shared seeds and recipes\nC. The lot was empty\nD. Volunteers installed shade cloth', NULL, 'B', 'Sharing seeds and recipes indicates interaction among neighbors.', NULL, 2, 1, 'N', 0, 0),
-(@p1, @creator, NULL, 'M', 'Passage 1 - Q3', 'What happened when the heat wave arrived?\nA. The garden closed\nB. Volunteers added shade and collected rainwater\nC. The plants were removed\nD. Residents stopped visiting', NULL, 'B', 'The passage states volunteers installed shade cloth and collected rainwater.', NULL, 2, 1, 'N', 0, 0),
-(@p1, @creator, NULL, 'M', 'Passage 1 - Q4', 'Which word best describes the tone of the passage?\nA. Critical\nB. Celebratory\nC. Indifferent\nD. Sarcastic', NULL, 'B', 'The passage praises the positive effects of the garden.', NULL, 2, 1, 'N', 0, 0),
-(@p1, @creator, NULL, 'M', 'Passage 1 - Q5', 'What can be inferred about the neighborhood before the garden?\nA. It was already closely connected\nB. It had no available land\nC. Many neighbors did not know each other\nD. It was famous for farming', NULL, 'C', 'The passage notes neighbors who had never spoken began to talk.', NULL, 2, 1, 'N', 0, 0);
-
--- Passage 2
-INSERT INTO questions (p_question_id, creator_no, group_id, question_type_id, title, question, content, answer, explanation, hint, difficulty, is_public, is_deleted, time_limit, rating)
-VALUES (NULL, @creator, NULL, 'S', 'Reading Passage 2', 'Read the passage and answer questions 6-10.',
-'A recent study explored how short naps affect memory. Participants learned a list of word pairs, then either stayed awake or took a 30-minute nap. Later, the napping group recalled more pairs. Researchers suggest that during light sleep the brain replays new information, helping to store it. However, the study also found that longer naps did not improve recall and sometimes left participants groggy. The findings imply that brief naps may be a practical way to boost learning without disrupting daily routines.',
-'N/A', NULL, NULL, 3, 1, 'N', 0, 0);
-SET @p2 = LAST_INSERT_ID();
-
-INSERT INTO questions (p_question_id, creator_no, group_id, question_type_id, title, question, content, answer, explanation, hint, difficulty, is_public, is_deleted, time_limit, rating)
-VALUES
-(@p2, @creator, NULL, 'M', 'Passage 2 - Q6', 'What did the study compare?\nA. Different types of memory tests\nB. People who napped and people who stayed awake\nC. Morning learning and evening learning\nD. Long naps and no naps only', NULL, 'B', 'The study compared a napping group with a staying-awake group.', NULL, 3, 1, 'N', 0, 0),
-(@p2, @creator, NULL, 'M', 'Passage 2 - Q7', 'Why might a short nap help memory, according to the researchers?\nA. It reduces hunger\nB. The brain replays new information during light sleep\nC. It increases physical strength\nD. It lowers stress permanently', NULL, 'B', 'The passage mentions replay of new information during light sleep.', NULL, 3, 1, 'N', 0, 0),
-(@p2, @creator, NULL, 'M', 'Passage 2 - Q8', 'What was a downside of longer naps in the study?\nA. They improved recall too much\nB. They had no effect and caused grogginess\nC. They caused participants to forget the words entirely\nD. They were not allowed', NULL, 'B', 'Longer naps did not improve recall and left participants groggy.', NULL, 3, 1, 'N', 0, 0),
-(@p2, @creator, NULL, 'M', 'Passage 2 - Q9', 'Which statement best summarizes the conclusion?\nA. Sleep never helps learning\nB. Long naps are better than short naps\nC. Brief naps can boost learning without major disruption\nD. Only students benefit from naps', NULL, 'C', 'The findings imply brief naps are practical and helpful.', NULL, 3, 1, 'N', 0, 0),
-(@p2, @creator, NULL, 'M', 'Passage 2 - Q10', 'What is the primary organizational pattern of the passage?\nA. Problem and solution\nB. Cause and effect\nC. Description of a study and its results\nD. Chronological biography', NULL, 'C', 'It describes the study setup and outcomes.', NULL, 3, 1, 'N', 0, 0);
-
--- Passage 3
-INSERT INTO questions (p_question_id, creator_no, group_id, question_type_id, title, question, content, answer, explanation, hint, difficulty, is_public, is_deleted, time_limit, rating)
-VALUES (NULL, @creator, NULL, 'S', 'Reading Passage 3', 'Read the passage and answer questions 11-15.',
-'A coastal town decided to replace its aging power plant with wind turbines. Some residents worried that the turbines would spoil the ocean view, while others hoped they would create jobs. After months of debate, the town council approved a smaller project: fewer turbines placed farther offshore. The plan reduced visual impact and still provided enough electricity for public buildings. One year later, surveys showed that most residents supported the project, and local businesses reported increased tourism from visitors interested in clean energy.',
-'N/A', NULL, NULL, 3, 1, 'N', 0, 0);
-SET @p3 = LAST_INSERT_ID();
-
-INSERT INTO questions (p_question_id, creator_no, group_id, question_type_id, title, question, content, answer, explanation, hint, difficulty, is_public, is_deleted, time_limit, rating)
-VALUES
-(@p3, @creator, NULL, 'M', 'Passage 3 - Q11', 'What was the town replacing?\nA. A bridge\nB. An aging power plant\nC. A fishing port\nD. A highway', NULL, 'B', 'The passage says the town replaced its aging power plant.', NULL, 3, 1, 'N', 0, 0),
-(@p3, @creator, NULL, 'M', 'Passage 3 - Q12', 'How did the town council respond to the debate?\nA. It canceled the project\nB. It approved a smaller offshore project\nC. It built the largest possible project\nD. It delayed the decision for years', NULL, 'B', 'The council approved fewer turbines placed farther offshore.', NULL, 3, 1, 'N', 0, 0),
-(@p3, @creator, NULL, 'M', 'Passage 3 - Q13', 'What was one result after one year?\nA. Residents became less supportive\nB. Electricity prices doubled\nC. Tourism increased because of interest in clean energy\nD. The turbines were removed', NULL, 'C', 'Local businesses reported increased tourism from visitors.', NULL, 3, 1, 'N', 0, 0),
-(@p3, @creator, NULL, 'M', 'Passage 3 - Q14', 'Which concern is mentioned in the passage?\nA. Noise from trains\nB. Loss of ocean view\nC. Damage to farmland\nD. Lack of internet access', NULL, 'B', 'Residents worried the turbines would spoil the ocean view.', NULL, 2, 1, 'N', 0, 0),
-(@p3, @creator, NULL, 'M', 'Passage 3 - Q15', 'What is the main idea of the passage?\nA. Wind energy always faces opposition\nB. Compromise helped a clean energy project succeed\nC. Tourism is the town primary industry\nD. Power plants are safer than turbines', NULL, 'B', 'A smaller offshore plan balanced concerns and benefits.', NULL, 3, 1, 'N', 0, 0);
-
--- Passage 4
-INSERT INTO questions (p_question_id, creator_no, group_id, question_type_id, title, question, content, answer, explanation, hint, difficulty, is_public, is_deleted, time_limit, rating)
-VALUES (NULL, @creator, NULL, 'S', 'Reading Passage 4', 'Read the passage and answer questions 16-20.',
-'An archive recently digitized thousands of historical letters. The project began because the paper was aging and difficult to handle. By scanning the letters and creating searchable transcripts, the archive made the collection available to researchers worldwide. The team also discovered that students were more engaged when they could read the letters online and annotate them. While the digitization required significant time and funding, the archive argued that expanding access was worth the effort.',
-'N/A', NULL, NULL, 2, 1, 'N', 0, 0);
-SET @p4 = LAST_INSERT_ID();
-
-INSERT INTO questions (p_question_id, creator_no, group_id, question_type_id, title, question, content, answer, explanation, hint, difficulty, is_public, is_deleted, time_limit, rating)
-VALUES
-(@p4, @creator, NULL, 'M', 'Passage 4 - Q16', 'Why did the archive start the digitization project?\nA. The letters were already digital\nB. The paper was aging and hard to handle\nC. Researchers requested paper copies only\nD. The archive wanted to reduce staff', NULL, 'B', 'The passage states the paper was aging and difficult to handle.', NULL, 2, 1, 'N', 0, 0),
-(@p4, @creator, NULL, 'M', 'Passage 4 - Q17', 'What new benefit did the team notice?\nA. Fewer researchers used the archive\nB. Students were more engaged with online access and annotation\nC. The letters lost their historical value\nD. The project required no funding', NULL, 'B', 'Students engaged more when they could read and annotate online.', NULL, 2, 1, 'N', 0, 0),
-(@p4, @creator, NULL, 'M', 'Passage 4 - Q18', 'Which best describes the author perspective?\nA. Skeptical about digitization\nB. Neutral but acknowledging benefits and costs\nC. Angry about technology\nD. Dismissive of researchers', NULL, 'B', 'The passage notes the effort and cost while supporting access.', NULL, 2, 1, 'N', 0, 0),
-(@p4, @creator, NULL, 'M', 'Passage 4 - Q19', 'What does the word expanding most nearly mean in this context?\nA. Reducing\nB. Limiting\nC. Increasing\nD. Hiding', NULL, 'C', 'Expanding access means increasing access.', NULL, 2, 1, 'N', 0, 0),
-(@p4, @creator, NULL, 'M', 'Passage 4 - Q20', 'What is the main idea of the passage?\nA. Digitization preserves and broadens access to historical letters\nB. Online archives are always free\nC. Students dislike reading letters\nD. Archives should stop collecting letters', NULL, 'A', 'The passage emphasizes preservation and wider access.', NULL, 2, 1, 'N', 0, 0);

@@ -102,6 +102,20 @@ export class QuestionsService {
               username: true,
             },
           },
+          children: {
+            orderBy: {
+              question_id: 'asc',
+            },
+            include: {
+              type: true,
+              passage: true,
+              options: {
+                orderBy: {
+                  option_number: 'asc',
+                },
+              },
+            },
+          },
           passage: true,
           options: {
             orderBy: {

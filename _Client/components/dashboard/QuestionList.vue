@@ -120,6 +120,10 @@ const handleSolve = (question: Question) => {
   selectedQuestionForSolve.value = question;
 };
 
+const handleSolveFromSolver = (question: Question) => {
+  selectedQuestionForSolve.value = question;
+};
+
 const canEditQuestion = (question: Question) => {
   if (props.currentUserNo === undefined || props.currentUserNo === null)
     return false;
@@ -606,6 +610,7 @@ watch(
       @close="selectedQuestionForSolve = null"
       @prev="handlePrev"
       @next="handleNext"
+      @solve-child="handleSolveFromSolver"
     />
   </div>
 </template>

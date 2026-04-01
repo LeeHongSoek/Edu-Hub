@@ -14,6 +14,7 @@ export interface QuestionOption {
 
 export interface Question {
   question_id: string | number; // 문제 고유 ID
+  p_question_id?: string | number | null; // 부모 문제 ID
   creator_no: string | number; // 생성자 고유 번호
   creator?: {
     username: string;
@@ -37,6 +38,7 @@ export interface Question {
   passage?: { content_md: string }; // 관계: 마크다운 지문 (1:1)
   options?: QuestionOption[]; // 관계: 보기 목록 (객관식용)
   reviews?: QuestionReview[]; // 관계: 리뷰 목록
+  children?: Question[]; // 관계: 자식 문제 목록
 }
 
 export interface QuestionListResponse {
