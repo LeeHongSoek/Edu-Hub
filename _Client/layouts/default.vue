@@ -59,6 +59,11 @@ const loadRecentMessages = async () => {
 };
 
 const openMessagePopover = async (autoClose = false) => {
+  if (userInfo.value && userInfo.value.msgAlert && userInfo.value.msgAlert !== "none") {
+    return;
+  }
+  setMsgAlertConfirm(); // 한번이라도 실행되면 Confirm
+
   showMessagePopover.value = true;
   if (messageHideTimer) {
     clearTimeout(messageHideTimer);
@@ -80,6 +85,21 @@ const markMessagesSeen = () => {
   }
 };
 
+const setMsgAlertConfirm = () => {
+  if (!userCookie.value) return;
+  const next =
+    typeof userCookie.value === "string"
+      ? { ...(JSON.parse(userCookie.value) as any) }
+      : { ...userCookie.value };
+  next.msgAlert = "confirm";
+  userCookie.value = next as any;
+};
+
+const handleMessageBadgeClick = async () => {
+  setMsgAlertConfirm();
+  await openMessagePopover();
+};
+
 const closeMessagePopover = () => {
   showMessagePopover.value = false;
   if (messageHideTimer) {
@@ -96,6 +116,8 @@ onMounted(() => {
     messageSeenCookie.value = null;
     return;
   }
+  // 페이지 최초 진입 시 받은 메시지 팝오버 표시
+  void openMessagePopover(true);
 });
 </script>
 
@@ -137,10 +159,10 @@ onMounted(() => {
             to="/dashboard?tab=messages&view=received"
             class="message-badge"
             title="받은 메시지 확인"
-            @click.prevent="openMessagePopover()"
+            @click.prevent="handleMessageBadgeClick"
           >
             <IconMessage class="icon-message" aria-hidden="true" />
-            [{{ userInfo.msgAlert }}]
+            <!-- [{{ userInfo.msgAlert }}] -->
           </NuxtLink>
           <NuxtLink
             v-if="userInfo.role_id === 'S' || userInfo.role_id === 'T'"
