@@ -133,7 +133,7 @@ export class DashboardService {
     const targetFilter = this.resolveRelationTargetFilter(userRoleId, target);
 
     const where: any = {
-      user_no_1: userNo,
+      OR: [{ user_no_1: userNo }, { user_no_2: userNo }],
     };
 
     if (targetFilter) {
@@ -145,19 +145,21 @@ export class DashboardService {
     if (keyword) {
       const keywordFilter = [
         {
+          user1: {
+            is: {
+              OR: [
+                { username: { contains: keyword } },
+                { user_id: { contains: keyword } },
+              ],
+            },
+          },
+        },
+        {
           user2: {
             is: {
               OR: [
-                {
-                  username: {
-                    contains: keyword,
-                  },
-                },
-                {
-                  user_id: {
-                    contains: keyword,
-                  },
-                },
+                { username: { contains: keyword } },
+                { user_id: { contains: keyword } },
               ],
             },
           },
@@ -180,26 +182,47 @@ export class DashboardService {
       }
     }
 
-    const [total, items] = await Promise.all([
-      this.prisma.userRelation.count({ where }),
-      this.prisma.userRelation.findMany({
-        where,
-        include: {
-          user2: {
-            select: {
-              user_no: true,
-              user_id: true,
-              username: true,
-              role_id: true,
-            },
+    // 모든 방향을 불러온 뒤 counterpart 기준으로 중복 제거하여 페이지네이션
+    const rawItems = await this.prisma.userRelation.findMany({
+      where,
+      include: {
+        user1: {
+          select: {
+            user_no: true,
+            user_id: true,
+            username: true,
+            role_id: true,
           },
-          relation_type: true,
         },
-        orderBy: { created_at: 'desc' },
-        skip: (safePage - 1) * safeLimit,
-        take: safeLimit,
-      }),
-    ]);
+        user2: {
+          select: {
+            user_no: true,
+            user_id: true,
+            username: true,
+            role_id: true,
+          },
+        },
+        relation_type: true,
+      },
+      orderBy: { created_at: 'desc' },
+    });
+
+    const deduped: any[] = [];
+    const seen = new Set<string>();
+    for (const rel of rawItems) {
+      // 현재 사용자 관점에서 상대방 사용자 결정
+      const other =
+        rel.user_no_1.toString() === userNo.toString() ? rel.user2 : rel.user1;
+      if (!other?.user_no) continue;
+      const otherKey = other.user_no.toString();
+      if (seen.has(otherKey)) continue;
+      seen.add(otherKey);
+      deduped.push(rel);
+    }
+
+    const total = deduped.length;
+    const start = (safePage - 1) * safeLimit;
+    const items = deduped.slice(start, start + safeLimit);
 
     return {
       items: items.map((relation) => ({

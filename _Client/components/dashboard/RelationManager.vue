@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, reactive, ref, watch } from "vue";
+import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from "vue";
 import IconUsers from "~/assets/icons/IconUsers.svg?component";
+import IconGraphForce from "~/assets/icons/IconGraphForce.svg?component";
 import IconSearch from "~/assets/icons/IconSearch.svg?component";
 import IconClose from "~/assets/icons/IconClose.svg?component";
 
@@ -37,6 +38,7 @@ interface GraphNode {
   level: 0 | 1 | 2;  // 0=나, 1=그룹, 2=개인
   group?: string;     // 그룹 노드 id (2레벨 노드에서 사용)
   fixed?: boolean;
+  pinned?: boolean;   // 드래그로 고정된 노드
 }
 
 interface GraphEdge {
@@ -93,6 +95,8 @@ const userInfo = computed(() => {
     return null;
   }
 });
+
+const myUserNo = computed(() => userInfo.value?.user_no ?? null);
 
 const userRoleId = computed<RelationRoleId | "">(() => {
   const role = userInfo.value?.role_id ?? userInfo.value?.role ?? "";
@@ -279,7 +283,7 @@ const groupLabel = (typeId: string): string => {
 const graphData = computed(() => {
   const cx = graphWidth / 2;
   const cy = graphHeight / 2;
-  const me = userInfo.value?.username || "나";
+  const me = "나";
   const centerId = graphCenterNodeId.value;
 
   const centerNode: GraphNode = {
@@ -290,9 +294,9 @@ const graphData = computed(() => {
     y: cy,
     vx: 0,
     vy: 0,
-    r: 28,
+    r: 36,
     level: 0,
-    fixed: true,
+    pinned: true, // 기본 위치 고정, 드래그 시 이동 가능
   };
 
   const nodes: GraphNode[] = [centerNode];
@@ -305,22 +309,29 @@ const graphData = computed(() => {
   const groups = new Map<string, { label: string; users: any[] }>();
 
   allRelations.value.forEach((relation) => {
-    const user = relation?.user2;
+    const user = getOtherUser(relation);
     if (!user?.user_no) return;
 
-    // 역할(role_id) 기반으로 그룹 결정 (대소문자 무관하게 처리)
     const targetRole = String(user.role_id || "").toUpperCase();
     const myRole = String(userRoleId.value || "").toUpperCase();
-    let label = "기타";
 
+    // 1) 역할이 명확하면 역할 기준
+    let label: string | null = null;
     if (targetRole === "S") {
-      // 상대방이 학생인 경우: 내가 학생이면 '친구', 아니면 '학생'
       label = myRole === "S" ? "친구" : "학생";
     } else if (targetRole === "T") {
       label = "선생님";
     } else if (targetRole === "P") {
       label = "학부모";
     }
+
+    // 2) 역할이 비어 있으면 관계 타입으로 추론 (백엔드가 role_id를 안 내려줄 경우)
+    if (!label) {
+      const typeId = String(relation?.relation_type_id || "").toUpperCase();
+      label = groupLabel(typeId) || "기타";
+    }
+
+    if (!label) label = "기타";
 
     const groupId = `group-${label}`;
     if (!groups.has(groupId)) {
@@ -431,6 +442,13 @@ const handleGlobalMouseMove = (event: MouseEvent) => {
 };
 
 const stopDragging = () => {
+  if (!draggingNodeId.value) return;
+  const node = graphNodes.value.find((n) => n.id === draggingNodeId.value);
+  if (node && !node.fixed) {
+    node.pinned = true; // 드래그 드롭 후 위치 고정
+    node.vx = 0;
+    node.vy = 0;
+  }
   draggingNodeId.value = null;
 };
 
@@ -455,6 +473,8 @@ const loadAllRelationsForGraph = async () => {
 };
 
 const openGraphModal = async () => {
+  // 헤더 클릭 시에도 최신 인맥을 가져오도록 강제 호출
+  await loadRelations();
   showGraphModal.value = true;
   await loadAllRelationsForGraph();
 };
@@ -490,6 +510,13 @@ const startGraphSimulation = () => {
         const b = nodes[j];
         // 다른 레벨이면 반발력 없음 (계층을 어지럽히지 않도록)
         if (a.level !== b.level) continue;
+        // 드래그로 고정된 노드는 힘 적용 안 함
+        if (a.pinned) {
+          continue;
+        }
+        if (b.pinned) {
+          continue;
+        }
         let dx = b.x - a.x;
         let dy = b.y - a.y;
         const dist = Math.sqrt(dx * dx + dy * dy) || 1;
@@ -517,11 +544,11 @@ const startGraphSimulation = () => {
       dx /= dist;
       dy /= dist;
 
-      if (!source.fixed && source.id !== draggingNodeId.value) {
+      if (!source.fixed && !source.pinned && source.id !== draggingNodeId.value) {
         source.vx += dx * spring;
         source.vy += dy * spring;
       }
-      if (!target.fixed && target.id !== draggingNodeId.value) {
+      if (!target.fixed && !target.pinned && target.id !== draggingNodeId.value) {
         target.vx -= dx * spring;
         target.vy -= dy * spring;
       }
@@ -529,9 +556,7 @@ const startGraphSimulation = () => {
 
     // --- 통합 ---
     nodes.forEach((node) => {
-      if (node.fixed) {
-        node.x = graphWidth / 2;
-        node.y = graphHeight / 2;
+      if (node.pinned) {
         node.vx = 0;
         node.vy = 0;
         return;
@@ -588,8 +613,18 @@ watch(
   { deep: true },
 );
 
+onMounted(() => {
+  // 탭 진입 시 바로 내 인맥을 불러오도록 추가
+  void loadRelations();
+  void loadAllRelationsForGraph();
+  window.addEventListener("mousemove", handleGlobalMouseMove);
+  window.addEventListener("mouseup", stopDragging);
+});
+
 onBeforeUnmount(() => {
   stopGraphSimulation();
+  window.removeEventListener("mousemove", handleGlobalMouseMove);
+  window.removeEventListener("mouseup", stopDragging);
 });
 
 function createPanelState(): SearchPanelState {
@@ -612,6 +647,19 @@ function getPanelState(key: TargetKey) {
   return panelStates[key];
 }
 
+const getOtherUser = (relation: any) => {
+  const u1 = relation?.user1;
+  const u2 = relation?.user2;
+  const me = myUserNo.value;
+
+  if (me && u1?.user_no === me) return u2 || null;
+  if (me && u2?.user_no === me) return u1 || null;
+  return u2 || u1 || null;
+};
+
+const getRelationTargetUser = (relation: any) =>
+  getOtherUser(relation) || relation?.user2 || relation?.user1 || null;
+
 const roleLabel = (roleId?: string) => {
   if (roleId === "T") return "선생님";
   if (roleId === "P") return "학부모";
@@ -620,7 +668,7 @@ const roleLabel = (roleId?: string) => {
 };
 
 const relationBadgeLabel = (relation: any) => {
-  const otherRoleId = String(relation?.user2?.role_id || "");
+  const otherRoleId = String(getOtherUser(relation)?.role_id || "");
   const relationTypeId = String(relation?.relation_type_id || "");
 
   if (relationTypeId === "FRIEND") {
@@ -932,14 +980,15 @@ watch(
 <template>
   <div class="relation-manager">
     <div class="manager-header">
-      <div
-        class="header-copy header-copy-clickable"
-        @click="openGraphModal"
-      >
+      <div class="header-copy">
         <h3><IconUsers class="section-icon" /> 나의 인맥 관리</h3>
         <p class="manager-subtitle">{{ relationSummary }}</p>
       </div>
       <div class="header-actions">
+        <button class="btn-graph" @click="openGraphModal">
+          <IconGraphForce class="graph-icon" />
+          그래프로 보기
+        </button>
         <div class="target-tabs target-tabs-inline">
           <button
             v-for="target in relationTargets"
@@ -1051,17 +1100,17 @@ watch(
             <button
               type="button"
               class="user-name-button"
-              @click="emit('open-message-thread', rel.user2)"
+              @click="emit('open-message-thread', getRelationTargetUser(rel))"
             >
-              <span class="user-name">{{ rel.user2.username }}</span>
+              <span class="user-name">{{ getRelationTargetUser(rel)?.username }}</span>
             </button>
-            <span class="user-id">{{ rel.user2.user_id }}</span>
+            <span class="user-id">{{ getRelationTargetUser(rel)?.user_id }}</span>
           </div>
           <div class="relation-actions">
             <span class="relation-badge">{{ relationBadgeLabel(rel) }}</span>
             <button
               class="relation-message-btn"
-              @click="emit('compose-message', rel.user2)"
+              @click="emit('compose-message', getRelationTargetUser(rel))"
             >
               메시지
             </button>
@@ -1374,7 +1423,7 @@ watch(
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  gap: 0.75rem;
+  gap: 0.5rem;
   margin-left: auto;
   flex-wrap: wrap;
 }
@@ -1383,15 +1432,6 @@ watch(
   display: flex;
   flex-direction: column;
   gap: 0.35rem;
-}
-
-.header-copy-clickable {
-  cursor: pointer;
-  transition: transform 0.2s ease;
-}
-
-.header-copy-clickable:hover {
-  transform: translateY(-1px);
 }
 
 .manager-header h3 {
@@ -1415,6 +1455,33 @@ watch(
   color: #94a3b8;
   margin: 0;
   font-size: 0.92rem;
+}
+
+.btn-graph {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.55rem 0.9rem;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.08);
+  color: #e2e8f0;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  cursor: pointer;
+  font-weight: 800;
+  transition: transform 0.18s ease, border-color 0.18s ease,
+    background 0.18s ease, color 0.18s ease;
+}
+
+.btn-graph:hover {
+  transform: translateY(-1px);
+  border-color: rgba(129, 140, 248, 0.55);
+  background: rgba(129, 140, 248, 0.12);
+  color: #ffffff;
+}
+
+.graph-icon {
+  width: 1rem;
+  height: 1rem;
 }
 
 .btn-add {
@@ -1687,7 +1754,7 @@ watch(
 }
 .label-me {
   fill: #ffffff;
-  font-size: 13px;
+  font-size: 26px;
   font-weight: 800;
 }
 .label-group {
@@ -1804,11 +1871,15 @@ watch(
 }
 
 .target-tabs {
-  display: flex;
-  gap: 0.6rem;
+  display: inline-flex;
+  gap: 0.2rem;
+  padding: 0.18rem;
   margin-bottom: 0;
   align-items: center;
   flex-wrap: wrap;
+  border-radius: 8px;
+  background: rgba(15, 23, 42, 0.55);
+  border: 1px solid rgba(148, 163, 184, 0.14);
 }
 
 .target-tabs-inline {
@@ -1816,19 +1887,31 @@ watch(
 }
 
 .target-tab {
-  border: 1px solid rgba(255, 255, 255, 0.11);
-  background: rgba(255, 255, 255, 0.05);
-  color: #cbd5e1;
-  border-radius: 999px;
-  padding: 0.55rem 1rem;
+  border: none;
+  background: transparent;
+  color: #94a3b8;
+  font-size: 0.88rem;
   font-weight: 700;
+  border-radius: 6px;
+  padding: 0 0.7rem;
+  height: 28px;
+  line-height: 28px;
   cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  transition: all 0.2s ease;
+}
+
+.target-tab:hover {
+  color: #e2e8f0;
+  background: rgba(255, 255, 255, 0.04);
 }
 
 .target-tab.active {
-  color: #fff;
-  background: linear-gradient(90deg, #6366f1, #818cf8);
-  border-color: transparent;
+  background: #6d6eff;
+  color: #ffffff;
+  box-shadow: 0 8px 18px rgba(109, 110, 255, 0.25);
 }
 
 .target-panel {
