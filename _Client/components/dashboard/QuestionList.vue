@@ -120,10 +120,6 @@ const handleSolve = (question: Question) => {
   selectedQuestionForSolve.value = question;
 };
 
-const handleSolveFromSolver = (question: Question) => {
-  selectedQuestionForSolve.value = question;
-};
-
 const canEditQuestion = (question: Question) => {
   if (props.currentUserNo === undefined || props.currentUserNo === null)
     return false;
@@ -178,6 +174,11 @@ const handlePrev = () => {
 const handleNext = () => {
   const next = getNextQuestion();
   if (next) selectedQuestionForSolve.value = next;
+};
+
+const handleGoToQuestionIndex = (index: number) => {
+  if (index < 0 || index >= props.questions.length) return;
+  selectedQuestionForSolve.value = props.questions[index];
 };
 
 const formatGroupPath = (group: Group) => {
@@ -610,7 +611,7 @@ watch(
       @close="selectedQuestionForSolve = null"
       @prev="handlePrev"
       @next="handleNext"
-      @solve-child="handleSolveFromSolver"
+      @go-to-index="handleGoToQuestionIndex"
     />
   </div>
 </template>

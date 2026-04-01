@@ -109,6 +109,15 @@ export class QuestionsService {
             include: {
               type: true,
               passage: true,
+              group: {
+                include: {
+                  parent_group: {
+                    include: {
+                      parent_group: true,
+                    },
+                  },
+                },
+              },
               options: {
                 orderBy: {
                   option_number: 'asc',

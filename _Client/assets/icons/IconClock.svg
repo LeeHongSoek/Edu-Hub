@@ -1,39 +1,10 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="filter: drop-shadow(1.5px 1.5px 2px rgba(0,0,0,0.4));">
-  
-  <line x1="7" y1="20" x2="4" y2="23"></line>
-  <line x1="17" y1="20" x2="20" y2="23"></line>
-
-  <path d="M5 6a4 4 0 0 1 4-4" class="bell-left"></path>
-  <path d="M15 2a4 4 0 0 1 4 4" class="bell-right"></path>
-  
-  <circle cx="12" cy="13" r="8" fill="none"></circle>
-  
-  <line x1="12" y1="13" x2="12" y2="9" style="transform-origin: 12px 13px; animation: spin 10s linear infinite;"></line>
-  
-  <line x1="12" y1="13" x2="16" y2="13" style="transform-origin: 12px 13px; animation: spin 2s linear infinite;"></line>
-
-  <style>
-    /* 바늘 회전 애니메이션 */
-    @keyframes spin {
-      from { transform: rotate(0deg); }
-      to { transform: rotate(360deg); }
-    }
-
-    /* 벨 흔들기 애니메이션 */
-    @keyframes shake {
-      0%, 100% { transform: rotate(0deg); }
-      25% { transform: rotate(-15deg); }
-      75% { transform: rotate(15deg); }
-    }
-
-    .bell-left {
-      transform-origin: 9px 6px;
-      animation: shake 0.2s ease-in-out infinite;
-    }
-
-    .bell-right {
-      transform-origin: 15px 6px;
-      animation: shake 0.2s ease-in-out infinite reverse;
-    }
-  </style>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+  <circle cx="12" cy="13" r="8"></circle>
+  <path d="M8 3h8"></path>
+  <path d="M9 2v3"></path>
+  <path d="M15 2v3"></path>
+  <path d="M5 6l-2 2"></path>
+  <path d="M19 6l2 2"></path>
+  <path d="M12 13V9"></path>
+  <path d="M12 13h3.5"></path>
 </svg>

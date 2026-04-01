@@ -1,4 +1,4 @@
-import { Controller, Get, UseGuards, Request, UnauthorizedException, Param, Query } from '@nestjs/common';
+import { Controller, Get, Post, Body, UseGuards, Request, UnauthorizedException, Param, Query } from '@nestjs/common';
 import { ExamsService } from './exams.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
@@ -14,6 +14,23 @@ export class ExamsController {
     return scope === 'all'
       ? this.examsService.findAll()
       : this.examsService.findAll(BigInt(userNoVal));
+  }
+
+  @Post()
+  async create(
+    @Request() req: any,
+    @Body() body: {
+      exam_name: string;
+      start_time: string;
+      end_time: string;
+      location?: string;
+      is_auto_score?: boolean;
+      class_id?: string;
+    },
+  ) {
+    const userNoVal = req.user?.user_no || req.user?.userNo;
+    if (!userNoVal) throw new UnauthorizedException();
+    return this.examsService.create(BigInt(userNoVal), body);
   }
 
   @Get(':id')

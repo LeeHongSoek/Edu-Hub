@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, computed } from "vue";
+import { ref, onMounted, onUnmounted, computed, reactive } from "vue";
 import type { Question, QuestionReview } from "~/types";
 import LatexRenderer from "~/components/LatexRenderer.vue";
 import IconClock from "~/assets/icons/IconClock.svg?component";
@@ -22,12 +22,31 @@ const emit = defineEmits<{
   (e: "close"): void;
   (e: "prev"): void;
   (e: "next"): void;
-  (e: "solve-child", question: Question): void;
+  (e: "go-to-index", index: number): void;
 }>();
+
+const getAggregateTimeLimit = (question: Question) => {
+  if (question.p_question_id == null && question.children?.length) {
+    return question.children.reduce(
+      (sum, child) => sum + (child.time_limit || 0),
+      0,
+    );
+  }
+  return question.time_limit || 0;
+};
+
+type SolveState = {
+  userAnswer: string;
+  selectedOptionIds: (string | number)[];
+  isFinished: boolean;
+  showResult: boolean;
+  isCorrect: boolean;
+  hasStartedSolving: boolean;
+};
 
 const userAnswer = ref("");
 const selectedOptionIds = ref<(string | number)[]>([]);
-const timeLeft = ref(props.question.time_limit || 0);
+const timeLeft = ref(getAggregateTimeLimit(props.question));
 const isFinished = ref(false);
 const showResult = ref(false);
 const isCorrect = ref(false);
@@ -48,15 +67,38 @@ const isSubmittingReview = ref(false);
 
 let timerInterval: any = null;
 const hasStartedSolving = ref(false);
+const childSolveStates = reactive<Record<string, SolveState>>({});
+
+const createSolveState = (): SolveState => ({
+  userAnswer: "",
+  selectedOptionIds: [],
+  isFinished: false,
+  showResult: false,
+  isCorrect: false,
+  hasStartedSolving: false,
+});
+
+const getQuestionType = (question: Question) =>
+  question.question_type_id?.toUpperCase();
+
+const isMultipleChoice = (question: Question) => getQuestionType(question) === "M";
+
+const getChildState = (child: Question) => {
+  const key = String(child.question_id);
+  if (!childSolveStates[key]) {
+    childSolveStates[key] = createSolveState();
+  }
+  return childSolveStates[key];
+};
 
 // 학습 로그 기록 : POST /study-logs
-const logAction = async (action: string) => {
+const logActionForQuestion = async (question: Question, action: string) => {
   try {
     await $fetch(`${apiBase.value}/study-logs`, {
       method: "POST",
       headers: getAuthHeader(),
       body: {
-        question_id: props.question.question_id.toString(),
+        question_id: question.question_id.toString(),
         user_memo: action,
       },
     });
@@ -65,38 +107,62 @@ const logAction = async (action: string) => {
   }
 };
 
+const logAction = async (action: string) => {
+  await logActionForQuestion(props.question, action);
+};
+
 // 풀이 결과 저장 : POST /solve-results
-const saveSolveResult = async (isTimeOver: boolean) => {
-  try {
-    // 사용자 답변 준비
-    let submittedAnswer = "";
-    if (props.question.question_type_id?.toUpperCase() === "M") {
-      // 객관식: 선택한 옵션 IDs를 쉼표로 구분된 문자열로 변환
-      submittedAnswer = selectedOptionIds.value.join(",");
-    } else {
-      // 주관식: 입력한 답변
-      submittedAnswer = userAnswer.value.trim();
+const getSubmittedAnswer = (question: Question, state: SolveState) => {
+  if (isMultipleChoice(question)) {
+    return state.selectedOptionIds.join(",");
+  }
+  return state.userAnswer.trim();
+};
+
+const evaluateCorrectness = (question: Question, state: SolveState) => {
+  if (isMultipleChoice(question)) {
+    const correctOptions = question.options?.filter((opt) => opt.is_answer) || [];
+    const correctOptionIds = correctOptions.map((opt) => opt.option_id);
+
+    if (correctOptionIds.length === 0) {
+      return state.selectedOptionIds.length === 0;
     }
 
-    // is_correct 값 결정 (1=정답, 0=오답, -1=시간초과)
+    if (correctOptionIds.length !== state.selectedOptionIds.length) {
+      return false;
+    }
+
+    return state.selectedOptionIds.every((id) =>
+      correctOptionIds.includes(id as NonNullable<string | number>),
+    );
+  }
+
+  return state.userAnswer.trim().toLowerCase() === question.answer.trim().toLowerCase();
+};
+
+const saveSolveResultForQuestion = async (
+  question: Question,
+  state: SolveState,
+  isCorrectAnswer: boolean,
+  isTimeOver: boolean,
+  timeTaken = 0,
+) => {
+  try {
+    const submittedAnswer = getSubmittedAnswer(question, state);
+
     let correctStatus = 0;
     if (isTimeOver) {
       correctStatus = -1;
-    } else if (isCorrect.value) {
+    } else if (isCorrectAnswer) {
       correctStatus = 1;
     }
-
-    // 사용한 시간 계산 (총 시간 - 남은 시간)
-    const timeTaken = props.question.time_limit
-      ? props.question.time_limit - timeLeft.value
-      : 0;
 
     await $fetch(`${apiBase.value}/solve-results`, {
       method: "POST",
       headers: getAuthHeader(),
       body: {
-        question_id: props.question.question_id.toString(),
-        correct_answer: props.question.answer,
+        question_id: question.question_id.toString(),
+        correct_answer: question.answer,
         submitted_answer: submittedAnswer,
         is_correct: correctStatus,
         time_taken: timeTaken,
@@ -105,6 +171,26 @@ const saveSolveResult = async (isTimeOver: boolean) => {
   } catch (err) {
     console.error("서버 통신 오류(save) review):", err);
   }
+};
+
+const saveSolveResult = async (isTimeOver: boolean) => {
+  const totalTimeLimit = getAggregateTimeLimit(props.question);
+  const timeTaken = totalTimeLimit ? totalTimeLimit - timeLeft.value : 0;
+
+  await saveSolveResultForQuestion(
+    props.question,
+    {
+      userAnswer: userAnswer.value,
+      selectedOptionIds: selectedOptionIds.value,
+      isFinished: isFinished.value,
+      showResult: showResult.value,
+      isCorrect: isCorrect.value,
+      hasStartedSolving: hasStartedSolving.value,
+    },
+    isCorrect.value,
+    isTimeOver,
+    timeTaken,
+  );
 };
 
 const startTimer = () => {
@@ -140,10 +226,33 @@ const toggleOption = (id: string | number) => {
   }
 };
 
+const toggleChildOption = (child: Question, id: string | number) => {
+  const state = getChildState(child);
+  if (state.isFinished) return;
+  if (!state.hasStartedSolving) {
+    state.hasStartedSolving = true;
+    logActionForQuestion(child, "문제풀기");
+  }
+  const index = state.selectedOptionIds.indexOf(id);
+  if (index === -1) {
+    state.selectedOptionIds.push(id);
+  } else {
+    state.selectedOptionIds.splice(index, 1);
+  }
+};
+
 const handleInput = () => {
   if (!hasStartedSolving.value && userAnswer.value.trim().length > 0) {
     hasStartedSolving.value = true;
     logAction("문제풀기");
+  }
+};
+
+const handleChildInput = (child: Question) => {
+  const state = getChildState(child);
+  if (!state.hasStartedSolving && state.userAnswer.trim().length > 0) {
+    state.hasStartedSolving = true;
+    logActionForQuestion(child, "문제풀기");
   }
 };
 
@@ -152,6 +261,19 @@ const handleFinish = async (isTimeOver = false) => {
 
   isFinished.value = true;
   clearInterval(timerInterval);
+
+  if (isCompositeParentQuestion.value) {
+    if (isTimeOver) {
+      await handleFinishAllChildren(true);
+      modalType.value = "warning";
+      modalTitle.value = "시간 초과!";
+      modalMessage.value =
+        "세부연계문제의 입력 답안 중 정답인 문항만 정답 처리되었습니다.";
+      showModal.value = true;
+      await logAction("정답확인:시간초과");
+    }
+    return;
+  }
 
   if (isTimeOver) {
     isCorrect.value = false;
@@ -206,6 +328,61 @@ const handleFinish = async (isTimeOver = false) => {
   showModal.value = true;
 };
 
+const handleChildFinish = async (child: Question, isTimeOver = false) => {
+  const state = getChildState(child);
+  if (state.isFinished) return;
+
+  state.isFinished = true;
+  state.isCorrect = evaluateCorrectness(child, state);
+  state.showResult = true;
+
+  if (isTimeOver) {
+    await logActionForQuestion(
+      child,
+      state.isCorrect ? "정답확인:정답" : "정답확인:시간초과",
+    );
+  } else {
+    await logActionForQuestion(
+      child,
+      state.isCorrect ? "정답확인:정답" : "정답확인:오답",
+    );
+  }
+
+  await saveSolveResultForQuestion(
+    child,
+    state,
+    state.isCorrect,
+    isTimeOver && !state.isCorrect,
+    child.time_limit || 0,
+  );
+};
+
+const isChildReadyToSubmit = (child: Question) => {
+  const state = getChildState(child);
+  if (state.isFinished) return true;
+  if (isMultipleChoice(child)) {
+    return state.selectedOptionIds.length > 0;
+  }
+  return state.userAnswer.trim().length > 0;
+};
+
+const hasUnfinishedChildQuestions = computed(() =>
+  childQuestions.value.some((child) => !getChildState(child).isFinished),
+);
+
+const canSubmitAllChildQuestions = computed(() => {
+  if (childQuestions.value.length === 0) return false;
+  return childQuestions.value.every((child) => isChildReadyToSubmit(child));
+});
+
+const handleFinishAllChildren = async (isTimeOver = false) => {
+  for (const child of childQuestions.value) {
+    if (!getChildState(child).isFinished) {
+      await handleChildFinish(child, isTimeOver);
+    }
+  }
+};
+
 const handleKeyDown = (e: KeyboardEvent) => {
   if (e.key === "Escape") {
     emit("close");
@@ -242,11 +419,38 @@ onUnmounted(() => {
 });
 
 const progressWidth = computed(() => {
-  if (!props.question.time_limit) return "100%";
-  return `${(timeLeft.value / props.question.time_limit) * 100}%`;
+  if (!effectiveTimeLimit.value) return "100%";
+  return `${(timeLeft.value / effectiveTimeLimit.value) * 100}%`;
 });
-const isParentQuestion = computed(() => props.question.p_question_id == null);
+const questionSliderValue = computed(() =>
+  currentIndex.value !== undefined ? currentIndex.value + 1 : 1,
+);
+const questionSliderPercentage = computed(() => {
+  if (
+    currentIndex.value === undefined ||
+    totalQuestions.value === undefined ||
+    totalQuestions.value <= 1
+  ) {
+    return 0;
+  }
+  return (currentIndex.value / (totalQuestions.value - 1)) * 100;
+});
 const childQuestions = computed(() => props.question.children || []);
+const isParentQuestion = computed(() => props.question.p_question_id == null);
+const isCompositeParentQuestion = computed(
+  () => isParentQuestion.value && childQuestions.value.length > 0,
+);
+const effectiveTimeLimit = computed(() => getAggregateTimeLimit(props.question));
+const currentIndex = computed(() => props.currentIndex);
+const totalQuestions = computed(() => props.totalQuestions);
+const effectiveGroup = computed(() => {
+  if (props.question.group) return props.question.group;
+  return childQuestions.value.find((child) => child.group)?.group;
+});
+const handleQuestionSliderInput = (e: Event) => {
+  const nextIndex = parseInt((e.target as HTMLInputElement).value, 10) - 1;
+  emit("go-to-index", nextIndex);
+};
 const formatGroupPath = (group: any) => {
   const parts: string[] = [];
   let current = group;
@@ -323,10 +527,10 @@ const submitReview = async () => {
             <span class="badge-type">{{ question.type.type_name }}</span>
           </div>
           <div class="compact-top-right">
-            <div v-if="question.group" class="solver-group-path">
-              {{ formatGroupPath(question.group) }}
+            <div v-if="effectiveGroup" class="solver-group-path">
+              {{ formatGroupPath(effectiveGroup) }}
             </div>
-            <div v-if="question.time_limit" class="timer-wrapper">
+            <div v-if="effectiveTimeLimit" class="timer-wrapper">
               <div class="compact-timer">
                 <IconClock class="icon-clock" />
                 <span class="timer-label">제한시간:</span>
@@ -373,7 +577,7 @@ const submitReview = async () => {
         </div>
 
         <div
-          v-if="isParentQuestion && childQuestions.length > 0"
+          v-if="isCompositeParentQuestion"
           class="child-questions"
         >
           <div class="child-questions-title">세부연계 문제</div>
@@ -386,15 +590,6 @@ const submitReview = async () => {
               <div class="child-question-meta">
                 <span class="child-number">Q{{ idx + 1 }}</span>
                 <span class="child-type">{{ child.type?.type_name }}</span>
-              </div>
-              <div class="child-question-actions">
-                <button
-                  type="button"
-                  class="child-action-btn child-action-solve"
-                  @click="emit('solve-child', child)"
-                >
-                  풀기
-                </button>
               </div>
             </div>
             <div class="child-question-text">
@@ -413,6 +608,17 @@ const submitReview = async () => {
                 v-for="opt in child.options || []"
                 :key="opt.option_id"
                 class="child-option"
+                :class="{
+                  'is-selected': getChildState(child).selectedOptionIds.includes(
+                    opt.option_id,
+                  ),
+                  'is-correct': getChildState(child).showResult && opt.is_answer,
+                  'is-wrong':
+                    getChildState(child).showResult &&
+                    getChildState(child).selectedOptionIds.includes(opt.option_id) &&
+                    !opt.is_answer,
+                }"
+                @click="toggleChildOption(child, opt.option_id)"
               >
                 <span class="child-option-number">{{ opt.option_number }}</span>
                 <span class="child-option-text">
@@ -420,10 +626,52 @@ const submitReview = async () => {
                 </span>
               </div>
             </div>
-            <div v-else class="child-answer-note">
-              주관식 문제입니다. 답을 입력해 주세요.
+            <div v-else class="child-subjective-area">
+              <input
+                v-model="getChildState(child).userAnswer"
+                type="text"
+                placeholder="정답을 입력하세요"
+                class="child-answer-input"
+                :disabled="getChildState(child).isFinished"
+                @keyup.enter="
+                  !getChildState(child).isFinished && handleChildFinish(child)
+                "
+                @input="handleChildInput(child)"
+              />
+            </div>
+
+            <div class="child-card-footer">
+              <div
+                v-if="getChildState(child).showResult"
+                class="child-result-box"
+                :class="{
+                  correct: getChildState(child).isCorrect,
+                  wrong: !getChildState(child).isCorrect,
+                }"
+              >
+                <div class="child-result-label">
+                  {{
+                    getChildState(child).isCorrect
+                      ? "정답입니다!"
+                      : `오답입니다. 정답: ${child.answer || "해설 참조"}`
+                  }}
+                </div>
+                <p class="child-result-explanation">
+                  {{ child.explanation || "등록된 해설이 없습니다." }}
+                </p>
+              </div>
             </div>
           </div>
+
+          <button
+            v-if="hasUnfinishedChildQuestions"
+            type="button"
+            class="child-submit-all-btn"
+            :disabled="!canSubmitAllChildQuestions"
+            @click="handleFinishAllChildren"
+          >
+            세부연계문제 정답 확인
+          </button>
         </div>
 
         <!-- 객관식 보기 영역 (M: 객관식) -->
@@ -459,7 +707,7 @@ const submitReview = async () => {
         </div>
 
         <!-- 주관식 입력 영역 -->
-        <div v-else-if="!isParentQuestion" class="answer-input-container">
+        <div v-else-if="!isCompositeParentQuestion" class="answer-input-container">
           <input
             v-model="userAnswer"
             type="text"
@@ -470,6 +718,19 @@ const submitReview = async () => {
             @input="handleInput"
           />
         </div>
+
+        <button
+          v-if="!isFinished && !isCompositeParentQuestion"
+          class="btn-submit"
+          :disabled="
+            question.question_type_id === 'M'
+              ? selectedOptionIds.length === 0
+              : !userAnswer
+          "
+          @click="handleFinish()"
+        >
+          정답 확인
+        </button>
       </div>
 
       <div class="solver-footer">
@@ -496,35 +757,35 @@ const submitReview = async () => {
           </div>
           <p>{{ question.explanation || "등록된 해설이 없습니다." }}</p>
         </div>
-
-        <button
-          v-if="!isFinished && !isParentQuestion"
-          class="btn-submit"
-          :disabled="
-            question.question_type_id === 'M'
-              ? selectedOptionIds.length === 0
-              : !userAnswer
-          "
-          @click="handleFinish()"
-        >
-          정답 확인
-        </button>
-        <div v-else class="footer-nav-buttons">
-          <button class="btn-nav" :disabled="!hasPrev" @click="emit('prev')">
-            이전문제
-          </button>
-          <button class="btn-primary" @click="emit('close')">
-            목록으로 돌아가기
-            <span
-              v-if="currentIndex !== undefined && totalQuestions !== undefined"
-              class="nav-count"
-            >
-              ({{ currentIndex + 1 }}/{{ totalQuestions }})
-            </span>
-          </button>
-          <button class="btn-nav" :disabled="!hasNext" @click="emit('next')">
-            다음문제
-          </button>
+        <div class="footer-slider-nav">
+          <div
+            v-if="currentIndex !== undefined && totalQuestions !== undefined"
+            class="solver-slider-section"
+          >
+            <span class="solver-slider-limit">1</span>
+            <div class="solver-slider-track-container">
+              <input
+                :value="questionSliderValue"
+                type="range"
+                min="1"
+                :max="totalQuestions"
+                step="1"
+                class="solver-page-slider"
+                @input="handleQuestionSliderInput"
+              />
+              <div
+                class="solver-slider-fill"
+                :style="{ width: questionSliderPercentage + '%' }"
+              ></div>
+              <div
+                class="solver-slider-tooltip"
+                :style="{ left: questionSliderPercentage + '%' }"
+              >
+                {{ questionSliderValue }}
+              </div>
+            </div>
+            <span class="solver-slider-limit">{{ totalQuestions }}</span>
+          </div>
         </div>
       </div>
     </div>
@@ -700,8 +961,6 @@ const submitReview = async () => {
 .child-question-header {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 0.75rem;
   margin-bottom: 0.5rem;
   color: #cbd5f5;
   font-size: 0.85rem;
@@ -722,35 +981,6 @@ const submitReview = async () => {
 .child-type {
   font-size: 0.8rem;
   opacity: 0.8;
-}
-
-.child-question-actions {
-  display: flex;
-  align-items: center;
-  gap: 0.45rem;
-  flex-shrink: 0;
-}
-
-.child-action-btn {
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 999px;
-  padding: 0.35rem 0.8rem;
-  font-size: 0.78rem;
-  font-weight: 700;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.child-action-solve {
-  background: rgba(99, 102, 241, 0.18);
-  color: #c7d2fe;
-  border-color: rgba(99, 102, 241, 0.35);
-}
-
-.child-action-solve:hover {
-  background: rgba(99, 102, 241, 0.28);
-  border-color: rgba(129, 140, 248, 0.55);
-  color: #eef2ff;
 }
 
 .child-question-text {
@@ -774,6 +1004,28 @@ const submitReview = async () => {
   border-radius: 8px;
   background: rgba(15, 23, 42, 0.45);
   border: 1px solid rgba(255, 255, 255, 0.05);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.child-option:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(99, 102, 241, 0.45);
+}
+
+.child-option.is-selected {
+  background: rgba(99, 102, 241, 0.15);
+  border-color: #6366f1;
+}
+
+.child-option.is-correct {
+  background: rgba(34, 197, 94, 0.15);
+  border-color: #22c55e;
+}
+
+.child-option.is-wrong {
+  background: rgba(239, 68, 68, 0.15);
+  border-color: #ef4444;
 }
 
 .child-option-number {
@@ -785,9 +1037,86 @@ const submitReview = async () => {
   color: #e2e8f0;
 }
 
-.child-answer-note {
+.child-subjective-area {
+  margin-top: 0.35rem;
+}
+
+.child-answer-input {
+  width: 100%;
+  padding: 0.85rem 1rem;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 8px;
+  color: #fff;
+  font-size: 0.95rem;
+  outline: none;
+  transition: all 0.2s ease;
+  box-sizing: border-box;
+}
+
+.child-answer-input:focus {
+  border-color: #6366f1;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.child-card-footer {
+  margin-top: 0.8rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+}
+
+.child-submit-all-btn {
+  align-self: flex-end;
+  margin-top: 0.25rem;
+  padding: 0.7rem 1.15rem;
+  border: none;
+  border-radius: 999px;
+  background: #6366f1;
+  color: #fff;
+  font-size: 0.88rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.child-submit-all-btn:hover:not(:disabled) {
+  background: #5458ee;
+}
+
+.child-submit-all-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.child-result-box {
+  padding: 0.85rem 0.95rem;
+  border-radius: 10px;
+  border: 1px solid transparent;
+}
+
+.child-result-box.correct {
+  background: rgba(34, 197, 94, 0.12);
+  border-color: rgba(34, 197, 94, 0.25);
+}
+
+.child-result-box.wrong {
+  background: rgba(239, 68, 68, 0.12);
+  border-color: rgba(239, 68, 68, 0.25);
+}
+
+.child-result-label {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: #f8fafc;
+  margin-bottom: 0.35rem;
+}
+
+.child-result-explanation {
+  margin: 0;
   font-size: 0.85rem;
   color: #cbd5f5;
+  line-height: 1.5;
 }
 
 .compact-top {
@@ -1059,16 +1388,6 @@ const submitReview = async () => {
   .options-list {
     grid-template-columns: 1fr;
   }
-
-  .child-question-header {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-
-  .child-question-actions {
-    width: 100%;
-    justify-content: flex-end;
-  }
 }
 
 .answer-input-container {
@@ -1146,7 +1465,6 @@ const submitReview = async () => {
 }
 
 .inline-icon,
-.modal-icon-svg,
 .close-icon {
   width: 1rem;
   height: 1rem;
@@ -1253,6 +1571,7 @@ const submitReview = async () => {
 }
 
 .btn-submit {
+  margin-top: 1rem;
   background: #6366f1;
   color: #fff;
 }
@@ -1262,38 +1581,83 @@ const submitReview = async () => {
   transform: translateY(-2px);
 }
 
-.footer-nav-buttons {
+.footer-slider-nav {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
+  flex-direction: column;
   gap: 1rem;
 }
 
-.btn-nav {
-  padding: 1rem 1.5rem;
-  background: rgba(255, 255, 255, 0.05);
-  color: #a5b4fc;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 10px;
-  font-weight: 600;
+.solver-slider-section {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+}
+
+.solver-slider-limit {
+  min-width: 1.5rem;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #94a3b8;
+  text-align: center;
+}
+
+.solver-slider-track-container {
+  position: relative;
+  flex: 1;
+  display: flex;
+  align-items: center;
+}
+
+.solver-page-slider {
+  width: 100%;
+  height: 6px;
+  margin: 0;
+  appearance: none;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 999px;
+  outline: none;
+  position: relative;
+  z-index: 2;
+}
+
+.solver-page-slider::-webkit-slider-thumb {
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #818cf8;
+  border: 2px solid #e0e7ff;
+  box-shadow: 0 4px 14px rgba(99, 102, 241, 0.35);
   cursor: pointer;
-  transition: all 0.2s;
-  flex: 0 0 auto;
 }
 
-.btn-nav:hover:not(:disabled) {
-  background: rgba(255, 255, 255, 0.1);
-  color: #fff;
-  border-color: rgba(255, 255, 255, 0.2);
-  transform: translateY(-2px);
+.solver-slider-fill {
+  position: absolute;
+  left: 0;
+  top: 50%;
+  height: 6px;
+  transform: translateY(-50%);
+  border-radius: 999px;
+  background: linear-gradient(90deg, #6366f1 0%, #818cf8 100%);
+  pointer-events: none;
 }
 
-.btn-nav:disabled {
-  opacity: 0.3;
-  cursor: not-allowed;
+.solver-slider-tooltip {
+  position: absolute;
+  bottom: calc(100% + 10px);
+  transform: translateX(-50%);
+  padding: 0.2rem 0.45rem;
+  border-radius: 999px;
+  background: rgba(99, 102, 241, 0.22);
+  color: #e0e7ff;
+  font-size: 0.75rem;
+  font-weight: 700;
+  line-height: 1;
+  pointer-events: none;
+  white-space: nowrap;
 }
 
-.footer-nav-buttons .btn-primary {
+.footer-slider-nav .btn-primary {
   flex: 1;
 }
 
@@ -1356,9 +1720,29 @@ const submitReview = async () => {
 }
 
 .modal-icon {
-  font-size: 3.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   margin-bottom: 1.5rem;
-  filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.2));
+}
+
+.modal-icon-svg {
+  width: 3.5rem;
+  height: 3.5rem;
+  flex-shrink: 0;
+  filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.18));
+}
+
+.modal-content.success .modal-icon-svg {
+  color: #4ade80;
+}
+
+.modal-content.error .modal-icon-svg {
+  color: #f87171;
+}
+
+.modal-content.warning .modal-icon-svg {
+  color: #fbbf24;
 }
 
 .modal-title {

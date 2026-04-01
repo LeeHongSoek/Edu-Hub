@@ -160,6 +160,68 @@ const clearExamSearch = () => {
   examSearchQuery.value = "";
   currentPage.value = 1;
 };
+const showCreateModal = ref(false);
+const createLoading = ref(false);
+const createError = ref("");
+const createForm = ref({
+  exam_name: "",
+  start_time: "",
+  end_time: "",
+  location: "",
+  is_auto_score: true,
+});
+
+const openCreateModal = () => {
+  createForm.value = {
+    exam_name: "",
+    start_time: "",
+    end_time: "",
+    location: "",
+    is_auto_score: true,
+  };
+  createError.value = "";
+  showCreateModal.value = true;
+};
+
+const closeCreateModal = () => {
+  showCreateModal.value = false;
+};
+
+const submitCreateExam = async () => {
+  if (!createForm.value.exam_name.trim()) {
+    createError.value = "고사 이름을 입력해주세요.";
+    return;
+  }
+  if (!createForm.value.start_time || !createForm.value.end_time) {
+    createError.value = "시작일시와 종료일시를 모두 입력해주세요.";
+    return;
+  }
+  if (new Date(createForm.value.start_time) >= new Date(createForm.value.end_time)) {
+    createError.value = "종료일시는 시작일시보다 이후여야 합니다.";
+    return;
+  }
+  createLoading.value = true;
+  createError.value = "";
+  try {
+    await $fetch(`${apiBase.value}/exams`, {
+      method: "POST",
+      headers: getAuthHeader(),
+      body: {
+        exam_name: createForm.value.exam_name.trim(),
+        start_time: createForm.value.start_time,
+        end_time: createForm.value.end_time,
+        location: createForm.value.location.trim() || undefined,
+        is_auto_score: createForm.value.is_auto_score,
+      },
+    });
+    closeCreateModal();
+    await fetchExams();
+  } catch (err: any) {
+    createError.value = err?.data?.message || "고사 생성 중 오류가 발생했습니다.";
+  } finally {
+    createLoading.value = false;
+  }
+};
 </script>
 
 <template>
@@ -193,10 +255,15 @@ const clearExamSearch = () => {
               전체 고사집
             </button>
           </div>
+
         </div>
       </div>
 
       <div class="page-links">
+        <button class="btn-new-exam" @click="openCreateModal" id="btn-open-create-exam">
+          <span class="btn-new-icon">＋</span>
+          새 고사집
+        </button>
         <NuxtLink to="/dashboard" class="back-btn">
           <IconArrowUp class="back-icon" />
           대시보드
@@ -287,7 +354,7 @@ const clearExamSearch = () => {
                 {{ new Date(exam.end_time).toLocaleDateString("ko-KR") }}</span
               >
             </div>
-            <h4><{{ exam.exam_id }}> {{ exam.exam_name }}</h4>
+            <h4>&lt;{{ exam.exam_id }}&gt; {{ exam.exam_name }}</h4>
           </div>
           <div class="exam-meta">
             <span class="exam-meta-line">
@@ -319,6 +386,93 @@ const clearExamSearch = () => {
       </div>
     </div>
   </div>
+
+  <!-- 새 고사 생성 모달 -->
+  <Teleport to="body">
+    <Transition name="modal-fade">
+      <div v-if="showCreateModal" class="modal-backdrop" @click.self="closeCreateModal">
+        <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+          <div class="modal-header">
+            <h2 id="modal-title" class="modal-title">새 고사집 만들기</h2>
+            <button class="modal-close-btn" @click="closeCreateModal" aria-label="닫기">✕</button>
+          </div>
+
+          <form class="modal-form" @submit.prevent="submitCreateExam">
+            <div class="form-group">
+              <label for="exam-name" class="form-label">고사 이름 <span class="required">*</span></label>
+              <input
+                id="exam-name"
+                v-model="createForm.exam_name"
+                type="text"
+                class="form-input"
+                placeholder="예) 2024년 1학기 중간고사"
+                maxlength="255"
+                autocomplete="off"
+              />
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label for="exam-start" class="form-label">시작 일시 <span class="required">*</span></label>
+                <input
+                  id="exam-start"
+                  v-model="createForm.start_time"
+                  type="datetime-local"
+                  class="form-input"
+                />
+              </div>
+              <div class="form-group">
+                <label for="exam-end" class="form-label">종료 일시 <span class="required">*</span></label>
+                <input
+                  id="exam-end"
+                  v-model="createForm.end_time"
+                  type="datetime-local"
+                  class="form-input"
+                />
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="exam-location" class="form-label">장소 <span class="optional">(선택)</span></label>
+              <input
+                id="exam-location"
+                v-model="createForm.location"
+                type="text"
+                class="form-input"
+                placeholder="예) 1학년 1반 교실"
+                maxlength="100"
+                autocomplete="off"
+              />
+            </div>
+
+            <div class="form-group form-group-check">
+              <label class="form-check-label" for="exam-auto-score">
+                <input
+                  id="exam-auto-score"
+                  v-model="createForm.is_auto_score"
+                  type="checkbox"
+                  class="form-checkbox"
+                />
+                <span class="check-text">자동 채점 활성화</span>
+              </label>
+            </div>
+
+            <div v-if="createError" class="form-error">{{ createError }}</div>
+
+            <div class="modal-actions">
+              <button type="button" class="btn-cancel" @click="closeCreateModal" :disabled="createLoading">
+                취소
+              </button>
+              <button type="submit" class="btn-submit" :disabled="createLoading" id="btn-submit-create-exam">
+                <span v-if="createLoading" class="loading-spinner"></span>
+                {{ createLoading ? '생성 중...' : '고사 생성' }}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </Transition>
+  </Teleport>
 </template>
 
 <style scoped>
@@ -744,5 +898,289 @@ const clearExamSearch = () => {
   background: rgba(15, 23, 42, 0.65);
   box-shadow: 0 20px 60px -22px rgba(15, 23, 42, 1);
   margin-bottom: 1.5rem;
+}
+
+/* 새 고사 버튼 */
+.btn-new-exam {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.4rem 0.9rem;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  color: #fff;
+  font-size: 0.9rem;
+  font-weight: 700;
+  border: none;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 14px rgba(99, 102, 241, 0.35);
+}
+
+.btn-new-exam:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(99, 102, 241, 0.5);
+  background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+}
+
+.btn-new-icon {
+  font-size: 1rem;
+  line-height: 1;
+}
+
+/* 모달 스타일 */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(2, 6, 23, 0.75);
+  backdrop-filter: blur(6px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  padding: 1rem;
+}
+
+.modal-box {
+  background: linear-gradient(145deg, rgba(15, 23, 42, 0.98), rgba(30, 41, 59, 0.98));
+  border: 1px solid rgba(99, 102, 241, 0.3);
+  border-radius: 18px;
+  padding: 2rem;
+  width: 100%;
+  max-width: 520px;
+  box-shadow:
+    0 25px 60px rgba(0, 0, 0, 0.6),
+    0 0 0 1px rgba(255, 255, 255, 0.04) inset;
+  animation: modal-slide-in 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes modal-slide-in {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.75rem;
+}
+
+.modal-title {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: #f1f5f9;
+  margin: 0;
+}
+
+.modal-close-btn {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #94a3b8;
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: all 0.2s;
+}
+
+.modal-close-btn:hover {
+  background: rgba(255, 255, 255, 0.12);
+  color: #f1f5f9;
+}
+
+.modal-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.form-group-check {
+  flex-direction: row;
+  align-items: center;
+}
+
+.form-label {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: #94a3b8;
+}
+
+.required {
+  color: #f87171;
+}
+
+.optional {
+  color: #64748b;
+  font-weight: 400;
+  font-size: 0.82rem;
+}
+
+.form-input {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 10px;
+  color: #f1f5f9;
+  padding: 0.6rem 0.85rem;
+  font-size: 0.92rem;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  outline: none;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.form-input:focus {
+  border-color: rgba(99, 102, 241, 0.6);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.12);
+}
+
+.form-input::placeholder {
+  color: #475569;
+}
+
+.form-input[type="datetime-local"] {
+  color-scheme: dark;
+}
+
+.form-check-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  cursor: pointer;
+}
+
+.form-checkbox {
+  width: 1rem;
+  height: 1rem;
+  accent-color: #6366f1;
+  cursor: pointer;
+}
+
+.check-text {
+  font-size: 0.9rem;
+  color: #94a3b8;
+  font-weight: 500;
+}
+
+.form-error {
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  border-radius: 8px;
+  padding: 0.6rem 0.9rem;
+  font-size: 0.88rem;
+  color: #fca5a5;
+  font-weight: 500;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: flex-end;
+  margin-top: 0.5rem;
+}
+
+.btn-cancel {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #94a3b8;
+  padding: 0.6rem 1.4rem;
+  border-radius: 10px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-cancel:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.1);
+  color: #e2e8f0;
+}
+
+.btn-cancel:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-submit {
+  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  border: none;
+  color: #fff;
+  padding: 0.6rem 1.6rem;
+  border-radius: 10px;
+  font-size: 0.9rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: all 0.2s;
+  box-shadow: 0 4px 14px rgba(99, 102, 241, 0.35);
+}
+
+.btn-submit:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(99, 102, 241, 0.5);
+}
+
+.btn-submit:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.loading-spinner {
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* 모달 트랜지션 */
+.modal-fade-enter-active,
+.modal-fade-leave-active {
+  transition: opacity 0.2s ease;
+}
+
+.modal-fade-enter-from,
+.modal-fade-leave-to {
+  opacity: 0;
+}
+
+@media (max-width: 600px) {
+  .form-row {
+    grid-template-columns: 1fr;
+  }
+  .modal-box {
+    padding: 1.5rem 1.25rem;
+  }
 }
 </style>
