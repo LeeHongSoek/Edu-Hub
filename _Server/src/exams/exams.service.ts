@@ -36,9 +36,19 @@ export class ExamsService {
     });
   }
 
-  async findAll(userNo?: bigint) {
+  async findAll(userNo?: bigint, classId?: bigint) {
+    const where: any = {};
+
+    if (userNo) {
+      where.creator_no = userNo;
+    }
+
+    if (classId) {
+      where.class_id = classId;
+    }
+
     return this.prisma.exam.findMany({
-      where: userNo ? { creator_no: userNo } : {},
+      where,
       include: {
         creator: { select: { user_no: true, username: true } },
         class: true,

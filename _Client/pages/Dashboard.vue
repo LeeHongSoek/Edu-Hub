@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, computed } from "vue";
+import { ref, onMounted, computed, nextTick } from "vue";
 import StudentDashboard from "~/components/dashboard/StudentDashboard.vue";
 import TeacherDashboard from "~/components/dashboard/TeacherDashboard.vue";
 import ParentDashboard from "~/components/dashboard/ParentDashboard.vue";
@@ -18,7 +18,7 @@ import IconChart from "~/assets/icons/IconChart.svg?component";
 import IconUsers from "~/assets/icons/IconUsers.svg?component";
 import IconMessage from "~/assets/icons/IconMessage.svg?component";
 import IconCalendar from "~/assets/icons/IconCalendar.svg?component";
-import { nextTick } from "vue";
+import IconClassRoom from "~/assets/icons/IconClassRoom.svg?component";
 
 type UserCookiePayload = {
   user_no: string;
@@ -30,7 +30,18 @@ type UserCookiePayload = {
   msgAlert?: string;
 };
 
+type DashboardClassItem = {
+  classId: string;
+  className: string;
+  teacherNo: string | null;
+  teacherName: string | null;
+  studentCount: number;
+  examCount: number;
+  createdAt?: string | null;
+};
+
 const userCookie = useCookie<UserCookiePayload | string | null>("user_info");
+const { apiBase, getAuthHeader } = useApi();
 const userInfo = computed<UserCookiePayload | null>(() => {
   if (!userCookie.value) return null;
   try {
@@ -38,19 +49,73 @@ const userInfo = computed<UserCookiePayload | null>(() => {
       typeof userCookie.value === "string"
         ? (JSON.parse(userCookie.value) as UserCookiePayload)
         : userCookie.value;
-        
-    console.log("[사용자 정보] msgAlert =", parsed?.msgAlert);
+    const normalizedRole = parsed?.role_id || parsed?.role || "";
+    const normalizedUser = {
+      ...parsed,
+      role: normalizedRole,
+      role_id: normalizedRole,
+    };
 
-    return parsed;
+    console.log("[사용자 정보] =", normalizedUser);
+
+    return normalizedUser;
   } catch {
     return null;
   }
 });
 
-const activeTab = ref("stats"); // 'stats', 'relations', 'messages', 'logs', 'question-books', 'exams'
+const activeTab = ref("stats"); // 'stats', 'relations', 'messages', 'classes', 'logs', 'question-books', 'exams'
 const composeMessageTarget = ref<any | null>(null);
 const composeReturnTab = ref<"relations" | null>(null);
 const messageThreadTarget = ref<any | null>(null);
+const classList = ref<DashboardClassItem[]>([]);
+const classListLoading = ref(false);
+const classListError = ref("");
+const currentRoleId = computed(() => userInfo.value?.role_id || userInfo.value?.role || "");
+
+const shouldShowClassList = computed(
+  () => currentRoleId.value === "S" || currentRoleId.value === "T",
+);
+const classListTitle = computed(() =>
+  currentRoleId.value === "T" ? "내 클래스 목록" : "소속 클래스 목록",
+);
+
+const fetchClassList = async () => {
+  if (!shouldShowClassList.value) {
+    classList.value = [];
+    return;
+  }
+
+  classListLoading.value = true;
+  classListError.value = "";
+
+  try {
+    const data = await $fetch<DashboardClassItem[]>(
+      `${apiBase.value}/dashboard/classes`,
+      {
+        headers: getAuthHeader(),
+      },
+    );
+    classList.value = Array.isArray(data) ? data : [];
+  } catch (error) {
+    console.error("클래스 목록 조회 실패:", error);
+    classListError.value = "클래스 목록을 불러오지 못했습니다.";
+    classList.value = [];
+  } finally {
+    classListLoading.value = false;
+  }
+};
+
+const openClassExams = async (item: DashboardClassItem) => {
+  await navigateTo({
+    path: "/exams",
+    query: {
+      scope: "all",
+      classId: item.classId,
+      className: item.className,
+    },
+  });
+};
 
 const openMessageCompose = async (user: any) => {
   composeMessageTarget.value = user;
@@ -84,7 +149,10 @@ const clearMessageThreadTarget = () => {
 onMounted(() => {
   if (!userInfo.value) {
     navigateTo("/");
+    return;
   }
+
+  fetchClassList();
 });
 </script>
 
@@ -152,6 +220,15 @@ onMounted(() => {
           <IconMessage class="tab-icon" /> 메시지 함
         </button>
         <button
+          v-if="shouldShowClassList"
+          :class="{ active: activeTab === 'classes' }"
+          :aria-pressed="activeTab === 'classes'"
+          @click="activeTab = 'classes'"
+        >
+          <IconClassRoom class="tab-icon" /> 소속 클래스
+        </button>
+
+        <button
           v-if="userInfo.role_id === 'S'"
           :class="{ active: activeTab === 'logs' }"
           :aria-pressed="activeTab === 'logs'"
@@ -183,6 +260,44 @@ onMounted(() => {
             @compose-dismissed="handleMessageComposeDismissed"
             @thread-consumed="clearMessageThreadTarget"
           />
+        </div>
+
+        <div v-else-if="activeTab === 'classes'">
+          <section v-if="shouldShowClassList" class="class-list-panel">
+            <div class="class-list-header">
+              <h3>{{ classListTitle }}</h3>
+              <span class="class-list-count">{{ classList.length }}개</span>
+            </div>
+
+            <div v-if="classListLoading" class="class-list-state">
+              클래스 목록을 불러오는 중...
+            </div>
+            <div v-else-if="classListError" class="class-list-state error">
+              {{ classListError }}
+            </div>
+            <div v-else-if="classList.length === 0" class="class-list-state empty">
+              표시할 클래스가 없습니다.
+            </div>
+            <div v-else class="class-list-grid">
+              <article
+                v-for="item in classList"
+                :key="item.classId"
+                class="class-card"
+              >
+                <div class="class-card-top">
+                  <button class="class-link" @click="openClassExams(item)">
+                    {{ item.className }}
+                  </button>
+                  <span>{{ item.examCount }}개</span>
+                </div>
+                <p v-if="userInfo.role_id === 'S'" class="class-card-meta">
+                  담당 선생님:
+                  {{ item.teacherName || `#${item.teacherNo ?? "-"}` }}
+                </p>
+                <p v-else class="class-card-meta">연결된 고사 수: {{ item.examCount }}개</p>
+              </article>
+            </div>
+          </section>
         </div>
 
         <div v-else-if="activeTab === 'logs'">
@@ -390,5 +505,108 @@ onMounted(() => {
   padding: 1.75rem 1.8rem 1.9rem;
   min-height: 400px;
   box-shadow: 0 12px 28px rgba(2, 6, 23, 0.22);
+}
+
+.class-list-panel {
+  margin-top: 1.75rem;
+  padding: 1.2rem;
+  border-radius: 14px;
+  border: 1px solid rgba(129, 140, 248, 0.18);
+  background: rgba(15, 23, 42, 0.35);
+}
+
+.class-list-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.class-list-header h3 {
+  margin: 0;
+  color: #f8fafc;
+  font-size: 1rem;
+}
+
+.class-list-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 2.4rem;
+  padding: 0.3rem 0.65rem;
+  border-radius: 999px;
+  background: rgba(99, 102, 241, 0.14);
+  color: #c7d2fe;
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.class-list-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 0.85rem;
+}
+
+.class-card {
+  padding: 1rem 1.05rem;
+  border-radius: 12px;
+  border: 1px solid rgba(148, 163, 184, 0.14);
+  background: rgba(30, 41, 59, 0.72);
+}
+
+.class-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.45rem;
+  color: #f8fafc;
+}
+
+.class-card-top strong {
+  font-size: 0.98rem;
+}
+
+.class-link {
+  appearance: none;
+  background: transparent;
+  border: none;
+  padding: 0;
+  color: #f8fafc;
+  font-size: 0.98rem;
+  font-weight: 700;
+  text-align: left;
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.class-link:hover {
+  color: #a5b4fc;
+}
+
+.class-card-top span {
+  color: #a5b4fc;
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.class-card-meta {
+  margin: 0;
+  color: #94a3b8;
+  font-size: 0.9rem;
+}
+
+.class-list-state {
+  padding: 1rem 0.25rem;
+  color: #94a3b8;
+}
+
+.class-list-state.error {
+  color: #fda4af;
+}
+
+.class-list-state.empty {
+  color: #64748b;
 }
 </style>

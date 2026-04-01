@@ -31,7 +31,7 @@ CREATE TABLE `classes` (
   PRIMARY KEY (`class_id`),
   KEY `fk_class_teacher` (`teacher_no`),
   CONSTRAINT `fk_class_teacher` FOREIGN KEY (`teacher_no`) REFERENCES `users` (`user_no`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci COMMENT='학급 관리 테이블';
+) ENGINE=InnoDB AUTO_INCREMENT=22 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci COMMENT='학급 관리 테이블';
 /*!40101 SET character_set_client = @saved_cs_client */;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8mb4 */;

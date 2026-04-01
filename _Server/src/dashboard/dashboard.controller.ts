@@ -19,6 +19,15 @@ export class DashboardController {
     return this.dashboardService.getStats(userNo, roleId);
   }
 
+  @Get('classes')
+  async getDashboardClasses(@Request() req) {
+    const userNoVal = req.user?.user_no || req.user?.userNo;
+    if (!userNoVal) throw new UnauthorizedException();
+
+    const roleId = String(req.user?.role_id || req.user?.role || '').toUpperCase();
+    return this.dashboardService.getClassList(BigInt(userNoVal), roleId);
+  }
+
   @Get('relations')
   async getRelations(
     @Request() req,

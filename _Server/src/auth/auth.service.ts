@@ -36,6 +36,7 @@ export class AuthService {
         username: user.username,
         email: user.email,
         role: user.role_id,
+        role_id: user.role_id,
         msgAlert: 'none'
       }
     };
@@ -102,6 +103,7 @@ export class AuthService {
         userId: updatedUser.user_id,
         username: updatedUser.username,
         role: updatedUser.role_id,
+        role_id: updatedUser.role_id,
         email: updatedUser.email
       }
     };

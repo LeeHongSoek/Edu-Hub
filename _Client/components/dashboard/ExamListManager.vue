@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, watch } from "vue";
-import { useRouter } from "vue-router";
+import { useRoute, useRouter } from "vue-router";
 import IconCalendar from "~/assets/icons/IconCalendar.svg?component";
 import IconArrowUp from "~/assets/icons/IconArrowUp.svg?component";
 import IconFileText from "~/assets/icons/IconFileText.svg?component";
@@ -20,7 +20,10 @@ const loading = ref(true);
 const pageSize = 5;
 const currentPage = ref(1);
 const sliderValue = ref(1);
-const listScope = ref<"mine" | "all">("mine");
+const route = useRoute();
+const listScope = ref<"mine" | "all">(
+  route.query.scope === "all" ? "all" : "mine",
+);
 const examSearchInput = ref("");
 const examSearchQuery = ref("");
 const userCookie = useCookie("user_info");
@@ -38,8 +41,19 @@ const userInfo = computed(() => {
 const listTitle = computed(() =>
   listScope.value === "all" ? "전체 고사집 목록" : "나의 고사집 목록",
 );
+const selectedClassId = computed(() => {
+  const raw = route.query.classId;
+  return typeof raw === "string" && raw.trim() ? raw : "";
+});
+const selectedClassName = computed(() => {
+  const raw = route.query.className;
+  return typeof raw === "string" && raw.trim() ? raw : "";
+});
 const emptyText = computed(() => {
   if (examSearchQuery.value) return "검색 조건에 맞는 고사집이 없습니다.";
+  if (selectedClassName.value) {
+    return `${selectedClassName.value}에 연결된 고사집이 없습니다.`;
+  }
   return listScope.value === "all"
     ? "등록된 고사집이 없습니다."
     : "생성된 고사집이 없습니다.";
@@ -109,10 +123,13 @@ const viewExamDetails = (examId: number | string | bigint) => {
 const fetchExams = async () => {
   loading.value = true;
   try {
-    // scope(mine/all)에 따라 서버에서 필터된 목록을 가져온다
+    // scope와 classId를 함께 보내서 서버에서 즉시 필터된 목록을 가져옵니다.
     const data = await $fetch(`${apiBase.value}/exams`, {
       headers: getAuthHeader(),
-      query: { scope: listScope.value },
+      query: {
+        scope: listScope.value,
+        classId: selectedClassId.value || undefined,
+      },
     });
     exams.value = data as any[];
   } catch (err) {
@@ -123,7 +140,14 @@ const fetchExams = async () => {
 };
 
 watch(
-  listScope,
+  () => route.query.scope,
+  (scope) => {
+    listScope.value = scope === "all" ? "all" : "mine";
+  },
+);
+
+watch(
+  [listScope, selectedClassId],
   async () => {
     currentPage.value = 1;
     sliderValue.value = 1;
@@ -134,7 +158,12 @@ watch(
 
 const setScope = (scope: "mine" | "all") => {
   if (listScope.value === scope) return;
-  listScope.value = scope;
+  router.replace({
+    query: {
+      ...route.query,
+      scope,
+    },
+  });
 };
 
 const handleSliderInput = (e: Event) => {
@@ -161,6 +190,13 @@ const clearExamSearch = () => {
   examSearchInput.value = "";
   examSearchQuery.value = "";
   currentPage.value = 1;
+};
+
+const clearClassFilter = () => {
+  const nextQuery = { ...route.query };
+  delete nextQuery.classId;
+  delete nextQuery.className;
+  router.replace({ query: nextQuery });
 };
 const showCreateModal = ref(false);
 const createLoading = ref(false);
@@ -292,6 +328,13 @@ const submitCreateExam = async () => {
     <div v-else>
       <div class="pagination-panel-border">
         <div class="slider-panel">
+          <div v-if="selectedClassName" class="class-filter-banner">
+            <span class="class-filter-label">클래스 필터</span>
+            <strong>{{ selectedClassName }}</strong>
+            <button class="class-filter-clear" @click="clearClassFilter">
+              전체 보기
+            </button>
+          </div>
           <div class="search-row">
             <input
               v-model="examSearchInput"
@@ -383,6 +426,10 @@ const submitCreateExam = async () => {
               <span class="exam-count"
                 >문제수 {{ exam._count?.questions ?? 0 }}문항</span
               >
+              <span v-if="exam.class?.class_name" class="exam-separator">·</span>
+              <span v-if="exam.class?.class_name" class="exam-class-name">
+                {{ exam.class.class_name }}
+              </span>
             </span>
             <button class="btn-start" @click="viewExamDetails(exam.exam_id)">
               상세보기
@@ -503,6 +550,46 @@ const submitCreateExam = async () => {
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
+}
+
+.class-filter-banner {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.9rem;
+}
+
+.class-filter-label {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.2rem 0.5rem;
+  border-radius: 999px;
+  background: rgba(129, 140, 248, 0.14);
+  color: #c7d2fe;
+  font-size: 0.74rem;
+  font-weight: 700;
+}
+
+.class-filter-banner strong {
+  color: #f8fafc;
+  font-size: 0.95rem;
+}
+
+.class-filter-clear {
+  appearance: none;
+  border: 1px solid rgba(129, 140, 248, 0.22);
+  background: rgba(30, 41, 59, 0.72);
+  color: #cbd5e1;
+  padding: 0.32rem 0.65rem;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.exam-class-name {
+  color: #c7d2fe;
+  font-size: 0.86rem;
 }
 .manager-header {
   display: flex;

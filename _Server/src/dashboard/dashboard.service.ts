@@ -22,6 +22,78 @@ export class DashboardService {
     return stats;
   }
 
+  async getClassList(userNo: bigint, roleId: string) {
+    const normalizedRoleId = String(roleId || '').toUpperCase();
+
+    // 학생은 수강중인 반, 선생님은 운영 중인 반 기준으로 같은 모양의 목록을 내려줍니다.
+    if (normalizedRoleId === 'S') {
+      const memberships = await this.prisma.classStudent.findMany({
+        where: { student_no: userNo },
+        include: {
+          class: {
+            include: {
+              teacher: {
+                select: {
+                  user_no: true,
+                  username: true,
+                },
+              },
+              _count: {
+                select: {
+                  students: true,
+                  exams: true,
+                },
+              },
+            },
+          },
+        },
+      });
+
+      return memberships
+        .sort((a, b) => {
+          const left = a.class.created_at?.getTime() ?? 0;
+          const right = b.class.created_at?.getTime() ?? 0;
+          return right - left;
+        })
+        .map((membership) => ({
+          classId: membership.class.class_id.toString(),
+          className: membership.class.class_name,
+          teacherNo: membership.class.teacher.user_no.toString(),
+          teacherName: membership.class.teacher.username,
+          studentCount: membership.class._count.students,
+          examCount: membership.class._count.exams,
+          createdAt: membership.class.created_at,
+        }));
+    }
+
+    if (normalizedRoleId === 'T') {
+      const classes = await this.prisma.class.findMany({
+        where: { teacher_no: userNo },
+        include: {
+          _count: {
+            select: {
+              students: true,
+              exams: true,
+            },
+          },
+        },
+        orderBy: { created_at: 'desc' },
+      });
+
+      return classes.map((classroom) => ({
+        classId: classroom.class_id.toString(),
+        className: classroom.class_name,
+        teacherNo: classroom.teacher_no.toString(),
+        teacherName: null,
+        studentCount: classroom._count.students,
+        examCount: classroom._count.exams,
+        createdAt: classroom.created_at,
+      }));
+    }
+
+    return [];
+  }
+
   private async getStudentStats(userNo: bigint) {
     // 학생 통계: 최근 7일간 푼 문제 수, 정답률 등
     const now = new Date();

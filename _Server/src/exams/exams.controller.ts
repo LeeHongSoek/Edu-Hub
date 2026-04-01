@@ -8,12 +8,18 @@ export class ExamsController {
   constructor(private readonly examsService: ExamsService) {}
 
   @Get()
-  async findAll(@Request() req: any, @Query('scope') scope?: 'mine' | 'all') {
+  async findAll(
+    @Request() req: any,
+    @Query('scope') scope?: 'mine' | 'all',
+    @Query('classId') classId?: string,
+  ) {
     const userNoVal = req.user?.user_no || req.user?.userNo;
     if (!userNoVal) throw new UnauthorizedException();
+
+    const classIdValue = classId ? BigInt(classId) : undefined;
     return scope === 'all'
-      ? this.examsService.findAll()
-      : this.examsService.findAll(BigInt(userNoVal));
+      ? this.examsService.findAll(undefined, classIdValue)
+      : this.examsService.findAll(BigInt(userNoVal), classIdValue);
   }
 
   @Post()
