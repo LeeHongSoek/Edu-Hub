@@ -730,7 +730,9 @@ const submitCreateExam = async () => {
 .search-input {
   flex: 1;
   min-width: 220px;
-  height: 38px;
+  height: 30px;
+  padding-top: 0.1rem;
+  padding-bottom: 0.1rem;
 }
 
 .btn-search,
