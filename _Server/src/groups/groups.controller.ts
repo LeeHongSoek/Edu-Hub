@@ -9,8 +9,9 @@ export class GroupsController {
   findAll(
     @Query('scope') scope?: string,
     @Query('userNo') userNo?: string | number,
+    @Query('viewerNo') viewerNo?: string | number,
   ) {
-    return this.groupsService.getHierarchy(scope, userNo);
+    return this.groupsService.getHierarchy(scope, userNo, viewerNo);
   }
 
   @Post()

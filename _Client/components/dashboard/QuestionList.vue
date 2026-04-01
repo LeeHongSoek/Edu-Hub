@@ -88,6 +88,8 @@ const handleSelectGroup = (groupId: string | number | null) => {
 
 const handleScopeChange = (scope: "mine" | "all") => {
   emit("change-scope", scope);
+  // 스코프 변경 시 그룹 선택/검색 필터 초기화
+  clearAllFilters();
 };
 
 const clearAllFilters = () => {
@@ -214,13 +216,11 @@ const findGroupPath = (
 
 const selectedGroupBreadcrumb = computed(() => {
   if (props.selectedGroupId === null || props.selectedGroupId === undefined) {
-    return " / / ";
+    return "";
   }
   const path = findGroupPath(groups.value, props.selectedGroupId);
-  if (!path) return " / / ";
-  const padded = [...path];
-  while (padded.length < 3) padded.push("");
-  return `${padded[0]} / ${padded[1]} / ${padded[2]}`.trimStart();
+  if (!path || path.length === 0) return "";
+  return path.join(" / ");
 });
 
 const groupSearchInput = ref("");
@@ -299,6 +299,7 @@ const fetchGroups = async () => {
       query: {
         scope: props.viewMode,
         userNo: props.currentUserNo ?? undefined,
+        viewerNo: props.currentUserNo ?? undefined,
       },
     });
     groups.value = data;
@@ -311,6 +312,13 @@ onMounted(async () => {
   await fetchGroups();
   searchInput.value = props.appliedSearchKeyword;
 });
+
+watch(
+  () => props.viewMode,
+  async () => {
+    await fetchGroups();
+  },
+);
 
 watch(
   () => props.appliedSearchField,
@@ -805,8 +813,9 @@ watch(
 .question-list-row {
   display: flex;
   align-items: flex-start;
-  gap: 1.25rem;
   width: 100%;
+  gap: 1.25rem;
+  padding: 0;
 }
 
 .question-list-main {
@@ -818,6 +827,7 @@ watch(
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 10px;
   padding: 1rem;
+  background: rgba(30, 41, 59, 0.5); /* content-box와 동일 */
   overflow: hidden;
 }
 
