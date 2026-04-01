@@ -35,7 +35,8 @@ export class AuthService {
         userId: user.user_id,
         username: user.username,
         email: user.email,
-        role: user.role_id
+        role: user.role_id,
+        msgAlert: 'none'
       }
     };
   }

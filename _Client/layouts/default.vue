@@ -140,6 +140,7 @@ onMounted(() => {
             @click.prevent="openMessagePopover()"
           >
             <IconMessage class="icon-message" aria-hidden="true" />
+            [{{ userInfo.msgAlert }}]
           </NuxtLink>
           <NuxtLink
             v-if="userInfo.role_id === 'S' || userInfo.role_id === 'T'"

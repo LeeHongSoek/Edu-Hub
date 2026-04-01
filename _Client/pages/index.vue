@@ -221,6 +221,8 @@ const handleLogin = async () => {
       const user = useCookie("user_info");
       user.value = JSON.stringify((data.value as any).user);
 
+      console.log('[사용자 정보] user.value = ',user.value);
+
       navigateTo("/dashboard");
     }
   } catch (err) {

@@ -20,13 +20,28 @@ import IconMessage from "~/assets/icons/IconMessage.svg?component";
 import IconCalendar from "~/assets/icons/IconCalendar.svg?component";
 import { nextTick } from "vue";
 
-const userCookie = useCookie("user_info");
-const userInfo = computed(() => {
+type UserCookiePayload = {
+  user_no: string;
+  userId?: string;
+  user_id?: string;
+  username?: string;
+  role?: string;
+  role_id?: string;
+  msgAlert?: string;
+};
+
+const userCookie = useCookie<UserCookiePayload | string | null>("user_info");
+const userInfo = computed<UserCookiePayload | null>(() => {
   if (!userCookie.value) return null;
   try {
-    return typeof userCookie.value === "string"
-      ? JSON.parse(userCookie.value)
-      : userCookie.value;
+    const parsed =
+      typeof userCookie.value === "string"
+        ? (JSON.parse(userCookie.value) as UserCookiePayload)
+        : userCookie.value;
+        
+    console.log("[사용자 정보] msgAlert =", parsed?.msgAlert);
+
+    return parsed;
   } catch {
     return null;
   }
@@ -91,8 +106,7 @@ onMounted(() => {
                   : "학생"
             }}
           </span>
-          <span class="username">{{ userInfo.username }}</span
-          >님!
+          <span class="username">{{ userInfo.username }}</span>님!
           <!-- 대시보드 내 네비게이션 버튼 (타이틀 바로 뒤) -->
           <div v-if="userInfo.role_id !== 'P'" class="quick-nav">
             <NuxtLink to="/questions?mine=true" class="nav-btn">
