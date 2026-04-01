@@ -23,7 +23,7 @@ const props = defineProps<{
   questions: Question[];
   currentUserNo?: string | number | null;
   selectedGroupId: string | number | null;
-  appliedSearchField: "title" | "content";
+  appliedSearchField: "content" | "title";
   appliedSearchKeyword: string;
   currentPage: number;
   totalPages: number;
@@ -39,7 +39,7 @@ const groups = ref<Group[]>([]);
 const selectedQuestionForSolve = ref<Question | null>(null);
 const selectedQuestionForEdit = ref<Question | null>(null);
 const showGroupManager = ref(false);
-const searchField = ref<"title" | "content">(props.appliedSearchField);
+const searchField = ref<"content" | "title">(props.appliedSearchField);
 const searchInput = ref("");
 const sliderValue = ref(props.currentPage);
 
@@ -91,7 +91,7 @@ const handleScopeChange = (scope: "mine" | "all") => {
 };
 
 const clearAllFilters = () => {
-  searchField.value = "title";
+  searchField.value = "content";
   searchInput.value = "";
   groupSearchInput.value = "";
   emit("change-group", null);
@@ -443,8 +443,8 @@ watch(
             <div class="slider-panel">
               <div class="search-row">
                 <select v-model="searchField" class="search-select">
-                  <option value="title">문제제목</option>
-                  <option value="content">문제내용</option>
+                  <option value="content">문제</option>
+                  <option value="title">제목</option>
                 </select>
                 <input
                   v-model="searchInput"

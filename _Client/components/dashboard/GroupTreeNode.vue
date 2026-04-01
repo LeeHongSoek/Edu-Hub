@@ -132,25 +132,25 @@ const toggleExpand = (event: Event) => {
 }
 
 .toggle-icon {
-  font-size: 0.75rem;
+  font-size: 0.9rem;
   color: #94a3b8;
   transition:
     transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275),
     color 0.2s;
   display: inline-block;
-  width: 1.2rem;
+  width: 1.45rem;
   text-align: center;
 }
 
 .toggle-icon-svg {
-  width: 0.75rem;
-  height: 0.75rem;
+  width: 0.95rem;
+  height: 0.95rem;
   transition: transform 0.2s ease;
 }
 
 .toggle-icon:hover {
   color: #ababc6;
-  transform: scale(1.4);
+  transform: scale(1.55);
 }
 
 .toggle-icon.is-expanded {
@@ -158,7 +158,7 @@ const toggleExpand = (event: Event) => {
 }
 
 .toggle-icon.is-expanded:hover {
-  transform: rotate(90deg) scale(1.3);
+  transform: rotate(90deg) scale(1.4);
 }
 
 .bullet {

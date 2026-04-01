@@ -733,26 +733,41 @@ onMounted(() => {
 }
 
 .message-tabs {
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.2rem;
+  padding: 0.18rem;
+  border-radius: 8px;
+  background: rgba(15, 23, 42, 0.55);
+  border: 1px solid rgba(148, 163, 184, 0.14);
 }
 
 .message-tab {
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  background: rgba(255, 255, 255, 0.05);
-  color: #cbd5e1;
-  border-radius: 999px;
-  padding: 0.45rem 0.9rem;
-  font-size: 0.82rem;
+  border: none;
+  background: transparent;
+  color: #94a3b8;
+  font-size: 0.86rem;
   font-weight: 800;
+  border-radius: 6px;
+  padding: 0 0.78rem;
+  height: 30px;
+  line-height: 30px;
   cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  transition: all 0.2s ease;
+}
+
+.message-tab:hover {
+  color: #e2e8f0;
+  background: rgba(255, 255, 255, 0.04);
 }
 
 .message-tab.active {
-  background: linear-gradient(90deg, #6366f1, #a855f7);
+  background: #6d6eff;
   color: #fff;
-  border-color: transparent;
+  box-shadow: 0 8px 18px rgba(109, 110, 255, 0.25);
 }
 
 .manager-subtitle {
