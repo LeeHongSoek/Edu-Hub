@@ -6,36 +6,83 @@ export class GroupsService {
   constructor(private prisma: PrismaService) {}
 
   // 최상위 그룹(depth 1)을 기준으로 하위 그룹들을 포함하여 조회
-  async findAll() {
-    return this.prisma.group.findMany({
+  async findAll(scope?: string, userNo?: string | number) {
+    const groups = await this.prisma.group.findMany({
       where: {
         parent_group_id: null,
       },
       include: {
+        _count: { select: this.countSelector(scope, userNo) },
         child_groups: {
           include: {
-            child_groups: true, // 3단계까지 포함
+            _count: { select: this.countSelector(scope, userNo) },
+            child_groups: {
+              include: {
+                _count: { select: this.countSelector(scope, userNo) },
+                child_groups: {
+                  include: {
+                    _count: { select: this.countSelector(scope, userNo) },
+                  },
+                },
+              },
+            },
           },
         },
       },
     });
+
+    return this.attachCounts(groups);
   }
 
-  async getHierarchy() {
-    // This simple findMany handles 3 levels. For deeper levels, recursive logic or a specialized query would be better.
-    // However, given the requirement, 3 levels usually suffice for standard organization.
-    return this.prisma.group.findMany({
+  async getHierarchy(scope?: string, userNo?: string | number) {
+    const groups = await this.prisma.group.findMany({
       where: {
         parent_group_id: null,
       },
       include: {
+        _count: { select: this.countSelector(scope, userNo) },
         child_groups: {
           include: {
-            child_groups: true,
+            _count: { select: this.countSelector(scope, userNo) },
+            child_groups: {
+              include: {
+                _count: { select: this.countSelector(scope, userNo) },
+                child_groups: {
+                  include: {
+                    _count: { select: this.countSelector(scope, userNo) },
+                  },
+                },
+              },
+            },
           },
         },
       },
     });
+
+    return this.attachCounts(groups);
+  }
+
+  private attachCounts(groups: any[]): any[] {
+    const compute = (node: any): number => {
+      const own = node?._count?.questions ?? 0;
+      const children = Array.isArray(node?.child_groups)
+        ? node.child_groups.reduce((sum: number, child: any) => sum + compute(child), 0)
+        : 0;
+      node.question_count = own;
+      node.question_total = own + children;
+      return node.question_total;
+    };
+
+    groups.forEach((g) => compute(g));
+    return groups;
+  }
+
+  private countSelector(scope?: string, userNo?: string | number) {
+    const where: any = { is_deleted: { not: 'Y' } };
+    if (String(scope || '').toLowerCase() === 'mine' && userNo !== undefined && userNo !== null) {
+      where.creator_no = BigInt(userNo);
+    }
+    return { questions: { where } };
   }
 
   // 그룹 생성

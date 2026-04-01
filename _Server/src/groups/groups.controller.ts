@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Patch, Delete, Body, Param } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Delete, Body, Param, Query } from '@nestjs/common';
 import { GroupsService } from './groups.service';
 
 @Controller('groups')
@@ -6,8 +6,11 @@ export class GroupsController {
   constructor(private readonly groupsService: GroupsService) {}
 
   @Get()
-  findAll() {
-    return this.groupsService.getHierarchy();
+  findAll(
+    @Query('scope') scope?: string,
+    @Query('userNo') userNo?: string | number,
+  ) {
+    return this.groupsService.getHierarchy(scope, userNo);
   }
 
   @Post()

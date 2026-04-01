@@ -58,6 +58,9 @@ export interface Group {
   depth: number | null; // 계층 깊이 (1-3)
   child_groups?: Group[]; // 관계: 하위 그룹 리스트
   parent_group?: Group; // 관계: 상위 그룹 정보
+  question_count?: number; // 자신이 가진 문제 수
+  question_total?: number; // 자신 + 하위 전체 문제 수
+  _count?: { questions?: number }; // Prisma count 포함 시
 }
 
 export interface QuestionReview {

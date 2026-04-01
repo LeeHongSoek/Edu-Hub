@@ -29,6 +29,31 @@ const isOwned = computed(() => {
   return Boolean(props.inheritedOwned) || selfOwned;
 });
 
+const rawQuestionCount = (g: any) =>
+  g?.question_count ??
+  g?.questions_count ??
+  g?.questionCount ??
+  g?.questionsCount ??
+  g?._count?.questions ??
+  g?.question_total ??
+  g?.questionTotal ??
+  g?.total_question_count ??
+  g?.question_count_all ??
+  g?.questionCountWithChildren ??
+  (Array.isArray(g?.questions) ? g.questions.length : 0) ??
+  (Array.isArray(g?.questionList) ? g.questionList.length : 0) ??
+  0;
+
+const totalQuestionCount = (g: any): number => {
+  if (!g) return 0;
+  const own = Number(rawQuestionCount(g)) || 0;
+  const children =
+    Array.isArray(g.child_groups)
+      ? g.child_groups.reduce((sum: number, child: any) => sum + totalQuestionCount(child), 0)
+      : 0;
+  return own + children;
+};
+
 watchEffect(() => {
   if (!props.expandedIds) return;
   const groupKey = String(props.group.group_id);
@@ -65,7 +90,10 @@ const toggleExpand = (event: Event) => {
         <IconArrowRight class="toggle-icon-svg" />
       </span>
       <span v-else class="bullet">•</span>
-      <span class="name-text">{{ group.name }}</span>
+      <span class="name-text">
+        {{ group.name }}
+        <span class="count-pill">({{ totalQuestionCount(group) }}개)</span>
+      </span>
     </div>
 
     <div
@@ -177,6 +205,15 @@ const toggleExpand = (event: Event) => {
   color: #cbd5e1;
   line-height: 1.25rem;
   word-break: break-all;
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.28rem;
+}
+
+.count-pill {
+  color: #a5b4fc;
+  font-weight: 700;
+  font-size: 0.75rem;
 }
 
 .child-nodes {

@@ -295,7 +295,12 @@ const searchedGroups = computed(() => {
 
 const fetchGroups = async () => {
   try {
-    const data = await $fetch<Group[]>(`${apiBase.value}/groups`);
+    const data = await $fetch<Group[]>(`${apiBase.value}/groups`, {
+      query: {
+        scope: props.viewMode,
+        userNo: props.currentUserNo ?? undefined,
+      },
+    });
     groups.value = data;
   } catch (error) {
     console.error("서버 통신 오류(fetch) groups:", error);

@@ -61,7 +61,6 @@ const openMessagePopover = async (
   reason: "mount" | "click" = "click",
   autoClose = false,
 ) => {
-  // alert(reason);
   if (
     reason === "click" ||
     (
@@ -100,6 +99,10 @@ const setMsgAlertConfirm = () => {
 };
 
 const handleMessageBadgeClick = async (reason: "mount" | "click" = "click") => {  
+  if (showMessagePopover.value) {
+    closeMessagePopover();
+    return;
+  }
   await openMessagePopover(reason, true);
 };
 
