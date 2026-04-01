@@ -28,20 +28,20 @@ interface SearchPanelState {
 interface GraphNode {
   id: string;
   label: string;
-  subtitle: string;
   color: string;
   x: number;
   y: number;
   vx: number;
   vy: number;
+  r: number;          // 반지름
+  level: 0 | 1 | 2;  // 0=나, 1=그룹, 2=개인
+  group?: string;     // 그룹 노드 id (2레벨 노드에서 사용)
   fixed?: boolean;
 }
 
 interface GraphEdge {
   source: string;
   target: string;
-  label: string;
-  color: string;
 }
 
 const pageSize = 6;
@@ -64,6 +64,9 @@ const feedbackMessage = ref("");
 const hoveredGraphNodeId = ref<string>("");
 const graphNodes = ref<GraphNode[]>([]);
 const graphEdges = ref<GraphEdge[]>([]);
+const allRelations = ref<any[]>([]);
+const graphLoading = ref(false);
+const draggingNodeId = ref<string | null>(null);
 let graphAnimationFrame = 0;
 const emit = defineEmits<{
   (event: "compose-message", user: any): void;
@@ -264,62 +267,119 @@ const graphCenterNodeId = computed(() =>
   userInfo.value?.user_no ? `me-${userInfo.value.user_no}` : "me",
 );
 
+// 그룹 레이블 매핑
+const groupLabel = (typeId: string): string => {
+  if (typeId === "FRIEND") return "친구";
+  if (typeId === "CHILD_PARENT" || typeId === "PARENT_CHILD") return "학부모";
+  if (typeId === "PUPIL_TEACHER" || typeId === "TEACHER_PUPIL") return "선생님";
+  if (typeId === "STUDENTS") return "학생";
+  return "기타";
+};
+
 const graphData = computed(() => {
-  const baseLabel = userInfo.value?.username || "나";
-  const baseRole = roleLabel(userRoleId.value || "");
+  const cx = graphWidth / 2;
+  const cy = graphHeight / 2;
+  const me = userInfo.value?.username || "나";
+  const centerId = graphCenterNodeId.value;
+
   const centerNode: GraphNode = {
-    id: graphCenterNodeId.value,
-    label: baseLabel,
-    subtitle: baseRole,
+    id: centerId,
+    label: me,
     color: "#818cf8",
-    x: graphWidth / 2,
-    y: graphHeight / 2,
+    x: cx,
+    y: cy,
     vx: 0,
     vy: 0,
+    r: 28,
+    level: 0,
     fixed: true,
   };
 
   const nodes: GraphNode[] = [centerNode];
   const edges: GraphEdge[] = [];
-  const added = new Set<string>([centerNode.id]);
 
-  relations.value.forEach((relation, index) => {
+  // 관계 타입별로 그루핑
+  // 학생(S) 기준: FRIEND, CHILD_PARENT, PUPIL_TEACHER
+  // 학부모(P) 기준: PARENT_CHILD
+  // 선생님(T) 기준: TEACHER_PUPIL
+  const groups = new Map<string, { label: string; users: any[] }>();
+
+  allRelations.value.forEach((relation) => {
     const user = relation?.user2;
     if (!user?.user_no) return;
-    const id = `user-${user.user_no}`;
-    if (!added.has(id)) {
-      added.add(id);
-      const angle = (Math.PI * 2 * index) / Math.max(relations.value.length, 1);
-      const radius = 120 + (index % 3) * 24;
-      nodes.push({
-        id,
-        label: user.username || "이름 없음",
-        subtitle: user.user_id || roleLabel(user.role_id),
-        color:
-          user.role_id === "T"
-            ? "#38bdf8"
-            : user.role_id === "P"
-              ? "#f59e0b"
-              : "#a78bfa",
-        x: graphWidth / 2 + Math.cos(angle) * radius,
-        y: graphHeight / 2 + Math.sin(angle) * radius,
-        vx: 0,
-        vy: 0,
-      });
+
+    // 역할(role_id) 기반으로 그룹 결정 (대소문자 무관하게 처리)
+    const targetRole = String(user.role_id || "").toUpperCase();
+    const myRole = String(userRoleId.value || "").toUpperCase();
+    let label = "기타";
+
+    if (targetRole === "S") {
+      // 상대방이 학생인 경우: 내가 학생이면 '친구', 아니면 '학생'
+      label = myRole === "S" ? "친구" : "학생";
+    } else if (targetRole === "T") {
+      label = "선생님";
+    } else if (targetRole === "P") {
+      label = "학부모";
     }
 
-    edges.push({
-      source: centerNode.id,
-      target: id,
-      label: relationBadgeLabel(relation),
-      color:
-        relation?.relation_type_id === "FRIEND"
-          ? "rgba(129, 140, 248, 0.75)"
-          : relation?.user2?.role_id === "T"
-            ? "rgba(56, 189, 248, 0.7)"
-            : relation?.user2?.role_id === "P"
-              ? "rgba(245, 158, 11, 0.7)"
-              : "rgba(167, 139, 250, 0.7)",
+    const groupId = `group-${label}`;
+    if (!groups.has(groupId)) {
+      groups.set(groupId, { label, users: [] });
+    }
+    const existing = groups.get(groupId)!.users;
+    if (!existing.find((u: any) => u.user_no === user.user_no)) {
+      existing.push(user);
+    }
+  });
+
+  // 그룹 노드 및 개인 노드 배치
+  const groupIds = [...groups.keys()];
+  const groupCount = groupIds.length;
+
+  groupIds.forEach((groupId, gi) => {
+    const groupData = groups.get(groupId)!;
+    // 그룹 노드를 나 주변에 방사형으로 배치
+    const gAngle = (Math.PI * 2 * gi) / Math.max(groupCount, 1) - Math.PI / 2;
+    const gRadius = 170;
+    const gx = cx + Math.cos(gAngle) * gRadius;
+    const gy = cy + Math.sin(gAngle) * gRadius;
+
+    const groupNode: GraphNode = {
+      id: groupId,
+      label: `${groupData.label} (${groupData.users.length})`,
+      color: "#6366f1",
+      x: gx,
+      y: gy,
+      vx: (Math.random() - 0.5) * 1.5,
+      vy: (Math.random() - 0.5) * 1.5,
+      r: 20,
+      level: 1,
+    };
+    nodes.push(groupNode);
+    edges.push({ source: centerId, target: groupId });
+
+    // 개인 노드를 그룹 노드 주변에 배치
+    const users = groupData.users;
+    users.forEach((user, ui) => {
+      const pAngle = gAngle + ((ui - (users.length - 1) / 2) * Math.PI) / Math.max(users.length, 2) * 0.9;
+      const pRadius = 120;
+      const pid = `user-${user.user_no}`;
+      // 이미 추가된 노드면 skip (동일인이 여러 그룹에 있는 경우는 없지만 방어)
+      if (!nodes.find(n => n.id === pid)) {
+        nodes.push({
+          id: pid,
+          label: user.username || "이름 없음",
+          color: "#818cf8",
+          x: gx + Math.cos(pAngle) * pRadius,
+          y: gy + Math.sin(pAngle) * pRadius,
+          vx: (Math.random() - 0.5) * 2,
+          vy: (Math.random() - 0.5) * 2,
+          r: 14,
+          level: 2,
+          group: groupId,
+        });
+      }
+      edges.push({ source: groupId, target: pid });
     });
   });
 
@@ -333,20 +393,70 @@ const graphEdgePositions = computed(() => {
       const target = graphNodes.value.find((node) => node.id === edge.target);
       if (!source || !target) return null;
       return {
-        ...edge,
+        source: edge.source,
+        target: edge.target,
         x1: source.x,
         y1: source.y,
         x2: target.x,
         y2: target.y,
-        mx: (source.x + target.x) / 2,
-        my: (source.y + target.y) / 2,
+        // 엣지 스타일: 레벨0→1은 밝게, 레벨1→2는 어둡게
+        isGroupEdge: source.level === 0 || target.level === 0,
       };
     })
-    .filter(Boolean);
+    .filter((e): e is NonNullable<typeof e> => e !== null);
 });
 
-const openGraphModal = () => {
+const startDragging = (nodeId: string) => {
+  draggingNodeId.value = nodeId;
+};
+
+const handleGlobalMouseMove = (event: MouseEvent) => {
+  if (!draggingNodeId.value) return;
+  const svg = document.querySelector(".graph-svg") as SVGSVGElement;
+  if (!svg) return;
+
+  const CTM = svg.getScreenCTM();
+  if (!CTM) return;
+
+  const x = (event.clientX - CTM.e) / CTM.a;
+  const y = (event.clientY - CTM.f) / CTM.d;
+
+  const node = graphNodes.value.find((n) => n.id === draggingNodeId.value);
+  if (node) {
+    node.x = x;
+    node.y = y;
+    node.vx = 0;
+    node.vy = 0;
+  }
+};
+
+const stopDragging = () => {
+  draggingNodeId.value = null;
+};
+
+const loadAllRelationsForGraph = async () => {
+  graphLoading.value = true;
+  try {
+    const data = await $fetch(`${apiBase.value}/dashboard/relations`, {
+      headers: getAuthHeader(),
+      query: {
+        page: 1,
+        limit: 24, // 백엔드 safeLimit 최대치
+      },
+    });
+    const response = data as { items: any[]; total: number };
+    allRelations.value = response.items ?? [];
+  } catch (err) {
+    console.error("그래프용 전체 관계 로드 실패:", err);
+    allRelations.value = [];
+  } finally {
+    graphLoading.value = false;
+  }
+};
+
+const openGraphModal = async () => {
   showGraphModal.value = true;
+  await loadAllRelationsForGraph();
 };
 
 const closeGraphModal = () => {
@@ -373,70 +483,76 @@ const startGraphSimulation = () => {
       return;
     }
 
+    // --- 반발력 (같은 레벨 노드끼리만 밀어냄, 멀어질수록 약해짐) ---
     for (let i = 0; i < nodes.length; i += 1) {
       for (let j = i + 1; j < nodes.length; j += 1) {
         const a = nodes[i];
         const b = nodes[j];
+        // 다른 레벨이면 반발력 없음 (계층을 어지럽히지 않도록)
+        if (a.level !== b.level) continue;
         let dx = b.x - a.x;
         let dy = b.y - a.y;
-        let dist = Math.sqrt(dx * dx + dy * dy) || 1;
-        const force = 2200 / (dist * dist);
+        const dist = Math.sqrt(dx * dx + dy * dy) || 1;
+        const minDist = (a.r + b.r) * 4.5;
+        if (dist > minDist * 3) continue; // 너무 멀면 무시
+        const force = (minDist * minDist) / (dist * dist + 1) * 0.6;
         dx /= dist;
         dy /= dist;
-
-        if (!a.fixed) {
-          a.vx -= dx * force;
-          a.vy -= dy * force;
-        }
-        if (!b.fixed) {
-          b.vx += dx * force;
-          b.vy += dy * force;
-        }
+        if (!a.fixed) { a.vx -= dx * force; a.vy -= dy * force; }
+        if (!b.fixed) { b.vx += dx * force; b.vy += dy * force; }
       }
     }
 
+    // --- 스프링 ---
     edges.forEach((edge) => {
-      const source = nodes.find((node) => node.id === edge.source);
-      const target = nodes.find((node) => node.id === edge.target);
+      const source = nodes.find((n) => n.id === edge.source);
+      const target = nodes.find((n) => n.id === edge.target);
       if (!source || !target) return;
 
       let dx = target.x - source.x;
       let dy = target.y - source.y;
       const dist = Math.sqrt(dx * dx + dy * dy) || 1;
-      const targetDist = source.fixed ? 160 : 120;
-      const spring = (dist - targetDist) * 0.004;
+      const restLen = source.level === 0 ? 175 : 130;
+      const spring = (dist - restLen) * 0.055;
       dx /= dist;
       dy /= dist;
 
-      if (!source.fixed) {
+      if (!source.fixed && source.id !== draggingNodeId.value) {
         source.vx += dx * spring;
         source.vy += dy * spring;
       }
-      if (!target.fixed) {
+      if (!target.fixed && target.id !== draggingNodeId.value) {
         target.vx -= dx * spring;
         target.vy -= dy * spring;
       }
     });
 
+    // --- 통합 ---
     nodes.forEach((node) => {
-      const centerPull = node.fixed ? 0 : 0.0018;
-      const centerDx = graphWidth / 2 - node.x;
-      const centerDy = graphHeight / 2 - node.y;
-
-      if (!node.fixed) {
-        node.vx += centerDx * centerPull;
-        node.vy += centerDy * centerPull;
-        node.vx *= 0.9;
-        node.vy *= 0.9;
-        node.x += node.vx;
-        node.y += node.vy;
-      } else {
+      if (node.fixed) {
         node.x = graphWidth / 2;
         node.y = graphHeight / 2;
+        node.vx = 0;
+        node.vy = 0;
+        return;
       }
 
-      node.x = Math.min(graphWidth - 48, Math.max(48, node.x));
-      node.y = Math.min(graphHeight - 48, Math.max(48, node.y));
+      if (node.id === draggingNodeId.value) return;
+
+      const cx = graphWidth / 2;
+      const cy = graphHeight / 2;
+      node.vx += (cx - node.x) * 0.0008;
+      node.vy += (cy - node.y) * 0.0008;
+
+      node.vx *= 0.88;
+      node.vy *= 0.88;
+
+      node.x += node.vx;
+      node.y += node.vy;
+
+      const pad = node.r + 10;
+      node.x = Math.min(graphWidth - pad, Math.max(pad, node.x));
+      node.y = Math.min(graphHeight - pad, Math.max(pad, node.y));
     });
 
     graphNodes.value = [...nodes];
@@ -453,6 +569,8 @@ watch(
       stopGraphSimulation();
       return;
     }
+    // openGraphModal에서 loadAllRelationsForGraph 후 allRelations가 세팅되면
+    // allRelations watcher가 시뮬레이션을 시작하므로 여기서는 시뮬레이션만
     graphNodes.value = graphData.value.nodes.map((node) => ({ ...node }));
     graphEdges.value = graphData.value.edges.map((edge) => ({ ...edge }));
     startGraphSimulation();
@@ -460,7 +578,7 @@ watch(
 );
 
 watch(
-  () => relations.value,
+  () => allRelations.value,
   () => {
     if (!showGraphModal.value) return;
     graphNodes.value = graphData.value.nodes.map((node) => ({ ...node }));
@@ -765,6 +883,8 @@ const toggleCandidateRelation = async (user: any, event: Event) => {
         : `${user.username} 님과의 연결을 해제했습니다.`);
     await loadRelations();
     await fetchCandidates(activeTarget.value.key);
+    // 그래프 데이터도 갱신
+    void loadAllRelationsForGraph();
   } catch (err: any) {
     const message =
       err?.data?.message || err?.message || "연결에 실패했습니다.";
@@ -1135,7 +1255,10 @@ watch(
           </button>
         </div>
 
-        <div v-if="graphNodes.length <= 1" class="graph-empty">
+        <div v-if="graphLoading" class="graph-empty">
+          인맥 그래프를 불러오는 중...
+        </div>
+        <div v-else-if="graphNodes.length <= 1" class="graph-empty">
           아직 시각화할 인맥이 없습니다. 먼저 친구나 관계를 연결해 보세요.
         </div>
 
@@ -1146,57 +1269,87 @@ watch(
             role="img"
             aria-label="인맥 네트워크 그래프"
           >
+            <defs>
+              <!-- 글로우 필터: 호버 시 빛나게 -->
+              <filter id="glow-sm" x="-50%" y="-50%" width="200%" height="200%">
+                <feGaussianBlur stdDeviation="4" result="blur" />
+                <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+              </filter>
+              <filter id="glow-md" x="-80%" y="-80%" width="260%" height="260%">
+                <feGaussianBlur stdDeviation="8" result="blur" />
+                <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+              </filter>
+            </defs>
+
+            <!-- 엣지 -->
             <g class="graph-links">
               <line
                 v-for="edge in graphEdgePositions"
                 :key="`${edge.source}-${edge.target}`"
-                :x1="edge.x1"
-                :y1="edge.y1"
-                :x2="edge.x2"
-                :y2="edge.y2"
-                :stroke="edge.color"
-                stroke-width="2"
-                stroke-linecap="round"
+                :x1="edge.x1" :y1="edge.y1"
+                :x2="edge.x2" :y2="edge.y2"
+                :class="edge.isGroupEdge ? 'graph-edge-main' : 'graph-edge-sub'"
               />
-              <text
-                v-for="edge in graphEdgePositions"
-                :key="`${edge.source}-${edge.target}-label`"
-                :x="edge.mx"
-                :y="edge.my"
-                class="graph-edge-label"
-              >
-                {{ edge.label }}
-              </text>
             </g>
 
+            <!-- 노드 -->
             <g class="graph-nodes">
               <g
                 v-for="node in graphNodes"
                 :key="node.id"
-                class="graph-node"
-                :class="{ hovered: hoveredGraphNodeId === node.id }"
+                class="graph-node-g"
                 :transform="`translate(${node.x}, ${node.y})`"
                 @mouseenter="hoveredGraphNodeId = node.id"
                 @mouseleave="hoveredGraphNodeId = ''"
+                style="cursor:default"
               >
+                <!-- 호버 글로우 링 -->
                 <circle
-                  :r="hoveredGraphNodeId === node.id ? 34 : node.fixed ? 30 : 26"
-                  :fill="node.color"
-                  :fill-opacity="node.fixed ? 0.95 : 0.88"
+                  v-if="hoveredGraphNodeId === node.id"
+                  :r="node.r + 10"
+                  class="graph-node-halo-ring"
+                  :filter="node.level === 0 ? 'url(#glow-md)' : 'url(#glow-sm)'"
                 />
+                <!-- 메인 원 -->
                 <circle
-                  :r="hoveredGraphNodeId === node.id ? 40 : node.fixed ? 36 : 31"
-                  class="graph-node-halo"
+                  :r="hoveredGraphNodeId === node.id ? node.r * 1.22 : node.r"
+                  class="graph-node-circle"
+                  :class="[
+                    node.level === 0 ? 'node-me' :
+                    node.level === 1 ? 'node-group' : 'node-person'
+                  ,hoveredGraphNodeId === node.id ? 'node-hovered' : '',
+                  draggingNodeId === node.id ? 'node-dragging' : '']"
+                  @mousedown.prevent="startDragging(node.id)"
                 />
-                <text class="graph-node-label" y="-2">
+                <!-- 라벨 -->
+                <text
+                  class="graph-node-label"
+                  :class="node.level === 0 ? 'label-me' : node.level === 1 ? 'label-group' : 'label-person'"
+                  y="0.35em"
+                >
                   {{ node.label }}
-                </text>
-                <text class="graph-node-subtitle" y="14">
-                  {{ node.subtitle }}
                 </text>
               </g>
             </g>
           </svg>
+
+          <!-- 호버 툴팁 (선택된 노드 정보) -->
+          <Transition name="tooltip-fade">
+            <div
+              v-if="hoveredGraphNodeId"
+              class="graph-tooltip"
+            >
+              <span class="graph-tooltip-label">
+                {{ graphNodes.find(n => n.id === hoveredGraphNodeId)?.label }}
+              </span>
+              <span class="graph-tooltip-level">
+                {{
+                  graphNodes.find(n => n.id === hoveredGraphNodeId)?.level === 0 ? '나' :
+                  graphNodes.find(n => n.id === hoveredGraphNodeId)?.level === 1 ? '그룹' : '구성원'
+                }}
+              </span>
+            </div>
+          </Transition>
         </div>
       </div>
     </div>
@@ -1459,6 +1612,7 @@ watch(
 
 .graph-stage {
   padding: 1rem;
+  position: relative;
 }
 
 .graph-svg {
@@ -1467,45 +1621,125 @@ watch(
   display: block;
   border-radius: 16px;
   background:
-    radial-gradient(circle at center, rgba(99, 102, 241, 0.08), transparent 55%),
-    linear-gradient(180deg, rgba(15, 23, 42, 0.84), rgba(15, 23, 42, 0.98));
+    radial-gradient(ellipse at 50% 40%, rgba(99, 102, 241, 0.13) 0%, transparent 60%),
+    linear-gradient(180deg, rgba(15, 23, 42, 0.9), rgba(10, 15, 35, 0.99));
 }
 
-.graph-edge-label {
-  fill: #94a3b8;
-  font-size: 12px;
-  font-weight: 700;
-  text-anchor: middle;
-  dominant-baseline: middle;
-  pointer-events: none;
+/* 엣지 스타일 */
+.graph-edge-main {
+  stroke: rgba(129, 140, 248, 0.55);
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-dasharray: none;
+}
+.graph-edge-sub {
+  stroke: rgba(129, 140, 248, 0.28);
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-dasharray: 4 3;
 }
 
-.graph-node {
-  transition: transform 0.2s ease;
+/* 노드 그룹 */
+.graph-node-g {
+  transition: none; /* 위치는 JS로 처리 */
 }
 
-.graph-node-halo {
-  fill: none;
-  stroke: rgba(255, 255, 255, 0.18);
+.graph-node-circle {
+  transition: r 0.18s cubic-bezier(0.34, 1.56, 0.64, 1),
+              opacity 0.18s ease;
+}
+
+/* 레벨별 원 색상 */
+.node-me {
+  fill: #818cf8;
+  opacity: 0.97;
+}
+.node-group {
+  fill: #6366f1;
+  opacity: 0.82;
+}
+.node-person {
+  fill: #818cf8;
+  opacity: 0.72;
+}
+.node-hovered {
+  opacity: 1 !important;
+}
+.node-dragging {
+  stroke: rgba(255, 255, 255, 0.6);
+  stroke-width: 2.5;
+  cursor: grabbing !important;
+}
+
+/* 글로우 링 */
+.graph-node-halo-ring {
+  fill: rgba(129, 140, 248, 0.22);
+  stroke: rgba(129, 140, 248, 0.5);
   stroke-width: 1.5;
 }
 
+/* 라벨 */
 .graph-node-label {
-  fill: #ffffff;
-  font-size: 12px;
-  font-weight: 800;
   text-anchor: middle;
-  dominant-baseline: middle;
+  dominant-baseline: central;
   pointer-events: none;
+  user-select: none;
+}
+.label-me {
+  fill: #ffffff;
+  font-size: 13px;
+  font-weight: 800;
+}
+.label-group {
+  fill: #e0e7ff;
+  font-size: 11px;
+  font-weight: 700;
+}
+.label-person {
+  fill: #c7d2fe;
+  font-size: 10px;
+  font-weight: 600;
 }
 
-.graph-node-subtitle {
-  fill: rgba(255, 255, 255, 0.82);
-  font-size: 10px;
-  font-weight: 700;
-  text-anchor: middle;
-  dominant-baseline: middle;
+/* 툴팁 */
+.graph-tooltip {
+  position: absolute;
+  bottom: 1.5rem;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(30, 41, 59, 0.95);
+  border: 1px solid rgba(129, 140, 248, 0.35);
+  border-radius: 10px;
+  padding: 0.45rem 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
   pointer-events: none;
+  backdrop-filter: blur(8px);
+  box-shadow: 0 8px 32px rgba(99, 102, 241, 0.2);
+}
+.graph-tooltip-label {
+  color: #f1f5f9;
+  font-size: 0.88rem;
+  font-weight: 700;
+}
+.graph-tooltip-level {
+  color: #818cf8;
+  font-size: 0.78rem;
+  font-weight: 700;
+  padding: 0.1rem 0.5rem;
+  background: rgba(129, 140, 248, 0.15);
+  border-radius: 999px;
+}
+
+.tooltip-fade-enter-active,
+.tooltip-fade-leave-active {
+  transition: opacity 0.18s ease, transform 0.18s ease;
+}
+.tooltip-fade-enter-from,
+.tooltip-fade-leave-to {
+  opacity: 0;
+  transform: translateX(-50%) translateY(6px);
 }
 
 .graph-empty {
