@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, reactive, ref, watch } from "vue";
+import { computed, onBeforeUnmount, reactive, ref, watch } from "vue";
 import IconUsers from "~/assets/icons/IconUsers.svg?component";
 import IconSearch from "~/assets/icons/IconSearch.svg?component";
 import IconClose from "~/assets/icons/IconClose.svg?component";
@@ -25,8 +25,29 @@ interface SearchPanelState {
   loading: boolean;
 }
 
+interface GraphNode {
+  id: string;
+  label: string;
+  subtitle: string;
+  color: string;
+  x: number;
+  y: number;
+  vx: number;
+  vy: number;
+  fixed?: boolean;
+}
+
+interface GraphEdge {
+  source: string;
+  target: string;
+  label: string;
+  color: string;
+}
+
 const pageSize = 6;
 const relationPageSize = 8;
+const graphWidth = 860;
+const graphHeight = 520;
 const relations = ref<any[]>([]);
 const relationLoading = ref(true);
 const relationSearchInput = ref("");
@@ -36,9 +57,14 @@ const relationSliderValue = ref(1);
 const relationTotal = ref(0);
 const relationTotalPages = ref(1);
 const showConnectModal = ref(false);
+const showGraphModal = ref(false);
 const activeTargetKey = ref<TargetKey | "">("");
 const submittingUserId = ref<string>("");
 const feedbackMessage = ref("");
+const hoveredGraphNodeId = ref<string>("");
+const graphNodes = ref<GraphNode[]>([]);
+const graphEdges = ref<GraphEdge[]>([]);
+let graphAnimationFrame = 0;
 const emit = defineEmits<{
   (event: "compose-message", user: any): void;
   (event: "open-message-thread", user: any): void;
@@ -182,6 +208,45 @@ const relationPageEndItem = computed(() =>
   Math.min(relationCurrentPage.value * relationPageSize, relationTotal.value),
 );
 
+const hasConnectedRelations = computed(() => relationTotal.value > 0);
+const hasCandidateResults = computed(
+  () => !!activePanel.value && activePanel.value.total > 0,
+);
+const mainDisplayTotal = computed(() => {
+  if (hasConnectedRelations.value) return relationTotal.value;
+  return activePanel.value?.total ?? 0;
+});
+const mainDisplayTotalPages = computed(() => {
+  if (hasConnectedRelations.value) return relationTotalPagesComputed.value;
+  if (!activePanel.value) return 1;
+  return Math.max(1, activePanel.value.totalPages || 1);
+});
+const mainDisplaySliderDisabled = computed(
+  () => mainDisplayTotalPages.value <= 1,
+);
+const mainDisplaySliderValue = computed(() => {
+  if (hasConnectedRelations.value) return relationSliderValue.value;
+  return activePanel.value?.sliderValue ?? 1;
+});
+const mainDisplaySliderPercentage = computed(() => {
+  if (mainDisplayTotalPages.value <= 1) return 0;
+  return (
+    ((mainDisplaySliderValue.value - 1) / (mainDisplayTotalPages.value - 1)) *
+    100
+  );
+});
+const mainDisplayPageStartItem = computed(() => {
+  if (mainDisplayTotal.value === 0) return 0;
+  if (hasConnectedRelations.value) return relationPageStartItem.value;
+  return ((activePanel.value?.currentPage ?? 1) - 1) * pageSize + 1;
+});
+const mainDisplayPageEndItem = computed(() => {
+  if (mainDisplayTotal.value === 0) return 0;
+  if (hasConnectedRelations.value) return relationPageEndItem.value;
+  if (!activePanel.value) return 0;
+  return Math.min(activePanel.value.currentPage * pageSize, activePanel.value.total);
+});
+
 const relationSummary = computed(() => {
   if (userRoleId.value === "S") {
     return "학생은 친구, 학부모, 선생님을 이름으로 찾아 바로 연결할 수 있습니다.";
@@ -193,6 +258,220 @@ const relationSummary = computed(() => {
     return "선생님은 학생을 이름으로 찾아 연결할 수 있습니다.";
   }
   return "연결 관리 기능을 사용할 수 없습니다.";
+});
+
+const graphCenterNodeId = computed(() =>
+  userInfo.value?.user_no ? `me-${userInfo.value.user_no}` : "me",
+);
+
+const graphData = computed(() => {
+  const baseLabel = userInfo.value?.username || "나";
+  const baseRole = roleLabel(userRoleId.value || "");
+  const centerNode: GraphNode = {
+    id: graphCenterNodeId.value,
+    label: baseLabel,
+    subtitle: baseRole,
+    color: "#818cf8",
+    x: graphWidth / 2,
+    y: graphHeight / 2,
+    vx: 0,
+    vy: 0,
+    fixed: true,
+  };
+
+  const nodes: GraphNode[] = [centerNode];
+  const edges: GraphEdge[] = [];
+  const added = new Set<string>([centerNode.id]);
+
+  relations.value.forEach((relation, index) => {
+    const user = relation?.user2;
+    if (!user?.user_no) return;
+    const id = `user-${user.user_no}`;
+    if (!added.has(id)) {
+      added.add(id);
+      const angle = (Math.PI * 2 * index) / Math.max(relations.value.length, 1);
+      const radius = 120 + (index % 3) * 24;
+      nodes.push({
+        id,
+        label: user.username || "이름 없음",
+        subtitle: user.user_id || roleLabel(user.role_id),
+        color:
+          user.role_id === "T"
+            ? "#38bdf8"
+            : user.role_id === "P"
+              ? "#f59e0b"
+              : "#a78bfa",
+        x: graphWidth / 2 + Math.cos(angle) * radius,
+        y: graphHeight / 2 + Math.sin(angle) * radius,
+        vx: 0,
+        vy: 0,
+      });
+    }
+
+    edges.push({
+      source: centerNode.id,
+      target: id,
+      label: relationBadgeLabel(relation),
+      color:
+        relation?.relation_type_id === "FRIEND"
+          ? "rgba(129, 140, 248, 0.75)"
+          : relation?.user2?.role_id === "T"
+            ? "rgba(56, 189, 248, 0.7)"
+            : relation?.user2?.role_id === "P"
+              ? "rgba(245, 158, 11, 0.7)"
+              : "rgba(167, 139, 250, 0.7)",
+    });
+  });
+
+  return { nodes, edges };
+});
+
+const graphEdgePositions = computed(() => {
+  return graphEdges.value
+    .map((edge) => {
+      const source = graphNodes.value.find((node) => node.id === edge.source);
+      const target = graphNodes.value.find((node) => node.id === edge.target);
+      if (!source || !target) return null;
+      return {
+        ...edge,
+        x1: source.x,
+        y1: source.y,
+        x2: target.x,
+        y2: target.y,
+        mx: (source.x + target.x) / 2,
+        my: (source.y + target.y) / 2,
+      };
+    })
+    .filter(Boolean);
+});
+
+const openGraphModal = () => {
+  showGraphModal.value = true;
+};
+
+const closeGraphModal = () => {
+  showGraphModal.value = false;
+  hoveredGraphNodeId.value = "";
+};
+
+const stopGraphSimulation = () => {
+  if (graphAnimationFrame) {
+    cancelAnimationFrame(graphAnimationFrame);
+    graphAnimationFrame = 0;
+  }
+};
+
+const startGraphSimulation = () => {
+  stopGraphSimulation();
+
+  const tick = () => {
+    const nodes = graphNodes.value;
+    const edges = graphEdges.value;
+
+    if (!showGraphModal.value || nodes.length === 0) {
+      stopGraphSimulation();
+      return;
+    }
+
+    for (let i = 0; i < nodes.length; i += 1) {
+      for (let j = i + 1; j < nodes.length; j += 1) {
+        const a = nodes[i];
+        const b = nodes[j];
+        let dx = b.x - a.x;
+        let dy = b.y - a.y;
+        let dist = Math.sqrt(dx * dx + dy * dy) || 1;
+        const force = 2200 / (dist * dist);
+        dx /= dist;
+        dy /= dist;
+
+        if (!a.fixed) {
+          a.vx -= dx * force;
+          a.vy -= dy * force;
+        }
+        if (!b.fixed) {
+          b.vx += dx * force;
+          b.vy += dy * force;
+        }
+      }
+    }
+
+    edges.forEach((edge) => {
+      const source = nodes.find((node) => node.id === edge.source);
+      const target = nodes.find((node) => node.id === edge.target);
+      if (!source || !target) return;
+
+      let dx = target.x - source.x;
+      let dy = target.y - source.y;
+      const dist = Math.sqrt(dx * dx + dy * dy) || 1;
+      const targetDist = source.fixed ? 160 : 120;
+      const spring = (dist - targetDist) * 0.004;
+      dx /= dist;
+      dy /= dist;
+
+      if (!source.fixed) {
+        source.vx += dx * spring;
+        source.vy += dy * spring;
+      }
+      if (!target.fixed) {
+        target.vx -= dx * spring;
+        target.vy -= dy * spring;
+      }
+    });
+
+    nodes.forEach((node) => {
+      const centerPull = node.fixed ? 0 : 0.0018;
+      const centerDx = graphWidth / 2 - node.x;
+      const centerDy = graphHeight / 2 - node.y;
+
+      if (!node.fixed) {
+        node.vx += centerDx * centerPull;
+        node.vy += centerDy * centerPull;
+        node.vx *= 0.9;
+        node.vy *= 0.9;
+        node.x += node.vx;
+        node.y += node.vy;
+      } else {
+        node.x = graphWidth / 2;
+        node.y = graphHeight / 2;
+      }
+
+      node.x = Math.min(graphWidth - 48, Math.max(48, node.x));
+      node.y = Math.min(graphHeight - 48, Math.max(48, node.y));
+    });
+
+    graphNodes.value = [...nodes];
+    graphAnimationFrame = requestAnimationFrame(tick);
+  };
+
+  graphAnimationFrame = requestAnimationFrame(tick);
+};
+
+watch(
+  () => showGraphModal.value,
+  (isOpen) => {
+    if (!isOpen) {
+      stopGraphSimulation();
+      return;
+    }
+    graphNodes.value = graphData.value.nodes.map((node) => ({ ...node }));
+    graphEdges.value = graphData.value.edges.map((edge) => ({ ...edge }));
+    startGraphSimulation();
+  },
+);
+
+watch(
+  () => relations.value,
+  () => {
+    if (!showGraphModal.value) return;
+    graphNodes.value = graphData.value.nodes.map((node) => ({ ...node }));
+    graphEdges.value = graphData.value.edges.map((edge) => ({ ...edge }));
+    startGraphSimulation();
+  },
+  { deep: true },
+);
+
+onBeforeUnmount(() => {
+  stopGraphSimulation();
 });
 
 function createPanelState(): SearchPanelState {
@@ -298,6 +577,14 @@ const applyRelationSearch = async () => {
   relationCurrentPage.value = 1;
   relationSliderValue.value = 1;
   await loadRelations();
+  if (activeTargetKey.value) {
+    const panel = getPanelState(activeTargetKey.value);
+    panel.searchInput = relationSearchInput.value;
+    panel.searchQuery = relationSearchQuery.value;
+    panel.currentPage = 1;
+    panel.sliderValue = 1;
+    await fetchCandidates(activeTargetKey.value);
+  }
 };
 
 const clearRelationSearch = async () => {
@@ -306,18 +593,42 @@ const clearRelationSearch = async () => {
   relationCurrentPage.value = 1;
   relationSliderValue.value = 1;
   await loadRelations();
+  if (activeTargetKey.value) {
+    const panel = getPanelState(activeTargetKey.value);
+    panel.searchInput = "";
+    panel.searchQuery = "";
+    panel.currentPage = 1;
+    panel.sliderValue = 1;
+    await fetchCandidates(activeTargetKey.value);
+  }
 };
 
 const handleRelationSliderInput = (event: Event) => {
-  relationSliderValue.value = Number((event.target as HTMLInputElement).value);
+  const value = Number((event.target as HTMLInputElement).value);
+  if (hasConnectedRelations.value) {
+    relationSliderValue.value = value;
+    return;
+  }
+  if (activePanel.value) {
+    activePanel.value.sliderValue = value;
+  }
 };
 
 const commitRelationSliderValue = async () => {
-  relationCurrentPage.value = Math.min(
-    Math.max(relationSliderValue.value, 1),
-    relationTotalPagesComputed.value,
+  if (hasConnectedRelations.value) {
+    relationCurrentPage.value = Math.min(
+      Math.max(relationSliderValue.value, 1),
+      relationTotalPagesComputed.value,
+    );
+    await loadRelations();
+    return;
+  }
+  if (!activePanel.value || !activeTargetKey.value) return;
+  activePanel.value.currentPage = Math.min(
+    Math.max(activePanel.value.sliderValue, 1),
+    mainDisplayTotalPages.value,
   );
-  await loadRelations();
+  await fetchCandidates(activeTargetKey.value);
 };
 
 const fetchCandidates = async (targetKey = activeTargetKey.value) => {
@@ -485,7 +796,13 @@ watch(
     if (targetKey === previousKey) return;
     relationCurrentPage.value = 1;
     relationSliderValue.value = 1;
+    const panel = getPanelState(targetKey);
+    panel.searchInput = relationSearchInput.value;
+    panel.searchQuery = relationSearchQuery.value;
+    panel.currentPage = 1;
+    panel.sliderValue = 1;
     await loadRelations();
+    await fetchCandidates(targetKey);
   },
   { immediate: true },
 );
@@ -495,7 +812,10 @@ watch(
 <template>
   <div class="relation-manager">
     <div class="manager-header">
-      <div class="header-copy">
+      <div
+        class="header-copy header-copy-clickable"
+        @click="openGraphModal"
+      >
         <h3><IconUsers class="section-icon" /> 나의 인맥 관리</h3>
         <p class="manager-subtitle">{{ relationSummary }}</p>
       </div>
@@ -543,41 +863,41 @@ watch(
           </button>
         </div>
 
-        <div v-if="relationTotal > 0" class="slider-row">
-          <span class="summary-text">총 {{ relationTotal }}건</span>
+        <div class="slider-row">
+          <span class="summary-text">총 {{ mainDisplayTotal }}건</span>
           <div class="page-slider-section">
             <div
               class="slider-wrapper"
-              :class="{ disabled: relationIsSliderDisabled }"
+              :class="{ disabled: mainDisplaySliderDisabled }"
             >
               <span class="slider-limit">1</span>
               <div class="slider-track-container">
                 <input
                   type="range"
                   :min="1"
-                  :max="relationTotalPagesComputed"
-                  :value="relationSliderValue"
+                  :max="mainDisplayTotalPages"
+                  :value="mainDisplaySliderValue"
                   class="page-slider"
-                  :disabled="relationIsSliderDisabled"
+                  :disabled="mainDisplaySliderDisabled"
                   @input="handleRelationSliderInput"
                   @change="commitRelationSliderValue"
                 />
                 <div
                   class="slider-fill"
-                  :style="{ width: relationSliderPercentage + '%' }"
+                  :style="{ width: mainDisplaySliderPercentage + '%' }"
                 ></div>
                 <div
                   class="slider-tooltip"
-                  :style="{ left: relationSliderPercentage + '%' }"
+                  :style="{ left: mainDisplaySliderPercentage + '%' }"
                 >
-                  {{ relationSliderValue }}
+                  {{ mainDisplaySliderValue }}
                 </div>
               </div>
-              <span class="slider-limit">{{ relationTotalPagesComputed }}</span>
+              <span class="slider-limit">{{ mainDisplayTotalPages }}</span>
             </div>
           </div>
           <span class="range-text"
-            >{{ relationPageStartItem }}-{{ relationPageEndItem }}번째 항목 표시
+            >{{ mainDisplayPageStartItem }}-{{ mainDisplayPageEndItem }}번째 항목 표시
             중</span
           >
         </div>
@@ -585,7 +905,10 @@ watch(
     </div>
 
     <div v-if="relationLoading" class="loading">불러오는 중...</div>
-    <div v-else-if="relationTotal === 0" class="empty">
+    <div
+      v-else-if="!hasConnectedRelations && !hasCandidateResults"
+      class="empty"
+    >
       {{
         relationSearchQuery
           ? "검색 결과가 없습니다."
@@ -593,7 +916,7 @@ watch(
       }}
     </div>
     <TransitionGroup
-      v-else
+      v-else-if="hasConnectedRelations"
       name="relation-slide"
       tag="div"
       class="relation-list"
@@ -624,6 +947,30 @@ watch(
             </button>
           </div>
         </div>
+      </div>
+    </TransitionGroup>
+    <TransitionGroup
+      v-else
+      name="candidate-slide"
+      tag="div"
+      class="candidate-list candidate-list-main"
+    >
+      <div
+        v-for="user in activePanel?.items || []"
+        :key="user.user_no"
+        class="candidate-item"
+      >
+        <label class="candidate-row">
+          <input
+            class="relation-checkbox"
+            type="checkbox"
+            :checked="user.isConnected"
+            :disabled="submittingUserId === user.user_no"
+            @change="toggleCandidateRelation(user, $event)"
+          />
+          <span class="candidate-name">{{ user.username }}</span>
+          <span class="candidate-id">{{ user.user_id }}</span>
+        </label>
       </div>
     </TransitionGroup>
 
@@ -769,6 +1116,90 @@ watch(
         </div>
       </div>
     </div>
+
+    <div
+      v-if="showGraphModal"
+      class="graph-modal-overlay"
+      @click.self="closeGraphModal"
+    >
+      <div class="graph-modal-card">
+        <div class="graph-modal-header">
+          <div>
+            <h2>인맥 네트워크</h2>
+            <p class="graph-modal-desc">
+              현재 연결된 인맥을 포스 레이아웃으로 시각화했습니다.
+            </p>
+          </div>
+          <button class="btn-close" @click="closeGraphModal">
+            <IconClose class="close-icon" />
+          </button>
+        </div>
+
+        <div v-if="graphNodes.length <= 1" class="graph-empty">
+          아직 시각화할 인맥이 없습니다. 먼저 친구나 관계를 연결해 보세요.
+        </div>
+
+        <div v-else class="graph-stage">
+          <svg
+            class="graph-svg"
+            :viewBox="`0 0 ${graphWidth} ${graphHeight}`"
+            role="img"
+            aria-label="인맥 네트워크 그래프"
+          >
+            <g class="graph-links">
+              <line
+                v-for="edge in graphEdgePositions"
+                :key="`${edge.source}-${edge.target}`"
+                :x1="edge.x1"
+                :y1="edge.y1"
+                :x2="edge.x2"
+                :y2="edge.y2"
+                :stroke="edge.color"
+                stroke-width="2"
+                stroke-linecap="round"
+              />
+              <text
+                v-for="edge in graphEdgePositions"
+                :key="`${edge.source}-${edge.target}-label`"
+                :x="edge.mx"
+                :y="edge.my"
+                class="graph-edge-label"
+              >
+                {{ edge.label }}
+              </text>
+            </g>
+
+            <g class="graph-nodes">
+              <g
+                v-for="node in graphNodes"
+                :key="node.id"
+                class="graph-node"
+                :class="{ hovered: hoveredGraphNodeId === node.id }"
+                :transform="`translate(${node.x}, ${node.y})`"
+                @mouseenter="hoveredGraphNodeId = node.id"
+                @mouseleave="hoveredGraphNodeId = ''"
+              >
+                <circle
+                  :r="hoveredGraphNodeId === node.id ? 34 : node.fixed ? 30 : 26"
+                  :fill="node.color"
+                  :fill-opacity="node.fixed ? 0.95 : 0.88"
+                />
+                <circle
+                  :r="hoveredGraphNodeId === node.id ? 40 : node.fixed ? 36 : 31"
+                  class="graph-node-halo"
+                />
+                <text class="graph-node-label" y="-2">
+                  {{ node.label }}
+                </text>
+                <text class="graph-node-subtitle" y="14">
+                  {{ node.subtitle }}
+                </text>
+              </g>
+            </g>
+          </svg>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -799,6 +1230,15 @@ watch(
   display: flex;
   flex-direction: column;
   gap: 0.35rem;
+}
+
+.header-copy-clickable {
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+.header-copy-clickable:hover {
+  transform: translateY(-1px);
 }
 
 .manager-header h3 {
@@ -967,6 +1407,111 @@ watch(
   justify-content: center;
   z-index: 1000;
   padding: 1rem;
+}
+
+.graph-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(2, 6, 23, 0.82);
+  backdrop-filter: blur(10px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1100;
+  padding: 1rem;
+}
+
+.graph-modal-card {
+  width: min(980px, 100%);
+  max-height: 88vh;
+  background:
+    radial-gradient(circle at top, rgba(99, 102, 241, 0.2), transparent 30%),
+    linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 18px;
+  box-shadow: 0 28px 80px -30px rgba(0, 0, 0, 0.75);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.graph-modal-header {
+  padding: 1rem 1.2rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+}
+
+.graph-modal-header h2 {
+  margin: 0;
+  color: #f8fafc;
+  font-size: 1.28rem;
+  font-weight: 800;
+}
+
+.graph-modal-desc {
+  margin: 0.35rem 0 0;
+  color: #94a3b8;
+  font-size: 0.92rem;
+}
+
+.graph-stage {
+  padding: 1rem;
+}
+
+.graph-svg {
+  width: 100%;
+  height: min(68vh, 560px);
+  display: block;
+  border-radius: 16px;
+  background:
+    radial-gradient(circle at center, rgba(99, 102, 241, 0.08), transparent 55%),
+    linear-gradient(180deg, rgba(15, 23, 42, 0.84), rgba(15, 23, 42, 0.98));
+}
+
+.graph-edge-label {
+  fill: #94a3b8;
+  font-size: 12px;
+  font-weight: 700;
+  text-anchor: middle;
+  dominant-baseline: middle;
+  pointer-events: none;
+}
+
+.graph-node {
+  transition: transform 0.2s ease;
+}
+
+.graph-node-halo {
+  fill: none;
+  stroke: rgba(255, 255, 255, 0.18);
+  stroke-width: 1.5;
+}
+
+.graph-node-label {
+  fill: #ffffff;
+  font-size: 12px;
+  font-weight: 800;
+  text-anchor: middle;
+  dominant-baseline: middle;
+  pointer-events: none;
+}
+
+.graph-node-subtitle {
+  fill: rgba(255, 255, 255, 0.82);
+  font-size: 10px;
+  font-weight: 700;
+  text-anchor: middle;
+  dominant-baseline: middle;
+  pointer-events: none;
+}
+
+.graph-empty {
+  padding: 4rem 1.5rem;
+  text-align: center;
+  color: #94a3b8;
 }
 
 .modal-card {
@@ -1280,6 +1825,10 @@ watch(
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 0.7rem;
+}
+
+.candidate-list-main {
+  margin-top: 0.25rem;
 }
 
 .candidate-item {

@@ -140,37 +140,34 @@ export class DashboardService {
       if (targetFilter.relationTypeId) {
         where.relation_type_id = targetFilter.relationTypeId;
       }
-
-      if (targetFilter.otherRoleId) {
-        where.user2 = {
-          ...(where.user2 || {}),
-          role_id: targetFilter.otherRoleId,
-        };
-      }
     }
 
     if (keyword) {
       const keywordFilter = [
         {
           user2: {
-            OR: [
-              {
-                username: {
-                  contains: keyword,
+            is: {
+              OR: [
+                {
+                  username: {
+                    contains: keyword,
+                  },
                 },
-              },
-              {
-                user_id: {
-                  contains: keyword,
+                {
+                  user_id: {
+                    contains: keyword,
+                  },
                 },
-              },
-            ],
+              ],
+            },
           },
         },
         {
           relation_type: {
-            description: {
-              contains: keyword,
+            is: {
+              description: {
+                contains: keyword,
+              },
             },
           },
         },
@@ -228,18 +225,22 @@ export class DashboardService {
 
     if (normalizedRoleId === 'S') {
       if (normalizedTargetKey === 'friends') {
-        return { otherRoleId: 'S', relationTypeId: 'FRIEND' };
+        return { relationTypeId: 'FRIEND' };
       }
       if (normalizedTargetKey === 'parents') {
-        return { otherRoleId: 'P' };
+        return { relationTypeId: 'CHILD_PARENT' };
       }
       if (normalizedTargetKey === 'teachers') {
-        return { otherRoleId: 'T' };
+        return { relationTypeId: 'PUPIL_TEACHER' };
       }
     }
 
-    if ((normalizedRoleId === 'P' || normalizedRoleId === 'T') && normalizedTargetKey === 'students') {
-      return { otherRoleId: 'S' };
+    if (normalizedRoleId === 'P' && normalizedTargetKey === 'students') {
+      return { relationTypeId: 'PARENT_CHILD' };
+    }
+
+    if (normalizedRoleId === 'T' && normalizedTargetKey === 'students') {
+      return { relationTypeId: 'TEACHER_PUPIL' };
     }
 
     return null;
