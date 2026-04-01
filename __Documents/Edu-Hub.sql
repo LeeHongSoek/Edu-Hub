@@ -112,6 +112,7 @@ CREATE TABLE `exams` (
   `end_time` datetime NOT NULL COMMENT '시험 종료 시간',
   `location` varchar(100) DEFAULT NULL COMMENT '시험 장소 (온라인/오프라인 장소 등)',
   `is_auto_score` tinyint(1) DEFAULT 1 COMMENT '자동 채점 여부',
+  `description` text DEFAULT NULL COMMENT '문제집 설명',
   `created_at` datetime DEFAULT current_timestamp() COMMENT '생성 일시',
   PRIMARY KEY (`exam_id`),
   KEY `fk_exam_creator` (`creator_no`),
@@ -268,7 +269,7 @@ CREATE TABLE `solve_results` (
   CONSTRAINT `fk_result_exam` FOREIGN KEY (`exam_id`) REFERENCES `exams` (`exam_id`) ON DELETE CASCADE,
   CONSTRAINT `fk_result_q` FOREIGN KEY (`question_id`) REFERENCES `questions` (`question_id`) ON DELETE CASCADE,
   CONSTRAINT `fk_result_user` FOREIGN KEY (`user_no`) REFERENCES `users` (`user_no`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=17 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci COMMENT='사용자별 문제 풀이 결과';
+) ENGINE=InnoDB AUTO_INCREMENT=28 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci COMMENT='사용자별 문제 풀이 결과';
 /*!40101 SET character_set_client = @saved_cs_client */;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8mb4 */;
@@ -286,7 +287,7 @@ CREATE TABLE `study_logs` (
   KEY `fk_log_q` (`question_id`),
   CONSTRAINT `fk_log_q` FOREIGN KEY (`question_id`) REFERENCES `questions` (`question_id`) ON DELETE CASCADE,
   CONSTRAINT `fk_log_user` FOREIGN KEY (`user_no`) REFERENCES `users` (`user_no`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=63 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci COMMENT='개인별 문제 풀이 기록 및 오답 노트';
+) ENGINE=InnoDB AUTO_INCREMENT=180 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci COMMENT='개인별 문제 풀이 기록 및 오답 노트';
 /*!40101 SET character_set_client = @saved_cs_client */;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8mb4 */;

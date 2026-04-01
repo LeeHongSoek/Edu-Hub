@@ -187,6 +187,11 @@ const closeCreateModal = () => {
   showCreateModal.value = false;
 };
 
+const handleDateTimePicked = (event: Event) => {
+  const target = event.target as HTMLInputElement | null;
+  target?.blur();
+};
+
 const submitCreateExam = async () => {
   if (!createForm.value.exam_name.trim()) {
     createError.value = "고사 이름을 입력해주세요.";
@@ -255,15 +260,15 @@ const submitCreateExam = async () => {
               전체 고사집
             </button>
           </div>
-
+          <button class="btn-new-exam" @click="openCreateModal" id="btn-open-create-exam">
+            <span class="btn-new-icon">＋</span>
+            새 고사집
+          </button>
         </div>
       </div>
 
       <div class="page-links">
-        <button class="btn-new-exam" @click="openCreateModal" id="btn-open-create-exam">
-          <span class="btn-new-icon">＋</span>
-          새 고사집
-        </button>
+       
         <NuxtLink to="/dashboard" class="back-btn">
           <IconArrowUp class="back-icon" />
           대시보드
@@ -419,6 +424,7 @@ const submitCreateExam = async () => {
                   v-model="createForm.start_time"
                   type="datetime-local"
                   class="form-input"
+                  @change="handleDateTimePicked"
                 />
               </div>
               <div class="form-group">
@@ -428,9 +434,13 @@ const submitCreateExam = async () => {
                   v-model="createForm.end_time"
                   type="datetime-local"
                   class="form-input"
+                  @change="handleDateTimePicked"
                 />
               </div>
             </div>
+            <p class="form-help">
+              날짜와 시간을 선택하면 즉시 반영됩니다. 일부 브라우저 기본 선택기에는 별도 완료 버튼이 없습니다.
+            </p>
 
             <div class="form-group">
               <label for="exam-location" class="form-label">장소 <span class="optional">(선택)</span></label>
@@ -1063,6 +1073,13 @@ const submitCreateExam = async () => {
 
 .form-input[type="datetime-local"] {
   color-scheme: dark;
+}
+
+.form-help {
+  margin: -0.25rem 0 0.25rem;
+  font-size: 0.8rem;
+  color: #94a3b8;
+  line-height: 1.45;
 }
 
 .form-check-label {
