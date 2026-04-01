@@ -16,7 +16,6 @@ const messageList = ref<any[]>([]);
 const messageLoading = ref(false);
 const messageError = ref("");
 let messageHideTimer: ReturnType<typeof setTimeout> | null = null;
-const autoPopoverShown = ref(false);
 const messageSeenCookie = useCookie<string | null>("message_seen_user");
 const userCookie = useCookie("user_info");
 const { apiBase, getAuthHeader } = useApi();
@@ -92,13 +91,10 @@ const closeMessagePopover = () => {
 };
 
 onMounted(() => {
-  if (!userInfo.value) return;
-  const currentUserKey = String(userInfo.value.user_no ?? "");
-  const alreadySeen = messageSeenCookie.value === currentUserKey;
-  if (!alreadySeen && !autoPopoverShown.value) {
-    autoPopoverShown.value = true;
-    messageSeenCookie.value = currentUserKey; // 기록 후 한 번만 노출
-    void openMessagePopover(true);
+  if (!userInfo.value) {
+    // 로그인 전 초기 상태: 자동 팝업 관련 쿠키를 비워 새 세션에서 다시 판단
+    messageSeenCookie.value = null;
+    return;
   }
 });
 </script>
