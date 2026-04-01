@@ -16,7 +16,6 @@ const messageList = ref<any[]>([]);
 const messageLoading = ref(false);
 const messageError = ref("");
 let messageHideTimer: ReturnType<typeof setTimeout> | null = null;
-const messageSeenCookie = useCookie<string | null>("message_seen_user");
 const userCookie = useCookie("user_info");
 const { apiBase, getAuthHeader } = useApi();
 
@@ -35,7 +34,7 @@ function handleLogout() {
   const token = useCookie("auth_token");
   token.value = null;
   userCookie.value = null;
-  messageSeenCookie.value = null;
+
   navigateTo("/");
 }
 
@@ -58,32 +57,37 @@ const loadRecentMessages = async () => {
   }
 };
 
-const openMessagePopover = async (autoClose = false) => {
-  if (userInfo.value && userInfo.value.msgAlert && userInfo.value.msgAlert !== "none") {
-    return;
-  }
-  setMsgAlertConfirm(); // 한번이라도 실행되면 Confirm
+const openMessagePopover = async (
+  reason: "mount" | "click" = "click",
+  autoClose = false,
+) => {
+  // alert(reason);
+  if (
+    reason === "click" ||
+    (
+      reason === "mount" &&
+      userInfo.value.msgAlert === "none"
+    )
+  ) {
 
-  showMessagePopover.value = true;
-  if (messageHideTimer) {
-    clearTimeout(messageHideTimer);
-    messageHideTimer = null;
-  }
-  await loadRecentMessages();
-  if (autoClose) {
-    messageHideTimer = setTimeout(() => {
-      markMessagesSeen();
-      showMessagePopover.value = false;
+    showMessagePopover.value = true;
+    if (messageHideTimer) {
+      clearTimeout(messageHideTimer);
       messageHideTimer = null;
-    }, 10000);
-  }
+    }
+    await loadRecentMessages();
+    if (autoClose) {
+      messageHideTimer = setTimeout(() => {
+        showMessagePopover.value = false;
+        messageHideTimer = null;
+        setMsgAlertConfirm(); // 한번이라도 실행되면 Confirm
+      }, 5000);
+    }
+    
+    setMsgAlertConfirm(); // 한번이라도 실행되면 Confirm
+  }  
 };
 
-const markMessagesSeen = () => {
-  if (userInfo.value) {
-    messageSeenCookie.value = String(userInfo.value.user_no ?? "");
-  }
-};
 
 const setMsgAlertConfirm = () => {
   if (!userCookie.value) return;
@@ -95,9 +99,8 @@ const setMsgAlertConfirm = () => {
   userCookie.value = next as any;
 };
 
-const handleMessageBadgeClick = async () => {
-  setMsgAlertConfirm();
-  await openMessagePopover();
+const handleMessageBadgeClick = async (reason: "mount" | "click" = "click") => {  
+  await openMessagePopover(reason, true);
 };
 
 const closeMessagePopover = () => {
@@ -106,18 +109,13 @@ const closeMessagePopover = () => {
     clearTimeout(messageHideTimer);
     messageHideTimer = null;
   }
-  // 팝오버를 한 번이라도 닫으면 다시 자동으로 뜨지 않도록 쿠키에 기록
-  markMessagesSeen();
 };
 
 onMounted(() => {
-  if (!userInfo.value) {
-    // 로그인 전 초기 상태: 자동 팝업 관련 쿠키를 비워 새 세션에서 다시 판단
-    messageSeenCookie.value = null;
+  if (userInfo.value) {
+    handleMessageBadgeClick("mount");
     return;
   }
-  // 페이지 최초 진입 시 받은 메시지 팝오버 표시
-  void openMessagePopover(true);
 });
 </script>
 
@@ -159,7 +157,7 @@ onMounted(() => {
             to="/dashboard?tab=messages&view=received"
             class="message-badge"
             title="받은 메시지 확인"
-            @click.prevent="handleMessageBadgeClick"
+            @click.prevent="handleMessageBadgeClick('click')"
           >
             <IconMessage class="icon-message" aria-hidden="true" />
             <!-- [{{ userInfo.msgAlert }}] -->
@@ -167,8 +165,7 @@ onMounted(() => {
           <NuxtLink
             v-if="userInfo.role_id === 'S' || userInfo.role_id === 'T'"
             to="/questions"
-            class="my-questions-link"
-          >
+            class="my-questions-link">
             나의 문제목록
           </NuxtLink>
           <a href="#" class="logout-link" @click.prevent="handleLogout">
