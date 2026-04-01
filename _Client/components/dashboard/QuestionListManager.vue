@@ -12,7 +12,7 @@ const props = defineProps<{
   questions: Question[];
   currentUserNo?: string | number | null;
   selectedGroupId: string | number | null;
-  appliedSearchField: "title" | "content";
+  appliedSearchField: "content" | "title";
   appliedSearchKeyword: string;
   currentPage: number;
   totalPages: number;

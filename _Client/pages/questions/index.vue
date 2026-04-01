@@ -16,7 +16,7 @@ const userInfo = computed(() => {
 });
 
 const selectedGroupId = ref<string | number | null>(null);
-const appliedSearchField = ref<"title" | "content">("title");
+const appliedSearchField = ref<"content" | "title">("content");
 const appliedSearchKeyword = ref("");
 const currentPage = ref(1);
 const pageSize = 10;
