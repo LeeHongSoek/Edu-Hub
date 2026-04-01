@@ -335,18 +335,18 @@ CREATE TABLE `user_messages` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8mb4 */;
-CREATE TABLE `user_question_book_items` (
+CREATE TABLE `questionbook_question` (
   `book_id` bigint(20) NOT NULL,
   `question_id` bigint(20) NOT NULL,
   PRIMARY KEY (`book_id`,`question_id`),
   KEY `fk_uqbi_q` (`question_id`),
-  CONSTRAINT `fk_uqbi_book` FOREIGN KEY (`book_id`) REFERENCES `user_question_books` (`book_id`) ON DELETE CASCADE,
+  CONSTRAINT `fk_uqbi_book` FOREIGN KEY (`book_id`) REFERENCES `questionbook` (`book_id`) ON DELETE CASCADE,
   CONSTRAINT `fk_uqbi_q` FOREIGN KEY (`question_id`) REFERENCES `questions` (`question_id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci COMMENT='문제집에 포함된 문제 매핑';
 /*!40101 SET character_set_client = @saved_cs_client */;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8mb4 */;
-CREATE TABLE `user_question_books` (
+CREATE TABLE `questionbook` (
   `book_id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '문제집 ID',
   `user_no` bigint(20) NOT NULL COMMENT '소유자 식별번호',
   `book_name` varchar(255) NOT NULL COMMENT '문제집 제목',
@@ -401,4 +401,3 @@ CREATE TABLE `users` (
 /*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*M!100616 SET NOTE_VERBOSITY=@OLD_NOTE_VERBOSITY */;
-

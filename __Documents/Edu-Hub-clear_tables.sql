@@ -31,8 +31,8 @@ DROP TABLE IF EXISTS `users`;
 DROP TABLE IF EXISTS `question_passages`;
 
 DROP TABLE IF EXISTS `user_relations`;
-DROP TABLE IF EXISTS `user_question_book_items`;
-DROP TABLE IF EXISTS `user_question_books`;
+DROP TABLE IF EXISTS `questionbook_question`;
+DROP TABLE IF EXISTS `questionbook`;
 DROP TABLE IF EXISTS `user_messages`;
 
 -- 3. 외래키 검사 원상 복구

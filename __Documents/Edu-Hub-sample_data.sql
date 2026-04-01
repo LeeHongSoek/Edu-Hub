@@ -1201,9 +1201,9 @@ INSERT INTO `user_messages` VALUES
 /*!40000 ALTER TABLE `user_messages` ENABLE KEYS */;
 UNLOCK TABLES;
 
-LOCK TABLES `user_question_book_items` WRITE;
-/*!40000 ALTER TABLE `user_question_book_items` DISABLE KEYS */;
-INSERT INTO `user_question_book_items` VALUES
+LOCK TABLES `questionbook_question` WRITE;
+/*!40000 ALTER TABLE `questionbook_question` DISABLE KEYS */;
+INSERT INTO `questionbook_question` VALUES
 (1,2),
 (4,2),
 (3,3),
@@ -1348,12 +1348,12 @@ INSERT INTO `user_question_book_items` VALUES
 (23,100),
 (23,101),
 (23,102);
-/*!40000 ALTER TABLE `user_question_book_items` ENABLE KEYS */;
+/*!40000 ALTER TABLE `questionbook_question` ENABLE KEYS */;
 UNLOCK TABLES;
 
-LOCK TABLES `user_question_books` WRITE;
-/*!40000 ALTER TABLE `user_question_books` DISABLE KEYS */;
-INSERT INTO `user_question_books` VALUES
+LOCK TABLES `questionbook` WRITE;
+/*!40000 ALTER TABLE `questionbook` DISABLE KEYS */;
+INSERT INTO `questionbook` VALUES
 (1,1,'김철수 3월 오답 정리','틀린 문제만 다시 모아 둔 개인 문제집','2026-03-27 21:48:29'),
 (2,2,'김철수 자료구조 집중','자료구조와 알고리즘 관련 문제를 따로 묶은 컬렉션','2026-03-27 21:48:29'),
 (3,3,'학부모 체크용 주말 점검','아이와 함께 볼 핵심 문제집','2026-03-27 21:48:29'),
@@ -1407,7 +1407,7 @@ INSERT INTO `user_question_books` VALUES
 (51,3,'김철수 국제 공모전 준비','프로그래밍·논술 혼합 셋','2026-03-27 21:48:29'),
 (52,4,'김철수 스타트업 팀워크','협업 시나리오와 이슈 대응 문항','2026-03-27 21:48:29'),
 (53,5,'김철수 에디터 픽셀','UI 설계 · 디버그 사례 중심','2026-03-27 21:48:29');
-/*!40000 ALTER TABLE `user_question_books` ENABLE KEYS */;
+/*!40000 ALTER TABLE `questionbook` ENABLE KEYS */;
 UNLOCK TABLES;
 
 LOCK TABLES `user_relations` WRITE;
@@ -1464,4 +1464,3 @@ UNLOCK TABLES;
 /*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*M!100616 SET NOTE_VERBOSITY=@OLD_NOTE_VERBOSITY */;
-

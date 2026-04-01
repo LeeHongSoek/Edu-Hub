@@ -430,7 +430,7 @@ model UserQuestionBook {
   user        User                   @relation(fields: [user_no], references: [user_no], onDelete: Cascade, onUpdate: Restrict, map: "fk_uqb_user")
 
   @@index([user_no], map: "fk_uqb_user")
-  @@map("user_question_books")
+  @@map("questionbook")
 }
 
 model UserQuestionBookItem {
@@ -441,5 +441,5 @@ model UserQuestionBookItem {
 
   @@id([book_id, question_id])
   @@index([question_id], map: "fk_uqbi_q")
-  @@map("user_question_book_items")
+  @@map("questionbook_question")
 }

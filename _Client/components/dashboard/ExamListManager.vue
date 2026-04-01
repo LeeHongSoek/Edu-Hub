@@ -66,6 +66,7 @@ const totalPages = computed(() =>
   Math.max(1, Math.ceil(filteredExams.value.length / pageSize)),
 );
 const pagedExams = computed(() => {
+  // 프론트 단순 페이지네이션 (서버 페이징 없음)
   const start = (currentPage.value - 1) * pageSize;
   return filteredExams.value.slice(start, start + pageSize);
 });
@@ -108,6 +109,7 @@ const viewExamDetails = (examId: number | string | bigint) => {
 const fetchExams = async () => {
   loading.value = true;
   try {
+    // scope(mine/all)에 따라 서버에서 필터된 목록을 가져온다
     const data = await $fetch(`${apiBase.value}/exams`, {
       headers: getAuthHeader(),
       query: { scope: listScope.value },
@@ -575,12 +577,6 @@ const submitCreateExam = async () => {
   box-shadow: 0 8px 18px rgba(109, 110, 255, 0.25);
 }
 
-.scope-icon {
-  width: 0.95rem;
-  height: 0.95rem;
-  flex-shrink: 0;
-}
-
 .page-links {
   display: flex;
   align-items: center;
@@ -720,11 +716,6 @@ const submitCreateExam = async () => {
   color: #fff;
   padding: 0.45rem 0.7rem;
   font-size: 0.9rem;
-}
-
-.search-select {
-  min-width: 130px;
-  height: 38px;
 }
 
 .search-input {
