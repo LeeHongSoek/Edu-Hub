@@ -165,6 +165,7 @@ const createLoading = ref(false);
 const createError = ref("");
 const createForm = ref({
   exam_name: "",
+  description: "",
   start_time: "",
   end_time: "",
   location: "",
@@ -174,6 +175,7 @@ const createForm = ref({
 const openCreateModal = () => {
   createForm.value = {
     exam_name: "",
+    description: "",
     start_time: "",
     end_time: "",
     location: "",
@@ -185,11 +187,6 @@ const openCreateModal = () => {
 
 const closeCreateModal = () => {
   showCreateModal.value = false;
-};
-
-const handleDateTimePicked = (event: Event) => {
-  const target = event.target as HTMLInputElement | null;
-  target?.blur();
 };
 
 const submitCreateExam = async () => {
@@ -213,6 +210,7 @@ const submitCreateExam = async () => {
       headers: getAuthHeader(),
       body: {
         exam_name: createForm.value.exam_name.trim(),
+        description: createForm.value.description.trim() || undefined,
         start_time: createForm.value.start_time,
         end_time: createForm.value.end_time,
         location: createForm.value.location.trim() || undefined,
@@ -227,6 +225,7 @@ const submitCreateExam = async () => {
     createLoading.value = false;
   }
 };
+
 </script>
 
 <template>
@@ -416,30 +415,28 @@ const submitCreateExam = async () => {
               />
             </div>
 
-            <div class="form-row">
+
+            <div class="form-row form-row-datetime">
               <div class="form-group">
                 <label for="exam-start" class="form-label">시작 일시 <span class="required">*</span></label>
-                <input
+                <DateTimePicker
                   id="exam-start"
                   v-model="createForm.start_time"
-                  type="datetime-local"
-                  class="form-input"
-                  @change="handleDateTimePicked"
+                  :size="1"
                 />
               </div>
               <div class="form-group">
                 <label for="exam-end" class="form-label">종료 일시 <span class="required">*</span></label>
-                <input
+                <DateTimePicker
                   id="exam-end"
                   v-model="createForm.end_time"
-                  type="datetime-local"
-                  class="form-input"
-                  @change="handleDateTimePicked"
+                  align="right"
+                  :size="1"
                 />
               </div>
             </div>
             <p class="form-help">
-              날짜와 시간을 선택하면 즉시 반영됩니다. 일부 브라우저 기본 선택기에는 별도 완료 버튼이 없습니다.
+              날짜를 더블클릭하면 바로 확정되고, 하단 완료 버튼으로도 저장할 수 있습니다.
             </p>
 
             <div class="form-group">
@@ -465,6 +462,20 @@ const submitCreateExam = async () => {
                 />
                 <span class="check-text">자동 채점 활성화</span>
               </label>
+            </div>
+
+
+            <div class="form-group">
+              <label for="exam-description" class="form-label">
+                설명 <span class="optional">(선택)</span>
+              </label>
+              <textarea
+                id="exam-description"
+                v-model="createForm.description"
+                class="form-input form-textarea"
+                placeholder="고사집에 대한 설명을 적어주세요."
+                maxlength="1000"
+              ></textarea>
             </div>
 
             <div v-if="createError" class="form-error">{{ createError }}</div>
@@ -1022,10 +1033,15 @@ const submitCreateExam = async () => {
   gap: 1rem;
 }
 
+.form-row-datetime {
+  gap: 0.75rem;
+}
+
 .form-group {
   display: flex;
   flex-direction: column;
   gap: 0.45rem;
+  min-width: 0;
 }
 
 .form-group-check {
@@ -1071,13 +1087,20 @@ const submitCreateExam = async () => {
   color: #475569;
 }
 
-.form-input[type="datetime-local"] {
-  color-scheme: dark;
+.form-textarea {
+  min-height: 96px;
+  resize: vertical;
+}
+
+.form-input-datetime {
+  min-width: 0;
+  font-size: 0.88rem;
+  letter-spacing: -0.01em;
 }
 
 .form-help {
-  margin: -0.25rem 0 0.25rem;
-  font-size: 0.8rem;
+  margin: -0.35rem 0 0.1rem;
+  font-size: 0.76rem;
   color: #94a3b8;
   line-height: 1.45;
 }
@@ -1196,8 +1219,14 @@ const submitCreateExam = async () => {
   .form-row {
     grid-template-columns: 1fr;
   }
+
+  .form-row-datetime {
+    gap: 1rem;
+  }
+
   .modal-box {
     padding: 1.5rem 1.25rem;
   }
+
 }
 </style>

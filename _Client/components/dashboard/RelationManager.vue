@@ -1,11 +1,11 @@
 <script setup lang="ts">
-import { computed, onMounted, reactive, ref } from "vue";
+import { computed, reactive, ref, watch } from "vue";
 import IconUsers from "~/assets/icons/IconUsers.svg?component";
 import IconSearch from "~/assets/icons/IconSearch.svg?component";
 import IconClose from "~/assets/icons/IconClose.svg?component";
 
 type RelationRoleId = "S" | "T" | "P";
-type TargetKey = "parents" | "teachers" | "students";
+type TargetKey = "parents" | "teachers" | "students" | "friends";
 
 interface RelationTarget {
   key: TargetKey;
@@ -48,6 +48,7 @@ const panelStates = reactive<Record<TargetKey, SearchPanelState>>({
   parents: createPanelState(),
   teachers: createPanelState(),
   students: createPanelState(),
+  friends: createPanelState(),
 });
 
 const { apiBase, getAuthHeader } = useApi();
@@ -72,6 +73,12 @@ const userRoleId = computed<RelationRoleId | "">(() => {
 const relationTargets = computed<RelationTarget[]>(() => {
   if (userRoleId.value === "S") {
     return [
+      {
+        key: "friends",
+        label: "친구",
+        roleId: "S",
+        description: "이름으로 다른 학생을 검색하고 친구 연결을 만들 수 있습니다.",
+      },
       {
         key: "parents",
         label: "학부모",
@@ -177,7 +184,7 @@ const relationPageEndItem = computed(() =>
 
 const relationSummary = computed(() => {
   if (userRoleId.value === "S") {
-    return "학생은 학부모와 선생님을 이름으로 따로 찾아 연결할 수 있습니다.";
+    return "학생은 친구, 학부모, 선생님을 이름으로 찾아 바로 연결할 수 있습니다.";
   }
   if (userRoleId.value === "P") {
     return "학부모는 학생을 이름으로 찾아 연결할 수 있습니다.";
@@ -260,6 +267,7 @@ const loadRelations = async () => {
       headers: getAuthHeader(),
       query: {
         q: relationSearchQuery.value,
+        target: activeTargetKey.value || undefined,
         page: relationCurrentPage.value,
         limit: relationPageSize,
       },
@@ -360,7 +368,9 @@ const fetchCandidates = async (targetKey = activeTargetKey.value) => {
 const openConnectModal = () => {
   if (relationTargets.value.length === 0) return;
   showConnectModal.value = true;
-  activeTargetKey.value = relationTargets.value[0].key;
+  if (!activeTargetKey.value) {
+    activeTargetKey.value = relationTargets.value[0].key;
+  }
   feedbackMessage.value = "";
   void fetchCandidates(activeTargetKey.value);
 };
@@ -370,11 +380,14 @@ const closeConnectModal = () => {
   feedbackMessage.value = "";
 };
 
-const selectTarget = (targetKey: TargetKey) => {
+const selectTarget = async (targetKey: TargetKey) => {
   if (activeTargetKey.value === targetKey) return;
   activeTargetKey.value = targetKey;
   if (showConnectModal.value) {
-    void fetchCandidates(targetKey);
+    const panel = getPanelState(targetKey);
+    panel.currentPage = 1;
+    panel.sliderValue = 1;
+    await fetchCandidates(targetKey);
   }
 };
 
@@ -465,7 +478,18 @@ watch(
   { immediate: true },
 );
 
-onMounted(loadRelations);
+watch(
+  () => activeTargetKey.value,
+  async (targetKey, previousKey) => {
+    if (!targetKey) return;
+    if (targetKey === previousKey) return;
+    relationCurrentPage.value = 1;
+    relationSliderValue.value = 1;
+    await loadRelations();
+  },
+  { immediate: true },
+);
+
 </script>
 
 <template>
@@ -475,13 +499,26 @@ onMounted(loadRelations);
         <h3><IconUsers class="section-icon" /> 나의 인맥 관리</h3>
         <p class="manager-subtitle">{{ relationSummary }}</p>
       </div>
-      <button
-        class="btn-add"
-        :disabled="relationTargets.length === 0"
-        @click="openConnectModal"
-      >
-        + 연결 관리
-      </button>
+      <div class="header-actions">
+        <div class="target-tabs target-tabs-inline">
+          <button
+            v-for="target in relationTargets"
+            :key="target.key"
+            class="target-tab"
+            :class="{ active: activeTargetKey === target.key }"
+            @click="selectTarget(target.key)"
+          >
+            {{ target.label }}
+          </button>
+        </div>
+        <button
+          class="btn-add"
+          :disabled="relationTargets.length === 0"
+          @click="openConnectModal"
+        >
+          + 연결 관리
+        </button>
+      </div>
     </div>
 
     <div class="pagination-panel-border">
@@ -749,6 +786,15 @@ onMounted(loadRelations);
   gap: 1rem;
 }
 
+.header-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  margin-left: auto;
+  flex-wrap: wrap;
+}
+
 .header-copy {
   display: flex;
   flex-direction: column;
@@ -984,6 +1030,10 @@ onMounted(loadRelations);
   margin-bottom: 0;
   align-items: center;
   flex-wrap: wrap;
+}
+
+.target-tabs-inline {
+  justify-content: flex-end;
 }
 
 .target-tab {
@@ -1344,6 +1394,11 @@ onMounted(loadRelations);
     align-items: flex-start;
   }
 
+  .header-actions {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
   .modal-card {
     max-height: 92vh;
   }
@@ -1368,6 +1423,10 @@ onMounted(loadRelations);
 
   .target-tabs {
     justify-content: flex-end;
+  }
+
+  .target-tabs-inline {
+    justify-content: flex-start;
   }
 
   .range-text {

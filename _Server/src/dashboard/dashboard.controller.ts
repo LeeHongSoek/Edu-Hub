@@ -23,12 +23,21 @@ export class DashboardController {
   async getRelations(
     @Request() req,
     @Query('q') q = '',
+    @Query('target') target = '',
     @Query('page') page = '1',
     @Query('limit') limit = '8',
   ) {
     const userNoVal = req.user?.user_no || req.user?.userNo;
     if (!userNoVal) throw new UnauthorizedException();
-    return this.dashboardService.getRelations(BigInt(userNoVal), q, Number(page), Number(limit));
+    const userRoleId = String(req.user?.role_id || req.user?.role || '').toUpperCase();
+    return this.dashboardService.getRelations(
+      BigInt(userNoVal),
+      userRoleId,
+      q,
+      target,
+      Number(page),
+      Number(limit),
+    );
   }
 
   @Get('relations/candidates')

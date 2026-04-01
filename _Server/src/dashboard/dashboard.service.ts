@@ -119,17 +119,38 @@ export class DashboardService {
     }));
   }
 
-  async getRelations(userNo: bigint, query = '', page = 1, limit = 8) {
+  async getRelations(
+    userNo: bigint,
+    userRoleId: string,
+    query = '',
+    target = '',
+    page = 1,
+    limit = 8,
+  ) {
     const safePage = Math.max(1, Number.isFinite(page) ? Math.floor(page) : 1);
     const safeLimit = Math.min(Math.max(Number.isFinite(limit) ? Math.floor(limit) : 8, 1), 24);
     const keyword = String(query || '').trim();
+    const targetFilter = this.resolveRelationTargetFilter(userRoleId, target);
 
     const where: any = {
       user_no_1: userNo,
     };
 
+    if (targetFilter) {
+      if (targetFilter.relationTypeId) {
+        where.relation_type_id = targetFilter.relationTypeId;
+      }
+
+      if (targetFilter.otherRoleId) {
+        where.user2 = {
+          ...(where.user2 || {}),
+          role_id: targetFilter.otherRoleId,
+        };
+      }
+    }
+
     if (keyword) {
-      where.OR = [
+      const keywordFilter = [
         {
           user2: {
             OR: [
@@ -154,6 +175,12 @@ export class DashboardService {
           },
         },
       ];
+
+      if (where.OR) {
+        where.OR = [...where.OR, ...keywordFilter];
+      } else {
+        where.OR = keywordFilter;
+      }
     }
 
     const [total, items] = await Promise.all([
@@ -189,6 +216,33 @@ export class DashboardService {
       total,
       totalPages: Math.max(1, Math.ceil(total / safeLimit)),
     };
+  }
+
+  private resolveRelationTargetFilter(userRoleId: string, targetKey?: string) {
+    const normalizedRoleId = String(userRoleId || '').toUpperCase();
+    const normalizedTargetKey = String(targetKey || '').toLowerCase();
+
+    if (!normalizedTargetKey) {
+      return null;
+    }
+
+    if (normalizedRoleId === 'S') {
+      if (normalizedTargetKey === 'friends') {
+        return { otherRoleId: 'S', relationTypeId: 'FRIEND' };
+      }
+      if (normalizedTargetKey === 'parents') {
+        return { otherRoleId: 'P' };
+      }
+      if (normalizedTargetKey === 'teachers') {
+        return { otherRoleId: 'T' };
+      }
+    }
+
+    if ((normalizedRoleId === 'P' || normalizedRoleId === 'T') && normalizedTargetKey === 'students') {
+      return { otherRoleId: 'S' };
+    }
+
+    return null;
   }
 
   async getRelationCandidates(userNo: bigint, targetRoleId: string, query: string, page: number, limit: number) {

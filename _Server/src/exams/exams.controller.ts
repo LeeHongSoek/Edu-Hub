@@ -21,6 +21,7 @@ export class ExamsController {
     @Request() req: any,
     @Body() body: {
       exam_name: string;
+      description?: string;
       start_time: string;
       end_time: string;
       location?: string;

@@ -366,7 +366,9 @@ const setScope = (scope: "mine" | "all") => {
           ></textarea>
         </div>
         <div class="modal-actions">
-          <button @click="showCreateModal = false">취소</button>
+          <button class="btn-secondary" @click="showCreateModal = false">
+            취소
+          </button>
           <button class="btn-primary" @click="createBook">생성하기</button>
         </div>
       </div>
@@ -627,10 +629,13 @@ const setScope = (scope: "mine" | "all") => {
   width: 100%;
   max-width: 450px;
   border: 1px solid rgba(255, 255, 255, 0.1);
+  box-sizing: border-box;
+  overflow: hidden;
 }
 
 .form-group {
   margin-bottom: 1.5rem;
+  min-width: 0;
 }
 .form-group label {
   display: block;
@@ -646,6 +651,23 @@ const setScope = (scope: "mine" | "all") => {
   border-radius: 10px;
   padding: 0.8rem;
   color: white;
+  box-sizing: border-box;
+  max-width: 100%;
+  outline: none;
+  transition:
+    border-color 0.2s,
+    box-shadow 0.2s;
+}
+
+.form-group textarea {
+  min-height: 96px;
+  resize: vertical;
+}
+
+.form-group input:focus,
+.form-group textarea:focus {
+  border-color: rgba(99, 102, 241, 0.55);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.12);
 }
 
 .modal-actions {
@@ -654,13 +676,41 @@ const setScope = (scope: "mine" | "all") => {
   gap: 1rem;
   margin-top: 1rem;
 }
+
+.btn-secondary,
+.btn-primary {
+  padding: 0.6rem 1.5rem;
+  border-radius: 10px;
+  cursor: pointer;
+  font-weight: 700;
+  transition:
+    transform 0.2s,
+    background 0.2s,
+    border-color 0.2s,
+    color 0.2s;
+}
+
+.btn-secondary {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  color: #cbd5e1;
+}
+
+.btn-secondary:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.22);
+  color: #f8fafc;
+}
+
 .btn-primary {
   background: #6366f1;
   border: none;
   color: white;
-  padding: 0.6rem 1.5rem;
-  border-radius: 10px;
-  cursor: pointer;
+}
+
+.btn-primary:hover,
+.btn-secondary:hover {
+  transform: translateY(-1px);
 }
 
 .search-select,

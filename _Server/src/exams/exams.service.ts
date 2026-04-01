@@ -9,6 +9,7 @@ export class ExamsService {
     creatorNo: bigint,
     data: {
       exam_name: string;
+      description?: string;
       start_time: string;
       end_time: string;
       location?: string;
@@ -20,6 +21,7 @@ export class ExamsService {
       data: {
         creator_no: creatorNo,
         exam_name: data.exam_name,
+        description: data.description || null,
         start_time: new Date(data.start_time),
         end_time: new Date(data.end_time),
         location: data.location || null,
