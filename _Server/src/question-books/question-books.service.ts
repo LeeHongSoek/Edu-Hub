@@ -6,7 +6,7 @@ export class QuestionBooksService {
   constructor(private prisma: PrismaService) {}
 
   async create(userNo: bigint, data: any) {
-    return this.prisma.userQuestionBook.create({
+    return this.prisma.questionBook.create({
       data: {
         user_no: userNo,
         book_name: data.book_name,
@@ -16,7 +16,7 @@ export class QuestionBooksService {
   }
 
   async findAll() {
-    const books = await this.prisma.userQuestionBook.findMany({
+    const books = await this.prisma.questionBook.findMany({
       include: {
         user: { select: { user_no: true, username: true } },
         items: {
@@ -35,7 +35,7 @@ export class QuestionBooksService {
   }
 
   async findByUser(userNo: bigint) {
-    const books = await this.prisma.userQuestionBook.findMany({
+    const books = await this.prisma.questionBook.findMany({
       where: { user_no: userNo },
       include: {
         user: { select: { user_no: true, username: true } },
@@ -55,7 +55,7 @@ export class QuestionBooksService {
   }
 
   async findById(bookId: bigint) {
-    const book = await this.prisma.userQuestionBook.findUnique({
+    const book = await this.prisma.questionBook.findUnique({
       where: { book_id: bookId },
       include: {
         user: { select: { user_no: true, username: true } },
@@ -77,13 +77,13 @@ export class QuestionBooksService {
   }
 
   async update(bookId: bigint, userNo: bigint, data: any) {
-    const book = await this.prisma.userQuestionBook.findUnique({
+    const book = await this.prisma.questionBook.findUnique({
       where: { book_id: bookId },
     });
     if (!book) throw new NotFoundException('Question book not found');
     if (book.user_no !== userNo) throw new ForbiddenException('Not authorized');
 
-    return this.prisma.userQuestionBook.update({
+    return this.prisma.questionBook.update({
       where: { book_id: bookId },
       data: {
         book_name: data.book_name,
@@ -93,25 +93,25 @@ export class QuestionBooksService {
   }
 
   async remove(bookId: bigint, userNo: bigint) {
-    const book = await this.prisma.userQuestionBook.findUnique({
+    const book = await this.prisma.questionBook.findUnique({
       where: { book_id: bookId },
     });
     if (!book) throw new NotFoundException('Question book not found');
     if (book.user_no !== userNo) throw new ForbiddenException('Not authorized');
 
-    return this.prisma.userQuestionBook.delete({
+    return this.prisma.questionBook.delete({
       where: { book_id: bookId },
     });
   }
 
   async addItem(bookId: bigint, userNo: bigint, questionId: bigint) {
-    const book = await this.prisma.userQuestionBook.findUnique({
+    const book = await this.prisma.questionBook.findUnique({
       where: { book_id: bookId },
     });
     if (!book) throw new NotFoundException('Question book not found');
     if (book.user_no !== userNo) throw new ForbiddenException('Not authorized');
 
-    return this.prisma.userQuestionBookItem.create({
+    return this.prisma.questionBookItem.create({
       data: {
         book_id: bookId,
         question_id: questionId,
@@ -120,13 +120,13 @@ export class QuestionBooksService {
   }
 
   async removeItem(bookId: bigint, userNo: bigint, questionId: bigint) {
-    const book = await this.prisma.userQuestionBook.findUnique({
+    const book = await this.prisma.questionBook.findUnique({
       where: { book_id: bookId },
     });
     if (!book) throw new NotFoundException('Question book not found');
     if (book.user_no !== userNo) throw new ForbiddenException('Not authorized');
 
-    return this.prisma.userQuestionBookItem.delete({
+    return this.prisma.questionBookItem.delete({
       where: {
         book_id_question_id: {
           book_id: bookId,

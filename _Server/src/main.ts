@@ -100,7 +100,7 @@ async function bootstrap() {
     'ClassStudent',
     'QuestionTag',
     'ExamQuestion',
-    'UserQuestionBookItem',
+    'QuestionBookItem',
   ]);
 
   const resourceNames = Object.keys(prisma)

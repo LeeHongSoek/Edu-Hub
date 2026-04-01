@@ -52,7 +52,7 @@ export class QuestionsService {
     }
 
     if (bookId !== undefined) {
-      const questionItems = await this.prisma.userQuestionBookItem.findMany({
+      const questionItems = await this.prisma.questionBookItem.findMany({
         where: { book_id: bookId },
         select: { question_id: true },
       });
