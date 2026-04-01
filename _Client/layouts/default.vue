@@ -1,15 +1,25 @@
 <script setup lang="ts">
-import { ref, computed } from "vue";
+import { ref, computed, onMounted } from "vue";
 import UserProfileModal from "~/components/UserProfileModal.vue";
 import IconHome from "~/assets/icons/IconHome.svg?component";
 import IconUser from "~/assets/icons/IconUser.svg?component";
+import IconMessage from "~/assets/icons/IconMessage.svg?component";
 import IconLogout from "~/assets/icons/IconLogout.svg?component";
 import IconFeedback from "~/assets/icons/IconFeedback.svg?component";
 import OmbudsmanModal from "~/components/OmbudsmanModal.vue";
+import { useApi } from "~/composables/useApi";
 
 const showOmbudsmanModal = ref(false);
 const showUserModal = ref(false);
+const showMessagePopover = ref(false);
+const messageList = ref<any[]>([]);
+const messageLoading = ref(false);
+const messageError = ref("");
+let messageHideTimer: ReturnType<typeof setTimeout> | null = null;
+const autoPopoverShown = ref(false);
+const messageSeenCookie = useCookie<string | null>("message_seen_user");
 const userCookie = useCookie("user_info");
+const { apiBase, getAuthHeader } = useApi();
 
 const userInfo = computed(() => {
   if (!userCookie.value) return null;
@@ -26,8 +36,71 @@ function handleLogout() {
   const token = useCookie("auth_token");
   token.value = null;
   userCookie.value = null;
+  messageSeenCookie.value = null;
   navigateTo("/");
 }
+
+const loadRecentMessages = async () => {
+  if (!userInfo.value) return;
+  messageLoading.value = true;
+  messageError.value = "";
+  try {
+    const data = await $fetch(`${apiBase.value}/dashboard/messages`, {
+      headers: getAuthHeader(),
+      query: { view: "received", page: 1, limit: 5 },
+    });
+    const response = data as { items: any[] };
+    messageList.value = response.items ?? [];
+  } catch (err: any) {
+    messageError.value = err?.data?.message || err?.message || "메시지를 불러올 수 없습니다.";
+    messageList.value = [];
+  } finally {
+    messageLoading.value = false;
+  }
+};
+
+const openMessagePopover = async (autoClose = false) => {
+  showMessagePopover.value = true;
+  if (messageHideTimer) {
+    clearTimeout(messageHideTimer);
+    messageHideTimer = null;
+  }
+  await loadRecentMessages();
+  if (autoClose) {
+    messageHideTimer = setTimeout(() => {
+      markMessagesSeen();
+      showMessagePopover.value = false;
+      messageHideTimer = null;
+    }, 10000);
+  }
+};
+
+const markMessagesSeen = () => {
+  if (userInfo.value) {
+    messageSeenCookie.value = String(userInfo.value.user_no ?? "");
+  }
+};
+
+const closeMessagePopover = () => {
+  showMessagePopover.value = false;
+  if (messageHideTimer) {
+    clearTimeout(messageHideTimer);
+    messageHideTimer = null;
+  }
+  // 팝오버를 한 번이라도 닫으면 다시 자동으로 뜨지 않도록 쿠키에 기록
+  markMessagesSeen();
+};
+
+onMounted(() => {
+  if (!userInfo.value) return;
+  const currentUserKey = String(userInfo.value.user_no ?? "");
+  const alreadySeen = messageSeenCookie.value === currentUserKey;
+  if (!alreadySeen && !autoPopoverShown.value) {
+    autoPopoverShown.value = true;
+    messageSeenCookie.value = currentUserKey; // 기록 후 한 번만 노출
+    void openMessagePopover(true);
+  }
+});
 </script>
 
 <template>
@@ -65,6 +138,14 @@ function handleLogout() {
             {{ userInfo.username }} <{{ userInfo.user_no }}>님
           </a>
           <NuxtLink
+            to="/dashboard?tab=messages&view=received"
+            class="message-badge"
+            title="받은 메시지 확인"
+            @click.prevent="openMessagePopover()"
+          >
+            <IconMessage class="icon-message" aria-hidden="true" />
+          </NuxtLink>
+          <NuxtLink
             v-if="userInfo.role_id === 'S' || userInfo.role_id === 'T'"
             to="/questions"
             class="my-questions-link"
@@ -78,6 +159,35 @@ function handleLogout() {
         </template>
       </nav>
     </header>
+    <Transition name="fade">
+      <div v-if="showMessagePopover" class="message-popover">
+        <div class="popover-header">
+          <div class="popover-title">
+            <IconMessage class="icon-message" />
+            받은 메시지
+          </div>
+          <button class="popover-close" @click="closeMessagePopover">✕</button>
+        </div>
+        <div v-if="messageLoading" class="popover-body">불러오는 중...</div>
+        <div v-else-if="messageError" class="popover-body error">
+          {{ messageError }}
+        </div>
+        <div v-else-if="messageList.length === 0" class="popover-body empty">
+          받은 메시지가 없습니다.
+        </div>
+        <ul v-else class="popover-list">
+          <li v-for="msg in messageList" :key="msg.message_id" class="popover-item">
+            <div class="popover-item-top">
+              <span class="from">{{ msg.sender?.username || "발신자 없음" }}</span>
+              <span class="time">
+                {{ new Date(msg.created_at).toLocaleString("ko-KR", { month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" }) }}
+              </span>
+            </div>
+            <div class="popover-content">{{ msg.content }}</div>
+          </li>
+        </ul>
+      </div>
+    </Transition>
     <main>
       <slot />
     </main>
@@ -156,6 +266,147 @@ function handleLogout() {
 .nav-links a.router-link-active {
   color: #f0f4ff;
 }
+
+.message-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.35rem 0.75rem;
+  border-radius: 999px;
+  background: rgba(99, 102, 241, 0.18);
+  border: 1px solid rgba(129, 140, 248, 0.32);
+  color: #e0e7ff !important;
+  font-size: 0.88rem;
+  font-weight: 700;
+  text-decoration: none;
+  transition: all 0.18s ease;
+}
+
+.message-badge:hover {
+  background: rgba(99, 102, 241, 0.32);
+  border-color: rgba(129, 140, 248, 0.6);
+  color: #ffffff !important;
+  transform: translateY(-1px);
+  box-shadow: 0 8px 18px rgba(109, 110, 255, 0.25);
+}
+
+.icon-message {
+  width: 1rem;
+  height: 1rem;
+}
+
+.message-popover {
+  position: fixed;
+  top: 76px;
+  right: 32px;
+  width: 320px;
+  max-height: 60vh;
+  background: rgba(15, 23, 42, 0.96);
+  border: 1px solid rgba(129, 140, 248, 0.35);
+  border-radius: 12px;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.35);
+  backdrop-filter: blur(8px);
+  z-index: 1300;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.popover-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.65rem 0.8rem;
+  background: rgba(99, 102, 241, 0.08);
+  border-bottom: 1px solid rgba(129, 140, 248, 0.2);
+}
+
+.popover-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  color: #e0e7ff;
+  font-weight: 800;
+}
+
+.popover-close {
+  border: none;
+  background: transparent;
+  color: #94a3b8;
+  font-size: 1rem;
+  cursor: pointer;
+}
+
+.popover-close:hover {
+  color: #fff;
+}
+
+.popover-body {
+  padding: 0.8rem;
+  color: #cbd5e1;
+  font-size: 0.9rem;
+}
+
+.popover-body.error {
+  color: #fca5a5;
+}
+
+.popover-body.empty {
+  color: #94a3b8;
+}
+
+.popover-list {
+  list-style: none;
+  margin: 0;
+  padding: 0.6rem 0.8rem 0.8rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  overflow-y: auto;
+}
+
+.popover-item {
+  padding: 0.55rem 0.65rem;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.popover-item-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.2rem;
+}
+
+.popover-item .from {
+  color: #e2e8f0;
+  font-weight: 700;
+  font-size: 0.9rem;
+}
+
+.popover-item .time {
+  color: #94a3b8;
+  font-size: 0.78rem;
+}
+
+.popover-content {
+  color: #cbd5e1;
+  font-size: 0.88rem;
+  line-height: 1.4;
+  word-break: break-word;
+}
+
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.18s ease, transform 0.18s ease;
+}
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+  transform: translateY(-4px);
+}
+
 .nav-path-box {
   display: flex;
   align-items: center;

@@ -981,14 +981,16 @@ watch(
   <div class="relation-manager">
     <div class="manager-header">
       <div class="header-copy">
-        <h3><IconUsers class="section-icon" /> 나의 인맥 관리</h3>
+        <div class="title-row">
+          <h3><IconUsers class="section-icon" /> 나의 인맥 관리</h3>
+          <button class="btn-graph" @click="openGraphModal">
+            <IconGraphForce class="graph-icon" />
+            그래프로 보기
+          </button>
+        </div>
         <p class="manager-subtitle">{{ relationSummary }}</p>
       </div>
       <div class="header-actions">
-        <button class="btn-graph" @click="openGraphModal">
-          <IconGraphForce class="graph-icon" />
-          그래프로 보기
-        </button>
         <div class="target-tabs target-tabs-inline">
           <button
             v-for="target in relationTargets"
@@ -1419,6 +1421,13 @@ watch(
   gap: 1rem;
 }
 
+.title-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
 .header-actions {
   display: flex;
   align-items: center;
@@ -1461,8 +1470,8 @@ watch(
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
-  padding: 0.55rem 0.9rem;
-  border-radius: 10px;
+  padding: 0.3em 0.9rem;
+  border-radius: 5px;
   background: rgba(255, 255, 255, 0.08);
   color: #e2e8f0;
   border: 1px solid rgba(255, 255, 255, 0.14);
