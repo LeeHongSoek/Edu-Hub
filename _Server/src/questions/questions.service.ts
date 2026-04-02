@@ -23,6 +23,7 @@ export class QuestionsService {
     const where: any = {};
     // Only fetch parent questions for list view
     where.p_question_id = null;
+    where.is_deleted = 'N';
     if (creatorNo !== undefined) where.creator_no = creatorNo;
     else if (publicOnly) where.is_public = true;
     if (creatorNo === undefined && publicOnly && viewerNo !== undefined) {
@@ -412,9 +413,27 @@ export class QuestionsService {
   // 문제 삭제
   async remove(id: string | number) {
     const questionId = typeof id === 'string' ? BigInt(id) : BigInt(id);
-    return this.prisma.question.delete({
+    return this.prisma.question.update({
       where: { question_id: questionId },
+      data: { is_deleted: 'Y' },
     });
+  }
+
+  async removeMany(questionIds: bigint[], userNo: bigint) {
+    if (!questionIds.length) {
+      return { updatedCount: 0 };
+    }
+
+    const result = await this.prisma.question.updateMany({
+      where: {
+        question_id: { in: questionIds },
+        creator_no: userNo,
+        is_deleted: 'N',
+      },
+      data: { is_deleted: 'Y' },
+    });
+
+    return { updatedCount: result.count };
   }
 
   // 리뷰 목록 조회

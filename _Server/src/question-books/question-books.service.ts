@@ -17,6 +17,7 @@ export class QuestionBooksService {
 
   async findAll() {
     const books = await this.prisma.questionBook.findMany({
+      where: { is_deleted: 'N' },
       include: {
         user: { select: { user_no: true, username: true } },
         items: {
@@ -36,7 +37,7 @@ export class QuestionBooksService {
 
   async findByUser(userNo: bigint) {
     const books = await this.prisma.questionBook.findMany({
-      where: { user_no: userNo },
+      where: { user_no: userNo, is_deleted: 'N' },
       include: {
         user: { select: { user_no: true, username: true } },
         items: {
@@ -55,8 +56,8 @@ export class QuestionBooksService {
   }
 
   async findById(bookId: bigint) {
-    const book = await this.prisma.questionBook.findUnique({
-      where: { book_id: bookId },
+    const book = await this.prisma.questionBook.findFirst({
+      where: { book_id: bookId, is_deleted: 'N' },
       include: {
         user: { select: { user_no: true, username: true } },
         items: {
@@ -111,8 +112,8 @@ export class QuestionBooksService {
   }
 
   async update(bookId: bigint, userNo: bigint, data: any) {
-    const book = await this.prisma.questionBook.findUnique({
-      where: { book_id: bookId },
+    const book = await this.prisma.questionBook.findFirst({
+      where: { book_id: bookId, is_deleted: 'N' },
     });
     if (!book) throw new NotFoundException('Question book not found');
     if (book.user_no !== userNo) throw new ForbiddenException('Not authorized');
@@ -127,20 +128,36 @@ export class QuestionBooksService {
   }
 
   async remove(bookId: bigint, userNo: bigint) {
-    const book = await this.prisma.questionBook.findUnique({
-      where: { book_id: bookId },
+    const book = await this.prisma.questionBook.findFirst({
+      where: { book_id: bookId, user_no: userNo, is_deleted: 'N' },
     });
     if (!book) throw new NotFoundException('Question book not found');
-    if (book.user_no !== userNo) throw new ForbiddenException('Not authorized');
-
-    return this.prisma.questionBook.delete({
+    return this.prisma.questionBook.update({
       where: { book_id: bookId },
+      data: { is_deleted: 'Y' },
     });
   }
 
+  async removeMany(bookIds: bigint[], userNo: bigint) {
+    if (!bookIds.length) {
+      return { updatedCount: 0 };
+    }
+
+    const result = await this.prisma.questionBook.updateMany({
+      where: {
+        book_id: { in: bookIds },
+        user_no: userNo,
+        is_deleted: 'N',
+      },
+      data: { is_deleted: 'Y' },
+    });
+
+    return { updatedCount: result.count };
+  }
+
   async addItem(bookId: bigint, userNo: bigint, questionId: bigint) {
-    const book = await this.prisma.questionBook.findUnique({
-      where: { book_id: bookId },
+    const book = await this.prisma.questionBook.findFirst({
+      where: { book_id: bookId, is_deleted: 'N' },
     });
     if (!book) throw new NotFoundException('Question book not found');
     if (book.user_no !== userNo) throw new ForbiddenException('Not authorized');
@@ -154,8 +171,8 @@ export class QuestionBooksService {
   }
 
   async removeItem(bookId: bigint, userNo: bigint, questionId: bigint) {
-    const book = await this.prisma.questionBook.findUnique({
-      where: { book_id: bookId },
+    const book = await this.prisma.questionBook.findFirst({
+      where: { book_id: bookId, is_deleted: 'N' },
     });
     if (!book) throw new NotFoundException('Question book not found');
     if (book.user_no !== userNo) throw new ForbiddenException('Not authorized');

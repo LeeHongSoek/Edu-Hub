@@ -5,6 +5,8 @@ import IconCalendar from "~/assets/icons/IconCalendar.svg?component";
 import IconArrowUp from "~/assets/icons/IconArrowUp.svg?component";
 import IconFileText from "~/assets/icons/IconFileText.svg?component";
 import IconBook from "~/assets/icons/IconBook.svg?component";
+import IconCreateAction from "~/assets/icons/IconCreateAction.svg?component";
+import IconDeleteAction from "~/assets/icons/IconDeleteAction.svg?component";
 
 const props = withDefaults(
   defineProps<{
@@ -24,6 +26,7 @@ const route = useRoute();
 const listScope = ref<"mine" | "all">(
   route.query.scope === "all" ? "all" : "mine",
 );
+const selectedExamIds = ref<string[]>([]);
 const examSearchInput = ref("");
 const examSearchQuery = ref("");
 const userCookie = useCookie("user_info");
@@ -95,6 +98,8 @@ const sliderPercentage = computed(() => {
   if (totalPages.value <= 1) return 0;
   return ((sliderValue.value - 1) / (totalPages.value - 1)) * 100;
 });
+const selectedExamCount = computed(() => selectedExamIds.value.length);
+const canDeleteExams = computed(() => selectedExamCount.value > 0);
 
 const isSliderDisabled = computed(() => totalPages.value <= 1);
 
@@ -132,6 +137,7 @@ const fetchExams = async () => {
       },
     });
     exams.value = data as any[];
+    selectedExamIds.value = [];
   } catch (err) {
     console.error("서버 통신 오류(fetch) exams:", err);
   } finally {
@@ -281,6 +287,53 @@ const submitCreateExam = async () => {
   }
 };
 
+const getExamIdKey = (examId: number | string | bigint) => String(examId);
+
+const isExamSelected = (examId: number | string | bigint) =>
+  selectedExamIds.value.includes(getExamIdKey(examId));
+
+const toggleExamSelected = (
+  examId: number | string | bigint,
+  checked: boolean,
+) => {
+  const idKey = getExamIdKey(examId);
+  if (checked) {
+    if (!selectedExamIds.value.includes(idKey)) {
+      selectedExamIds.value = [...selectedExamIds.value, idKey];
+    }
+    return;
+  }
+  selectedExamIds.value = selectedExamIds.value.filter((id) => id !== idKey);
+};
+
+const deleteSelectedExams = async () => {
+  if (!canDeleteExams.value) return;
+  const ok = window.confirm(
+    `선택한 고사집 ${selectedExamCount.value}개를 삭제하시겠습니까?`,
+  );
+  if (!ok) return;
+
+  try {
+    const result = (await $fetch(`${apiBase.value}/exams/soft-delete`, {
+      method: "PATCH",
+      headers: getAuthHeader(),
+      body: {
+        examIds: selectedExamIds.value,
+      },
+    })) as { updatedCount?: number };
+
+    const deletedCount = Number(result?.updatedCount ?? 0);
+    if (deletedCount === 0) {
+      alert("삭제할 수 있는 고사집이 없습니다.");
+    }
+    selectedExamIds.value = [];
+    await fetchExams();
+  } catch (err) {
+    console.error("고사집 삭제 오류:", err);
+    alert("고사집 삭제 중 오류가 발생했습니다.");
+  }
+};
+
 </script>
 
 <template>
@@ -315,8 +368,12 @@ const submitCreateExam = async () => {
             </button>
           </div>
           <button class="btn-new-exam" @click="openCreateModal" id="btn-open-create-exam">
-            <span class="btn-new-icon">＋</span>
+            <IconCreateAction class="btn-action-icon" />
             새 고사집
+          </button>
+          <button class="btn-delete-exam" :disabled="!canDeleteExams" @click="deleteSelectedExams">
+            <IconDeleteAction class="btn-action-icon" />
+            삭제
           </button>
         </div>
       </div>
@@ -426,6 +483,14 @@ const submitCreateExam = async () => {
                 type="checkbox"
                 class="copy-checkbox"
                 aria-label="고사 선택"
+                :checked="isExamSelected(exam.exam_id)"
+                :disabled="!isCurrentUserOwner(exam.creator?.user_no)"
+                @change="
+                  toggleExamSelected(
+                    exam.exam_id,
+                    ($event.target as HTMLInputElement).checked,
+                  )
+                "
               />
               <span>{{ exam.exam_name }}</span>
             </h4>
@@ -834,6 +899,11 @@ const submitCreateExam = async () => {
   transform: rotate(45deg);
 }
 
+.copy-checkbox:disabled {
+  opacity: 0.42;
+  cursor: not-allowed;
+}
+
 .exam-meta {
   display: flex;
   flex-direction: column;
@@ -1094,13 +1164,16 @@ const submitCreateExam = async () => {
 .btn-new-exam {
   display: inline-flex;
   align-items: center;
-  gap: 0.4rem;
-  padding: 0.4rem 0.9rem;
+  justify-content: center;
+  gap: 0.35rem;
+  height: 32px;
+  padding: 0 0.95rem;
   border-radius: 10px;
   background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
   color: #fff;
   font-size: 0.9rem;
   font-weight: 700;
+  line-height: 1;
   border: none;
   cursor: pointer;
   white-space: nowrap;
@@ -1112,6 +1185,41 @@ const submitCreateExam = async () => {
   transform: translateY(-1px);
   box-shadow: 0 6px 20px rgba(99, 102, 241, 0.5);
   background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+}
+
+.btn-delete-exam {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  height: 32px;
+  padding: 0 0.95rem;
+  border-radius: 10px;
+  border: 1px solid rgba(248, 113, 113, 0.45);
+  background: rgba(239, 68, 68, 0.14);
+  color: #fecaca;
+  font-size: 0.9rem;
+  font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+}
+
+.btn-delete-exam:hover:not(:disabled) {
+  background: rgba(239, 68, 68, 0.22);
+  border-color: rgba(248, 113, 113, 0.7);
+}
+
+.btn-delete-exam:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.btn-action-icon {
+  width: 0.92rem;
+  height: 0.92rem;
+  flex-shrink: 0;
 }
 
 .btn-new-icon {

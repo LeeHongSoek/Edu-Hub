@@ -4,6 +4,8 @@ import IconBook from "~/assets/icons/IconBook.svg?component";
 import IconArrowUp from "~/assets/icons/IconArrowUp.svg?component";
 import IconFileText from "~/assets/icons/IconFileText.svg?component";
 import IconPencil from "~/assets/icons/IconPencil.svg?component";
+import IconCreateAction from "~/assets/icons/IconCreateAction.svg?component";
+import IconDeleteAction from "~/assets/icons/IconDeleteAction.svg?component";
 
 const props = withDefaults(
   defineProps<{
@@ -23,6 +25,7 @@ const listScope = ref<"mine" | "all">("mine");
 const searchField = ref<"name" | "description">("name");
 const searchInput = ref("");
 const searchQuery = ref("");
+const selectedBookIds = ref<string[]>([]);
 const userCookie = useCookie("user_info");
 const userInfo = computed(() => {
   if (!userCookie.value) return null;
@@ -82,6 +85,8 @@ const sliderPercentage = computed(() => {
   if (totalPages.value <= 1) return 0;
   return ((sliderValue.value - 1) / (totalPages.value - 1)) * 100;
 });
+const selectedBookCount = computed(() => selectedBookIds.value.length);
+const canDeleteBooks = computed(() => selectedBookCount.value > 0);
 
 watch(
   () => filteredBooks.value.length,
@@ -143,6 +148,7 @@ const fetchBooks = async () => {
       query: { scope: listScope.value },
     });
     books.value = data as any[];
+    selectedBookIds.value = [];
   } catch (err) {
     console.error("서버 통신 오류(fetch) books:", err);
   } finally {
@@ -164,6 +170,53 @@ const createBook = async () => {
     await fetchBooks();
   } catch (err) {
     alert("문제집 생성 피일");
+  }
+};
+
+const getBookIdKey = (bookId: number | string | bigint) => String(bookId);
+
+const isBookSelected = (bookId: number | string | bigint) =>
+  selectedBookIds.value.includes(getBookIdKey(bookId));
+
+const toggleBookSelected = (
+  bookId: number | string | bigint,
+  checked: boolean,
+) => {
+  const idKey = getBookIdKey(bookId);
+  if (checked) {
+    if (!selectedBookIds.value.includes(idKey)) {
+      selectedBookIds.value = [...selectedBookIds.value, idKey];
+    }
+    return;
+  }
+  selectedBookIds.value = selectedBookIds.value.filter((id) => id !== idKey);
+};
+
+const deleteSelectedBooks = async () => {
+  if (!canDeleteBooks.value) return;
+  const ok = window.confirm(
+    `선택한 문제집 ${selectedBookCount.value}개를 삭제하시겠습니까?`,
+  );
+  if (!ok) return;
+
+  try {
+    const result = (await $fetch(`${apiBase.value}/question-books/soft-delete`, {
+      method: "PATCH",
+      headers: getAuthHeader(),
+      body: {
+        bookIds: selectedBookIds.value,
+      },
+    })) as { updatedCount?: number };
+
+    const deletedCount = Number(result?.updatedCount ?? 0);
+    if (deletedCount === 0) {
+      alert("삭제할 수 있는 문제집이 없습니다.");
+    }
+    selectedBookIds.value = [];
+    await fetchBooks();
+  } catch (err) {
+    console.error("문제집 삭제 오류:", err);
+    alert("문제집 삭제 중 오류가 발생했습니다.");
   }
 };
 
@@ -200,8 +253,7 @@ const setScope = (scope: "mine" | "all") => {
               class="scope-btn"
               :class="{ active: listScope === 'mine' }"
               :aria-pressed="listScope === 'mine'"
-              @click="setScope('mine')"
-            >
+              @click="setScope('mine')">
               나의 문제집
             </button>
             <button
@@ -209,13 +261,17 @@ const setScope = (scope: "mine" | "all") => {
               class="scope-btn"
               :class="{ active: listScope === 'all' }"
               :aria-pressed="listScope === 'all'"
-              @click="setScope('all')"
-            >
+              @click="setScope('all')">
               전체 문제집
             </button>
           </div>
           <button class="btn-create" @click="showCreateModal = true">
-            + 새 문제집
+            <IconCreateAction class="btn-action-icon" />
+            새 문제집
+          </button>
+          <button class="btn-delete" :disabled="!canDeleteBooks" @click="deleteSelectedBooks">
+            <IconDeleteAction class="btn-action-icon" />
+            삭제
           </button>
         </div>
       </div>
@@ -314,6 +370,14 @@ const setScope = (scope: "mine" | "all") => {
                 type="checkbox"
                 class="copy-checkbox"
                 aria-label="문제집 선택"
+                :checked="isBookSelected(book.book_id)"
+                :disabled="!isCurrentUserOwner(book.creator?.user_no)"
+                @change="
+                  toggleBookSelected(
+                    book.book_id,
+                    ($event.target as HTMLInputElement).checked,
+                  )
+                "
               />
               <span class="book-title">{{ book.book_name }}</span>
             </h4>
@@ -508,13 +572,61 @@ const setScope = (scope: "mine" | "all") => {
 }
 
 .btn-create {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  height: 32px;
+  padding: 0 0.95rem;
   background: #6366f1;
   color: white;
   border: none;
-  padding: 0.6rem 1.2rem;
   border-radius: 10px;
-  font-weight: 600;
+  font-size: 0.9rem;
+  font-weight: 700;
+  line-height: 1;
   cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+}
+
+.btn-create:hover {
+  background: #4f46e5;
+}
+
+.btn-delete {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  height: 32px;
+  padding: 0 0.95rem;
+  background: rgba(239, 68, 68, 0.15);
+  color: #fecaca;
+  border: 1px solid rgba(248, 113, 113, 0.45);
+  border-radius: 10px;
+  font-size: 0.9rem;
+  font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+}
+
+.btn-delete:hover:not(:disabled) {
+  background: rgba(239, 68, 68, 0.22);
+  border-color: rgba(248, 113, 113, 0.7);
+}
+
+.btn-delete:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.btn-action-icon {
+  width: 0.92rem;
+  height: 0.92rem;
+  flex-shrink: 0;
 }
 
 .book-grid {
@@ -612,6 +724,11 @@ const setScope = (scope: "mine" | "all") => {
   border: solid #dbeafe;
   border-width: 0 0.18rem 0.18rem 0;
   transform: rotate(45deg);
+}
+
+.copy-checkbox:disabled {
+  opacity: 0.42;
+  cursor: not-allowed;
 }
 
 .book-card-body p {

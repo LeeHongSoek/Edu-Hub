@@ -11,6 +11,8 @@ import IconArrowUp from "~/assets/icons/IconArrowUp.svg?component";
 import IconBook from "~/assets/icons/IconBook.svg?component";
 import IconPencil from "~/assets/icons/IconPencil.svg?component";
 import IconFileText from "~/assets/icons/IconFileText.svg?component";
+import IconCreateAction from "~/assets/icons/IconCreateAction.svg?component";
+import IconDeleteAction from "~/assets/icons/IconDeleteAction.svg?component";
 import { useApi } from "~/composables/useApi";
 import type { Question, Group } from "~/types";
 
@@ -43,6 +45,7 @@ const groups = ref<Group[]>([]);
 const selectedQuestionForSolve = ref<Question | null>(null);
 const selectedQuestionForEdit = ref<Question | null>(null);
 const showGroupManager = ref(false);
+const selectedQuestionIds = ref<string[]>([]);
 const searchField = ref<"content" | "title" | "id">(props.appliedSearchField);
 const searchInput = ref("");
 
@@ -88,6 +91,8 @@ const sliderPercentage = computed(() => {
   if (props.totalPages <= 1) return 0;
   return ((sliderValue.value - 1) / (props.totalPages - 1)) * 100;
 });
+const selectedQuestionCount = computed(() => selectedQuestionIds.value.length);
+const canDeleteQuestions = computed(() => selectedQuestionCount.value > 0);
 
 const isSliderDisabled = computed(() => props.totalPages <= 1);
 
@@ -139,6 +144,28 @@ const resetSearch = () => {
 
 const handleSolve = (question: Question) => {
   selectedQuestionForSolve.value = question;
+};
+
+const getQuestionIdKey = (questionId: string | number | bigint) =>
+  String(questionId);
+
+const isQuestionSelected = (questionId: string | number | bigint) =>
+  selectedQuestionIds.value.includes(getQuestionIdKey(questionId));
+
+const toggleQuestionSelected = (
+  questionId: string | number | bigint,
+  checked: boolean,
+) => {
+  const idKey = getQuestionIdKey(questionId);
+  if (checked) {
+    if (!selectedQuestionIds.value.includes(idKey)) {
+      selectedQuestionIds.value = [...selectedQuestionIds.value, idKey];
+    }
+    return;
+  }
+  selectedQuestionIds.value = selectedQuestionIds.value.filter(
+    (id) => id !== idKey,
+  );
 };
 
 const canEditQuestion = (question: Question) => {
@@ -352,6 +379,39 @@ const fetchGroups = async () => {
   }
 };
 
+const deleteSelectedQuestions = async () => {
+  if (!canDeleteQuestions.value) return;
+  if (props.currentUserNo === null || props.currentUserNo === undefined) {
+    alert("사용자 정보가 없어 삭제할 수 없습니다.");
+    return;
+  }
+
+  const ok = window.confirm(
+    `선택한 문제 ${selectedQuestionCount.value}개를 삭제하시겠습니까?`,
+  );
+  if (!ok) return;
+
+  try {
+    const result = (await $fetch(`${apiBase.value}/questions/soft-delete`, {
+      method: "PATCH",
+      body: {
+        questionIds: selectedQuestionIds.value,
+        user_no: String(props.currentUserNo),
+      },
+    })) as { updatedCount?: number };
+
+    const deletedCount = Number(result?.updatedCount ?? 0);
+    if (deletedCount === 0) {
+      alert("삭제 가능한 문제가 없습니다.");
+    }
+    selectedQuestionIds.value = [];
+    emit("refresh");
+  } catch (error) {
+    console.error("문제 삭제 오류:", error);
+    alert("문제 삭제 중 오류가 발생했습니다.");
+  }
+};
+
 onMounted(async () => {
   await fetchGroups();
   searchInput.value = props.appliedSearchKeyword;
@@ -375,6 +435,13 @@ watch(
   () => props.appliedSearchKeyword,
   (value) => {
     searchInput.value = value;
+  },
+);
+
+watch(
+  () => props.questions,
+  () => {
+    selectedQuestionIds.value = [];
   },
 );
 </script>
@@ -478,6 +545,18 @@ watch(
                     전체 문제
                   </button>
                 </div>
+                <button class="btn-create">
+                  <IconCreateAction class="btn-action-icon" />
+                  새 문제
+                </button>
+                <button
+                  class="btn-delete"
+                  :disabled="!canDeleteQuestions"
+                  @click="deleteSelectedQuestions"
+                >
+                  <IconDeleteAction class="btn-action-icon" />
+                  삭제
+                </button>
               </div>
             </div>
 
@@ -627,10 +706,18 @@ watch(
 
               <div class="question-main">
                 <input
-                    type="checkbox"
-                    class="copy-checkbox"
-                    aria-label="문제 선택"
-                  />
+                  type="checkbox"
+                  class="copy-checkbox"
+                  aria-label="문제 선택"
+                  :checked="isQuestionSelected(q.question_id)"
+                  :disabled="!canEditQuestion(q)"
+                  @change="
+                    toggleQuestionSelected(
+                      q.question_id,
+                      ($event.target as HTMLInputElement).checked,
+                    )
+                  "
+                />
                 <div class="question-content">
                   <LatexRenderer :text="q.question" class="question-preview" />
                 </div>
@@ -995,6 +1082,64 @@ watch(
   background: #4f46e5;
 }
 
+.btn-create {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  border: none;
+  background: #6366f1;
+  color: #fff;
+  height: 32px;
+  padding: 0 0.95rem;
+  border-radius: 10px;
+  font-size: 0.9rem;
+  font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+}
+
+.btn-create:hover {
+  background: #4f46e5;
+}
+
+.btn-delete {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  border: 1px solid rgba(248, 113, 113, 0.45);
+  background: rgba(239, 68, 68, 0.14);
+  color: #fecaca;
+  height: 32px;
+  padding: 0 0.95rem;
+  border-radius: 10px;
+  font-size: 0.9rem;
+  font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+}
+
+.btn-delete:hover:not(:disabled) {
+  background: rgba(239, 68, 68, 0.22);
+  border-color: rgba(248, 113, 113, 0.7);
+}
+
+.btn-delete:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.btn-action-icon {
+  width: 0.92rem;
+  height: 0.92rem;
+  flex-shrink: 0;
+}
+
 .btn-reset-search {
   border: 1px solid rgba(255, 255, 255, 0.12);
   background: rgba(255, 255, 255, 0.05);
@@ -1189,6 +1334,11 @@ watch(
   border: solid #dbeafe;
   border-width: 0 0.18rem 0.18rem 0;
   transform: rotate(45deg);
+}
+
+.copy-checkbox:disabled {
+  opacity: 0.42;
+  cursor: not-allowed;
 }
 
 .btn-solve {

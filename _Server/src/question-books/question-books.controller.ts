@@ -34,6 +34,19 @@ export class QuestionBooksController {
     return this.questionBooksService.findById(BigInt(id));
   }
 
+  @Patch('soft-delete')
+  @UseGuards(JwtAuthGuard)
+  async softDeleteMany(
+    @Request() req,
+    @Body('bookIds') bookIds: Array<string | number | bigint>,
+  ) {
+    const userNo = BigInt(req.user.user_no);
+    const normalizedBookIds = Array.isArray(bookIds)
+      ? bookIds.map((bookId) => BigInt(bookId))
+      : [];
+    return this.questionBooksService.removeMany(normalizedBookIds, userNo);
+  }
+
   @Patch(':id')
   @UseGuards(JwtAuthGuard)
   async update(@Request() req, @Param('id') id: string, @Body() body: any) {

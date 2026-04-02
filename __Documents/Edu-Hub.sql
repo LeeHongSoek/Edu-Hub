@@ -113,6 +113,7 @@ CREATE TABLE `exams` (
   `location` varchar(100) DEFAULT NULL COMMENT '시험 장소 (온라인/오프라인 장소 등)',
   `is_auto_score` tinyint(1) DEFAULT 1 COMMENT '자동 채점 여부',
   `description` text DEFAULT NULL COMMENT '문제집 설명',
+  `is_deleted` enum('Y','N','T') NOT NULL DEFAULT 'N' COMMENT '삭제 여부 (Y: 삭제, N: 디폴트, T: 휴지통)',
   `created_at` datetime DEFAULT current_timestamp() COMMENT '생성 일시',
   PRIMARY KEY (`exam_id`),
   KEY `fk_exam_creator` (`creator_no`),
@@ -351,6 +352,7 @@ CREATE TABLE `questionbook` (
   `user_no` bigint(20) NOT NULL COMMENT '소유자 식별번호',
   `book_name` varchar(255) NOT NULL COMMENT '문제집 제목',
   `description` text DEFAULT NULL COMMENT '문제집 설명',
+  `is_deleted` enum('Y','N','T') NOT NULL DEFAULT 'N' COMMENT '삭제 여부 (Y: 삭제, N: 디폴트, T: 휴지통)',
   `created_at` datetime DEFAULT current_timestamp() COMMENT '생성 일시',
   PRIMARY KEY (`book_id`),
   KEY `fk_uqb_user` (`user_no`),
@@ -401,4 +403,3 @@ CREATE TABLE `users` (
 /*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*M!100616 SET NOTE_VERBOSITY=@OLD_NOTE_VERBOSITY */;
-

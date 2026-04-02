@@ -251,6 +251,7 @@ model Exam {
   location      String?        @db.VarChar(100)
   is_auto_score Boolean?       @default(true)
   description   String?        @db.Text
+  is_deleted    IsDeleted      @default(N)
   created_at    DateTime?      @default(now()) @db.DateTime(0)
   questions     ExamQuestion[]
   results       ExamResult[]
@@ -425,6 +426,7 @@ model QuestionBook {
   user_no     BigInt
   book_name   String                 @db.VarChar(255)
   description String?                @db.Text
+  is_deleted  IsDeleted              @default(N)
   created_at  DateTime?              @default(now()) @db.DateTime(0)
   items       QuestionBookItem[]
   user        User                   @relation(fields: [user_no], references: [user_no], onDelete: Cascade, onUpdate: Restrict, map: "fk_uqb_user")

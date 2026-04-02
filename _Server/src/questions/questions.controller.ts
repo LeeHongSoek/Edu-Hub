@@ -40,6 +40,26 @@ export class QuestionsController {
   }
 
   // 문제 수정
+  @Patch('soft-delete')
+  softDeleteMany(
+    @Body('questionIds') questionIds: Array<string | number | bigint>,
+    @Body('user_no') userNo?: string | number | bigint,
+  ) {
+    const normalizedUserNo = userNo !== undefined && userNo !== null
+      ? BigInt(userNo)
+      : undefined;
+    if (!normalizedUserNo) {
+      throw new BadRequestException('삭제할 사용자 정보가 필요합니다.');
+    }
+
+    const normalizedQuestionIds = Array.isArray(questionIds)
+      ? questionIds.map((questionId) => BigInt(questionId))
+      : [];
+
+    return this.questionsService.removeMany(normalizedQuestionIds, normalizedUserNo);
+  }
+
+  // 문제 수정
   @Patch(':id')
   update(@Param('id') id: string, @Body() updateQuestionDto: any) {
     return this.questionsService.update(id, updateQuestionDto);

@@ -170,7 +170,7 @@ UNLOCK TABLES;
 
 LOCK TABLES `exams` WRITE;
 /*!40000 ALTER TABLE `exams` DISABLE KEYS */;
-INSERT INTO `exams` VALUES
+INSERT INTO `exams` (`exam_id`,`creator_no`,`class_id`,`exam_name`,`start_time`,`end_time`,`location`,`is_auto_score`,`description`,`created_at`) VALUES
 (1,1,1,'1월 정보처리 기초 모의고사 (교사 생성)','2026-01-20 14:00:00','2026-01-20 15:00:00','온라인 CBT',1,NULL,'2026-03-27 21:48:29'),
 (2,2,2,'2월 정기 테스트 (교사 생성)','2026-02-15 10:00:00','2026-02-15 11:00:00','제1 시험장',1,NULL,'2026-03-27 21:48:29'),
 (3,3,3,'전국 단위 공개 시험 (교사 생성)','2026-03-01 13:00:00','2026-03-01 13:30:00','온라인',1,NULL,'2026-03-27 21:48:29'),
@@ -1433,7 +1433,7 @@ UNLOCK TABLES;
 
 LOCK TABLES `questionbook` WRITE;
 /*!40000 ALTER TABLE `questionbook` DISABLE KEYS */;
-INSERT INTO `questionbook` VALUES
+INSERT INTO `questionbook` (`book_id`,`user_no`,`book_name`,`description`,`created_at`) VALUES
 (1,1,'김철수 3월 오답 정리','틀린 문제만 다시 모아 둔 개인 문제집','2026-03-27 21:48:29'),
 (2,2,'김철수 자료구조 집중','자료구조와 알고리즘 관련 문제를 따로 묶은 컬렉션','2026-03-27 21:48:29'),
 (3,3,'학부모 체크용 주말 점검','아이와 함께 볼 핵심 문제집','2026-03-27 21:48:29'),

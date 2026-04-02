@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, UseGuards, Request, UnauthorizedException, Param, Query } from '@nestjs/common';
+import { Controller, Get, Post, Body, UseGuards, Request, UnauthorizedException, Param, Query, Patch } from '@nestjs/common';
 import { ExamsService } from './exams.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
@@ -38,6 +38,21 @@ export class ExamsController {
     const userNoVal = req.user?.user_no || req.user?.userNo;
     if (!userNoVal) throw new UnauthorizedException();
     return this.examsService.create(BigInt(userNoVal), body);
+  }
+
+  @Patch('soft-delete')
+  async softDeleteMany(
+    @Request() req: any,
+    @Body('examIds') examIds: Array<string | number | bigint>,
+  ) {
+    const userNoVal = req.user?.user_no || req.user?.userNo;
+    if (!userNoVal) throw new UnauthorizedException();
+
+    const normalizedExamIds = Array.isArray(examIds)
+      ? examIds.map((examId) => BigInt(examId))
+      : [];
+
+    return this.examsService.removeMany(normalizedExamIds, BigInt(userNoVal));
   }
 
   @Get(':id')

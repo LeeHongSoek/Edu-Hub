@@ -37,7 +37,9 @@ export class ExamsService {
   }
 
   async findAll(userNo?: bigint, classId?: bigint) {
-    const where: any = {};
+    const where: any = {
+      is_deleted: 'N',
+    };
 
     if (userNo) {
       where.creator_no = userNo;
@@ -59,8 +61,8 @@ export class ExamsService {
   }
 
   async findById(examId: bigint, userNo?: bigint) {
-    const exam = await this.prisma.exam.findUnique({
-      where: { exam_id: examId },
+    const exam = await this.prisma.exam.findFirst({
+      where: { exam_id: examId, is_deleted: 'N' },
       include: {
         creator: { select: { user_no: true, username: true } },
         class: true,
@@ -78,5 +80,22 @@ export class ExamsService {
     if (!exam) throw new NotFoundException('Exam not found');
 
     return exam;
+  }
+
+  async removeMany(examIds: bigint[], creatorNo: bigint) {
+    if (!examIds.length) {
+      return { updatedCount: 0 };
+    }
+
+    const result = await this.prisma.exam.updateMany({
+      where: {
+        exam_id: { in: examIds },
+        creator_no: creatorNo,
+        is_deleted: 'N',
+      },
+      data: { is_deleted: 'Y' },
+    });
+
+    return { updatedCount: result.count };
   }
 }

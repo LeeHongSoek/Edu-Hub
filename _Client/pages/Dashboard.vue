@@ -163,22 +163,25 @@ onMounted(() => {
   <div v-if="userInfo" class="dashboard-page">
     <div class="dashboard-header">
       <div class="welcome-section">
-        <h1 class="welcome-title">
-          안녕하세요,
-          <span class="role-badge-inline" :class="'role-' + userInfo.role">
-            <IconGraduationCap v-if="userInfo.role === 'S'" class="role-icon" />
-            <IconBoard v-else-if="userInfo.role === 'T'" class="role-icon" />
-            <IconHome v-else class="role-icon" />
-            {{
-              userInfo.role === "T"
-                ? "선생님"
-                : userInfo.role === "P"
-                  ? "학부모"
-                  : "학생"
-            }}
-          </span>
-          <span class="username">{{ userInfo.username }}</span>님!
-          <!-- 대시보드 내 네비게이션 버튼 (타이틀 바로 뒤) -->
+        <div class="welcome-top-row">
+          <h1 class="welcome-title">
+            <span class="welcome-text">
+              안녕하세요,
+              <span class="role-badge-inline" :class="'role-' + userInfo.role">
+                <IconGraduationCap v-if="userInfo.role === 'S'" class="role-icon" />
+                <IconBoard v-else-if="userInfo.role === 'T'" class="role-icon" />
+                <IconHome v-else class="role-icon" />
+                {{
+                  userInfo.role === "T"
+                    ? "선생님"
+                    : userInfo.role === "P"
+                      ? "학부모"
+                      : "학생"
+                }}
+              </span>
+              <span class="username">{{ userInfo.username }}</span>님!
+            </span>
+          </h1>
           <div v-if="userInfo.role_id !== 'P'" class="quick-nav">
             <NuxtLink to="/questions?mine=true" class="nav-btn">
               <IconFileText class="nav-icon" />
@@ -193,7 +196,7 @@ onMounted(() => {
               <span>고사집 목록</span>
             </NuxtLink>
           </div>
-        </h1>
+        </div>
         <p class="welcome-sub">오늘도 지식을 완성하는 하루 되세요.</p>
       </div>
     </div>
@@ -330,29 +333,53 @@ onMounted(() => {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  margin-bottom: 2rem;
+  margin-bottom: 1rem;
+}
+
+.welcome-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  margin: 0;
+  padding: 0;
+  align-items: flex-start;
+  text-align: left;
+  width: 100%;
+}
+
+.welcome-top-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  width: 100%;
 }
 
 .welcome-title {
   font-size: 2rem;
   font-weight: 800;
   color: #f8fafc;
-  margin-bottom: 0.5rem;
+  margin: 0;
   display: flex !important;
-  flex-direction: row !important;
   align-items: center !important;
-  gap: 0.4rem !important; /* Reduced from 2rem */
-  white-space: nowrap;
+  flex: 0 1 auto;
 }
 
 .welcome-title .username {
   color: #c7d2fe;
 }
 
+.welcome-text {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  white-space: nowrap;
+}
+
 .welcome-sub {
   color: #94a3b8;
   font-size: 1.1rem;
-  margin-bottom: 0;
+  margin: 0;
 }
 
 .quick-nav {
@@ -360,7 +387,10 @@ onMounted(() => {
   flex-direction: row !important;
   align-items: center !important;
   gap: 0.75rem;
-  margin-left: 1rem;
+  margin-left: auto;
+  justify-content: flex-end;
+  white-space: nowrap;
+  flex: 0 0 auto;
 }
 
 .nav-btn {
