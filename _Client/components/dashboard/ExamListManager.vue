@@ -414,13 +414,14 @@ const submitCreateExam = async () => {
         <div v-for="exam in pagedExams" :key="exam.exam_id" class="exam-card">
           <div class="exam-info">
             <div class="exam-headline">
+              <span class="exam-id">{{ exam.exam_id }}</span> 
               <div class="exam-badge">고사</div>
               <span class="exam-period-inline"
                 >{{ new Date(exam.start_time).toLocaleDateString("ko-KR") }} ~
                 {{ new Date(exam.end_time).toLocaleDateString("ko-KR") }}</span
               >
             </div>
-            <h4><span class="exam-id">{{ exam.exam_id }}</span> {{ exam.exam_name }}</h4>
+            <h4>{{ exam.exam_name }}</h4>
           </div>
           <div class="exam-meta">
             <span class="exam-meta-line">

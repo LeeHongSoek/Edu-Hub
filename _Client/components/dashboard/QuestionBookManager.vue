@@ -309,7 +309,7 @@ const setScope = (scope: "mine" | "all") => {
         <div v-for="book in pagedBooks" :key="book.book_id" class="book-card">
           <div class="book-card-head">
             <h4>
-              <span class="book-id"><{{ book.book_id }}></span>
+              <span class="book-id">{{ book.book_id }}</span>
               <span class="book-title">{{ book.book_name }}</span>
             </h4>
             <span class="book-meta">
