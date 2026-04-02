@@ -612,9 +612,7 @@ onMounted(() => {
                 @click="handlePublicQuestions"
               >오늘의 공개문제</button>를 풀어보세요
             </p>
-            <p class="auth-sub">
-              셈플 계정으로 로그인해보세요<br />학생 [id:s pw:x], 교사[id:t pw:x], 부모 [id:p pw:x]
-            </p>
+           
 
             <form @submit.prevent="handleLogin" class="form">
               <div class="field">
@@ -651,6 +649,9 @@ onMounted(() => {
                 </div>
               </div>
               <div class="auth-error-msg">{{ authError }}&nbsp;</div>
+               <p class="auth-sub auth-sub-sample">
+              셈플 계정으로 로그인해보세요<br />학생 [id:s pw:x], 교사[id:t pw:x], 부모 [id:p pw:x]
+            </p>
               <div class="row-util">
                 <label class="chk"><input type="checkbox" />로그인 유지</label>
                 <a href="#" class="link-sm">비밀번호 찾기</a>
@@ -976,7 +977,7 @@ onMounted(() => {
 /* ─── 루트 페이지 ─── */
 .page {
   font-family: "Noto Sans KR", "Apple SD Gothic Neo", sans-serif;
-  min-height: 100vh;
+  height: 100vh;
   width: 100%;
   position: relative;
   overflow: hidden;
@@ -1046,8 +1047,7 @@ onMounted(() => {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  justify-content: center; /* 수직 중앙 */
-  padding-bottom: 14vh; /* 중심점을 위로 이동 */
+  height: 100vh;
   opacity: 0;
   transform: translateY(20px);
   transition:
@@ -1116,13 +1116,14 @@ onMounted(() => {
 /* ─── 메인 행 ─── */
 .main-row {
   display: flex;
-  align-items: stretch;
-  justify-content: center; /* 수평 중앙 */
+  align-items: center;
+  justify-content: center;
   gap: 4rem;
-  padding: 2rem 5rem;
+  padding: 0 5rem 2rem;
   width: 100%;
   max-width: 1400px;
   margin: 0 auto;
+   min-height: 0;
 }
 
 /* ─── 히어로 ─── */
@@ -1485,6 +1486,9 @@ onMounted(() => {
   margin-bottom: 1.2rem;
   line-height: 1.5;
 }
+.auth-sub-sample {
+  margin-bottom: 0;
+}
 
 .btn-public {
   background: rgba(99, 102, 241, 0.15);
@@ -1591,6 +1595,9 @@ input[type="password"] {
   align-items: center;
   font-size: 0.8rem;
   margin-top: -0.25rem;
+}
+.form .auth-sub-sample + .row-util {
+  margin-top: -0.65rem;
 }
 .chk {
   display: flex;
