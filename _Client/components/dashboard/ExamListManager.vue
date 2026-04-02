@@ -421,7 +421,14 @@ const submitCreateExam = async () => {
                 {{ new Date(exam.end_time).toLocaleDateString("ko-KR") }}</span
               >
             </div>
-            <h4>{{ exam.exam_name }}</h4>
+            <h4>
+              <input
+                type="checkbox"
+                class="copy-checkbox"
+                aria-label="고사 선택"
+              />
+              <span>{{ exam.exam_name }}</span>
+            </h4>
           </div>
           <div class="exam-meta">
             <span class="exam-meta-line">
@@ -791,6 +798,40 @@ const submitCreateExam = async () => {
   margin: 0;
   font-size: 1.15rem;
   font-weight: 700;
+}
+
+.copy-checkbox {
+  width: 1.4rem;
+  height: 1.4rem;
+  -webkit-appearance: none;
+  appearance: none;
+  border: 1.9px solid rgba(148, 163, 184, 0.7);
+  border-radius: 0.19rem;
+  background: rgba(15, 23, 42, 0.55);
+  box-shadow: inset 0 0 0 1px rgba(15, 23, 42, 0.35);
+  cursor: pointer;
+  position: relative;
+  display: inline-flex;
+  flex-shrink: 0;
+  align-self: center;
+  margin-right: 0.6rem;
+}
+
+.copy-checkbox:checked {
+  border-color: #818cf8;
+  background: rgba(99, 102, 241, 0.28);
+}
+
+.copy-checkbox:checked::after {
+  content: "";
+  position: absolute;
+  left: 35%;
+  top: 18%;
+  width: 20%;
+  height: 42%;
+  border: solid #dbeafe;
+  border-width: 0 0.18rem 0.18rem 0;
+  transform: rotate(45deg);
 }
 
 .exam-meta {

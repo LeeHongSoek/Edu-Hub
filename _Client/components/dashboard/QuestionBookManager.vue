@@ -310,6 +310,11 @@ const setScope = (scope: "mine" | "all") => {
           <div class="book-card-head">
             <h4>
               <span class="book-id">{{ book.book_id }}</span>
+              <input
+                type="checkbox"
+                class="copy-checkbox"
+                aria-label="문제집 선택"
+              />
               <span class="book-title">{{ book.book_name }}</span>
             </h4>
             <span class="book-meta">
@@ -573,6 +578,40 @@ const setScope = (scope: "mine" | "all") => {
 
 .book-title {
   color: #f8fafc;
+}
+
+.copy-checkbox {
+  width: 1.4rem;
+  height: 1.4rem;
+  -webkit-appearance: none;
+  appearance: none;
+  border: 1.9px solid rgba(148, 163, 184, 0.7);
+  border-radius: 0.19rem;
+  background: rgba(15, 23, 42, 0.55);
+  box-shadow: inset 0 0 0 1px rgba(15, 23, 42, 0.35);
+  cursor: pointer;
+  position: relative;
+  display: inline-flex;
+  flex-shrink: 0;
+  align-self: center;
+  margin-right: 0.05rem;
+}
+
+.copy-checkbox:checked {
+  border-color: #818cf8;
+  background: rgba(99, 102, 241, 0.28);
+}
+
+.copy-checkbox:checked::after {
+  content: "";
+  position: absolute;
+  left: 35%;
+  top: 18%;
+  width: 20%;
+  height: 42%;
+  border: solid #dbeafe;
+  border-width: 0 0.18rem 0.18rem 0;
+  transform: rotate(45deg);
 }
 
 .book-card-body p {
