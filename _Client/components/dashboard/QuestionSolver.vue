@@ -23,6 +23,7 @@ const emit = defineEmits<{
   (e: "prev"): void;
   (e: "next"): void;
   (e: "go-to-index", index: number): void;
+  (e: "solve", isCorrect: boolean): void;
 }>();
 
 const getAggregateTimeLimit = (question: Question) => {
@@ -82,6 +83,31 @@ const getQuestionType = (question: Question) =>
   question.question_type_id?.toUpperCase();
 
 const isMultipleChoice = (question: Question) => getQuestionType(question) === "M";
+
+const getQuestionTypeBadgeLabel = (question: Question) => {
+  const typeId = String(question.question_type_id || "").toUpperCase();
+  const typeName = question.type?.type_name || "";
+  const multipleChoice = typeId === "M" || typeName.includes("객관식");
+
+  if (!multipleChoice) {
+    return typeName || "객관식";
+  }
+
+  const answerCount = (question.options || []).filter((opt: any) => {
+    const raw = opt?.is_answer;
+    return (
+      raw === true ||
+      raw === 1 ||
+      raw === "1" ||
+      raw === "Y" ||
+      raw === "y"
+    );
+  }).length;
+
+  if (answerCount >= 2) return "객관식_선다";
+  if (answerCount === 1) return "객관식_선단";
+  return "객관식";
+};
 
 const getChildState = (child: Question) => {
   const key = String(child.question_id);
@@ -314,6 +340,7 @@ const handleFinish = async (isTimeOver = false) => {
 
     // solve_results에 결과 저장
     await saveSolveResult(isTimeOver);
+    emit("solve", isCorrect.value);
   }
 
   showResult.value = true;
@@ -524,7 +551,7 @@ const submitReview = async () => {
       <div class="solver-header-compact">
         <div class="compact-top">
           <div class="compact-top-left">
-            <span class="badge-type">{{ question.type.type_name }}</span>
+            <span class="badge-type">{{ getQuestionTypeBadgeLabel(question) }}</span>
           </div>
           <div class="compact-top-right">
             <div v-if="effectiveGroup" class="solver-group-path">
@@ -668,7 +695,7 @@ const submitReview = async () => {
             type="button"
             class="child-submit-all-btn"
             :disabled="!canSubmitAllChildQuestions"
-            @click="handleFinishAllChildren"
+            @click="handleFinishAllChildren()"
           >
             세부연계문제 정답 확인
           </button>

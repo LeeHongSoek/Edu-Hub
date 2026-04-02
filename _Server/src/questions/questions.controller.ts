@@ -26,7 +26,7 @@ export class QuestionsController {
       examId: (examId && examId !== 'undefined') ? BigInt(examId) : undefined,
       publicOnly: publicOnly === true || publicOnly === 'true',
       viewerNo: (viewerNo && viewerNo !== 'undefined') ? BigInt(viewerNo) : undefined,
-      searchField: searchField === 'content' ? 'content' : 'title',
+      searchField: (searchField === 'content' || searchField === 'id') ? searchField : 'title',
       searchKeyword: searchKeyword?.trim() || undefined,
       page: page ? Number(page) : 1,
       limit: limit ? Number(limit) : 10,

@@ -2,6 +2,7 @@
 import { ref, onMounted, onUnmounted, computed } from "vue";
 import type { QuestionListResponse } from "~/types";
 import LatexRenderer from "~/components/LatexRenderer.vue";
+import DailyQuestionsModal from "~/components/DailyQuestionsModal.vue";
 import IconShield from "~/assets/icons/IconShield.svg?component";
 import IconCheck from "~/assets/icons/IconCheck.svg?component";
 import IconSparkle from "~/assets/icons/IconSparkle.svg?component";
@@ -188,6 +189,37 @@ const fetchTickerData = async () => {
   }
 };
 
+const dailyQuestions = ref<any[]>([]);
+const showDailyModal = ref(false);
+
+const checkDailyRefresh = async () => {
+  try {
+    const data = await $fetch<any>(`${apiBase.value}/question-books/daily/refresh`);
+    if (data && data.items) {
+      dailyQuestions.value = data.items.map((it: any) => it.question);
+    }
+  } catch (err) {
+    console.error("[checkDailyRefresh] Error:", err);
+  }
+};
+
+const handlePublicQuestions = () => {
+  if (dailyQuestions.value.length > 0) {
+    showDailyModal.value = true;
+  } else {
+    // 만약 데이터가 없으면 강제 리프레시 시도 후 오픈
+    checkDailyRefresh().then(() => {
+      if (dailyQuestions.value.length > 0) {
+        showDailyModal.value = true;
+      } else {
+        alert("오늘의 공개문제를 불러올 수 없거나, 오늘 문제가 아직 준비되지 않았습니다!");
+      }
+    }).catch(err => {
+      alert("공개문제 호출 오류: " + err.message);
+    });
+  }
+};
+
 const handleLogin = async () => {
   if (!userIdInput.value || !passwordInput.value) {
     authError.value = "아이디와 비밀번호를 입력해주세요.";
@@ -364,6 +396,8 @@ onMounted(() => {
   }, 530);
   // 즉시 티커 노출
   fetchTickerData();
+  // 오늘의 공개문제 리프레시 및 준비
+  checkDailyRefresh();
 });
 </script>
 
@@ -570,7 +604,17 @@ onMounted(() => {
         <aside class="auth-box">
           <div class="auth-card">
             <h2 class="auth-title">시작하기</h2>
-            <p class="auth-sub">무료 가입 후 오늘의 문제를 풀어보세요</p>
+            <p class="auth-sub">
+              무료 가입 전
+              <button
+                type="button"
+                class="btn-public"
+                @click="handlePublicQuestions"
+              >오늘의 공개문제</button>를 풀어보세요
+            </p>
+            <p class="auth-sub">
+              셈플 계정으로 로그인해보세요<br />학생 [id:s pw:x], 교사[id:t pw:x], 부모 [id:p pw:x]
+            </p>
 
             <form @submit.prevent="handleLogin" class="form">
               <div class="field">
@@ -907,6 +951,13 @@ onMounted(() => {
         </div>
       </div>
     </Transition>
+
+    <!-- 오늘의 공개문제 전용 모달 -->
+    <DailyQuestionsModal
+      v-if="showDailyModal"
+      :questions="dailyQuestions"
+      @close="showDailyModal = false"
+    />
   </div>
 </template>
 
@@ -1430,8 +1481,33 @@ onMounted(() => {
 }
 .auth-sub {
   font-size: 0.88rem;
-  color: #64748b;
-  margin-bottom: 1.75rem;
+  color: #cbd5e1;
+  margin-bottom: 1.2rem;
+  line-height: 1.5;
+}
+
+.btn-public {
+  background: rgba(99, 102, 241, 0.15);
+  border: 1px solid rgba(129, 140, 248, 0.4);
+  color: #a5b4fc;
+  padding: 0.15rem 0.6rem;
+  border-radius: 6px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  display: inline-flex;
+  align-items: center;
+  font-family: inherit;
+  margin: 0 0.25rem;
+  box-shadow: 0 0 12px rgba(99, 102, 241, 0.2);
+}
+
+.btn-public:hover {
+  background: rgba(99, 102, 241, 0.3);
+  border-color: rgba(129, 140, 248, 0.6);
+  color: #fff;
+  transform: translateY(-1.5px);
+  box-shadow: 0 0 20px rgba(99, 102, 241, 0.4);
 }
 
 .form {

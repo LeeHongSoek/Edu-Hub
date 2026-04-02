@@ -153,6 +153,31 @@ const shouldShowQuestionOwner = (question: Question) => {
   return String(question.creator_no) !== String(props.currentUserNo);
 };
 
+const getQuestionTypeBadgeLabel = (question: Question) => {
+  const typeId = String(question.question_type_id || "").toUpperCase();
+  const typeName = question.type?.type_name || "";
+  const isMultipleChoice = typeId === "M" || typeName.includes("객관식");
+
+  if (!isMultipleChoice) {
+    return typeName || "객관식";
+  }
+
+  const answerCount = (question.options || []).filter((opt: any) => {
+    const raw = opt?.is_answer;
+    return (
+      raw === true ||
+      raw === 1 ||
+      raw === "1" ||
+      raw === "Y" ||
+      raw === "y"
+    );
+  }).length;
+
+  if (answerCount >= 2) return "객관식_선다";
+  if (answerCount === 1) return "객관식_선단";
+  return "객관식";
+};
+
 const pageStartItem = computed(() => {
   if (props.totalItems === 0) return 0;
   return (props.currentPage - 1) * props.pageSize + 1;
@@ -579,38 +604,39 @@ watch(
                 <div class="question-title-row">
                   <h3 class="question-id">{{ q.question_id }}</h3>
                   <span class="badge badge-type question-type-badge">{{
-                    q.type.type_name
+                    getQuestionTypeBadgeLabel(q)
                   }}</span>
                   <h3 class="question-title">{{ q.title }}</h3>
                 </div>
-                <div
-                  v-if="q.group || shouldShowQuestionOwner(q)"
-                  class="question-group-path"
-                >
+                <div class="question-group-path">
                   <span
                     v-if="q.creator?.username && shouldShowQuestionOwner(q)"
                     class="question-owner"
                     >{{ q.creator.username }}</span
                   >
                   <span
-                    v-if="
-                      q.creator?.username &&
-                      shouldShowQuestionOwner(q) &&
-                      q.group
-                    "
+                    v-if="q.creator?.username && shouldShowQuestionOwner(q)"
                     class="question-separator"
                     >·</span
                   >
-                  <span v-if="q.group">{{ formatGroupPath(q.group) }}</span>
+                  <span>{{
+                    q.group ? formatGroupPath(q.group) : "문제 분류 없음"
+                  }}</span>
                 </div>
               </div>
 
               <div class="question-main">
+                <input
+                    type="checkbox"
+                    class="copy-checkbox"
+                    aria-label="문제 선택"
+                  />
                 <div class="question-content">
                   <LatexRenderer :text="q.question" class="question-preview" />
                 </div>
 
                 <div class="question-actions">
+                  
                   <button
                     v-if="props.viewMode === 'all' && !props.hideGroupOverlay"
                     class="btn-copy"
@@ -1129,6 +1155,40 @@ watch(
   display: flex;
   gap: 0.75rem;
   align-items: center;
+}
+
+.copy-checkbox {
+  width: 1.4rem;
+  height: 1.4rem;
+  -webkit-appearance: none;
+  appearance: none;
+  border: 1.9px solid rgba(148, 163, 184, 0.7);
+  border-radius: 0.19rem;
+  background: rgba(15, 23, 42, 0.55);
+  box-shadow: inset 0 0 0 1px rgba(15, 23, 42, 0.35);
+  cursor: pointer;
+  position: relative;
+  display: inline-flex;
+  flex-shrink: 0;
+  align-self: center;
+  margin-right: 0.19rem;
+}
+
+.copy-checkbox:checked {
+  border-color: #818cf8;
+  background: rgba(99, 102, 241, 0.28);
+}
+
+.copy-checkbox:checked::after {
+  content: "";
+  position: absolute;
+  left: 35%;
+  top: 18%;
+  width: 20%;
+  height: 42%;
+  border: solid #dbeafe;
+  border-width: 0 0.18rem 0.18rem 0;
+  transform: rotate(45deg);
 }
 
 .btn-solve {

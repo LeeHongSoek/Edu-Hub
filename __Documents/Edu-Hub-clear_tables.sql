@@ -2,6 +2,17 @@
  Edu-Hub DB 초기화 스크립트 (Edu-Hub-clear.sql)
 */
 
+
+
+-- 1. 데이터베이스 삭제
+DROP DATABASE `Edu-Hub-Tunnel` ;
+
+-- 2. 데이터베이스 다시 생성
+CREATE DATABASE `Edu-Hub-Tunnel`;
+
+
+
+
 -- 1. 외래키 검사 일시 중지
 SET FOREIGN_KEY_CHECKS = 0;
 

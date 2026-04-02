@@ -8,7 +8,7 @@ type FindAllParams = {
   examId?: bigint;
   publicOnly?: boolean;
   viewerNo?: bigint;
-  searchField?: 'title' | 'content';
+  searchField?: 'title' | 'content' | 'id';
   searchKeyword?: string;
   page?: number;
   limit?: number;
@@ -184,7 +184,19 @@ export class QuestionsService {
     return descendantIds;
   }
 
-  private buildSearchCondition(searchField: 'title' | 'content', searchKeyword: string) {
+  private buildSearchCondition(searchField: 'title' | 'content' | 'id', searchKeyword: string) {
+    if (searchField === 'id') {
+      try {
+        const id = BigInt(searchKeyword.trim());
+        return {
+          question_id: id,
+        };
+      } catch {
+        // 숫자가 아닌 경우 검색 결과가 없도록 처리
+        return { question_id: -1 };
+      }
+    }
+
     if (searchField === 'content') {
       return {
         OR: [
