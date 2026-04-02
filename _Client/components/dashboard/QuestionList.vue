@@ -1034,7 +1034,7 @@ watch(
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 1rem;
+  gap: 0.5rem;
 }
 
 .question-group-path {
@@ -1171,7 +1171,7 @@ watch(
   display: inline-flex;
   flex-shrink: 0;
   align-self: center;
-  margin-right: 0.19rem;
+  margin-right: 0.05rem;
 }
 
 .copy-checkbox:checked {
