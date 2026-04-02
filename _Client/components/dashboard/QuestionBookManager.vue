@@ -559,9 +559,11 @@ const setScope = (scope: "mine" | "all") => {
   color: #e2e8f0;
 }
 
-.book-owner {
-  color: #c7d2fe;
-  font-weight: 700;
+.book-id {
+  font-size: 1.5rem !important;
+  font-weight: 900 !important;
+  color: #0055ff !important;
+  margin: 0;
 }
 
 .book-separator {

@@ -420,7 +420,7 @@ const submitCreateExam = async () => {
                 {{ new Date(exam.end_time).toLocaleDateString("ko-KR") }}</span
               >
             </div>
-            <h4>&lt;{{ exam.exam_id }}&gt; {{ exam.exam_name }}</h4>
+            <h4><span class="exam-id">{{ exam.exam_id }}</span> {{ exam.exam_name }}</h4>
           </div>
           <div class="exam-meta">
             <span class="exam-meta-line">
@@ -776,10 +776,20 @@ const submitCreateExam = async () => {
   width: fit-content;
   font-weight: 700;
 }
+.exam-id {
+  font-size: 1.5rem !important;
+  font-weight: 900 !important;
+  color: #0055ff !important;
+  margin-right: 0.5rem;
+}
+
 .exam-info h4 {
+  display: flex;
+  align-items: center;
   color: #f8fafc;
   margin: 0;
-  font-size: 1.1rem;
+  font-size: 1.15rem;
+  font-weight: 700;
 }
 
 .exam-meta {
