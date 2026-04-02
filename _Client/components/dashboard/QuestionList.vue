@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted, computed, watch } from "vue";
+import { useRoute } from "vue-router";
 import GroupHierarchy from "~/components/dashboard/GroupHierarchy.vue";
 import GroupManager from "~/components/dashboard/GroupManager.vue";
 import QuestionEditor from "~/components/dashboard/QuestionEditor.vue";
@@ -12,6 +13,8 @@ import IconPencil from "~/assets/icons/IconPencil.svg?component";
 import IconFileText from "~/assets/icons/IconFileText.svg?component";
 import { useApi } from "~/composables/useApi";
 import type { Question, Group } from "~/types";
+
+const route = useRoute();
 
 const props = defineProps<{
   listTitle?: string;
@@ -30,6 +33,7 @@ const props = defineProps<{
   totalItems: number;
   pageSize: number;
   viewMode: "mine" | "all";
+  hideGroupOverlay?: boolean;
 }>();
 
 // API 설정 통합
@@ -338,7 +342,7 @@ watch(
 <template>
   <div class="question-list-container">
     <div class="question-list-row">
-      <div class="group-overlay">
+      <div v-if="!props.hideGroupOverlay" class="group-overlay">
         <div class="group-overlay-header">
           <span>문제 그룹</span>
           <div class="header-actions">
@@ -403,10 +407,14 @@ watch(
               <div class="title-row">
                 <h3 class="question-list-title">
                   <IconFileText class="section-icon" />
-                  {{ props.listTitle ?? "문제 목록" }}
+                  {{
+                    props.hideGroupOverlay && props.listSubtitle
+                      ? props.listSubtitle
+                      : (props.listTitle ?? "문제 목록")
+                  }}
                 </h3>
                 <div
-                  v-if="props.showScopeToggle"
+                  v-if="props.showScopeToggle && !props.hideGroupOverlay"
                   class="scope-toggle"
                   role="tablist"
                   aria-label="문제 목록 범위 선택"
@@ -431,9 +439,6 @@ watch(
                   </button>
                 </div>
               </div>
-              <span v-if="props.listSubtitle" class="question-list-subtitle">{{
-                props.listSubtitle
-              }}</span>
             </div>
 
             <div class="page-links">
@@ -441,13 +446,29 @@ watch(
                 <IconArrowUp class="back-icon" />
                 대시보드
               </NuxtLink>
-              <NuxtLink to="/question-books" class="quick-link">
+              <NuxtLink
+                v-if="!props.hideGroupOverlay"
+                to="/question-books"
+                class="quick-link"
+              >
                 <IconBook class="quick-icon" />
                 문제집 목록
               </NuxtLink>
-              <NuxtLink to="/exams" class="quick-link">
+              <NuxtLink
+                v-if="!props.hideGroupOverlay"
+                to="/exams"
+                class="quick-link"
+              >
                 <IconPencil class="quick-icon" />
                 고사집 목록
+              </NuxtLink>
+              <NuxtLink
+                v-if="props.hideGroupOverlay"
+                :to="route.query.book ? '/question-books' : '/exams'"
+                class="quick-link"
+              >
+                되돌아가기
+                <IconArrowUp class="quick-icon" style="transform: rotate(-270deg);" />
               </NuxtLink>
             </div>
           </div>
@@ -538,12 +559,11 @@ watch(
             >
               <div class="question-header">
                 <div class="question-title-row">
+                  <h3 class="question-id">{{ q.question_id }}</h3>
                   <span class="badge badge-type question-type-badge">{{
                     q.type.type_name
                   }}</span>
-                  <h3 class="question-title">
-                    {{ q.title }} <{{ q.question_id }}>
-                  </h3>
+                  <h3 class="question-title">{{ q.title }}</h3>
                 </div>
                 <div
                   v-if="q.group || shouldShowQuestionOwner(q)"
@@ -574,22 +594,16 @@ watch(
 
                 <div class="question-actions">
                   <button
-                    v-if="props.viewMode === 'all'"
+                    v-if="props.viewMode === 'all' && !props.hideGroupOverlay"
                     class="btn-copy"
                     @click="emit('copy-question', q)"
-                  >
-                    복사 후 가져오기
-                  </button>
+                  >복사 후 가져오기</button>
                   <button
-                    v-else-if="canEditQuestion(q)"
+                    v-else-if="canEditQuestion(q) && !props.hideGroupOverlay"
                     class="btn-modify"
                     @click="selectedQuestionForEdit = q"
-                  >
-                    수정
-                  </button>
-                  <button class="btn-solve" @click="handleSolve(q)">
-                    풀기
-                  </button>
+                  >수정</button>
+                  <button class="btn-solve" @click="handleSolve(q)">풀기</button>
                 </div>
               </div>
             </div>
@@ -964,7 +978,7 @@ watch(
 .question-item {
   display: flex;
   flex-direction: column;
-  padding: 1rem 1.5rem;
+  padding: 0.75rem 1.25rem;
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 10px;
@@ -1005,15 +1019,25 @@ watch(
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 0.45rem;
+  margin-bottom: 0.25rem;
   gap: 1rem;
 }
 
 .question-title-row {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.4rem;
   min-width: 0;
+}
+
+.question-id {
+  margin: 0 !important;
+  font-size: 1.5rem !important;
+  font-weight: 900 !important;
+  color: #0055ff !important;
+  font-family: "Pretendard", "Segoe UI", Roboto, Helvetica, Arial, sans-serif !important;
+  line-height: 1 !important;
+  opacity: 1 !important;
 }
 
 .question-item:hover {
@@ -1031,8 +1055,8 @@ watch(
 }
 
 .question-title {
-  margin: 0 0 0.25rem 0;
-  font-size: 0.85rem;
+  margin: 0;
+  font-size: 0.75rem;
   font-weight: 500;
   color: #94a3b8;
   text-transform: uppercase;
@@ -1042,7 +1066,8 @@ watch(
 
 .question-type-badge {
   flex-shrink: 0;
-  padding: 0.2rem 0.6rem;
+  padding: 0.1rem 0.4rem;
+  font-size: 0.65rem;
 }
 
 .question-preview {

@@ -19,6 +19,7 @@ const props = defineProps<{
   totalItems: number;
   pageSize: number;
   viewMode: "mine" | "all";
+  hideGroupOverlay?: boolean;
 }>();
 
 const emit = defineEmits<{
@@ -50,6 +51,7 @@ const emit = defineEmits<{
     :total-items="props.totalItems"
     :page-size="props.pageSize"
     :view-mode="props.viewMode"
+    :hide-group-overlay="props.hideGroupOverlay"
     @refresh="emit('refresh')"
     @change-scope="emit('change-scope', $event)"
     @change-group="emit('change-group', $event)"

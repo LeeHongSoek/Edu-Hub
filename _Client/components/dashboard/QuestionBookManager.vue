@@ -349,7 +349,10 @@ const setScope = (scope: "mine" | "all") => {
       @click.self="showCreateModal = false"
     >
       <div class="modal-content">
-        <h3>새 문제집 만들기</h3>
+        <div class="modal-header">
+          <h3>새 문제집 만들기</h3>
+          <button class="modal-close" @click="showCreateModal = false" aria-label="닫기">✕</button>
+        </div>
         <div class="form-group">
           <label>문제집 이름</label>
           <input
@@ -625,12 +628,48 @@ const setScope = (scope: "mine" | "all") => {
 .modal-content {
   background: #1e293b;
   padding: 2rem;
-  border-radius: 10px;
+  border-radius: 12px;
   width: 100%;
   max-width: 450px;
   border: 1px solid rgba(255, 255, 255, 0.1);
   box-sizing: border-box;
   overflow: hidden;
+  position: relative;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+}
+
+.modal-header h3 {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: #fff;
+}
+
+.modal-close {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  color: #94a3b8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 0.9rem;
+}
+
+.modal-close:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+  transform: scale(1.05);
 }
 
 .form-group {

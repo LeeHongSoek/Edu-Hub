@@ -175,13 +175,7 @@ onMounted(() => {
           >
             <IconMessage class="icon-message" aria-hidden="true" />
             <!-- [{{ userInfo.msgAlert }}] -->
-          </NuxtLink>
-          <NuxtLink
-            v-if="userInfo.role_id === 'S' || userInfo.role_id === 'T'"
-            to="/questions"
-            class="my-questions-link">
-            나의 문제목록
-          </NuxtLink>
+          </NuxtLink>         
           <a href="#" class="logout-link" @click.prevent="handleLogout">
             <IconLogout class="icon-logout" />
             로그아웃

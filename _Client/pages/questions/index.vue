@@ -271,6 +271,7 @@ const handleCopyQuestion = async (question: Question) => {
         :total-items="questionResponse?.total || 0"
         :page-size="questionResponse?.limit || pageSize"
         :view-mode="questionScope"
+        :hide-group-overlay="isSourceDetail"
         @refresh="refresh"
         @change-scope="setQuestionScope"
         @change-group="handleGroupChange"

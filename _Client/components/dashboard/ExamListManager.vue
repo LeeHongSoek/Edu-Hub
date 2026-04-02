@@ -208,9 +208,12 @@ const createForm = ref({
   end_time: "",
   location: "",
   is_auto_score: true,
+  class_id: "", // 추가
 });
 
-const openCreateModal = () => {
+const taughtClasses = ref<any[]>([]); // 추가
+
+const openCreateModal = async () => {
   createForm.value = {
     exam_name: "",
     description: "",
@@ -218,9 +221,22 @@ const openCreateModal = () => {
     end_time: "",
     location: "",
     is_auto_score: true,
+    class_id: "",
   };
   createError.value = "";
   showCreateModal.value = true;
+  await fetchTaughtClasses(); // 모달 열 때 클래스 목록 로드
+};
+
+const fetchTaughtClasses = async () => {
+  try {
+    const data = await $fetch(`${apiBase.value}/dashboard/classes`, {
+      headers: getAuthHeader(),
+    });
+    taughtClasses.value = (data as any).classes || [];
+  } catch (err) {
+    console.error("클래스 목록 로드 실패:", err);
+  }
 };
 
 const closeCreateModal = () => {
@@ -253,6 +269,7 @@ const submitCreateExam = async () => {
         end_time: createForm.value.end_time,
         location: createForm.value.location.trim() || undefined,
         is_auto_score: createForm.value.is_auto_score,
+        class_id: createForm.value.class_id ? Number(createForm.value.class_id) : null,
       },
     });
     closeCreateModal();
@@ -462,6 +479,26 @@ const submitCreateExam = async () => {
                 maxlength="255"
                 autocomplete="off"
               />
+            </div>
+
+            <div class="form-group">
+              <label for="exam-class" class="form-label"
+                >대상 클래스 <span class="optional">(선택)</span></label
+              >
+              <select
+                id="exam-class"
+                v-model="createForm.class_id"
+                class="form-input"
+              >
+                <option value="">선택하지 않음</option>
+                <option
+                  v-for="cls in taughtClasses"
+                  :key="cls.classId"
+                  :value="cls.classId"
+                >
+                  {{ cls.className }}
+                </option>
+              </select>
             </div>
 
 
