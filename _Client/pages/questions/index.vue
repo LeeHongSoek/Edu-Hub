@@ -16,7 +16,7 @@ const userInfo = computed(() => {
 });
 
 const selectedGroupId = ref<string | number | null>(null);
-const appliedSearchField = ref<"content" | "title">("content");
+const appliedSearchField = ref<"content" | "title" | "id">("content");
 const appliedSearchKeyword = ref("");
 const currentPage = ref(1);
 const pageSize = 10;
@@ -195,7 +195,7 @@ const handleGroupChange = (groupId: string | number | null) => {
 };
 
 const handleSearch = (payload: {
-  field: "title" | "content";
+  field: "title" | "content" | "id";
   keyword: string;
 }) => {
   appliedSearchField.value = payload.field;

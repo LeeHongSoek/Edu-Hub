@@ -26,7 +26,7 @@ const props = defineProps<{
   questions: Question[];
   currentUserNo?: string | number | null;
   selectedGroupId: string | number | null;
-  appliedSearchField: "content" | "title";
+  appliedSearchField: "content" | "title" | "id";
   appliedSearchKeyword: string;
   currentPage: number;
   totalPages: number;
@@ -43,8 +43,23 @@ const groups = ref<Group[]>([]);
 const selectedQuestionForSolve = ref<Question | null>(null);
 const selectedQuestionForEdit = ref<Question | null>(null);
 const showGroupManager = ref(false);
-const searchField = ref<"content" | "title">(props.appliedSearchField);
+const searchField = ref<"content" | "title" | "id">(props.appliedSearchField);
 const searchInput = ref("");
+
+// 문제번호인 경우 숫자만 입력받도록 강제하는 watch
+watch(searchInput, (newVal) => {
+  if (searchField.value === "id") {
+    const cleaned = newVal.replace(/[^0-9]/g, "");
+    if (newVal !== cleaned) {
+      searchInput.value = cleaned;
+    }
+  }
+});
+
+// 검색 필드 변경 시 입력값 초기화 (옵션)
+watch(searchField, () => {
+  searchInput.value = "";
+});
 const sliderValue = ref(props.currentPage);
 
 watch(
@@ -80,7 +95,7 @@ const emit = defineEmits<{
   (e: "refresh"): void;
   (e: "change-scope", scope: "mine" | "all"): void;
   (e: "change-group", groupId: string | number | null): void;
-  (e: "search", payload: { field: "title" | "content"; keyword: string }): void;
+  (e: "search", payload: { field: "title" | "content" | "id"; keyword: string }): void;
   (e: "reset-search"): void;
   (e: "change-page", page: number): void;
   (e: "copy-question", question: Question): void;
@@ -477,7 +492,8 @@ watch(
             <div class="slider-panel">
               <div class="search-row">
                 <select v-model="searchField" class="search-select">
-                  <option value="content">문제</option>
+                  <option value="id">문제번호</option>
+                  <option value="content">문제 내용</option>
                   <option value="title">제목</option>
                 </select>
                 <input
@@ -485,9 +501,11 @@ watch(
                   type="text"
                   class="search-input"
                   :placeholder="
-                    searchField === 'title'
-                      ? '문제 제목을 입력하세요'
-                      : '문제 내용을 입력하세요'
+                    searchField === 'id'
+                      ? '문제번호(ID)를 입력하세요'
+                      : searchField === 'title'
+                        ? '문제 제목을 입력하세요'
+                        : '문제 내용을 입력하세요'
                   "
                   @keyup.enter="applySearch"
                 />

@@ -12,7 +12,7 @@ const props = defineProps<{
   questions: Question[];
   currentUserNo?: string | number | null;
   selectedGroupId: string | number | null;
-  appliedSearchField: "content" | "title";
+  appliedSearchField: "content" | "title" | "id";
   appliedSearchKeyword: string;
   currentPage: number;
   totalPages: number;
@@ -26,7 +26,7 @@ const emit = defineEmits<{
   (e: "refresh"): void;
   (e: "change-scope", scope: "mine" | "all"): void;
   (e: "change-group", groupId: string | number | null): void;
-  (e: "search", payload: { field: "title" | "content"; keyword: string }): void;
+  (e: "search", payload: { field: "title" | "content" | "id"; keyword: string }): void;
   (e: "reset-search"): void;
   (e: "change-page", page: number): void;
   (e: "copy-question", question: Question): void;
