@@ -255,6 +255,29 @@ const handleGoToQuestionIndex = (index: number) => {
   selectedQuestionForSolve.value = props.questions[index];
 };
 
+const openEditor = (q: Question | null) => {
+  if (q) {
+    selectedQuestionForEdit.value = q;
+  } else {
+    // 새 문제 생성 시 초기값
+    selectedQuestionForEdit.value = {
+      title: "",
+      question: "",
+      content: "",
+      question_type_id: "M",
+      difficulty: 3,
+      rating: 3,
+      options: [
+        { option_number: 1, content: "", is_answer: true },
+        { option_number: 2, content: "", is_answer: false },
+        { option_number: 3, content: "", is_answer: false },
+        { option_number: 4, content: "", is_answer: false },
+      ],
+      group_id: props.selectedGroupId || undefined,
+    } as Question;
+  }
+};
+
 const formatGroupPath = (group: Group) => {
   const parts: string[] = [];
   let current: Group | undefined = group;
@@ -546,18 +569,20 @@ watch(
                     전체 문제
                   </button>
                 </div>
-                <button class="btn-create">
-                  <IconCreateAction class="btn-action-icon" />
-                  새 문제
-                </button>
-                <button
-                  class="btn-delete"
-                  :disabled="!canDeleteQuestions"
-                  @click="deleteSelectedQuestions"
-                >
-                  <IconDeleteAction class="btn-action-icon" />
-                  삭제
-                </button>
+                <div class="action-button-group">
+                  <button class="btn-create" @click="openEditor(null)">
+                    <IconCreateAction class="btn-action-icon" />
+                    새 문제
+                  </button>
+                  <button
+                    class="btn-delete"
+                    :disabled="!canDeleteQuestions"
+                    @click="deleteSelectedQuestions"
+                  >
+                    <IconDeleteAction class="btn-action-icon" />
+                    삭제
+                  </button>
+                </div>
               </div>
             </div>
 
@@ -846,7 +871,27 @@ watch(
   flex-shrink: 0;
 }
 
+.scope-btn {
+  border: none;
+  background: transparent;
+  color: #94a3b8;
+  font-size: 0.8rem;
+  font-weight: 700;
+  border-radius: 999px;
+  padding: 0.47rem 1rem;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
 
+.scope-btn.active {
+  background: linear-gradient(135deg, #6366f1, #818cf8);
+  color: #ffffff;
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.35);
+}
 
 
 .scope-btn:not(.active):hover {
@@ -1567,14 +1612,64 @@ watch(
   gap: 0.3rem;
 }
 
-.btn-clear-filter:hover {
-  background: rgba(99, 102, 241, 0.3);
-  color: #fff;
+.action-button-group {
+  display: flex !important;
+  align-items: center !important;
+  background: rgba(15, 23, 42, 0.4);
+  padding: 4px;
+  border-radius: 12px;
+  border: 1px solid rgba(129, 140, 248, 0.2);
+  backdrop-filter: blur(8px);
 }
 
-.filter-icon {
-  width: 0.85rem;
-  height: 0.85rem;
+.btn-create,
+.btn-delete {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  height: 32px;
+  padding: 0 0.95rem;
+  border: none;
+  font-size: 0.9rem;
+  font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.btn-create {
+  background: linear-gradient(135deg, #6366f1, #818cf8);
+  color: white;
+  border-radius: 8px;
+}
+
+.btn-create:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
+}
+
+.btn-delete {
+  background: transparent;
+  color: #94a3b8;
+  border-radius: 8px;
+  margin-left: 2px;
+}
+
+.btn-delete:hover:not(:disabled) {
+  background: rgba(239, 68, 68, 0.15);
+  color: #f87171;
+}
+
+.btn-delete:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.btn-action-icon {
+  width: 0.92rem;
+  height: 0.92rem;
   flex-shrink: 0;
 }
 

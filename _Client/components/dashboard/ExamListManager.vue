@@ -365,14 +365,16 @@ const deleteSelectedExams = async () => {
               전체 고사집
             </button>
           </div>
-          <button class="btn-new-exam" @click="openCreateModal" id="btn-open-create-exam">
-            <IconCreateAction class="btn-action-icon" />
-            새 고사집
-          </button>
-          <button class="btn-delete-exam" :disabled="!canDeleteExams" @click="deleteSelectedExams">
-            <IconDeleteAction class="btn-action-icon" />
-            삭제
-          </button>
+          <div class="action-button-group">
+            <button class="btn-create" @click="openCreateModal" id="btn-open-create-exam">
+              <IconCreateAction class="btn-action-icon" />
+              새 고사집
+            </button>
+            <button class="btn-delete" :disabled="!canDeleteExams" @click="deleteSelectedExams">
+              <IconDeleteAction class="btn-action-icon" />
+              삭제
+            </button>
+          </div>
         </div>
       </div>
 
@@ -747,15 +749,26 @@ const deleteSelectedExams = async () => {
   transition: all 0.2s ease;
 }
 
-.scope-btn:hover {
-  color: #e2e8f0;
-  background: rgba(255, 255, 255, 0.04);
+.scope-btn {
+  border: none;
+  background: transparent;
+  color: #94a3b8;
+  font-size: 0.8rem;
+  font-weight: 700;
+  border-radius: 999px;
+  padding: 0.47rem 1rem;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  transition: all 0.2s ease;
+  white-space: nowrap;
 }
 
 .scope-btn.active {
-  background: #6d6eff;
+  background: linear-gradient(135deg, #6366f1, #818cf8);
   color: #ffffff;
-  box-shadow: 0 8px 18px rgba(109, 110, 255, 0.25);
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.35);
 }
 
 
@@ -1104,49 +1117,65 @@ const deleteSelectedExams = async () => {
 }
 
 /* 새 고사 버튼 */
-.btn-new-exam {
+.action-button-group {
+  display: flex !important;
+  align-items: center !important;
+  background: rgba(15, 23, 42, 0.4);
+  padding: 4px;
+  border-radius: 12px;
+  border: 1px solid rgba(129, 140, 248, 0.2);
+  backdrop-filter: blur(8px);
+}
+
+.btn-create,
+.btn-delete {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 0.35rem;
   height: 32px;
   padding: 0 0.95rem;
-  border-radius: 10px;
-  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
-  color: #fff;
-  font-size: 0.9rem;
-  font-weight: 700;
-  line-height: 1;
   border: none;
-  cursor: pointer;
-  white-space: nowrap;
-  transition: all 0.2s ease;
-  box-shadow: 0 4px 14px rgba(99, 102, 241, 0.35);
-}
-
-.btn-new-exam:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 6px 20px rgba(99, 102, 241, 0.5);
-  background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
-}
-
-.btn-delete-exam {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.35rem;
-  height: 32px;
-  padding: 0 0.95rem;
-  border-radius: 10px;
-  border: 1px solid rgba(248, 113, 113, 0.45);
-  background: rgba(239, 68, 68, 0.14);
-  color: #fecaca;
   font-size: 0.9rem;
   font-weight: 700;
   line-height: 1;
   cursor: pointer;
   white-space: nowrap;
-  transition: all 0.2s ease;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.btn-create {
+  background: linear-gradient(135deg, #6366f1, #818cf8);
+  color: white;
+  border-radius: 8px;
+}
+
+.btn-create:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
+}
+
+.btn-delete {
+  background: transparent;
+  color: #94a3b8;
+  border-radius: 8px;
+  margin-left: 2px;
+}
+
+.btn-delete:hover:not(:disabled) {
+  background: rgba(239, 68, 68, 0.15);
+  color: #f87171;
+}
+
+.btn-delete:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.btn-action-icon {
+  width: 0.92rem;
+  height: 0.92rem;
+  flex-shrink: 0;
 }
 
 .btn-delete-exam:hover:not(:disabled) {

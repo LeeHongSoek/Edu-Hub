@@ -69,11 +69,20 @@ const removeOption = (index: number) => {
 const handleSave = async () => {
   isSaving.value = true;
   try {
-    await $fetch(`${apiBase.value}/questions/${props.question.question_id}`, {
-      method: "PATCH",
-      body: editData.value,
+    const isCreate = !props.question?.question_id;
+    const url = isCreate 
+      ? `${apiBase.value}/questions/create`
+      : `${apiBase.value}/questions/${props.question.question_id}`;
+    
+    await $fetch(url, {
+      method: isCreate ? "POST" : "PATCH",
+      body: {
+        ...editData.value,
+        // 생성 시 필요한 추가 정보가 있다면 여기에 포함
+      },
     });
-    alert("수정되었습니다!");
+    
+    alert(isCreate ? "생성되었습니다!" : "수정되었습니다!");
     emit("updated");
     emit("close");
   } catch (error) {
@@ -85,6 +94,7 @@ const handleSave = async () => {
 };
 
 const handleDelete = async () => {
+  if (!props.question?.question_id) return;
   if (!confirm("정말 이 문제를 삭제하시겠습니까?")) return;
 
   isSaving.value = true;
