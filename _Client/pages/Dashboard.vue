@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, computed, nextTick } from "vue";
+import { ref, onMounted, onUnmounted, computed, nextTick } from "vue";
 import StudentDashboard from "~/components/dashboard/StudentDashboard.vue";
 import TeacherDashboard from "~/components/dashboard/TeacherDashboard.vue";
 import ParentDashboard from "~/components/dashboard/ParentDashboard.vue";
@@ -8,6 +8,7 @@ import RelationManager from "~/components/dashboard/RelationManager.vue";
 import MessageManager from "~/components/dashboard/MessageManager.vue";
 import QuestionBookManager from "~/components/dashboard/QuestionBookManager.vue";
 import ExamListManager from "~/components/dashboard/ExamListManager.vue";
+import ManagerNav from "~/components/dashboard/ManagerNav.vue";
 import IconGraduationCap from "~/assets/icons/IconGraduationCap.svg?component";
 import IconBoard from "~/assets/icons/IconBoard.svg?component";
 import IconHome from "~/assets/icons/IconHome.svg?component";
@@ -149,6 +150,59 @@ const clearMessageThreadTarget = () => {
   messageThreadTarget.value = null;
 };
 
+const phrases = [
+  "오늘도 지식을 한 단계 더 완성해 나가는 의미 있는 하루가 되기를 기원합니다.",
+  "당신의 끊임없는 성장이 훗날 커다란 결실을 맺을 것임을 굳게 믿고 응원합니다.",
+  "새로운 배움이 기다리는 즐거운 오늘, 후회 없이 당신만의 특별한 하루를 만들어보세요.",
+  "비록 지금은 작은 노력일지라도, 그 노력이 차곡차곡 쌓여 가장 밝게 빛나는 내일이 될 것입니다.",
+  "오늘 하루도 알차고 보람차게 채워가며, 어제보다 더 나은 당신이 되기를 바랍니다."
+];
+
+const typedText = ref("");
+const showCursor = ref(true);
+let cursorInterval: any = null;
+const isTypingActive = ref(false);
+
+const fetchAdvice = async () => {
+  try {
+    const data = await $fetch<any>("https://korean-advice-open-api.vercel.app/api/advice");
+    if (data && data.message) {
+      return `${data.message} - ${data.author}`;
+    }
+    return phrases[Math.floor(Math.random() * phrases.length)];
+  } catch (error) {
+    console.error("명언 조회 실패:", error);
+    return phrases[Math.floor(Math.random() * phrases.length)];
+  }
+};
+
+const typePhrase = async () => {
+  if (!isTypingActive.value) return;
+  
+  const currentPhrase = await fetchAdvice();
+  typedText.value = "";
+  
+  for (let i = 0; i < currentPhrase.length; i++) {
+    if (!isTypingActive.value) return;
+    typedText.value += currentPhrase[i];
+    await new Promise(resolve => setTimeout(resolve, 60)); 
+  }
+  
+  if (!isTypingActive.value) return;
+  await new Promise(resolve => setTimeout(resolve, 3000));
+  
+  for (let i = currentPhrase.length; i > 0; i--) {
+    if (!isTypingActive.value) return;
+    typedText.value = typedText.value.slice(0, -1);
+    await new Promise(resolve => setTimeout(resolve, 30));
+  }
+  
+  if (!isTypingActive.value) return;
+  await new Promise(resolve => setTimeout(resolve, 500));
+  
+  typePhrase();
+};
+
 onMounted(() => {
   if (!userInfo.value) {
     navigateTo("/");
@@ -156,6 +210,17 @@ onMounted(() => {
   }
 
   fetchClassList();
+
+  isTypingActive.value = true;
+  cursorInterval = setInterval(() => {
+    showCursor.value = !showCursor.value;
+  }, 500);
+  typePhrase();
+});
+
+onUnmounted(() => {
+  isTypingActive.value = false;
+  if (cursorInterval) clearInterval(cursorInterval);
 });
 </script>
 
@@ -182,22 +247,12 @@ onMounted(() => {
               <span class="username">{{ userInfo.username }}</span>님!
             </span>
           </h1>
-          <div v-if="userInfo.role_id !== 'P'" class="quick-nav">
-            <NuxtLink to="/questions?mine=true" class="nav-btn">
-              <IconFileText class="nav-icon" />
-              <span>문제 목록</span>
-            </NuxtLink>
-            <NuxtLink to="/question-books" class="nav-btn">
-              <IconBook class="nav-icon" />
-              <span>문제집 목록</span>
-            </NuxtLink>
-            <NuxtLink to="/exams" class="nav-btn">
-              <IconPencil class="nav-icon" />
-              <span>고사집 목록</span>
-            </NuxtLink>
-          </div>
+          <ManagerNav v-if="userInfo.role_id !== 'P'" :is-dashboard="true" />
         </div>
-        <p class="welcome-sub">오늘도 지식을 완성하는 하루 되세요.</p>
+        <p class="typed-wrap">
+          <span class="typed-text">{{ typedText }}</span>
+          <span class="caret" :class="{ invisible: !showCursor }">│</span>
+        </p>
       </div>
     </div>
 
@@ -376,48 +431,29 @@ onMounted(() => {
   white-space: nowrap;
 }
 
-.welcome-sub {
+.typed-wrap {
   color: #94a3b8;
   font-size: 1.1rem;
   margin: 0;
-}
-
-.quick-nav {
-  display: flex !important;
-  flex-direction: row !important;
-  align-items: center !important;
-  gap: 0.75rem;
-  margin-left: auto;
-  justify-content: flex-end;
-  white-space: nowrap;
-  flex: 0 0 auto;
-}
-
-.nav-btn {
-  display: inline-flex;
+  display: flex;
   align-items: center;
-  gap: 0.45rem;
-  background: rgba(129, 140, 248, 0.1);
-  border: 1px solid rgba(129, 140, 248, 0.2);
+  min-height: 1.6rem;
+  width: 100%;
+}
+
+.typed-text {
+  white-space: pre-wrap;
+}
+
+.caret {
   color: #818cf8;
-  padding: 0.6rem 1.2rem;
-  border-radius: 10px;
-  font-weight: 600;
-  font-size: 0.9rem;
-  text-decoration: none;
-  cursor: pointer;
-  transition: all 0.2s;
+  font-weight: 700;
+  margin-left: 2px;
+  transition: opacity 0.1s;
 }
 
-.nav-btn:hover {
-  background: rgba(129, 140, 248, 0.2);
-  transform: translateY(-2px);
-}
-
-.nav-icon {
-  width: 1rem;
-  height: 1rem;
-  flex-shrink: 0;
+.invisible {
+  opacity: 0;
 }
 
 .tab-icon {

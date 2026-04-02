@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted, computed, watch } from "vue";
 import { useRoute } from "vue-router";
+import ManagerNav from "~/components/dashboard/ManagerNav.vue";
 import GroupHierarchy from "~/components/dashboard/GroupHierarchy.vue";
 import GroupManager from "~/components/dashboard/GroupManager.vue";
 import QuestionEditor from "~/components/dashboard/QuestionEditor.vue";
@@ -560,36 +561,10 @@ watch(
               </div>
             </div>
 
-            <div class="page-links">
-              <NuxtLink to="/dashboard" class="back-btn">
-                <IconArrowUp class="back-icon" />
-                대시보드
-              </NuxtLink>
-              <NuxtLink
-                v-if="!props.hideGroupOverlay"
-                to="/question-books"
-                class="quick-link"
-              >
-                <IconBook class="quick-icon" />
-                문제집 목록
-              </NuxtLink>
-              <NuxtLink
-                v-if="!props.hideGroupOverlay"
-                to="/exams"
-                class="quick-link"
-              >
-                <IconPencil class="quick-icon" />
-                고사집 목록
-              </NuxtLink>
-              <NuxtLink
-                v-if="props.hideGroupOverlay"
-                :to="route.query.book ? '/question-books' : '/exams'"
-                class="quick-link"
-              >
-                되돌아가기
-                <IconArrowUp class="quick-icon" style="transform: rotate(-270deg);" />
-              </NuxtLink>
-            </div>
+            <ManagerNav 
+              :active-page="hideGroupOverlay ? null : 'questions'" 
+              :back-link="hideGroupOverlay ? { to: route.query.book ? '/question-books' : '/exams', label: '되돌아가기' } : null"
+            />
           </div>
 
           <div class="pagination-panel-border">
@@ -871,74 +846,8 @@ watch(
   flex-shrink: 0;
 }
 
-.page-nav,
-.page-links {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 0.85rem;
-  flex-wrap: nowrap;
-  margin-left: auto;
-  min-width: 0;
-  max-width: 100%;
-  box-sizing: border-box;
-}
 
-.back-btn,
-.quick-link {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.45rem;
-  padding: 0.3rem 0.45rem;
-  border-radius: 8px;
-  color: #94a3b8;
-  text-decoration: none;
-  font-size: 0.9rem;
-  font-weight: 500;
-  transition: all 0.2s ease;
-  white-space: nowrap;
-}
 
-.back-btn:hover,
-.quick-link:hover {
-  background: rgba(255, 255, 255, 0.04);
-  color: #eef2ff;
-  transform: translateY(-1px);
-}
-
-.back-icon,
-.quick-icon {
-  width: 1rem;
-  height: 1rem;
-  flex-shrink: 0;
-}
-
-.scope-btn {
-  border: none;
-  background: transparent;
-  color: #94a3b8;
-  font-size: 0.8rem;
-  font-weight: 700;
-  border-radius: 999px;
-  padding: 0.47rem 0.9rem;
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
-  transition: all 0.2s ease;
-}
-
-.scope-btn.active {
-  background: linear-gradient(135deg, #6366f1, #818cf8);
-  color: #fff;
-  box-shadow: 0 8px 24px -12px rgba(99, 102, 241, 0.9);
-}
-
-.scope-icon {
-  width: 0.95rem;
-  height: 0.95rem;
-  flex-shrink: 0;
-}
 
 .scope-btn:not(.active):hover {
   color: #e2e8f0;

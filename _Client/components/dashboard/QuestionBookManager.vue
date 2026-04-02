@@ -1,9 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, watch } from "vue";
 import IconBook from "~/assets/icons/IconBook.svg?component";
-import IconArrowUp from "~/assets/icons/IconArrowUp.svg?component";
-import IconFileText from "~/assets/icons/IconFileText.svg?component";
-import IconPencil from "~/assets/icons/IconPencil.svg?component";
+import ManagerNav from "~/components/dashboard/ManagerNav.vue";
 import IconCreateAction from "~/assets/icons/IconCreateAction.svg?component";
 import IconDeleteAction from "~/assets/icons/IconDeleteAction.svg?component";
 
@@ -276,20 +274,7 @@ const setScope = (scope: "mine" | "all") => {
         </div>
       </div>
 
-      <div class="page-links">
-        <NuxtLink to="/dashboard" class="back-btn">
-          <IconArrowUp class="back-icon" />
-          대시보드
-        </NuxtLink>
-        <NuxtLink to="/questions" class="quick-link">
-          <IconFileText class="quick-icon" />
-          문제 목록
-        </NuxtLink>
-        <NuxtLink to="/exams" class="quick-link">
-          <IconPencil class="quick-icon" />
-          고사집 목록
-        </NuxtLink>
-      </div>
+      <ManagerNav active-page="books" />
     </div>
 
     <div v-if="loading" class="loading">불러오는 중...</div>
@@ -530,44 +515,6 @@ const setScope = (scope: "mine" | "all") => {
 .scope-icon {
   width: 0.95rem;
   height: 0.95rem;
-  flex-shrink: 0;
-}
-
-.page-links {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 0.85rem;
-  margin-left: auto;
-  flex-wrap: nowrap;
-}
-
-.back-btn,
-.quick-link {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.45rem;
-  padding: 0.3rem 0.45rem;
-  border-radius: 8px;
-  color: #94a3b8;
-  text-decoration: none;
-  font-size: 0.9rem;
-  font-weight: 500;
-  transition: all 0.2s ease;
-  white-space: nowrap;
-}
-
-.back-btn:hover,
-.quick-link:hover {
-  background: rgba(255, 255, 255, 0.04);
-  color: #eef2ff;
-  transform: translateY(-1px);
-}
-
-.back-icon,
-.quick-icon {
-  width: 1rem;
-  height: 1rem;
   flex-shrink: 0;
 }
 
