@@ -1102,6 +1102,12 @@ const deleteSelectedExams = async () => {
   color: #64748b;
 }
 
+.exam-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
 @media (max-width: 1024px) {
   .exam-list {
     grid-template-columns: 1fr;

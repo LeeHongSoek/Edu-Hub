@@ -352,23 +352,10 @@ const setScope = (scope: "mine" | "all") => {
       <div class="book-grid">
         <div v-for="book in pagedBooks" :key="book.book_id" class="book-card">
           <div class="book-card-head">
-            <h4>
-              <span class="book-id">{{ book.book_id }}</span>
-              <input
-                type="checkbox"
-                class="copy-checkbox"
-                aria-label="문제집 선택"
-                :checked="isBookSelected(book.book_id)"
-                :disabled="!isCurrentUserOwner(book.creator?.user_no)"
-                @change="
-                  toggleBookSelected(
-                    book.book_id,
-                    ($event.target as HTMLInputElement).checked,
-                  )
-                "
-              />
-              <span class="book-title">{{ book.book_name }}</span>
-            </h4>
+            <span class="book-id">{{ book.book_id }}</span>
+            <p class="book-description">
+              {{ book.description || "설명 없음" }}
+            </p>
             <span class="book-meta">
               <span
                 v-if="
@@ -390,7 +377,22 @@ const setScope = (scope: "mine" | "all") => {
             </span>
           </div>
           <div class="book-card-body">
-            <p>{{ book.description || "설명 없음" }}</p>
+            <h4>
+              <input
+                type="checkbox"
+                class="copy-checkbox"
+                aria-label="문제집 선택"
+                :checked="isBookSelected(book.book_id)"
+                :disabled="!isCurrentUserOwner(book.creator?.user_no)"
+                @change="
+                  toggleBookSelected(
+                    book.book_id,
+                    ($event.target as HTMLInputElement).checked,
+                  )
+                "
+              />
+              <span class="book-title">{{ book.book_name }}</span>
+            </h4>
             <button class="btn-view" @click="viewBookDetails(book.book_id)">
               상세보기
             </button>
@@ -626,7 +628,7 @@ const setScope = (scope: "mine" | "all") => {
   gap: 1rem;
 }
 
-.book-card-head h4 {
+.book-card-body h4 {
   color: #f8fafc;
   margin: 0;
   font-size: 1.1rem;
@@ -634,6 +636,7 @@ const setScope = (scope: "mine" | "all") => {
   align-items: center;
   gap: 0.35rem;
   flex-wrap: wrap;
+  flex: 1;
 }
 
 .book-id {
@@ -695,12 +698,13 @@ const setScope = (scope: "mine" | "all") => {
   cursor: not-allowed;
 }
 
-.book-card-body p {
+.book-card-head p {
   color: #94a3b8;
-  font-size: 0.9rem;
+  font-size: 0.88rem;
   margin: 0;
   line-height: 1.4;
   flex: 1;
+  font-weight: 500;
 }
 
 .book-meta {
