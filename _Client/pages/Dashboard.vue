@@ -295,7 +295,7 @@ onUnmounted(() => {
           :aria-pressed="activeTab === 'logs'"
           @click="activeTab = 'logs'"
         >
-          <IconCalendar class="tab-icon" /> 학습 활동 로그
+          <IconCalendar class="tab-icon" /> 활동 로그
         </button>
       </div>
 

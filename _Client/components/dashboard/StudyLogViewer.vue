@@ -35,7 +35,6 @@ const formatAction = (memo: string) => {
   <div class="log-viewer">
     <div class="header-row">
       <h3><IconCalendar class="section-icon" /> 최근 학습 활동 내역</h3>
-      <button class="btn-refresh" @click="fetchLogs">새로고침</button>
     </div>
 
     <div v-if="loading" class="loading">로그를 불러오는 중...</div>
