@@ -1430,7 +1430,7 @@ watch(
 
 .slider-tooltip {
   position: absolute;
-  top: -24px;
+  top: 32px;
   transform: translateX(-50%);
   background: #6366f1;
   color: white;
@@ -1443,6 +1443,7 @@ watch(
   box-shadow:
     0 4px 6px -1px rgba(0, 0, 0, 0.1),
     0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  z-index: 10;
 }
 
 .slider-panel-border {
@@ -1541,12 +1542,12 @@ watch(
 .slider-tooltip::after {
   content: "";
   position: absolute;
-  bottom: -4px;
+  top: -4px;
   left: 50%;
   transform: translateX(-50%);
   border-left: 4px solid transparent;
   border-right: 4px solid transparent;
-  border-top: 4px solid #6366f1;
+  border-bottom: 4px solid #6366f1;
 }
 
 @media (max-width: 640px) {

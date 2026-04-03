@@ -996,7 +996,7 @@ onMounted(() => {
 
 .slider-tooltip {
   position: absolute;
-  top: -24px;
+  top: 32px;
   transform: translateX(-50%);
   background: #6366f1;
   color: white;
@@ -1006,17 +1006,18 @@ onMounted(() => {
   font-weight: 800;
   pointer-events: none;
   white-space: nowrap;
+  z-index: 10;
 }
 
 .slider-tooltip::after {
   content: "";
   position: absolute;
-  bottom: -4px;
+  top: -4px;
   left: 50%;
   transform: translateX(-50%);
   border-left: 4px solid transparent;
   border-right: 4px solid transparent;
-  border-top: 4px solid #6366f1;
+  border-bottom: 4px solid #6366f1;
 }
 
 .message-list {

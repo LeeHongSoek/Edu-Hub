@@ -505,7 +505,7 @@ const formatTime = (dateStr: string) => {
 
 .slider-tooltip {
   position: absolute;
-  top: -30px;
+  top: 28px;
   transform: translateX(-50%);
   background: #818cf8;
   color: white;
@@ -515,6 +515,7 @@ const formatTime = (dateStr: string) => {
   font-weight: 800;
   pointer-events: none;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+  z-index: 10;
 }
 
 .page-info {
