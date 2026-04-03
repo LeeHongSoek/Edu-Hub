@@ -45,8 +45,13 @@ const selectedQuestionForSolve = ref<Question | null>(null);
 const selectedQuestionForEdit = ref<Question | null>(null);
 const showGroupManager = ref(false);
 const unassignedCount = ref(0);
+
+// --- [문제 선택 데이터 관리 (메모리)] ---
+// selectedQuestionIds: 선택한 문제들의 ID를 담는 배열 (실시간 화면 연동용)
 const selectedQuestionIds = ref<string[]>([]);
+// selectedQuestionCache: 선택한 문제의 상세 객체 정보를 저장하는 맵 (페이지 이동 시에도 정보 유지용)
 const selectedQuestionCache = ref<Record<string, Question>>({});
+// ------------------------------------------
 const searchField = ref<"content" | "title" | "id">(props.appliedSearchField);
 const searchInput = ref("");
 
@@ -499,10 +504,17 @@ const openBulkSolveModal = () => {
   showBulkSolveModal.value = true;
 };
 
+// --- [문제 선택 데이터 관리 (영구 저장용 키)] ---
+// 브라우저의 localStorage에 저장할 때 사용하는 고유 키 값들입니다.
 const STORAGE_KEY_IDS = "edu_hub_selected_question_ids";
 const STORAGE_KEY_CACHE = "edu_hub_selected_question_cache";
 const STORAGE_KEY_USER = "edu_hub_selected_question_user";
+// -----------------------------------------------
 
+/**
+ * 브라우저 저장소(localStorage)에서 이전에 선택했던 문제 정보를 불러옵니다.
+ * 보안을 위해 현재 로그인한 사용자와 저장된 사용자 ID가 일치할 때만 복구합니다.
+ */
 const restoreSelectionFromStorage = () => {
   const savedUser = localStorage.getItem(STORAGE_KEY_USER);
   const currentUser = String(props.currentUserNo || "");
@@ -541,6 +553,9 @@ onMounted(async () => {
   searchField.value = props.appliedSearchField;
 });
 
+/**
+ * 선택된 모든 문제 데이터와 저장소의 기록을 삭제하여 초기화합니다.
+ */
 const clearSelection = () => {
   selectedQuestionIds.value = [];
   selectedQuestionCache.value = {};
@@ -561,16 +576,19 @@ watch(
   },
 );
 
-// 선택 상태 변경 시 localStorage에 저장
+// --- [자동 저장 로직 (Watch)] ---
+// 선택된 문제 ID 목록이 변경될 때마다 브라우저 저장소에 자동으로 백업합니다.
 watch(selectedQuestionIds, (newIds) => {
   localStorage.setItem(STORAGE_KEY_IDS, JSON.stringify(newIds));
   localStorage.setItem(STORAGE_KEY_USER, String(props.currentUserNo || ""));
 }, { deep: true });
 
+// 선택된 문제의 상세 정보(캐시)가 변경될 때마다 브라우저 저장소에 자동으로 백업합니다.
 watch(selectedQuestionCache, (newCache) => {
   localStorage.setItem(STORAGE_KEY_CACHE, JSON.stringify(newCache));
   localStorage.setItem(STORAGE_KEY_USER, String(props.currentUserNo || ""));
 }, { deep: true });
+// ------------------------------
 
 
 watch(
