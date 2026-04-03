@@ -61,7 +61,7 @@ model User {
   reviews           QuestionReview[]
   created_sqs       Question[]
   solve_results     SolveResult[]
-  study_logs        StudyLog[]
+  user_logs         UserLog[]
   authored_cmts     UserComment[]      @relation("AuthoredComments")
   question_books    QuestionBook[]
   sent_messages     UserMessage[]      @relation("SentMessages")
@@ -183,7 +183,7 @@ model Question {
   group            Group?                 @relation(fields: [group_id], references: [group_id], onUpdate: Restrict, map: "fk_question_group")
   type             EnmQuestionType        @relation(fields: [question_type_id], references: [type_id], onUpdate: Restrict, map: "fk_question_type")
   solve_results    SolveResult[]
-  study_logs       StudyLog[]
+  // user_logs       UserLog[] // Removed strict relation to keep obj_id polymorphic
   book_items       QuestionBookItem[]
   comments         UserComment[]
   passage          QuestionPassage?
@@ -313,21 +313,31 @@ model UserComment {
   @@map("user_comments")
 }
 
-model StudyLog {
+model EnmLogType {
+  logtype_id  String    @id @db.Char(1)
+  description String    @db.VarChar(50)
+  logs        UserLog[]
+
+  @@map("enm_logtype")
+}
+
+model UserLog {
   log_id         BigInt    @id @default(autoincrement())
   user_no        BigInt
-  question_id    BigInt
-  user_memo      String?   @db.Text
-  is_correct     Boolean?  @default(false)
-  try_count      Int?      @default(0)
-  last_played_at DateTime? @default(now()) @updatedAt @db.DateTime(0)
-  next_review_at DateTime? @db.DateTime(0)
-  question       Question  @relation(fields: [question_id], references: [question_id], onDelete: Cascade, onUpdate: Restrict, map: "fk_log_q")
-  user           User      @relation(fields: [user_no], references: [user_no], onDelete: Cascade, onUpdate: Restrict, map: "fk_log_user")
+  logtype        String    @db.Char(1)
+  obj_id         BigInt
+  user_content   String?   @db.Text
+  score          Int?      @default(0)
+  total_score    Int?      @default(0)
+  score100       Int?      @default(0)
+  last_played_at DateTime? @db.DateTime(0)
 
-  @@index([question_id], map: "fk_log_q")
-  @@index([user_no], map: "fk_log_user")
-  @@map("study_logs")
+  user User       @relation(fields: [user_no], references: [user_no], onDelete: Cascade, onUpdate: Restrict, map: "fk_logs_user")
+  type EnmLogType @relation(fields: [logtype], references: [logtype_id], onUpdate: Restrict, map: "fk_logs_type")
+
+  @@index([user_no], map: "idx_log_user")
+  @@index([obj_id], map: "idx_log_obj")
+  @@map("users_logs")
 }
 
 model SolveResult {
@@ -432,7 +442,7 @@ model QuestionBook {
   user        User                   @relation(fields: [user_no], references: [user_no], onDelete: Cascade, onUpdate: Restrict, map: "fk_uqb_user")
 
   @@index([user_no], map: "fk_uqb_user")
-  @@map("questionbook")
+  @@map("questionbooks")
 }
 
 model QuestionBookItem {

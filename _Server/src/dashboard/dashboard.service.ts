@@ -123,24 +123,26 @@ export class DashboardService {
     }
 
     return {
-      totalViewed: await this.prisma.studyLog.count({
+      totalViewed: await (this.prisma as any).userLog.count({
         where: {
           user_no: userNo,
-          user_memo: '문제보기',
+          logtype: 'Q',
+          user_content: { contains: '보기' },
         },
       }),
-      totalSolved: await this.prisma.studyLog.count({
+      totalSolved: await (this.prisma as any).userLog.count({
         where: {
           user_no: userNo,
-          user_memo: '문제풀기',
+          logtype: 'Q',
+          user_content: { contains: '풀기' },
         },
       }),
       accuracy,
       dailyStats,
-      studyLogs: await this.prisma.studyLog.count({
+      studyLogs: await (this.prisma as any).userLog.count({
         where: {
           user_no: userNo,
-          is_correct: false,
+          score: 0,
         },
       }),
     };

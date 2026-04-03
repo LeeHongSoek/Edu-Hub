@@ -10,7 +10,7 @@ import { AuthModule } from './auth/auth.module';
 import { StatsModule } from './stats/stats.module';
 import { DashboardModule } from './dashboard/dashboard.module';
 import { OmbudsmanModule } from './ombudsman/ombudsman.module';
-import { StudyLogsModule } from './study-logs/study-logs.module';
+import { UserLogsModule } from './user-logs/user-logs.module';
 import { QuestionBooksModule } from './question-books/question-books.module';
 import { ExamsModule } from './exams/exams.module';
 import { SolveResultsModule } from './solve-results/solve-results.module';
@@ -32,7 +32,7 @@ import { DemoModule } from './demo/demo.module';
     StatsModule,
     DashboardModule,
     OmbudsmanModule,
-    StudyLogsModule,
+    UserLogsModule,
     QuestionBooksModule,
     ExamsModule,
     SolveResultsModule,

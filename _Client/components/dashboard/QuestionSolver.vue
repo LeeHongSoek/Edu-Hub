@@ -117,24 +117,28 @@ const getChildState = (child: Question) => {
   return childSolveStates[key];
 };
 
-// 학습 로그 기록 : POST /study-logs
-const logActionForQuestion = async (question: Question, action: string) => {
+// 학습 로그 기록 : POST /user-logs/:logtype/:obj_id
+const logActionForQuestion = async (question: Question, action: string, score: number = 0, totalScore: number = 0) => {
   try {
-    await $fetch(`${apiBase.value}/study-logs`, {
+    const score100 = totalScore > 0 ? Math.round((score / totalScore) * 100) : 0;
+    
+    await $fetch(`${apiBase.value}/user-logs/Q/${question.question_id}`, {
       method: "POST",
       headers: getAuthHeader(),
       body: {
-        question_id: question.question_id.toString(),
-        user_memo: action,
+        user_content: action,
+        score: score,
+        total_score: totalScore,
+        score100: score100,
       },
     });
   } catch (err) {
-    console.warn("서버 통신 오류(save) study-logs:", action, err);
+    console.warn("서버 통신 오류(save) user-logs:", action, err);
   }
 };
 
-const logAction = async (action: string) => {
-  await logActionForQuestion(props.question, action);
+const logAction = async (action: string, score: number = 0, totalScore: number = 0) => {
+  await logActionForQuestion(props.question, action, score, totalScore);
 };
 
 // 풀이 결과 저장 : POST /solve-results
@@ -330,12 +334,12 @@ const handleFinish = async (isTimeOver = false) => {
       modalType.value = "success";
       modalTitle.value = "정답입니다!";
       modalMessage.value = "정말 잘하셨어요! 다음 문제도 도전해 보세요.";
-      logAction("정답확인:정답");
+      logAction("정답확인:정답", 1, 1);
     } else {
       modalType.value = "error";
       modalTitle.value = "아쉽게도 틀렸습니다.";
       modalMessage.value = `정답은 "${props.question.answer || "해설 참조"}" 입니다. 해설을 확인해 보세요.`;
-      logAction("정답확인:오답");
+      logAction("정답확인:오답", 0, 1);
     }
 
     // solve_results에 결과 저장
@@ -350,7 +354,7 @@ const handleFinish = async (isTimeOver = false) => {
     modalTitle.value = "시간 초과!";
     modalMessage.value =
       "제한 시간이 다 되어 오답 처리되었습니다. 해설을 확인해 보세요.";
-    logAction("정답확인:시간초과");
+    logAction("정답확인:시간초과", 0, 1);
   }
   showModal.value = true;
 };
@@ -367,11 +371,15 @@ const handleChildFinish = async (child: Question, isTimeOver = false) => {
     await logActionForQuestion(
       child,
       state.isCorrect ? "정답확인:정답" : "정답확인:시간초과",
+      state.isCorrect ? 1 : 0,
+      1,
     );
   } else {
     await logActionForQuestion(
       child,
       state.isCorrect ? "정답확인:정답" : "정답확인:오답",
+      state.isCorrect ? 1 : 0,
+      1,
     );
   }
 
