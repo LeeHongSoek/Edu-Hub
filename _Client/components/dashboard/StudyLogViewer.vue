@@ -9,6 +9,13 @@ const logs = ref<any[]>([]);
 const totalLogs = ref(0);
 const loading = ref(true);
 
+const filterTypes = [
+  { id: "all", label: "전체", color: "#6366f1" },
+  { id: "Q", label: "문제", icon: IconFileText, color: "#6366f1" },
+  { id: "B", label: "문제집", icon: IconBook, color: "#10b981" },
+  { id: "E", label: "고사", icon: IconPencil, color: "#f59e0b" },
+];
+
 const selectedType = ref("all");
 const searchQuery = ref("");
 const searchInput = ref("");
@@ -116,12 +123,14 @@ const formatTime = (dateStr: string) => {
         <h3><IconCalendar class="section-icon" /> 최근 학습 활동 내역</h3>
         
         <div class="filter-group" role="tablist">
-          <button 
-            v-for="type in [{id: 'all', label: '전체'}, {id: 'Q', label: '문제'}, {id: 'B', label: '문제집'}, {id: 'E', label: '고사'}]" 
+          <button
+            v-for="type in filterTypes"
             :key="type.id"
             :class="{ active: selectedType === type.id }"
+            :style="{ '--active-color': type.color }"
             @click="selectedType = type.id"
           >
+            <component :is="type.icon" v-if="type.icon" class="filter-btn-icon" />
             {{ type.label }}
           </button>
         </div>
@@ -188,12 +197,15 @@ const formatTime = (dateStr: string) => {
               <span v-if="log.user_content" class="log-action-memo">{{ log.title }}</span>
               <span class="log-time">{{ formatTime(log.last_played_at) }}</span>
             </div>
-            <div class="log-title" :title="log.title">{{ log.user_content }}</div>
+            <div class="log-title-row">
+              <div class="log-title" :title="log.title">{{ log.user_content }}</div>
+              <div class="log-result" :class="formatResult(log).class">
+                {{ formatResult(log).text }}
+              </div>
+            </div>
           </div>
 
-          <div class="log-result" :class="formatResult(log).class">
-            {{ formatResult(log).text }}
-          </div>
+          
         </div>
       </div>
 
@@ -251,11 +263,14 @@ const formatTime = (dateStr: string) => {
 }
 
 .filter-group button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
   border: none;
   background: transparent;
   color: #94a3b8;
-  padding: 0.4rem 1.2rem;
-  font-size: 0.85rem;
+  padding: 0.4rem 0.9rem;
+  font-size: 0.82rem;
   font-weight: 700;
   border-radius: 999px;
   cursor: pointer;
@@ -267,9 +282,14 @@ const formatTime = (dateStr: string) => {
 }
 
 .filter-group button.active {
-  background: linear-gradient(135deg, #6366f1, #818cf8);
+  background: var(--active-color);
   color: white;
-  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.filter-btn-icon {
+  width: 0.9rem;
+  height: 0.9rem;
 }
 
 /* 검색바 */
@@ -342,10 +362,10 @@ const formatTime = (dateStr: string) => {
   backdrop-filter: blur(12px);
   border: 1px solid rgba(255, 255, 255, 0.05);
   border-radius: 16px;
-  padding: 1rem 1.5rem;
+  padding: 0.75rem 1.25rem;
   display: flex;
   align-items: center;
-  gap: 1.5rem;
+  gap: 1.25rem;
   transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
@@ -406,9 +426,17 @@ const formatTime = (dateStr: string) => {
 }
 
 .log-time {
+  margin-left: auto;
   font-size: 0.78rem;
   color: #64748b;
   font-weight: 500;
+}
+
+.log-title-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
 }
 
 .log-title {
@@ -418,16 +446,19 @@ const formatTime = (dateStr: string) => {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  flex: 1;
+  min-width: 0;
 }
 
 .log-result {
-  font-size: 0.88rem;
+  font-size: 0.72rem;
   font-weight: 800;
-  padding: 0.45rem 1rem;
-  border-radius: 10px;
-  min-width: 100px;
+  padding: 0.2rem 0.6rem;
+  border-radius: 6px;
   text-align: center;
-  letter-spacing: -0.02em;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .result-info { background: rgba(56, 189, 248, 0.1); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.2); }
