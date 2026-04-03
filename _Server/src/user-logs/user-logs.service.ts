@@ -59,8 +59,12 @@ export class UserLogsService {
           const q = await this.prisma.question.findUnique({ where: { question_id: log.obj_id }, select: { title: true } });
           title = q?.title || 'Unknown Question';
         } else if (log.logtype === 'B') {
-          const b = await this.prisma.questionBook.findUnique({ where: { book_id: log.obj_id }, select: { book_name: true } });
-          title = b?.book_name || 'Unknown Book';
+          if (log.obj_id === BigInt(0)) {
+            title = '임시 문제집';
+          } else {
+            const b = await this.prisma.questionBook.findUnique({ where: { book_id: log.obj_id }, select: { book_name: true } });
+            title = b?.book_name || 'Unknown Book';
+          }
         } else if (log.logtype === 'E') {
           const e = await this.prisma.exam.findUnique({ where: { exam_id: log.obj_id }, select: { exam_name: true } });
           title = e?.exam_name || 'Unknown Exam';

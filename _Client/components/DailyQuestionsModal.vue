@@ -5,9 +5,14 @@ import LatexRenderer from "~/components/LatexRenderer.vue";
 import IconDailySpark from "~/assets/icons/IconDailySpark.svg?component";
 import IconHintBulb from "~/assets/icons/IconHintBulb.svg?component";
 import IconDailyAward from "~/assets/icons/IconDailyAward.svg?component";
+const { apiBase, token, getAuthHeader } = useApi();
 
 const props = defineProps<{
   questions: Question[];
+  title?: string;
+  logType?: string;
+  logObjectId?: string | number | null;
+  logContent?: string;
 }>();
 
 const emit = defineEmits<{
@@ -22,6 +27,7 @@ const scoreGradeRef = ref<HTMLElement | null>(null);
 const scoreGradeStyle = ref<Record<string, string>>({
   transform: "translate3d(0, 0, 0)",
 });
+const logSaved = ref(false);
 
 const selectedOptions = ref<(string | number | null)[]>(Array(props.questions.length).fill(null));
 
@@ -163,7 +169,38 @@ const formatGroupPath = (group: any) => {
   return parts.length > 0 ? parts.join(" / ") : "일반";
 };
 
-const finishDaily = () => {
+const saveSessionLog = async () => {
+  if (
+    logSaved.value ||
+    !token.value ||
+    !props.logType ||
+    props.logObjectId === null ||
+    props.logObjectId === undefined
+  ) {
+    return;
+  }
+
+  try {
+    await $fetch(`${apiBase.value}/user-logs/${props.logType}/${props.logObjectId}`, {
+      method: "POST",
+      headers: getAuthHeader(),
+      body: {
+        user_content:
+          props.logContent ||
+          `${props.title || "학습 세트"} ${props.questions.length}문항`,
+        score: correctCount.value,
+        total_score: props.questions.length,
+        score100: totalScore.value,
+      },
+    });
+    logSaved.value = true;
+  } catch (err) {
+    console.warn("서버 통신 오류(save) user-logs:", err);
+  }
+};
+
+const finishDaily = async () => {
+  await saveSessionLog();
   emit("close");
 };
 
@@ -306,6 +343,18 @@ watch(
   },
 );
 
+watch(
+  () => props.questions,
+  () => {
+    currentIndex.value = 0;
+    isQuizFinished.value = false;
+    showHint.value = false;
+    selectedOptions.value = Array(props.questions.length).fill(null);
+    logSaved.value = false;
+  },
+  { deep: true },
+);
+
 watch(isQuizFinished, async (finished) => {
   if (finished) {
     await startScoreGradeMotion();
@@ -324,7 +373,7 @@ onUnmounted(() => {
     <div class="daily-modal-content">
       <div class="daily-header">
         <div class="daily-title">
-          <IconDailySpark class="daily-icon" /> 오늘의 공개문제
+          <IconDailySpark class="daily-icon" /> {{ props.title || "오늘의 공개문제" }}
         </div>
         <div class="daily-progress">
           <div class="progress-info">

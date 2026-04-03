@@ -6,6 +6,7 @@ import GroupHierarchy from "~/components/dashboard/GroupHierarchy.vue";
 import GroupManager from "~/components/dashboard/GroupManager.vue";
 import QuestionEditor from "~/components/dashboard/QuestionEditor.vue";
 import QuestionSolver from "~/components/dashboard/QuestionSolver.vue";
+import DailyQuestionsModal from "~/components/DailyQuestionsModal.vue";
 import IconSettings from "~/assets/icons/IconSettings.svg?component";
 import IconUsers from "~/assets/icons/IconUsers.svg?component";
 import IconFileText from "~/assets/icons/IconFileText.svg?component";
@@ -45,6 +46,7 @@ const selectedQuestionForEdit = ref<Question | null>(null);
 const showGroupManager = ref(false);
 const unassignedCount = ref(0);
 const selectedQuestionIds = ref<string[]>([]);
+const selectedQuestionCache = ref<Record<string, Question>>({});
 const searchField = ref<"content" | "title" | "id">(props.appliedSearchField);
 const searchInput = ref("");
 
@@ -92,6 +94,7 @@ const sliderPercentage = computed(() => {
 });
 const selectedQuestionCount = computed(() => selectedQuestionIds.value.length);
 const canDeleteQuestions = computed(() => selectedQuestionCount.value > 0);
+const canBulkSolveQuestions = computed(() => selectedQuestionCount.value >= 5);
 
 const isSliderDisabled = computed(() => props.totalPages <= 1);
 
@@ -151,6 +154,18 @@ const getQuestionIdKey = (questionId: string | number | bigint) =>
 const isQuestionSelected = (questionId: string | number | bigint) =>
   selectedQuestionIds.value.includes(getQuestionIdKey(questionId));
 
+const rememberSelectedQuestion = (questionId: string | number | bigint) => {
+  const idKey = getQuestionIdKey(questionId);
+  const question = props.questions.find(
+    (item) => getQuestionIdKey(item.question_id) === idKey,
+  );
+  if (!question) return;
+  selectedQuestionCache.value = {
+    ...selectedQuestionCache.value,
+    [idKey]: question,
+  };
+};
+
 const toggleQuestionSelected = (
   questionId: string | number | bigint,
   checked: boolean,
@@ -160,11 +175,15 @@ const toggleQuestionSelected = (
     if (!selectedQuestionIds.value.includes(idKey)) {
       selectedQuestionIds.value = [...selectedQuestionIds.value, idKey];
     }
+    rememberSelectedQuestion(questionId);
     return;
   }
   selectedQuestionIds.value = selectedQuestionIds.value.filter(
     (id) => id !== idKey,
   );
+  const nextCache = { ...selectedQuestionCache.value };
+  delete nextCache[idKey];
+  selectedQuestionCache.value = nextCache;
 };
 
 const canEditQuestion = (question: Question) => {
@@ -317,6 +336,15 @@ const selectedGroupBreadcrumb = computed(() => {
 });
 
 const groupSearchInput = ref("");
+const showBulkSolveModal = ref(false);
+const bulkSolveQuestions = computed(() =>
+  selectedQuestionIds.value
+    .map((id) => selectedQuestionCache.value[id])
+    .filter((question): question is Question => Boolean(question)),
+);
+const bulkSolveLogContent = computed(
+  () => `임의로 ${bulkSolveQuestions.value.length}문항을 선택하여 임시문제집 풀이`,
+);
 
 const filterGroupsByOwner = (
   list: Group[],
@@ -428,11 +456,26 @@ const deleteSelectedQuestions = async () => {
       alert("삭제 가능한 문제가 없습니다.");
     }
     selectedQuestionIds.value = [];
+    selectedQuestionCache.value = {};
     emit("refresh");
   } catch (error) {
     console.error("문제 삭제 오류:", error);
     alert("문제 삭제 중 오류가 발생했습니다.");
   }
+};
+
+const openBulkSolveModal = () => {
+  if (selectedQuestionCount.value < 5) {
+    alert("모아 풀기는 문제를 5개 이상 선택해야 시작할 수 있습니다.");
+    return;
+  }
+
+  if (bulkSolveQuestions.value.length < 5) {
+    alert("선택한 문제 정보를 확인한 뒤 다시 시도해주세요.");
+    return;
+  }
+
+  showBulkSolveModal.value = true;
 };
 
 onMounted(async () => {
@@ -464,8 +507,16 @@ watch(
 watch(
   () => props.questions,
   () => {
-    selectedQuestionIds.value = [];
+    const nextCache = { ...selectedQuestionCache.value };
+    for (const question of props.questions) {
+      const idKey = getQuestionIdKey(question.question_id);
+      if (selectedQuestionIds.value.includes(idKey)) {
+        nextCache[idKey] = question;
+      }
+    }
+    selectedQuestionCache.value = nextCache;
   },
+  { immediate: true },
 );
 </script>
 
@@ -561,7 +612,8 @@ watch(
                   </button>
                   <button
                     class="btn-bulk-action"
-                    :disabled="!canDeleteQuestions"
+                    :disabled="!canBulkSolveQuestions"
+                    @click="openBulkSolveModal"
                   >
                     모아<br/>풀기
                   </button>
@@ -790,6 +842,16 @@ watch(
       @prev="handlePrev"
       @next="handleNext"
       @go-to-index="handleGoToQuestionIndex"
+    />
+
+    <DailyQuestionsModal
+      v-if="showBulkSolveModal"
+      :questions="bulkSolveQuestions"
+      title="선택 문제 모아 풀기"
+      log-type="B"
+      :log-object-id="0"
+      :log-content="bulkSolveLogContent"
+      @close="showBulkSolveModal = false"
     />
   </div>
 </template>
