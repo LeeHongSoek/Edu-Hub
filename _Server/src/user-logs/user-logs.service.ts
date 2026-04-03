@@ -20,17 +20,37 @@ export class UserLogsService {
     });
   }
 
-  async findByUser(userNo: bigint) {
-    const logs = await this.prisma.userLog.findMany({
-      where: { user_no: userNo },
-      include: {
-        type: true,
-      },
-      orderBy: { last_played_at: 'desc' },
-      take: 50,
-    });
+  async findByUser(
+    userNo: bigint, 
+    logtype?: string, 
+    search?: string, 
+    page: number = 1, 
+    limit: number = 10
+  ) {
+    const where: any = { user_no: userNo };
+    
+    if (logtype && logtype !== 'all') {
+      where.logtype = logtype;
+    }
+    
+    if (search) {
+      where.user_content = { contains: search };
+    }
 
-    // Resolve titles for polymorphic obj_id
+    const [logs, total] = await Promise.all([
+      this.prisma.userLog.findMany({
+        where,
+        include: {
+          type: true,
+        },
+        orderBy: { last_played_at: 'desc' },
+        skip: (page - 1) * limit,
+        take: limit,
+      }),
+      this.prisma.userLog.count({ where }),
+    ]);
+
+    // Resolve titles for polymorphic obj_id (only for paginated items)
     const resolvedLogs = await Promise.all(
       logs.map(async (log) => {
         let title = 'Unknown Item';
@@ -53,7 +73,10 @@ export class UserLogsService {
       })
     );
 
-    return resolvedLogs;
+    return {
+      items: resolvedLogs,
+      total,
+    };
   }
 
   async findByObject(userNo: bigint, logtype: string, objId: bigint) {

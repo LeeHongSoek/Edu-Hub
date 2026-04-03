@@ -544,31 +544,7 @@ watch(
                       : (props.listTitle ?? "문제 목록")
                   }}
                 </h3>
-                <div
-                  v-if="props.showScopeToggle && !props.hideGroupOverlay"
-                  class="scope-toggle"
-                  role="tablist"
-                  aria-label="문제 목록 범위 선택"
-                >
-                  <button
-                    type="button"
-                    class="scope-btn"
-                    :class="{ active: (props.scopeMode ?? 'mine') === 'mine' }"
-                    :aria-pressed="(props.scopeMode ?? 'mine') === 'mine'"
-                    @click="handleScopeChange('mine')"
-                  >
-                    나의 문제
-                  </button>
-                  <button
-                    type="button"
-                    class="scope-btn"
-                    :class="{ active: (props.scopeMode ?? 'mine') === 'all' }"
-                    :aria-pressed="(props.scopeMode ?? 'mine') === 'all'"
-                    @click="handleScopeChange('all')"
-                  >
-                    전체 문제
-                  </button>
-                </div>
+
                 <div class="action-button-group">
                   <button class="btn-create" @click="openEditor(null)">
                     <IconCreateAction class="btn-action-icon" />
@@ -595,6 +571,31 @@ watch(
           <div class="pagination-panel-border">
             <div class="slider-panel">
               <div class="search-row">
+                <div
+                  v-if="props.showScopeToggle && !props.hideGroupOverlay"
+                  class="scope-toggle"
+                  role="tablist"
+                  aria-label="문제 목록 범위 선택"
+                >
+                  <button
+                    type="button"
+                    class="scope-btn"
+                    :class="{ active: (props.scopeMode ?? 'mine') === 'mine' }"
+                    :aria-pressed="(props.scopeMode ?? 'mine') === 'mine'"
+                    @click="handleScopeChange('mine')"
+                  >
+                    나의 문제
+                  </button>
+                  <button
+                    type="button"
+                    class="scope-btn"
+                    :class="{ active: (props.scopeMode ?? 'mine') === 'all' }"
+                    :aria-pressed="(props.scopeMode ?? 'mine') === 'all'"
+                    @click="handleScopeChange('all')"
+                  >
+                    전체 문제
+                  </button>
+                </div>
                 <select v-model="searchField" class="search-select">
                   <option value="id">문제번호</option>
                   <option value="content">문제 내용</option>
@@ -863,9 +864,9 @@ watch(
 
 .scope-toggle {
   display: inline-flex;
-  gap: 0.35rem;
-  padding: 0.22rem;
-  border-radius: 999px;
+  gap: 2px;
+  padding: 2px;
+  border-radius: 6px;
   background: rgba(15, 23, 42, 0.55);
   border: 1px solid rgba(148, 163, 184, 0.14);
   flex-shrink: 0;
@@ -875,9 +876,9 @@ watch(
   border: none;
   background: transparent;
   color: #94a3b8;
-  font-size: 0.8rem;
+  font-size: 0.75rem;
   font-weight: 700;
-  border-radius: 999px;
+  border-radius: 4px;
   padding: 0.47rem 1rem;
   cursor: pointer;
   display: inline-flex;

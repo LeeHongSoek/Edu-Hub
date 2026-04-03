@@ -240,29 +240,7 @@ const setScope = (scope: "mine" | "all") => {
       <div class="header-copy">
         <div class="title-row">
           <h3><IconBook class="section-icon" /> {{ listTitle }}</h3>
-          <div
-            v-if="showScopeToggle"
-            class="scope-toggle"
-            role="tablist"
-            aria-label="문제집 범위 선택"
-          >
-            <button
-              type="button"
-              class="scope-btn"
-              :class="{ active: listScope === 'mine' }"
-              :aria-pressed="listScope === 'mine'"
-              @click="setScope('mine')">
-              나의 문제집
-            </button>
-            <button
-              type="button"
-              class="scope-btn"
-              :class="{ active: listScope === 'all' }"
-              :aria-pressed="listScope === 'all'"
-              @click="setScope('all')">
-              전체 문제집
-            </button>
-          </div>
+
           <div class="action-button-group">
             <button class="btn-create" @click="showCreateModal = true">
               <IconCreateAction class="btn-action-icon" />
@@ -287,6 +265,29 @@ const setScope = (scope: "mine" | "all") => {
       <div class="pagination-panel-border">
         <div class="slider-panel">
           <div class="search-row">
+            <div
+              v-if="showScopeToggle"
+              class="scope-toggle"
+              role="tablist"
+              aria-label="문제집 범위 선택"
+            >
+              <button
+                type="button"
+                class="scope-btn"
+                :class="{ active: listScope === 'mine' }"
+                :aria-pressed="listScope === 'mine'"
+                @click="setScope('mine')">
+                나의 문제집
+              </button>
+              <button
+                type="button"
+                class="scope-btn"
+                :class="{ active: listScope === 'all' }"
+                :aria-pressed="listScope === 'all'"
+                @click="setScope('all')">
+                전체 문제집
+              </button>
+            </div>
             <select v-model="searchField" class="search-select">
               <option value="name">문제집명</option>
               <option value="description">설명</option>
@@ -479,9 +480,9 @@ const setScope = (scope: "mine" | "all") => {
 
 .scope-toggle {
   display: inline-flex;
-  gap: 0.35rem;
-  padding: 0.22rem;
-  border-radius: 999px;
+  gap: 2px;
+  padding: 2px;
+  border-radius: 6px;
   background: rgba(15, 23, 42, 0.55);
   border: 1px solid rgba(148, 163, 184, 0.14);
 }
@@ -507,10 +508,10 @@ const setScope = (scope: "mine" | "all") => {
   border: none;
   background: transparent;
   color: #94a3b8;
-  font-size: 0.8rem;
+  font-size: 0.75rem;
   font-weight: 700;
-  border-radius: 999px;
-  padding: 0.47rem 1rem;
+  border-radius: 4px;
+  padding: 0.45rem 0.9rem;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
