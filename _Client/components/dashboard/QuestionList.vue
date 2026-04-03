@@ -154,6 +154,25 @@ const getQuestionIdKey = (questionId: string | number | bigint) =>
 const isQuestionSelected = (questionId: string | number | bigint) =>
   selectedQuestionIds.value.includes(getQuestionIdKey(questionId));
 
+const isAllVisibleSelected = computed(() => {
+  if (props.questions.length === 0) return false;
+  const selectableQuestions = props.questions.filter((q) => canEditQuestion(q) || props.viewMode === 'all');
+  if (selectableQuestions.length === 0) return false;
+  return selectableQuestions.every((q) => isQuestionSelected(q.question_id));
+});
+
+const isSomeVisibleSelected = computed(() => {
+  const selectedCount = props.questions.filter((q) => isQuestionSelected(q.question_id)).length;
+  return selectedCount > 0 && !isAllVisibleSelected.value;
+});
+
+const toggleSelectAllVisible = (checked: boolean) => {
+  for (const q of props.questions) {
+    if (!canEditQuestion(q) && props.viewMode !== 'all') continue;
+    toggleQuestionSelected(q.question_id, checked);
+  }
+};
+
 const rememberSelectedQuestion = (questionId: string | number | bigint) => {
   const idKey = getQuestionIdKey(questionId);
   const question = props.questions.find(
@@ -482,8 +501,18 @@ const openBulkSolveModal = () => {
 
 const STORAGE_KEY_IDS = "edu_hub_selected_question_ids";
 const STORAGE_KEY_CACHE = "edu_hub_selected_question_cache";
+const STORAGE_KEY_USER = "edu_hub_selected_question_user";
 
 const restoreSelectionFromStorage = () => {
+  const savedUser = localStorage.getItem(STORAGE_KEY_USER);
+  const currentUser = String(props.currentUserNo || "");
+  
+  // 만약 저장된 사용자 ID와 현재 사용자 ID가 다르면 복구하지 않음
+  if (savedUser !== currentUser) {
+    if (savedUser) clearSelection();
+    return;
+  }
+
   const savedIds = localStorage.getItem(STORAGE_KEY_IDS);
   const savedCache = localStorage.getItem(STORAGE_KEY_CACHE);
 
@@ -517,13 +546,15 @@ const clearSelection = () => {
   selectedQuestionCache.value = {};
   localStorage.removeItem(STORAGE_KEY_IDS);
   localStorage.removeItem(STORAGE_KEY_CACHE);
+  localStorage.removeItem(STORAGE_KEY_USER);
 };
 
 // 로그아웃하거나 사용자가 바뀌면 선택 상태 및 필터 초기화
 watch(
   () => props.currentUserNo,
   (newVal, oldVal) => {
-    if (oldVal !== undefined && newVal !== oldVal) {
+    // 이미 로그인된 상태에서 값이 바뀌거나 null이 되면 로그아웃/교체로 간주하고 초기화
+    if (newVal !== oldVal) {
       clearSelection();
       clearAllFilters();
     }
@@ -533,11 +564,14 @@ watch(
 // 선택 상태 변경 시 localStorage에 저장
 watch(selectedQuestionIds, (newIds) => {
   localStorage.setItem(STORAGE_KEY_IDS, JSON.stringify(newIds));
+  localStorage.setItem(STORAGE_KEY_USER, String(props.currentUserNo || ""));
 }, { deep: true });
 
 watch(selectedQuestionCache, (newCache) => {
   localStorage.setItem(STORAGE_KEY_CACHE, JSON.stringify(newCache));
+  localStorage.setItem(STORAGE_KEY_USER, String(props.currentUserNo || ""));
 }, { deep: true });
+
 
 watch(
   () => props.viewMode,
@@ -755,10 +789,16 @@ watch(
                   type="checkbox"
                   class="copy-checkbox"
                   aria-label="전체 문제 선택"
-                  
+                  :checked="isAllVisibleSelected"
+                  :indeterminate="isSomeVisibleSelected"
+                  @change="toggleSelectAllVisible(($event.target as HTMLInputElement).checked)"
                 />
                 <span class="summary-text"
-                  >총 {{ props.totalItems }}문제</span
+                  >총 {{ props.totalItems }}문제
+                  <span class="selected-count">
+                    · {{ selectedQuestionCount }}개 선택됨
+                  </span>
+                </span
                 >
                 <div class="page-slider-section">
                   <div
@@ -1647,6 +1687,11 @@ watch(
   font-weight: 500;
   white-space: nowrap;
   flex-shrink: 0;
+}
+
+.selected-count {
+  color: #a5b4fc;
+  font-weight: 700;
 }
 
 .page-slider-section {
