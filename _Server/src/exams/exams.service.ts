@@ -36,6 +36,51 @@ export class ExamsService {
     });
   }
 
+  async update(
+    examId: bigint,
+    creatorNo: bigint,
+    data: {
+      exam_name: string;
+      description?: string;
+      start_time: string;
+      end_time: string;
+      location?: string;
+      is_auto_score?: boolean;
+      class_id?: string | number | null;
+    },
+  ) {
+    const existing = await this.prisma.exam.findFirst({
+      where: {
+        exam_id: examId,
+        creator_no: creatorNo,
+        is_deleted: 'N',
+      },
+      select: { exam_id: true },
+    });
+
+    if (!existing) {
+      throw new NotFoundException('Exam not found');
+    }
+
+    return this.prisma.exam.update({
+      where: { exam_id: examId },
+      data: {
+        exam_name: data.exam_name,
+        description: data.description || null,
+        start_time: new Date(data.start_time),
+        end_time: new Date(data.end_time),
+        location: data.location || null,
+        is_auto_score: data.is_auto_score ?? true,
+        class_id: data.class_id ? BigInt(data.class_id) : null,
+      },
+      include: {
+        creator: { select: { user_no: true, username: true } },
+        class: true,
+        _count: { select: { questions: true } },
+      },
+    });
+  }
+
   async findAll(userNo?: bigint, classId?: bigint) {
     const where: any = {
       is_deleted: 'N',

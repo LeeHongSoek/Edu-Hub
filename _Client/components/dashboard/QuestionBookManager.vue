@@ -127,9 +127,38 @@ const prevPage = () => goToPage(currentPage.value - 1);
 const nextPage = () => goToPage(currentPage.value + 1);
 const showCreateModal = ref(false);
 const newBook = ref({ book_name: "", description: "" });
+const editingBookId = ref<string>("");
 
 const { apiBase, getAuthHeader } = useApi();
 const router = useRouter();
+
+const isEditingBook = computed(() => editingBookId.value !== "");
+const modalTitle = computed(() =>
+  isEditingBook.value ? "문제집 수정" : "새 문제집 만들기",
+);
+const submitButtonLabel = computed(() =>
+  isEditingBook.value ? "수정하기" : "생성하기",
+);
+
+const openCreateModal = () => {
+  editingBookId.value = "";
+  newBook.value = { book_name: "", description: "" };
+  showCreateModal.value = true;
+};
+
+const openEditModal = (book: any) => {
+  editingBookId.value = String(book.book_id);
+  newBook.value = {
+    book_name: book.book_name || "",
+    description: book.description || "",
+  };
+  showCreateModal.value = true;
+};
+
+const closeCreateModal = () => {
+  editingBookId.value = "";
+  showCreateModal.value = false;
+};
 
 const viewBookDetails = (bookId: number | string | bigint) => {
   router.push({
@@ -156,18 +185,26 @@ const fetchBooks = async () => {
   }
 };
 
-const createBook = async () => {
+const submitBookForm = async () => {
   try {
-    await $fetch(`${apiBase.value}/question-books`, {
-      method: "POST",
-      headers: getAuthHeader(),
-      body: newBook.value,
-    });
-    showCreateModal.value = false;
+    if (isEditingBook.value) {
+      await $fetch(`${apiBase.value}/question-books/${editingBookId.value}`, {
+        method: "PATCH",
+        headers: getAuthHeader(),
+        body: newBook.value,
+      });
+    } else {
+      await $fetch(`${apiBase.value}/question-books`, {
+        method: "POST",
+        headers: getAuthHeader(),
+        body: newBook.value,
+      });
+    }
+    closeCreateModal();
     newBook.value = { book_name: "", description: "" };
     await fetchBooks();
   } catch (err) {
-    alert("문제집 생성 피일");
+    alert(isEditingBook.value ? "문제집 수정 실패" : "문제집 생성 실패");
   }
 };
 
@@ -242,7 +279,7 @@ const setScope = (scope: "mine" | "all") => {
           <h3><IconBook class="section-icon" /> {{ listTitle }}</h3>
 
           <div class="action-button-group">
-            <button class="btn-create" @click="showCreateModal = true">
+            <button class="btn-create" @click="openCreateModal">
               <IconCreateAction class="btn-action-icon" />
               새 문제집
             </button>
@@ -391,10 +428,16 @@ const setScope = (scope: "mine" | "all") => {
                   )
                 "
               />
-              <span class="book-title">{{ book.book_name }}</span>
+              <span class="book-title book-name-link" @click="viewBookDetails(book.book_id)">
+                {{ book.book_name }}
+              </span>
             </h4>
-            <button class="btn-view" @click="viewBookDetails(book.book_id)">
-              상세보기
+            <button
+              v-if="isCurrentUserOwner(book.creator?.user_no)"
+              class="btn-view btn-card-action"
+              @click="openEditModal(book)"
+            >
+              문제집 수정
             </button>
           </div>
         </div>
@@ -405,12 +448,12 @@ const setScope = (scope: "mine" | "all") => {
     <div
       v-if="showCreateModal"
       class="modal-overlay"
-      @click.self="showCreateModal = false"
+      @click.self="closeCreateModal"
     >
       <div class="modal-content">
         <div class="modal-header">
-          <h3>새 문제집 만들기</h3>
-          <button class="modal-close" @click="showCreateModal = false" aria-label="닫기">✕</button>
+          <h3>{{ modalTitle }}</h3>
+          <button class="modal-close" @click="closeCreateModal" aria-label="닫기">✕</button>
         </div>
         <div class="form-group">
           <label>문제집 이름</label>
@@ -428,10 +471,10 @@ const setScope = (scope: "mine" | "all") => {
           ></textarea>
         </div>
         <div class="modal-actions">
-          <button class="btn-secondary" @click="showCreateModal = false">
+          <button class="btn-secondary" @click="closeCreateModal">
             취소
           </button>
-          <button class="btn-primary" @click="createBook">생성하기</button>
+          <button class="btn-primary" @click="submitBookForm">{{ submitButtonLabel }}</button>
         </div>
       </div>
     </div>
@@ -659,6 +702,46 @@ const setScope = (scope: "mine" | "all") => {
   color: #f8fafc;
 }
 
+.book-name-link {
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.book-name-link:hover {
+  color: #818cf8;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+.btn-card-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 72px;
+  height: 34px;
+  padding: 0 0.95rem;
+  border-radius: 9px;
+  border: 1px solid rgba(129, 140, 248, 0.24);
+  background: rgba(99, 102, 241, 0.1);
+  color: #c7d2fe;
+  font-size: 0.84rem;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    color 0.2s ease,
+    transform 0.2s ease;
+}
+
+.btn-card-action:hover {
+  background: rgba(99, 102, 241, 0.18);
+  border-color: rgba(129, 140, 248, 0.42);
+  color: #ffffff;
+  transform: translateY(-1px);
+}
+
 .copy-checkbox {
   width: 1.4rem;
   height: 1.4rem;
@@ -717,24 +800,7 @@ const setScope = (scope: "mine" | "all") => {
   white-space: nowrap;
 }
 
-.btn-view {
-  padding: 0.5rem 1.2rem;
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  color: #e2e8f0;
-  border-radius: 8px;
-  cursor: pointer;
-  font-weight: 600;
-  transition:
-    border-color 0.2s,
-    background 0.2s;
-  white-space: nowrap;
-}
 
-.btn-view:hover {
-  border-color: rgba(99, 102, 241, 0.8);
-  background: rgba(99, 102, 241, 0.14);
-}
 
 /* Modal */
 .modal-overlay {

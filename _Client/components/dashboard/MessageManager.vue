@@ -403,22 +403,6 @@ onMounted(() => {
       <div class="header-copy">
         <div class="header-title-row">
           <h2><IconMessage class="section-icon" /> 메시지 함</h2>
-          <div class="message-tabs">
-            <button
-              class="message-tab"
-              :class="{ active: messageView === 'received' }"
-              @click="switchMessageView('received')"
-            >
-              받은 메시지
-            </button>
-            <button
-              class="message-tab"
-              :class="{ active: messageView === 'sent' }"
-              @click="switchMessageView('sent')"
-            >
-              보낸 메시지
-            </button>
-          </div>
         </div>
         <p class="manager-subtitle">{{ messageSummary }}</p>
         <p v-if="messageThreadTitle" class="thread-title">
@@ -437,6 +421,22 @@ onMounted(() => {
     <div class="pagination-panel-border">
       <div class="slider-panel">
         <div class="search-row">
+          <div class="message-tabs">
+            <button
+              class="message-tab"
+              :class="{ active: messageView === 'received' }"
+              @click="switchMessageView('received')"
+            >
+              받은 메시지
+            </button>
+            <button
+              class="message-tab"
+              :class="{ active: messageView === 'sent' }"
+              @click="switchMessageView('sent')"
+            >
+              보낸 메시지
+            </button>
+          </div>
           <label class="search-box">
             <IconSearch class="search-icon-svg" />
             <input

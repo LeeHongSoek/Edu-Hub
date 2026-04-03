@@ -3,6 +3,8 @@ import { ref, onMounted, onUnmounted, computed } from "vue";
 import type { QuestionListResponse } from "~/types";
 import LatexRenderer from "~/components/LatexRenderer.vue";
 import DailyQuestionsModal from "~/components/DailyQuestionsModal.vue";
+import VuePdfEmbed from "vue-pdf-embed";
+import manualPdfUrl from "~/assets/Edu-Hub_Project_Manual.pdf?url";
 import IconShield from "~/assets/icons/IconShield.svg?component";
 import IconCheck from "~/assets/icons/IconCheck.svg?component";
 import IconSparkle from "~/assets/icons/IconSparkle.svg?component";
@@ -18,6 +20,7 @@ import IconEyeOff from "~/assets/icons/IconEyeOff.svg?component";
 import IconArrowRight from "~/assets/icons/IconArrowRight.svg?component";
 import IconClose from "~/assets/icons/IconClose.svg?component";
 import IconInfo from "~/assets/icons/IconInfo.svg?component";
+import IconManual from "~/assets/icons/IconManual.svg?component";
 import NumberAnimation from "vue-number-animation";
 
 const { apiBase } = useApi();
@@ -29,11 +32,18 @@ const isLoaded = ref(false);
 
 // 소개 모달
 const showIntro = ref(false);
+const showManual = ref(false);
+const manualPdfSrc = manualPdfUrl;
 let introTimer: any = null;
+
+function syncBodyScrollLock() {
+  document.body.style.overflow =
+    showIntro.value || showRegister.value || showManual.value ? "hidden" : "";
+}
 
 function openIntro() {
   showIntro.value = true;
-  document.body.style.overflow = "hidden";
+  syncBodyScrollLock();
   // 10초 뒤 자동 닫기
   if (introTimer) clearTimeout(introTimer);
   introTimer = setTimeout(closeIntro, 10000);
@@ -41,15 +51,26 @@ function openIntro() {
 
 function closeIntro() {
   showIntro.value = false;
-  document.body.style.overflow = "";
+  syncBodyScrollLock();
   if (introTimer) {
     clearTimeout(introTimer);
     introTimer = null;
   }
 }
 
+function openManual() {
+  showManual.value = true;
+  syncBodyScrollLock();
+}
+
+function closeManual() {
+  showManual.value = false;
+  syncBodyScrollLock();
+}
+
 function onKeydown(e: KeyboardEvent) {
   if (e.key === "Escape") {
+    closeManual();
     closeIntro();
     closeRegister();
   }
@@ -285,7 +306,7 @@ function openRegister() {
   authError.value = "";
   isIdChecked.value = false;
   isIdAvailable.value = false;
-  document.body.style.overflow = "hidden";
+  syncBodyScrollLock();
 }
 
 const checkId = async () => {
@@ -370,7 +391,7 @@ const handleRegister = async () => {
 
 function closeRegister() {
   showRegister.value = false;
-  document.body.style.overflow = "";
+  syncBodyScrollLock();
 }
 
 onMounted(() => {
@@ -436,6 +457,14 @@ onMounted(() => {
             class="intro-link"
           >
             <IconInfo class="icon-info" />소개
+          </a>
+          <a
+            v-if="!loggedInUser"
+            href="#"
+            @click.prevent="openManual"
+            class="intro-link manual-link"
+          >
+            <IconManual class="icon-manual" />메뉴얼
           </a>
           <template v-if="loggedInUser">
             <div class="nav-path-box">
@@ -708,7 +737,7 @@ onMounted(() => {
           </button>
 
           <div class="modal-header">
-            <span class="modal-badge"
+             <span class="modal-badge"
               ><IconBook class="badge-icon" /> AI Edu-Hub 소개</span
             >
             <h2 class="modal-title">
@@ -792,6 +821,34 @@ onMounted(() => {
               AI Edu-Hub와 함께라면 공부가 더 이상 숙제가 아닌
               <strong>즐거운 경험</strong>이 됩니다!
             </p>
+          </div>
+        </div>
+      </div>
+    </Transition>
+
+    <Transition name="modal">
+      <div v-if="showManual" class="modal-backdrop" @click.self="closeManual">
+        <div
+          class="modal-box manual-modal"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Edu-Hub 프로젝트 메뉴얼"
+        >
+          <div class="modal-header manual-modal-header">
+            <span class="modal-badge">Edu-Hub 매뉴얼 </span>
+            <!-- <h2 class="modal-title">Edu-Hub_Project_Manual.pdf</h2> -->
+            <button class="modal-close" @click="closeManual" aria-label="닫기">
+              <IconClose width="20" height="20" />
+            </button>
+          </div>
+
+          <div class="manual-pdf-wrap">
+            <ClientOnly>
+              <VuePdfEmbed class="manual-pdf" :source="manualPdfSrc" />
+              <template #fallback>
+                <div class="manual-loading">메뉴얼을 불러오는 중입니다...</div>
+              </template>
+            </ClientOnly>
           </div>
         </div>
       </div>
@@ -1107,7 +1164,14 @@ onMounted(() => {
   align-items: center;
   gap: 0.35rem;
 }
+
 .icon-info {
+  width: 17px;
+  height: 17px;
+  color: inherit;
+}
+
+.icon-manual {
   width: 17px;
   height: 17px;
   color: inherit;
@@ -2028,7 +2092,7 @@ input[type="password"] {
   -webkit-backdrop-filter: blur(40px);
   border: 1px solid rgba(165, 180, 252, 0.18);
   border-radius: 10px;
-  padding: 2.75rem 2.5rem 2.5rem;
+  padding: 1.75rem 1.5rem 1.5rem 1.5rem;
   max-width: 884px; /* 1.3배 폭 증가 (680 * 1.3) */
   width: 95%;
   max-height: 95vh;
@@ -2100,7 +2164,7 @@ input[type="password"] {
 .modal-badge {
   display: inline-flex;
   align-items: center;
-  gap: 0.35rem;
+  gap: 0.15rem;
   background: linear-gradient(
     135deg,
     rgba(79, 70, 229, 0.3),
@@ -2113,24 +2177,6 @@ input[type="password"] {
   font-weight: 700;
   color: #a5b4fc;
   letter-spacing: 0.04em;
-  margin-bottom: 0.85rem;
-}
-
-.modal-title {
-  font-family: "Nanum Myeongjo", "궁서", Georgia, serif;
-  font-size: clamp(1.45rem, 3vw, 1.9rem);
-  font-weight: 800;
-  color: #f8fafc;
-  line-height: 1.35;
-  margin-bottom: 0.9rem;
-  letter-spacing: -0.02em;
-}
-.modal-title em {
-  font-style: normal;
-  background: linear-gradient(135deg, #818cf8, #c084fc);
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
 }
 
 .modal-lead {
@@ -2138,6 +2184,132 @@ input[type="password"] {
   color: rgba(240, 244, 255, 0.7);
   line-height: 1.8;
   margin-bottom: 0.5rem;
+}
+
+.manual-modal {
+  max-width: min(1180px, 98vw);
+  width: 98%;
+  max-height: 92vh;
+  padding-bottom: 1.5rem;
+  overflow-x: hidden;
+}
+
+.manual-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding-right: 0;
+}
+
+.manual-modal-header .modal-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-start;
+  margin-bottom: 0;
+  min-height: auto;
+  padding: 0;
+  font-size: 1.45rem;
+  font-weight: 800;
+  line-height: 1.3;
+  color: #f8fafc;
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  letter-spacing: 0.70em;
+  text-decoration: underline;
+  text-decoration-color: rgba(165, 180, 252, 0.85);
+  text-decoration-thickness: 2px;
+  text-underline-offset: 8px;
+  box-shadow: none;
+}
+
+.manual-modal-header .modal-close {
+  position: static;
+  top: auto;
+  right: auto;
+  flex-shrink: 0;
+}
+
+.manual-pdf-wrap {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 5px;
+  padding: 1rem;
+  scrollbar-width: auto;
+  scrollbar-color: rgba(165, 180, 252, 0.9) rgba(255, 255, 255, 0.08);
+}
+
+.manual-pdf-wrap::-webkit-scrollbar {
+  width: 52px;
+}
+
+.manual-pdf-wrap::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 18px;
+}
+
+.manual-pdf-wrap::-webkit-scrollbar-thumb {
+  background: linear-gradient(
+    180deg,
+    rgba(224, 231, 255, 0.96),
+    rgba(129, 140, 248, 0.92)
+  );
+  border-radius: 18px;
+  border: 8px solid rgba(15, 23, 42, 0.18);
+  min-height: 96px;
+}
+
+.manual-pdf-wrap::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(
+    180deg,
+    rgba(240, 244, 255, 0.98),
+    rgba(129, 140, 248, 1)
+  );
+}
+
+.manual-pdf {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.manual-pdf :deep(.vue-pdf-embed__page) {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
+.manual-pdf :deep(canvas) {
+  display: block;
+  margin: 0 auto;
+  max-width: 100%;
+  height: auto !important;
+}
+
+.manual-loading {
+  min-height: 240px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(240, 244, 255, 0.7);
+  font-size: 0.95rem;
+}
+
+@media (max-width: 850px) {
+  .manual-modal {
+    width: 100%;
+    max-height: 94vh;
+    padding: 2.75rem 1rem 1rem;
+  }
+
+  .manual-pdf-wrap {
+    padding: 0.5rem;
+  }
 }
 
 .feat-card {

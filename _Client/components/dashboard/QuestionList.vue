@@ -559,6 +559,24 @@ watch(
                     <IconDeleteAction class="btn-action-icon" />
                     삭제
                   </button>
+                  <button
+                    class="btn-bulk-action"
+                    :disabled="!canDeleteQuestions"
+                  >
+                    모아<br/>풀기
+                  </button>
+                  <button
+                    class="btn-bulk-action"
+                    :disabled="!canDeleteQuestions"
+                  >
+                    문제집<br/>만들기
+                  </button>
+                  <button
+                    class="btn-bulk-action"
+                    :disabled="!canDeleteQuestions"
+                  >
+                    고사집<br/>만들기
+                  </button>
                 </div>
               </div>
             </div>
@@ -1094,6 +1112,42 @@ watch(
   width: 0.92rem;
   height: 0.92rem;
   flex-shrink: 0;
+}
+
+.btn-bulk-action {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.18rem;
+  min-width: 72px;
+  height: 48px;
+  padding: 0.45rem 0.7rem;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: #94a3b8;
+  font-size: 0.84rem;
+  font-weight: 800;
+  line-height: 1.02;
+  text-align: center;
+  cursor: pointer;
+  transition:
+    background 0.2s ease,
+    color 0.2s ease,
+    transform 0.2s ease,
+    opacity 0.2s ease;
+}
+
+.btn-bulk-action:hover:not(:disabled) {
+  background: rgba(99, 102, 241, 0.12);
+  color: #e2e8f0;
+  transform: translateY(-1px);
+}
+
+.btn-bulk-action:disabled {
+  opacity: 0.38;
+  cursor: not-allowed;
 }
 
 .btn-reset-search {

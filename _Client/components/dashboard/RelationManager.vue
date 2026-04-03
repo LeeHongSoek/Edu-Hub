@@ -991,17 +991,6 @@ watch(
         <p class="manager-subtitle">{{ relationSummary }}</p>
       </div>
       <div class="header-actions">
-        <div class="target-tabs target-tabs-inline">
-          <button
-            v-for="target in relationTargets"
-            :key="target.key"
-            class="target-tab"
-            :class="{ active: activeTargetKey === target.key }"
-            @click="selectTarget(target.key)"
-          >
-            {{ target.label }}
-          </button>
-        </div>
         <button
           class="btn-add"
           :disabled="relationTargets.length === 0"
@@ -1015,6 +1004,17 @@ watch(
     <div class="pagination-panel-border">
       <div class="slider-panel">
         <div class="search-row">
+          <div class="target-tabs target-tabs-inline">
+            <button
+              v-for="target in relationTargets"
+              :key="target.key"
+              class="target-tab"
+              :class="{ active: activeTargetKey === target.key }"
+              @click="selectTarget(target.key)"
+            >
+              {{ target.label }}
+            </button>
+          </div>
           <label class="search-box">
             <IconSearch class="search-icon-svg" />
             <input

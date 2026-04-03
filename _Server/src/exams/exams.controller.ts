@@ -40,6 +40,25 @@ export class ExamsController {
     return this.examsService.create(BigInt(userNoVal), body);
   }
 
+  @Patch(':id')
+  async update(
+    @Request() req: any,
+    @Param('id') id: string,
+    @Body() body: {
+      exam_name: string;
+      description?: string;
+      start_time: string;
+      end_time: string;
+      location?: string;
+      is_auto_score?: boolean;
+      class_id?: string | number | null;
+    },
+  ) {
+    const userNoVal = req.user?.user_no || req.user?.userNo;
+    if (!userNoVal) throw new UnauthorizedException();
+    return this.examsService.update(BigInt(id), BigInt(userNoVal), body);
+  }
+
   @Patch('soft-delete')
   async softDeleteMany(
     @Request() req: any,

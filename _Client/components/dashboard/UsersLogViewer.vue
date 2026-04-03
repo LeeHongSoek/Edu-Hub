@@ -10,7 +10,7 @@ const totalLogs = ref(0);
 const loading = ref(true);
 
 const filterTypes = [
-  { id: "all", label: "전체", color: "#6366f1" },
+  { id: "all", label: "전체", color: "#636663" },
   { id: "Q", label: "문제", icon: IconFileText, color: "#6366f1" },
   { id: "B", label: "문제집", icon: IconBook, color: "#10b981" },
   { id: "E", label: "고사", icon: IconPencil, color: "#f59e0b" },
@@ -92,17 +92,10 @@ const getLogTypeInfo = (type: string) => {
 };
 
 const formatResult = (log: any) => {
-  if (log.logtype === "Q") {
-    if (log.user_content.includes("정답")) return { text: "정답", class: "result-success" };
-    if (log.user_content.includes("오답")) return { text: "오답", class: "result-error" };
-    return { text: log.user_content || "조회", class: "result-info" };
-  }
+  if (log.logtype === "Q" || log.score == null || log.total_score == null) return null;
   const scoreText = `${log.score}/${log.total_score}`;
   const percentText = log.score100 !== undefined ? `(${log.score100}점)` : "";
-  return { 
-    text: `${scoreText} ${percentText}`, 
-    class: log.score100 >= 80 ? "result-success" : log.score100 >= 60 ? "result-warning" : "result-error" 
-  };
+  return `${scoreText} ${percentText}`;
 };
 
 const formatTime = (dateStr: string) => {
@@ -121,7 +114,9 @@ const formatTime = (dateStr: string) => {
     <div class="header-row">
       <div class="title-group">
         <h3><IconCalendar class="section-icon" /> 최근 사용자 활동 로그</h3>
-        
+      </div>
+
+      <div class="header-controls">
         <div class="filter-group" role="tablist">
           <button
             v-for="type in filterTypes"
@@ -134,17 +129,16 @@ const formatTime = (dateStr: string) => {
             {{ type.label }}
           </button>
         </div>
-      </div>
-
-      <div class="search-bar">
-        <input 
-          v-model="searchInput" 
-          type="text" 
-          placeholder="기록 검색..." 
-          @keyup.enter="handleSearch"
-        />
-        <button v-if="searchInput" class="clear-btn" @click="clearSearch">✕</button>
-        <button class="search-btn" @click="handleSearch">검색</button>
+        <div class="search-bar">
+          <input 
+            v-model="searchInput" 
+            type="text" 
+            placeholder="기록 검색..." 
+            @keyup.enter="handleSearch"
+          />
+          <button v-if="searchInput" class="clear-btn" @click="clearSearch">✕</button>
+          <button class="search-btn" @click="handleSearch">검색</button>
+        </div>
       </div>
     </div>
 
@@ -199,8 +193,8 @@ const formatTime = (dateStr: string) => {
             </div>
             <div class="log-title-row">
               <div class="log-title" :title="log.title">{{ log.user_content }}</div>
-              <div class="log-result" :class="formatResult(log).class">
-                {{ formatResult(log).text }}
+              <div v-if="formatResult(log)" class="log-result">
+                {{ formatResult(log) }}
               </div>
             </div>
           </div>
@@ -236,6 +230,15 @@ const formatTime = (dateStr: string) => {
   flex-wrap: wrap;
 }
 
+.header-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  flex: 1;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+}
+
 .header-row h3 {
   color: #f8fafc;
   font-size: 1.15rem;
@@ -255,36 +258,49 @@ const formatTime = (dateStr: string) => {
 
 /* 필터 버튼 그룹 */
 .filter-group {
-  display: flex;
-  background: rgba(15, 23, 42, 0.4);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
   padding: 0.25rem;
-  border-radius: 999px;
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  background: rgba(15, 23, 42, 0.4);
+  border: 1px solid rgba(148, 163, 184, 0.15);
+  border-radius: 10px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
 }
 
 .filter-group button {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 0.35rem;
-  border: none;
-  background: transparent;
+  min-height: 34px;
+  border: 1px solid rgba(148, 163, 184, 0.14);
+  background: rgba(15, 23, 42, 0.4);
   color: #94a3b8;
   padding: 0.4rem 0.9rem;
-  font-size: 0.82rem;
-  font-weight: 700;
-  border-radius: 999px;
+  font-size: 0.84rem;
+  font-weight: 800;
+  border-radius: 8px;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition:
+    background 0.2s ease,
+    color 0.2s ease,
+    border-color 0.2s ease,
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
 }
 
 .filter-group button:hover {
   color: #e2e8f0;
+  border-color: rgba(165, 180, 252, 0.28);
+  transform: translateY(-1px);
 }
 
 .filter-group button.active {
   background: var(--active-color);
   color: white;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  border-color: rgba(191, 219, 254, 0.28);
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.2);
 }
 
 .filter-btn-icon {
@@ -352,9 +368,15 @@ const formatTime = (dateStr: string) => {
 }
 
 .log-list {
-  display: flex;
-  flex-direction: column;
-  gap: 0.85rem;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+}
+
+@media (max-width: 1200px) {
+  .log-list {
+    grid-template-columns: 1fr;
+  }
 }
 
 .log-card {
@@ -453,18 +475,25 @@ const formatTime = (dateStr: string) => {
 .log-result {
   font-size: 0.72rem;
   font-weight: 800;
-  padding: 0.2rem 0.6rem;
+  padding: 0.25rem 0.75rem; /* 상하좌우 여백을 조금 더 확보 */
   border-radius: 6px;
   text-align: center;
   letter-spacing: -0.01em;
-  white-space: nowrap;
-  flex-shrink: 0;
-}
+  white-space: nowrap; /* 내용이 길어도 아래로 떨어지지 않게 함 */
+  flex-shrink: 0; /* 부모 요소가 좁아져도 크기가 줄어들지 않음 */
+  
+  /* --- 수정 및 추가된 부분 --- */
+  min-width: 100px;      /* 최소 폭 고정 (내용이 짧아도 이 크기 유지) */
+  width: fit-content;   /* 내용에 맞춰 폭이 늘어남 */
+  display: inline-flex; /* 중앙 정렬을 위해 플렉스 적용 */
+  align-items: center;
+  justify-content: center;
 
-.result-info { background: rgba(56, 189, 248, 0.1); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.2); }
-.result-success { background: rgba(16, 185, 129, 0.1); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.2); }
-.result-error { background: rgba(244, 63, 94, 0.1); color: #f43f5e; border: 1px solid rgba(244, 63, 94, 0.2); }
-.result-warning { background: rgba(245, 158, 11, 0.1); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.2); }
+  /* 색깔 제거 및 중립 스타일 적용 */
+  background: rgba(148, 163, 184, 0.1);
+  color: #94a3b8;
+  border: 1px solid rgba(148, 163, 184, 0.1);
+}
 
 /* Pagination Styles */
 .pagination-area {

@@ -17,7 +17,7 @@ const props = withDefaults(
 
 const exams = ref<any[]>([]);
 const loading = ref(true);
-const pageSize = 5;
+const pageSize = 10;
 const currentPage = ref(1);
 const sliderValue = ref(1);
 const route = useRoute();
@@ -205,6 +205,7 @@ const clearClassFilter = () => {
 const showCreateModal = ref(false);
 const createLoading = ref(false);
 const createError = ref("");
+const editingExamId = ref<string>("");
 const createForm = ref({
   exam_name: "",
   description: "",
@@ -217,7 +218,27 @@ const createForm = ref({
 
 const taughtClasses = ref<any[]>([]); // 추가
 
+const isEditingExam = computed(() => editingExamId.value !== "");
+const modalTitle = computed(() =>
+  isEditingExam.value ? "고사집 수정" : "새 고사집 만들기",
+);
+const submitButtonLabel = computed(() => {
+  if (createLoading.value) {
+    return isEditingExam.value ? "수정 중..." : "생성 중...";
+  }
+  return isEditingExam.value ? "고사 수정" : "고사 생성";
+});
+
+const pad2 = (value: number) => String(value).padStart(2, "0");
+
+const toLocalDateTimeInputValue = (value?: string | Date | null) => {
+  if (!value) return "";
+  const date = new Date(value);
+  return `${date.getFullYear()}-${pad2(date.getMonth() + 1)}-${pad2(date.getDate())}T${pad2(date.getHours())}:${pad2(date.getMinutes())}`;
+};
+
 const openCreateModal = async () => {
+  editingExamId.value = "";
   createForm.value = {
     exam_name: "",
     description: "",
@@ -232,6 +253,22 @@ const openCreateModal = async () => {
   await fetchTaughtClasses(); // 모달 열 때 클래스 목록 로드
 };
 
+const openEditModal = async (exam: any) => {
+  editingExamId.value = String(exam.exam_id);
+  createForm.value = {
+    exam_name: exam.exam_name || "",
+    description: exam.description || "",
+    start_time: toLocalDateTimeInputValue(exam.start_time),
+    end_time: toLocalDateTimeInputValue(exam.end_time),
+    location: exam.location || "",
+    is_auto_score: exam.is_auto_score ?? true,
+    class_id: exam.class_id ? String(exam.class_id) : "",
+  };
+  createError.value = "";
+  showCreateModal.value = true;
+  await fetchTaughtClasses();
+};
+
 const fetchTaughtClasses = async () => {
   try {
     const data = await $fetch(`${apiBase.value}/dashboard/classes`, {
@@ -244,10 +281,11 @@ const fetchTaughtClasses = async () => {
 };
 
 const closeCreateModal = () => {
+  editingExamId.value = "";
   showCreateModal.value = false;
 };
 
-const submitCreateExam = async () => {
+const submitExamForm = async () => {
   if (!createForm.value.exam_name.trim()) {
     createError.value = "고사 이름을 입력해주세요.";
     return;
@@ -263,23 +301,37 @@ const submitCreateExam = async () => {
   createLoading.value = true;
   createError.value = "";
   try {
-    await $fetch(`${apiBase.value}/exams`, {
-      method: "POST",
-      headers: getAuthHeader(),
-      body: {
-        exam_name: createForm.value.exam_name.trim(),
-        description: createForm.value.description.trim() || undefined,
-        start_time: createForm.value.start_time,
-        end_time: createForm.value.end_time,
-        location: createForm.value.location.trim() || undefined,
-        is_auto_score: createForm.value.is_auto_score,
-        class_id: createForm.value.class_id ? Number(createForm.value.class_id) : null,
-      },
-    });
+    const payload = {
+      exam_name: createForm.value.exam_name.trim(),
+      description: createForm.value.description.trim() || undefined,
+      start_time: createForm.value.start_time,
+      end_time: createForm.value.end_time,
+      location: createForm.value.location.trim() || undefined,
+      is_auto_score: createForm.value.is_auto_score,
+      class_id: createForm.value.class_id ? Number(createForm.value.class_id) : null,
+    };
+
+    if (isEditingExam.value) {
+      await $fetch(`${apiBase.value}/exams/${editingExamId.value}`, {
+        method: "PATCH",
+        headers: getAuthHeader(),
+        body: payload,
+      });
+    } else {
+      await $fetch(`${apiBase.value}/exams`, {
+        method: "POST",
+        headers: getAuthHeader(),
+        body: payload,
+      });
+    }
     closeCreateModal();
     await fetchExams();
   } catch (err: any) {
-    createError.value = err?.data?.message || "고사 생성 중 오류가 발생했습니다.";
+    createError.value =
+      err?.data?.message ||
+      (isEditingExam.value
+        ? "고사 수정 중 오류가 발생했습니다."
+        : "고사 생성 중 오류가 발생했습니다.");
   } finally {
     createLoading.value = false;
   }
@@ -458,12 +510,12 @@ const deleteSelectedExams = async () => {
         <div v-for="exam in pagedExams" :key="exam.exam_id" class="exam-card">
           <div class="exam-info">
             <div class="exam-headline">
-              <span class="exam-id">{{ exam.exam_id }}</span> 
-              <div class="exam-badge">고사</div>
-              <span class="exam-period-inline"
-                >{{ new Date(exam.start_time).toLocaleDateString("ko-KR") }} ~
-                {{ new Date(exam.end_time).toLocaleDateString("ko-KR") }}</span
-              >
+              <div class="headline-left">
+                <span class="exam-id">{{ exam.exam_id }}</span> 
+                <span class="exam-count">{{ exam._count?.questions ?? 0 }}문제</span>
+                <span v-if="exam.class?.class_name" class="exam-class-name">{{ exam.class.class_name }}</span>
+              </div>
+              <span class="exam-period-inline">{{ new Date(exam.start_time).toLocaleDateString("ko-KR") }} ~ {{ new Date(exam.end_time).toLocaleDateString("ko-KR") }}</span>
             </div>
             <h4>
               <input
@@ -479,39 +531,17 @@ const deleteSelectedExams = async () => {
                   )
                 "
               />
-              <span>{{ exam.exam_name }}</span>
+              <span class="exam-name-link" @click="viewExamDetails(exam.exam_id)">{{ exam.exam_name }}</span>
+              <button
+                v-if="isCurrentUserOwner(exam.creator?.user_no)"
+                class="btn-start btn-card-action"
+                @click="openEditModal(exam)"
+              >
+                고사집 수정
+              </button>
             </h4>
-          </div>
-          <div class="exam-meta">
-            <span class="exam-meta-line">
-              <span
-                v-if="
-                  exam.creator?.username &&
-                  !isCurrentUserOwner(exam.creator.user_no)
-                "
-                class="exam-owner"
-                >{{ exam.creator.username }}</span
-              >
-              <span
-                v-if="
-                  exam.creator?.username &&
-                  !isCurrentUserOwner(exam.creator.user_no)
-                "
-                class="exam-separator"
-                >·</span
-              >
-              <span class="exam-count"
-                >문제수 {{ exam._count?.questions ?? 0 }}문항</span
-              >
-              <span v-if="exam.class?.class_name" class="exam-separator">·</span>
-              <span v-if="exam.class?.class_name" class="exam-class-name">
-                {{ exam.class.class_name }}
-              </span>
-            </span>
-            <button class="btn-start" @click="viewExamDetails(exam.exam_id)">
-              상세보기
-            </button>
-          </div>
+          </div>         
+        
         </div>
       </div>
     </div>
@@ -523,11 +553,11 @@ const deleteSelectedExams = async () => {
       <div v-if="showCreateModal" class="modal-backdrop" @click.self="closeCreateModal">
         <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="modal-title">
           <div class="modal-header">
-            <h2 id="modal-title" class="modal-title">새 고사집 만들기</h2>
+            <h2 id="modal-title" class="modal-title">{{ modalTitle }}</h2>
             <button class="modal-close-btn" @click="closeCreateModal" aria-label="닫기">✕</button>
           </div>
 
-          <form class="modal-form" @submit.prevent="submitCreateExam">
+          <form class="modal-form" @submit.prevent="submitExamForm">
             <div class="form-group">
               <label for="exam-name" class="form-label">고사 이름 <span class="required">*</span></label>
               <input
@@ -632,7 +662,7 @@ const deleteSelectedExams = async () => {
               </button>
               <button type="submit" class="btn-submit" :disabled="createLoading" id="btn-submit-create-exam">
                 <span v-if="createLoading" class="loading-spinner"></span>
-                {{ createLoading ? '생성 중...' : '고사 생성' }}
+                {{ submitButtonLabel }}
               </button>
             </div>
           </form>
@@ -774,27 +804,50 @@ const deleteSelectedExams = async () => {
 
 
 .exam-card {
-  display: inline-flex;
-  align-items: center;
-  background: rgba(255, 255, 255, 0.03);
+  background: rgba(30, 41, 59, 0.4);
+  backdrop-filter: blur(12px);
   border: 1px solid rgba(255, 255, 255, 0.05);
-  border-radius: 10px;
+  border-radius: 16px;
   padding: 1.25rem 1.5rem;
   display: flex;
-  justify-content: space-between;
-  align-items: center;
+  flex-direction: column;
+  gap: 1.25rem;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.exam-card:hover {
+  background: rgba(30, 41, 59, 0.6);
+  transform: translateY(-4px);
+  border-color: rgba(129, 140, 248, 0.25);
+  box-shadow: 0 12px 30px -10px rgba(0, 0, 0, 0.4);
 }
 
 .exam-info {
   display: flex;
   flex-direction: column;
   gap: 0.35rem;
+  width: 100%;
 }
 .exam-headline {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  width: 100%;
+}
+
+.headline-left {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.exam-period-inline,
+.exam-count,
+.exam-class-name,
+.exam-id {
   display: inline-flex;
   align-items: center;
-  gap: 0.55rem;
-  flex-wrap: wrap;
 }
 .exam-badge {
   display: inline-block;
@@ -810,16 +863,33 @@ const deleteSelectedExams = async () => {
   font-size: 1.5rem !important;
   font-weight: 900 !important;
   color: #0055ff !important;
-  margin-right: 0.5rem;
 }
 
 .exam-info h4 {
   display: flex;
   align-items: center;
+  gap: 0.35rem;
   color: #f8fafc;
   margin: 0;
   font-size: 1.15rem;
   font-weight: 700;
+  width: 100%;
+}
+
+.exam-name-link {
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 0;
+}
+
+.exam-name-link:hover {
+  color: #818cf8;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+.exam-info .btn-card-action {
+  margin-left: auto;
 }
 
 .copy-checkbox {
@@ -863,10 +933,12 @@ const deleteSelectedExams = async () => {
 
 .exam-meta {
   display: flex;
-  flex-direction: column;
-  align-items: flex-end;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
   color: #cbd5f5;
-  gap: 0.3rem;
 }
 
 .exam-period-inline {
@@ -892,8 +964,13 @@ const deleteSelectedExams = async () => {
 }
 
 .exam-count {
-  color: #c7d2fe;
-  font-weight: 600;
+  font-size: 0.72rem;
+  color: #818cf8;
+  background: rgba(129, 140, 248, 0.1);
+  padding: 0.15rem 0.5rem;
+  border-radius: 6px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
 }
 
 .exam-separator {
@@ -901,15 +978,7 @@ const deleteSelectedExams = async () => {
   font-weight: 700;
 }
 
-.btn-start {
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  color: #e2e8f0;
-  padding: 0.55rem 1.3rem;
-  border-radius: 10px;
-  cursor: not-allowed;
-  font-weight: 600;
-}
+
 
 .search-select,
 .search-input {
@@ -1104,9 +1173,9 @@ const deleteSelectedExams = async () => {
 }
 
 .exam-list {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.25rem;
 }
 
 @media (max-width: 1024px) {
@@ -1205,6 +1274,35 @@ const deleteSelectedExams = async () => {
 .btn-new-icon {
   font-size: 1rem;
   line-height: 1;
+}
+
+.btn-card-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 72px;
+  height: 34px;
+  padding: 0 0.95rem;
+  border-radius: 9px;
+  border: 1px solid rgba(129, 140, 248, 0.24);
+  background: rgba(99, 102, 241, 0.1);
+  color: #c7d2fe;
+  font-size: 0.84rem;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    color 0.2s ease,
+    transform 0.2s ease;
+}
+
+.btn-card-action:hover {
+  background: rgba(99, 102, 241, 0.18);
+  border-color: rgba(129, 140, 248, 0.42);
+  color: #ffffff;
+  transform: translateY(-1px);
 }
 
 /* 모달 스타일 */
