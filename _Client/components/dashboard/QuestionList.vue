@@ -46,6 +46,7 @@ const groups = ref<Group[]>([]);
 const selectedQuestionForSolve = ref<Question | null>(null);
 const selectedQuestionForEdit = ref<Question | null>(null);
 const showGroupManager = ref(false);
+const unassignedCount = ref(0);
 const selectedQuestionIds = ref<string[]>([]);
 const searchField = ref<"content" | "title" | "id">(props.appliedSearchField);
 const searchInput = ref("");
@@ -390,14 +391,15 @@ const searchedGroups = computed(() => {
 
 const fetchGroups = async () => {
   try {
-    const data = await $fetch<Group[]>(`${apiBase.value}/groups`, {
+    const data = await $fetch<{ groups: Group[]; unassigned_count: number }>(`${apiBase.value}/groups`, {
       query: {
         scope: props.viewMode,
         userNo: props.currentUserNo ?? undefined,
         viewerNo: props.currentUserNo ?? undefined,
       },
     });
-    groups.value = data;
+    groups.value = data.groups;
+    unassignedCount.value = data.unassigned_count;
   } catch (error) {
     console.error("서버 통신 오류(fetch) groups:", error);
   }
@@ -507,11 +509,13 @@ watch(
             </button>
           </div>
         </div>
+
         <GroupHierarchy
           :groups="searchedGroups.groups"
           :selected-group-id="props.selectedGroupId"
           :expanded-ids="searchedGroups.expandedIds"
           :current-user-no="props.currentUserNo"
+          :unassigned-count="unassignedCount"
           @select-group="handleSelectGroup"
         />
         <div
@@ -1574,19 +1578,15 @@ watch(
     align-items: flex-start;
     gap: 1rem;
   }
-
   .question-actions {
-    width: 100%;
-  }
-
-  .btn-solve {
     width: 100%;
   }
 }
 
 .group-overlay-header {
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-start;
+  gap: 0.75rem;
   align-items: center;
   flex-wrap: wrap;
   font-size: 0.75rem;
@@ -1611,6 +1611,7 @@ watch(
   display: inline-flex;
   align-items: center;
   gap: 0.3rem;
+  white-space: nowrap;
 }
 
 .action-button-group {

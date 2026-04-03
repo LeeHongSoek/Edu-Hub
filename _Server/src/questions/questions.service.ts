@@ -31,10 +31,14 @@ export class QuestionsService {
     }
 
     if (groupId !== undefined) {
-      const descendantGroupIds = await this.getDescendantGroupIds(groupId);
-      where.group_id = {
-        in: descendantGroupIds,
-      };
+      if (BigInt(groupId) === BigInt(-1)) {
+        where.group_id = null;
+      } else {
+        const descendantGroupIds = await this.getDescendantGroupIds(groupId);
+        where.group_id = {
+          in: descendantGroupIds,
+        };
+      }
     }
 
     const safePage = Number.isFinite(page) && page > 0 ? Math.floor(page) : 1;

@@ -31,35 +31,23 @@ export class GroupsService {
       },
     });
 
-    return this.attachCounts(groups);
+    const hierarchy = this.attachCounts(groups);
+    const unassignedCount = await this.getUnassignedCount(scope, userNo, viewerNo);
+
+    return {
+      groups: hierarchy,
+      unassigned_count: unassignedCount
+    };
   }
 
   async getHierarchy(scope?: string, userNo?: string | number, viewerNo?: string | number) {
-    const groups = await this.prisma.group.findMany({
-      where: {
-        parent_group_id: null,
-      },
-      include: {
-        _count: { select: this.countSelector(scope, userNo, viewerNo) },
-        child_groups: {
-          include: {
-            _count: { select: this.countSelector(scope, userNo, viewerNo) },
-            child_groups: {
-              include: {
-                _count: { select: this.countSelector(scope, userNo, viewerNo) },
-                child_groups: {
-                  include: {
-                    _count: { select: this.countSelector(scope, userNo, viewerNo) },
-                  },
-                },
-              },
-            },
-          },
-        },
-      },
-    });
+    return this.findAll(scope, userNo, viewerNo);
+  }
 
-    return this.attachCounts(groups);
+  private async getUnassignedCount(scope?: string, userNo?: string | number, viewerNo?: string | number) {
+    const selector = this.countSelector(scope, userNo, viewerNo);
+    const where = { ...selector.questions.where, group_id: null, p_question_id: null };
+    return this.prisma.question.count({ where });
   }
 
   private attachCounts(groups: any[]): any[] {
