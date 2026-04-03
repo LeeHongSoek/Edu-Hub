@@ -188,11 +188,15 @@ const formatTime = (dateStr: string) => {
           <div class="log-main-info">
             <div class="log-top">
               <span class="log-type-label">{{ getLogTypeInfo(log.logtype).label }}</span>
-              <span v-if="log.user_content" class="log-action-memo">{{ log.title }}</span>
+              <span
+                v-if="log.user_content"
+                class="log-action-memo"
+                :title="log.title"
+              >{{ log.title }}</span>
               <span class="log-time">{{ formatTime(log.last_played_at) }}</span>
             </div>
             <div class="log-title-row">
-              <div class="log-title" :title="log.title">{{ log.user_content }}</div>
+              <div class="log-title" :title="log.user_content">{{ log.user_content }}</div>
               <div v-if="formatResult(log)" class="log-result">
                 {{ formatResult(log) }}
               </div>
@@ -369,7 +373,7 @@ const formatTime = (dateStr: string) => {
 
 .log-list {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 1rem;
 }
 
@@ -388,12 +392,14 @@ const formatTime = (dateStr: string) => {
   display: flex;
   align-items: center;
   gap: 1.25rem;
+  min-width: 0;
+  overflow: hidden;
   transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .log-card:hover {
   background: rgba(30, 41, 59, 0.6);
-  transform: translateX(6px) scale(1.01);
+  transform: translateY(-2px) scale(1.01);
   border-color: rgba(129, 140, 248, 0.25);
   box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
 }
@@ -424,9 +430,11 @@ const formatTime = (dateStr: string) => {
 }
 
 .log-top {
-  display: flex;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: center;
   gap: 0.85rem;
+  min-width: 0;
 }
 
 .log-type-label {
@@ -444,7 +452,14 @@ const formatTime = (dateStr: string) => {
   padding: 0.1rem 0.5rem;
   border-radius: 6px;
   font-weight: 600;
+  display: inline-block;
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+  width: fit-content;
+  max-width: 100%;
+  justify-self: start;
 }
 
 .log-time {
@@ -452,13 +467,15 @@ const formatTime = (dateStr: string) => {
   font-size: 0.78rem;
   color: #64748b;
   font-weight: 500;
+  flex-shrink: 0;
 }
 
 .log-title-row {
-  display: flex;
-  justify-content: space-between;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
   gap: 1rem;
+  min-width: 0;
 }
 
 .log-title {
