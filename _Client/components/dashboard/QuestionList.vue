@@ -457,6 +457,8 @@ const deleteSelectedQuestions = async () => {
     }
     selectedQuestionIds.value = [];
     selectedQuestionCache.value = {};
+    localStorage.removeItem(STORAGE_KEY_IDS);
+    localStorage.removeItem(STORAGE_KEY_CACHE);
     emit("refresh");
   } catch (error) {
     console.error("문제 삭제 오류:", error);
@@ -478,10 +480,64 @@ const openBulkSolveModal = () => {
   showBulkSolveModal.value = true;
 };
 
+const STORAGE_KEY_IDS = "edu_hub_selected_question_ids";
+const STORAGE_KEY_CACHE = "edu_hub_selected_question_cache";
+
+const restoreSelectionFromStorage = () => {
+  const savedIds = localStorage.getItem(STORAGE_KEY_IDS);
+  const savedCache = localStorage.getItem(STORAGE_KEY_CACHE);
+
+  if (savedIds) {
+    try {
+      selectedQuestionIds.value = JSON.parse(savedIds);
+    } catch (e) {
+      console.error("Failed to parse saved IDs", e);
+    }
+  }
+
+  if (savedCache) {
+    try {
+      selectedQuestionCache.value = JSON.parse(savedCache);
+    } catch (e) {
+      console.error("Failed to parse saved cache", e);
+    }
+  }
+};
+
 onMounted(async () => {
+  restoreSelectionFromStorage();
+
   await fetchGroups();
   searchInput.value = props.appliedSearchKeyword;
+  searchField.value = props.appliedSearchField;
 });
+
+const clearSelection = () => {
+  selectedQuestionIds.value = [];
+  selectedQuestionCache.value = {};
+  localStorage.removeItem(STORAGE_KEY_IDS);
+  localStorage.removeItem(STORAGE_KEY_CACHE);
+};
+
+// 로그아웃하거나 사용자가 바뀌면 선택 상태 및 필터 초기화
+watch(
+  () => props.currentUserNo,
+  (newVal, oldVal) => {
+    if (oldVal !== undefined && newVal !== oldVal) {
+      clearSelection();
+      clearAllFilters();
+    }
+  },
+);
+
+// 선택 상태 변경 시 localStorage에 저장
+watch(selectedQuestionIds, (newIds) => {
+  localStorage.setItem(STORAGE_KEY_IDS, JSON.stringify(newIds));
+}, { deep: true });
+
+watch(selectedQuestionCache, (newCache) => {
+  localStorage.setItem(STORAGE_KEY_CACHE, JSON.stringify(newCache));
+}, { deep: true });
 
 watch(
   () => props.viewMode,
@@ -505,18 +561,18 @@ watch(
 );
 
 watch(
-  () => props.questions,
-  () => {
+  [() => props.questions, () => selectedQuestionIds.value],
+  ([newQuestions, newIds]) => {
     const nextCache = { ...selectedQuestionCache.value };
-    for (const question of props.questions) {
+    for (const question of newQuestions) {
       const idKey = getQuestionIdKey(question.question_id);
-      if (selectedQuestionIds.value.includes(idKey)) {
+      if (newIds.includes(idKey)) {
         nextCache[idKey] = question;
       }
     }
     selectedQuestionCache.value = nextCache;
   },
-  { immediate: true },
+  { immediate: true, deep: true },
 );
 </script>
 
@@ -964,9 +1020,8 @@ watch(
   cursor: pointer;
   display: inline-flex;
   align-items: center;
-  gap: 0.35rem;
-  transition: all 0.2s ease;
   white-space: nowrap;
+  cursor: pointer;
 }
 
 .scope-btn.active {
@@ -976,10 +1031,7 @@ watch(
 }
 
 
-.scope-btn:not(.active):hover {
-  color: #e2e8f0;
-  background: rgba(255, 255, 255, 0.04);
-}
+
 
 .question-list {
   display: flex;
@@ -1105,7 +1157,6 @@ watch(
   border-radius: 10px;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s;
 }
 
 .btn-search {
@@ -1114,9 +1165,7 @@ watch(
   color: #fff;
 }
 
-.btn-search:hover {
-  background: #4f46e5;
-}
+
 
 .btn-create {
   display: inline-flex;
@@ -1132,13 +1181,8 @@ watch(
   font-size: 0.9rem;
   font-weight: 700;
   line-height: 1;
-  cursor: pointer;
   white-space: nowrap;
-  transition: all 0.2s ease;
-}
-
-.btn-create:hover {
-  background: #4f46e5;
+  cursor: pointer;
 }
 
 .btn-delete {
@@ -1155,15 +1199,11 @@ watch(
   font-size: 0.9rem;
   font-weight: 700;
   line-height: 1;
-  cursor: pointer;
   white-space: nowrap;
-  transition: all 0.2s ease;
+  cursor: pointer;
 }
 
-.btn-delete:hover:not(:disabled) {
-  background: rgba(239, 68, 68, 0.22);
-  border-color: rgba(248, 113, 113, 0.7);
-}
+
 
 .btn-delete:disabled {
   opacity: 0.45;
@@ -1194,18 +1234,10 @@ watch(
   line-height: 1.02;
   text-align: center;
   cursor: pointer;
-  transition:
-    background 0.2s ease,
-    color 0.2s ease,
-    transform 0.2s ease,
-    opacity 0.2s ease;
+  cursor: pointer;
 }
 
-.btn-bulk-action:hover:not(:disabled) {
-  background: rgba(99, 102, 241, 0.12);
-  color: #e2e8f0;
-  transform: translateY(-1px);
-}
+
 
 .btn-bulk-action:disabled {
   opacity: 0.38;
@@ -1216,12 +1248,10 @@ watch(
   border: 1px solid rgba(255, 255, 255, 0.12);
   background: rgba(255, 255, 255, 0.05);
   color: #cbd5e1;
+  cursor: pointer;
 }
 
-.btn-reset-search:hover {
-  background: rgba(255, 255, 255, 0.1);
-  color: #fff;
-}
+
 
 .pagination-summary {
   display: flex;
@@ -1243,7 +1273,6 @@ watch(
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 10px;
-  transition: all 0.3s ease;
   backdrop-filter: blur(10px);
 }
 
@@ -1301,12 +1330,6 @@ watch(
   opacity: 1 !important;
 }
 
-.question-item:hover {
-  transform: translateX(5px);
-  background: rgba(255, 255, 255, 0.08);
-  border-color: var(--primary-color, #6366f1);
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
-}
 
 .question-content {
   flex: 1;
@@ -1421,7 +1444,6 @@ watch(
   border-radius: 10px;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s;
 }
 
 .btn-modify {
@@ -1432,7 +1454,6 @@ watch(
   border-radius: 10px;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s;
 }
 
 .btn-copy {
@@ -1441,30 +1462,15 @@ watch(
   color: #c7d2fe;
   border: 1px solid rgba(99, 102, 241, 0.28);
   border-radius: 10px;
-  font-weight: 700;
-  cursor: pointer;
-  transition: all 0.2s;
   white-space: nowrap;
+  cursor: pointer;
 }
 
-.btn-solve:hover {
-  background: #4f46e5;
-  transform: translateY(-2px);
-}
 
-.btn-modify:hover {
-  background: rgba(255, 255, 255, 0.1);
-  color: #fff;
-  border-color: rgba(255, 255, 255, 0.2);
-  transform: translateY(-2px);
-}
 
-.btn-copy:hover {
-  background: rgba(99, 102, 241, 0.2);
-  color: #fff;
-  border-color: rgba(99, 102, 241, 0.42);
-  transform: translateY(-2px);
-}
+
+
+
 
 .slider-wrapper {
   display: flex;
@@ -1522,13 +1528,9 @@ watch(
   cursor: pointer;
   box-shadow: 0 0 15px rgba(99, 102, 241, 0.4);
   border: 2px solid #fff;
-  transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
-.page-slider:hover::-webkit-slider-thumb {
-  transform: scale(1.15);
-  box-shadow: 0 0 20px rgba(99, 102, 241, 0.6);
-}
+
 
 .slider-fill {
   position: absolute;
@@ -1608,9 +1610,6 @@ watch(
   padding: 0.5rem 1rem;
   font-weight: 600;
   cursor: pointer;
-  transition:
-    background 0.2s,
-    transform 0.2s;
   height: 38px;
 }
 
@@ -1619,10 +1618,7 @@ watch(
   color: white;
 }
 
-.btn-search:hover {
-  background: #4f46e5;
-  transform: translateY(-1px);
-}
+
 
 .btn-reset-search {
   background: rgba(255, 255, 255, 0.08);
@@ -1699,9 +1695,9 @@ watch(
 
 .group-overlay-header {
   display: flex;
-  justify-content: flex-start;
-  gap: 0.75rem;
+  justify-content: space-between;
   align-items: center;
+  width: 100%;
   flex-wrap: wrap;
   font-size: 0.75rem;
   font-weight: 700;
@@ -1711,21 +1707,6 @@ watch(
   letter-spacing: 0.05em;
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
   padding-bottom: 0.5rem;
-}
-
-.btn-clear-filter {
-  background: rgba(99, 102, 241, 0.2);
-  border: 1px solid rgba(99, 102, 241, 0.4);
-  color: #a5b4fc;
-  padding: 0.2rem 0.5rem;
-  border-radius: 4px;
-  font-size: 0.65rem;
-  cursor: pointer;
-  transition: all 0.2s;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.3rem;
-  white-space: nowrap;
 }
 
 .action-button-group {
@@ -1752,7 +1733,6 @@ watch(
   line-height: 1;
   cursor: pointer;
   white-space: nowrap;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .btn-create {
@@ -1761,10 +1741,7 @@ watch(
   border-radius: 8px;
 }
 
-.btn-create:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
-}
+
 
 .btn-delete {
   background: transparent;
@@ -1773,10 +1750,7 @@ watch(
   margin-left: 2px;
 }
 
-.btn-delete:hover:not(:disabled) {
-  background: rgba(239, 68, 68, 0.15);
-  color: #f87171;
-}
+
 
 .btn-delete:disabled {
   opacity: 0.4;
@@ -1845,10 +1819,7 @@ watch(
   cursor: pointer;
 }
 
-.group-search-clear:hover {
-  background: rgba(99, 102, 241, 0.25);
-  color: #fff;
-}
+
 
 .group-search-empty {
   margin-top: 0.5rem;
@@ -1861,20 +1832,16 @@ watch(
   border: 1px solid rgba(99, 102, 241, 0.4);
   cursor: pointer;
   opacity: 0.6;
-  transition: opacity 0.2s;
   padding: 0.2rem 0.5rem;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 0.35rem;
   border-radius: 4px;
+  cursor: pointer;
 }
 
-.btn-manage-groups:hover {
-  opacity: 1;
-  background: rgba(99, 102, 241, 0.3);
-  color: #fff;
-}
+
 
 .settings-icon {
   width: 1rem;
@@ -1898,6 +1865,42 @@ watch(
   border-radius: 10px;
   color: #64748b;
   font-size: 1rem;
+}
+
+.btn-clear-filter {
+  background: rgba(14, 165, 233, 0.15);
+  border: 1px solid rgba(14, 165, 233, 0.35);
+  color: #7dd3fc;
+  cursor: pointer;
+  padding: 0.25rem 0.6rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  border-radius: 6px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  transition: all 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+  white-space: nowrap;
+}
+
+.btn-clear-filter:hover {
+  background: rgba(14, 165, 233, 0.25);
+  border-color: rgba(14, 165, 233, 0.55);
+  color: #e0f2fe;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(14, 165, 233, 0.2);
+}
+
+.btn-clear-filter:active {
+  transform: translateY(0);
+}
+
+.filter-icon {
+  width: 0.95rem;
+  height: 0.95rem;
+  flex-shrink: 0;
+  color: inherit;
 }
 
 @media (max-width: 1400px) {

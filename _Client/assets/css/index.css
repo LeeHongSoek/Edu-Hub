@@ -91,3 +91,13 @@ body {
   padding: 1rem 1rem;
   min-height: 430px;
 }
+
+/* 글로벌 포인터 커서 설정 */
+button, 
+a, 
+input[type="button"], 
+input[type="submit"], 
+input[type="reset"],
+[role="button"] {
+  cursor: pointer !important;
+}
