@@ -751,6 +751,12 @@ watch(
                 </button>
               </div>
               <div class="slider-row">
+                 <input
+                  type="checkbox"
+                  class="copy-checkbox"
+                  aria-label="전체 문제 선택"
+                  
+                />
                 <span class="summary-text"
                   >총 {{ props.totalItems }}문제</span
                 >
