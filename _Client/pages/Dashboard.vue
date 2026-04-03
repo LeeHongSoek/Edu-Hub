@@ -3,7 +3,7 @@ import { ref, onMounted, onUnmounted, computed, nextTick } from "vue";
 import StudentDashboard from "~/components/dashboard/StudentDashboard.vue";
 import TeacherDashboard from "~/components/dashboard/TeacherDashboard.vue";
 import ParentDashboard from "~/components/dashboard/ParentDashboard.vue";
-import StudyLogViewer from "~/components/dashboard/StudyLogViewer.vue";
+import UsersLogViewer from "~/components/dashboard/UsersLogViewer.vue";
 import RelationManager from "~/components/dashboard/RelationManager.vue";
 import MessageManager from "~/components/dashboard/MessageManager.vue";
 import QuestionBookManager from "~/components/dashboard/QuestionBookManager.vue";
@@ -12,9 +12,6 @@ import ManagerNav from "~/components/dashboard/ManagerNav.vue";
 import IconGraduationCap from "~/assets/icons/IconGraduationCap.svg?component";
 import IconBoard from "~/assets/icons/IconBoard.svg?component";
 import IconHome from "~/assets/icons/IconHome.svg?component";
-import IconFileText from "~/assets/icons/IconFileText.svg?component";
-import IconBook from "~/assets/icons/IconBook.svg?component";
-import IconPencil from "~/assets/icons/IconPencil.svg?component";
 import IconChart from "~/assets/icons/IconChart.svg?component";
 import IconUsers from "~/assets/icons/IconUsers.svg?component";
 import IconMessage from "~/assets/icons/IconMessage.svg?component";
@@ -362,7 +359,7 @@ onUnmounted(() => {
         </div>
 
         <div v-else-if="activeTab === 'logs'">
-          <StudyLogViewer />
+          <UsersLogViewer />
         </div>
 
         <div v-else-if="activeTab === 'question-books'">

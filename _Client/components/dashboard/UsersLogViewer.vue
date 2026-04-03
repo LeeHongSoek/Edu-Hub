@@ -120,7 +120,7 @@ const formatTime = (dateStr: string) => {
   <div class="log-viewer">
     <div class="header-row">
       <div class="title-group">
-        <h3><IconCalendar class="section-icon" /> 최근 학습 활동 내역</h3>
+        <h3><IconCalendar class="section-icon" /> 최근 사용자 활동 로그</h3>
         
         <div class="filter-group" role="tablist">
           <button
@@ -155,7 +155,7 @@ const formatTime = (dateStr: string) => {
     
     <div v-else-if="logs.length === 0" class="empty-state">
       <IconCalendar class="empty-icon" />
-      <p>기록된 학습 활동이 없습니다.</p>
+      <p>기록된 활동 로그가 없습니다.</p>
     </div>
 
     <div v-else class="log-content-area">
