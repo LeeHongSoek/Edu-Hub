@@ -1679,7 +1679,7 @@ const submitReview = async () => {
 
 .solver-slider-tooltip {
   position: absolute;
-  bottom: calc(100% + 10px);
+  top: calc(100% + 10px);
   transform: translateX(-50%);
   padding: 0.2rem 0.45rem;
   border-radius: 999px;
@@ -1690,6 +1690,7 @@ const submitReview = async () => {
   line-height: 1;
   pointer-events: none;
   white-space: nowrap;
+  z-index: 10;
 }
 
 .footer-slider-nav .btn-primary {
