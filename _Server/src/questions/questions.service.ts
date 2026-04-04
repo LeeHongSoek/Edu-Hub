@@ -44,8 +44,13 @@ export class QuestionsService {
     }
 
     if (groupId !== undefined) {
-      if (BigInt(groupId) === BigInt(-1)) {
-        where.group_id = null;
+      const gId = BigInt(groupId);
+      if (gId === BigInt(-1)) {
+        // '전체': 필터 없음 (모두 노출)
+        delete where.group_id;
+      } else if (gId === BigInt(0)) {
+        // '문제분류 없음': 정확히 group_id 0인 것만 노출
+        where.group_id = BigInt(0);
       } else {
         const descendantGroupIds = await this.getDescendantGroupIds(groupId);
         where.group_id = {

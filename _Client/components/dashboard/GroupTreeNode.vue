@@ -21,6 +21,7 @@ const emit = defineEmits<{
 }>();
 
 const isExpanded = ref(false);
+const isAllGroup = computed(() => props.group.name === "전체");
 const isOwned = computed(() => {
   const selfOwned =
     props.currentUserNo !== null && props.currentUserNo !== undefined
@@ -83,6 +84,7 @@ const toggleExpand = (event: Event) => {
       :class="{
         'is-selected': group.group_id === selectedGroupId,
         'is-owned': isOwned,
+        'is-all-group': isAllGroup,
       }"
       @click="emit('select-group', group.group_id)"
     >
@@ -162,6 +164,10 @@ const toggleExpand = (event: Event) => {
 .node-content.is-selected .name-text {
   color: #fff;
   font-weight: 600;
+}
+
+.node-content.is-all-group .name-text {
+  font-weight: 700;
 }
 
 .toggle-icon {
