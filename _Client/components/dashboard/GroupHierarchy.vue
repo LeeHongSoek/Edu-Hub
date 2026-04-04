@@ -7,7 +7,6 @@ const props = defineProps<{
   selectedGroupId?: string | number | null;
   expandedIds?: Set<string | number> | null;
   currentUserNo?: string | number | null;
-  unassignedCount?: number;
 }>();
 
 const emit = defineEmits<{
@@ -17,19 +16,7 @@ const emit = defineEmits<{
 
 <template>
   <div class="group-hierarchy">
-    <!-- 미분류 문제 노드 (디자인 일관성을 위해 내부에 배치) -->
-    <div
-      v-if="typeof unassignedCount === 'number'"
-      class="node-content special-node"
-      :class="{ 'is-selected': selectedGroupId === -1 }"
-      @click="emit('select-group', -1)"
-    >
-      <span class="bullet">•</span>
-      <span class="name-text">
-        문제 분류 없음
-        <span class="count-pill">({{ unassignedCount }}개)</span>
-      </span>
-    </div>
+
 
     <GroupTreeNode
       v-for="group in groups"
@@ -41,7 +28,7 @@ const emit = defineEmits<{
       :depth="0"
       @select-group="emit('select-group', $event)"
     />
-    <div v-if="groups.length === 0 && (typeof unassignedCount !== 'number' || unassignedCount === 0)" class="no-groups">
+    <div v-if="groups.length === 0" class="no-groups">
       그룹 정보 없음
     </div>
   </div>
@@ -110,10 +97,7 @@ const emit = defineEmits<{
   font-size: 0.75rem;
 }
 
-.special-node {
-  background: rgba(99, 102, 241, 0.06);
-  border-color: rgba(99, 102, 241, 0.15);
-}
+
 
 .no-groups {
   font-size: 0.75rem;

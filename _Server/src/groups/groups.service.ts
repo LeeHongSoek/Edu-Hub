@@ -65,7 +65,6 @@ export class GroupsService {
 
     return {
       groups: hierarchy,
-      unassigned_count: unassignedCount
     };
   }
 
@@ -73,11 +72,7 @@ export class GroupsService {
     return this.findAll(scope, userNo, viewerNo, bookId, examId);
   }
 
-  private async getUnassignedCount(scope?: string, userNo?: string | number, viewerNo?: string | number, bookId?: string | number, examId?: string | number) {
-    const selector = this.countSelector(scope, userNo, viewerNo, bookId, examId);
-    const where = { ...selector.questions.where, group_id: null, p_question_id: null };
-    return this.prisma.question.count({ where });
-  }
+
 
   private attachCounts(groups: any[]): any[] {
     const compute = (node: any): number => {

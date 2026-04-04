@@ -45,7 +45,7 @@ const groups = ref<Group[]>([]);
 const selectedQuestionForSolve = ref<Question | null>(null);
 const selectedQuestionForEdit = ref<Question | null>(null);
 const showGroupManager = ref(false);
-const unassignedCount = ref(0);
+
 
 // --- [토스트 메시지 관리] ---
 const showToast = ref(false);
@@ -566,7 +566,6 @@ const fetchGroups = async () => {
       },
     });
     groups.value = data.groups;
-    unassignedCount.value = data.unassigned_count;
   } catch (error) {
     console.error("서버 통신 오류(fetch) groups:", error);
   }
@@ -834,7 +833,7 @@ watch(
             </button>
             <button class="btn-clear-filter" @click="clearAllFilters">
               <IconUsers class="filter-icon" />
-              {{ (props.selectionContext || 'A') === 'A' ? (props.scopeMode === 'all' ? '나의그룹' : '전체') : '전체' }}
+              {{ (props.selectionContext || 'A') === 'A' ? (props.scopeMode === 'all' ? '전체그룹' : '나의그룹') : '전체' }}
             </button>
           </div>
           <div class="group-breadcrumb" v-html="selectedGroupBreadcrumb || '&nbsp;'"></div>
@@ -860,7 +859,7 @@ watch(
           :selected-group-id="props.selectedGroupId"
           :expanded-ids="searchedGroups.expandedIds"
           :current-user-no="props.currentUserNo"
-          :unassigned-count="unassignedCount"
+
           @select-group="handleSelectGroup"
         />
         <div
@@ -1072,7 +1071,7 @@ watch(
                 </div>
                 <div class="question-group-path">
                   <span>{{
-                    q.group ? formatGroupPath(q.group) : "문제 분류 없음"
+                    q.group ? formatGroupPath(q.group) : "미분류"
                   }}</span>
                   <span
                     v-if="q.creator?.username && shouldShowQuestionOwner(q)"
