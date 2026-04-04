@@ -493,7 +493,7 @@ const filterGroupsByOwner = (
   ownerNo: string | number,
 ): Group[] => {
   const matches = (group: Group) =>
-    String(group.creator_no) === String(ownerNo);
+    String(group.creator_no) === String(ownerNo) || String(group.creator_no) === "0";
   const result: Group[] = [];
   for (const group of list) {
     if (!matches(group)) continue;

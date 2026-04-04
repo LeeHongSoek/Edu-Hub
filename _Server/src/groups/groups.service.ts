@@ -17,7 +17,10 @@ export class GroupsService {
     // scope=mine일 경우 그룹 목록 자체도 로그인 사용자의 것만 필터링
     // 단, B, C 환경(문제집/고사 관리)에서는 다른 사람의 그룹에 속한 문항이 포함될 수 있으므로 필터를 해제함
     if (normalizedScope === 'mine' && userNo !== undefined && userNo !== null && !bookId && !examId) {
-      mainWhere.creator_no = BigInt(userNo);
+      mainWhere.OR = [
+        { creator_no: BigInt(userNo) },
+        { creator_no: BigInt(0) }
+      ];
     }
 
     const groups = await this.prisma.group.findMany({
@@ -44,24 +47,31 @@ export class GroupsService {
 
     let hierarchy = this.attachCounts(groups);
 
-    // B, C 환경에서 빈 그룹 필터링 로직 제거 (항상 전체를 보여달라는 요청 반영)
-    /*
-    if (bookId || examId) {
-      const filterEmpty = (nodes: any[]): any[] => {
-        return nodes
-          .filter(node => node.question_total > 0)
-          .map(node => {
-            if (node.child_groups) {
-              node.child_groups = filterEmpty(node.child_groups);
-            }
-            return node;
-          });
-      };
-      hierarchy = filterEmpty(hierarchy);
-    }
-    */
+    // 시스템 그룹 중복 제거 및 필터링: creator_no가 0인 경우 ID가 -1, 0인 공식 그룹만 남김
+    hierarchy = hierarchy.filter(group => {
+      if (BigInt(group.creator_no) === BigInt(0)) {
+        return Number(group.group_id) === -1 || Number(group.group_id) === 0;
+      }
+      return true;
+    });
 
-    const unassignedCount = await this.getUnassignedCount(scope, userNo, viewerNo, bookId, examId);
+    // 시스템 특수 그룹 정렬: -1(전체) -> 0(문제분류 없음) -> 기타 시스템 그룹 -> 일반 사용자 그룹
+    hierarchy.sort((a, b) => {
+      const gidA = Number(a.group_id);
+      const gidB = Number(b.group_id);
+
+      if (gidA === -1) return -1;
+      if (gidB === -1) return 1;
+
+      if (gidA === 0) return -1;
+      if (gidB === 0) return 1;
+
+      const a0 = BigInt(a.creator_no) === BigInt(0);
+      const b0 = BigInt(b.creator_no) === BigInt(0);
+      if (a0 && !b0) return -1;
+      if (!a0 && b0) return 1;
+      return 0;
+    });
 
     return {
       groups: hierarchy,
@@ -104,7 +114,10 @@ export class GroupsService {
     } else {
       // 컬렉션 환경이 아닐 때만 기존 scope 필터 적용
       if (normalizedScope === 'mine' && userNo !== undefined && userNo !== null) {
-        where.creator_no = BigInt(userNo);
+        where.OR = [
+          { creator_no: BigInt(userNo) },
+          { creator_no: BigInt(0) }
+        ];
       } else if (normalizedScope === 'all') {
         where.is_public = true;
         if (viewerNo !== undefined && viewerNo !== null) {

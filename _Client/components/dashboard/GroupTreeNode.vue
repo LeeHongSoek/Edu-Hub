@@ -26,7 +26,8 @@ const isOwned = computed(() => {
     props.currentUserNo !== null && props.currentUserNo !== undefined
       ? String(props.group.creator_no) === String(props.currentUserNo)
       : false;
-  return Boolean(props.inheritedOwned) || selfOwned;
+  const isSystemOwned = String(props.group.creator_no) === "0";
+  return Boolean(props.inheritedOwned) || selfOwned || isSystemOwned;
 });
 
 const rawQuestionCount = (g: any) =>
