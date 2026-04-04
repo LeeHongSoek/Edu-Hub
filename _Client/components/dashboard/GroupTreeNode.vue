@@ -14,6 +14,7 @@ const props = defineProps<{
   expandedIds?: Set<string | number> | null;
   currentUserNo?: string | number | null;
   inheritedOwned?: boolean;
+  selectionContext?: "A" | "B" | "C";
 }>();
 
 const emit = defineEmits<{
@@ -22,6 +23,12 @@ const emit = defineEmits<{
 
 const isExpanded = ref(false);
 const isAllGroup = computed(() => props.group.name === "전체");
+const displayedGroupName = computed(() => {
+  if (!isAllGroup.value) return props.group.name;
+  if (props.selectionContext === "B") return "전체_선택된문제집";
+  if (props.selectionContext === "C") return "전체_선택된고사";
+  return "전체_문제";
+});
 const isOwned = computed(() => {
   const selfOwned =
     props.currentUserNo !== null && props.currentUserNo !== undefined
@@ -61,14 +68,11 @@ const totalQuestionCount = (g: any): number => {
 };
 
 watchEffect(() => {
-  if (!props.expandedIds) return;
   const groupKey = String(props.group.group_id);
-  if (
+  if (!props.expandedIds) return;
+  isExpanded.value =
     props.expandedIds.has(groupKey) ||
-    props.expandedIds.has(props.group.group_id)
-  ) {
-    isExpanded.value = true;
-  }
+    props.expandedIds.has(props.group.group_id);
 });
 
 const toggleExpand = (event: Event) => {
@@ -98,7 +102,7 @@ const toggleExpand = (event: Event) => {
       </span>
       <span v-else class="bullet">•</span>
       <span class="name-text">
-        {{ group.name }}
+        <span class="name-label">{{ displayedGroupName }}</span>
         <span class="count-pill">({{ totalQuestionCount(group) }}개)</span>
       </span>
     </div>
@@ -116,6 +120,7 @@ const toggleExpand = (event: Event) => {
         :current-user-no="currentUserNo"
         :expanded-ids="expandedIds"
         :inherited-owned="isOwned"
+        :selection-context="selectionContext"
         @select-group="emit('select-group', $event)"
       />
     </div>
@@ -144,6 +149,15 @@ const toggleExpand = (event: Event) => {
 .node-content:hover {
   background: rgba(255, 255, 255, 0.08);
   border-color: rgba(99, 102, 241, 0.3);
+  border-width: 2px;
+}
+
+.node-content:hover .name-text {
+  font-size: 0.88rem;
+}
+
+.node-content:hover .count-pill {
+  font-size: 0.8rem;
 }
 
 .node-content.is-selected {
@@ -168,6 +182,16 @@ const toggleExpand = (event: Event) => {
 
 .node-content.is-all-group .name-text {
   font-weight: 700;
+}
+
+.node-content.is-all-group {
+  border-width: 2px;
+  border-color: rgba(165, 180, 252, 0.7);
+}
+
+.node-content.is-all-group .name-label {
+  text-decoration: underline;
+  text-underline-offset: 0.18rem;
 }
 
 .toggle-icon {
@@ -219,6 +243,10 @@ const toggleExpand = (event: Event) => {
   display: inline-flex;
   align-items: baseline;
   gap: 0.28rem;
+}
+
+.name-label {
+  display: inline-block;
 }
 
 .count-pill {

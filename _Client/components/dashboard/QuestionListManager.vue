@@ -7,6 +7,7 @@ const props = defineProps<{
   listSubtitle?: string | null;
   showScopeToggle?: boolean;
   scopeMode?: "mine" | "all";
+  contextScopeMode?: "mine" | "all";
   showError?: boolean;
   errorMessage?: string | null;
   questions: Question[];
@@ -27,6 +28,7 @@ const props = defineProps<{
 const emit = defineEmits<{
   (e: "refresh"): void;
   (e: "change-scope", scope: "mine" | "all"): void;
+  (e: "change-context-scope", scope: "mine" | "all"): void;
   (e: "change-group", groupId: string | number | null): void;
   (e: "search", payload: { field: "title" | "content" | "id"; keyword: string }): void;
   (e: "reset-search"): void;
@@ -41,6 +43,7 @@ const emit = defineEmits<{
     :list-subtitle="props.listSubtitle"
     :show-scope-toggle="props.showScopeToggle"
     :scope-mode="props.scopeMode"
+    :context-scope-mode="props.contextScopeMode"
     :show-error="props.showError"
     :error-message="props.errorMessage"
     :questions="props.questions"
@@ -58,6 +61,7 @@ const emit = defineEmits<{
     :context-id="props.contextId"
     @refresh="emit('refresh')"
     @change-scope="emit('change-scope', $event)"
+    @change-context-scope="emit('change-context-scope', $event)"
     @change-group="emit('change-group', $event)"
     @search="emit('search', $event)"
     @reset-search="emit('reset-search')"

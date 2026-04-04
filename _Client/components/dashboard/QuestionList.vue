@@ -8,7 +8,6 @@ import QuestionEditor from "~/components/dashboard/QuestionEditor.vue";
 import QuestionSolver from "~/components/dashboard/QuestionSolver.vue";
 import DailyQuestionsModal from "~/components/DailyQuestionsModal.vue";
 import IconSettings from "~/assets/icons/IconSettings.svg?component";
-import IconUsers from "~/assets/icons/IconUsers.svg?component";
 import IconFileText from "~/assets/icons/IconFileText.svg?component";
 import IconCreateAction from "~/assets/icons/IconCreateAction.svg?component";
 import IconDeleteAction from "~/assets/icons/IconDeleteAction.svg?component";
@@ -22,6 +21,7 @@ const props = defineProps<{
   listSubtitle?: string | null;
   showScopeToggle?: boolean;
   scopeMode?: "mine" | "all";
+  contextScopeMode?: "mine" | "all";
   showError?: boolean;
   errorMessage?: string | null;
   questions: Question[];
@@ -114,15 +114,6 @@ const sliderPercentage = computed(() => {
   return ((sliderValue.value - 1) / (props.totalPages - 1)) * 100;
 });
 
-const scopeLabelMine = computed(() => {
-  if (props.selectionContext === "A") return "나의 문제";
-  return "해당 문제";
-});
-
-const scopeLabelAll = computed(() => {
-  if (props.selectionContext === "A") return "전체 문제";
-  return "그외 문제";
-});
 
 const selectedQuestionCount = computed(() => selectedQuestionIds.value.length);
 const canDeleteQuestions = computed(() => selectedQuestionCount.value > 0);
@@ -133,6 +124,7 @@ const isSliderDisabled = computed(() => props.totalPages <= 1);
 const emit = defineEmits<{
   (e: "refresh"): void;
   (e: "change-scope", scope: "mine" | "all"): void;
+  (e: "change-context-scope", scope: "mine" | "all"): void;
   (e: "change-group", groupId: string | number | null): void;
   (e: "search", payload: { field: "title" | "content" | "id"; keyword: string }): void;
   (e: "reset-search"): void;
@@ -158,26 +150,35 @@ const handleSelectGroup = (groupId: string | number | null) => {
   emit("change-group", groupId);
 };
 
-const handleScopeChange = (scope: "mine" | "all") => {
-  emit("change-scope", scope);
-  // 스코프 변경 시 그룹 선택/검색 필터 초기화
-  clearAllFilters();
-};
-
-const clearAllFilters = () => {
+const resetFilterInputs = (options?: { keepGroupSelection?: boolean }) => {
   searchField.value = "content";
   searchInput.value = "";
   groupSearchInput.value = "";
-  emit("change-group", null);
+  if (!options?.keepGroupSelection) {
+    emit("change-group", null);
+  }
   emit("reset-search");
+};
+
+const handleScopeChange = (scope: "mine" | "all") => {
+  emit("change-scope", scope);
+  resetFilterInputs({ keepGroupSelection: true });
+};
+
+const handleContextScopeChange = (scope: "mine" | "all") => {
+  emit("change-context-scope", scope);
+  resetFilterInputs({ keepGroupSelection: true });
+};
+
+const clearAllFilters = () => {
+  resetFilterInputs();
   
   if (props.selectionContext === "A") {
     // A 환경일 경우 '전체' <-> '나의그룹' 토글
     const nextScope = props.scopeMode === "all" ? "mine" : "all";
     emit("change-scope", nextScope);
   } else {
-    // B, C 환경일 경우에도 '전체' 버튼 클릭 시 '그외 문제'(all) 스코프로 전환하여 A의 '전체'와 일관성 유지
-    emit("change-scope", "all");
+    emit("change-context-scope", "all");
   }
 };
 
@@ -280,6 +281,7 @@ const toggleSelectAllVisible = async (checked: boolean) => {
         triggerToast(msg);
       }
       await Promise.all(syncPromises);
+      await fetchGroups();
       emit('refresh');
     } catch (err) {
       console.error("Bulk sync failed:", err);
@@ -324,6 +326,7 @@ const toggleQuestionSelected = async (questionId: string | number | bigint, chec
     const msg = checked ? "'해당 문제'로 이전합니다" : "'그외 문제'로 이전합니다";
     triggerToast(msg);
     await syncContextSelection(questionId, checked);
+    await fetchGroups();
     emit('refresh');
   }
 };
@@ -505,12 +508,44 @@ const filterGroupsByOwner = (
   return result;
 };
 
+const totalGroupQuestionCount = (group: Group): number => {
+  if (group.question_total !== undefined && group.question_total !== null) {
+    return Number(group.question_total) || 0;
+  }
+  const own = Number(group.question_count ?? group._count?.questions ?? 0) || 0;
+  const children = (group.child_groups ?? []).reduce(
+    (sum, child) => sum + totalGroupQuestionCount(child),
+    0,
+  );
+  return own + children;
+};
+
+const filterZeroCountGroups = (list: Group[]): Group[] =>
+  list
+    .map((group) => ({
+      ...group,
+      child_groups: filterZeroCountGroups(group.child_groups ?? []),
+    }))
+    .filter((group) => totalGroupQuestionCount(group) > 0);
+
 const visibleGroups = computed(() => {
-  const scope = props.scopeMode ?? "mine";
-  if (scope !== "mine") return groups.value;
-  if (props.currentUserNo === null || props.currentUserNo === undefined)
-    return groups.value;
-  return filterGroupsByOwner(groups.value, props.currentUserNo);
+  const shouldKeepZeroCountGroups =
+    (props.selectionContext || "A") === "A" && (props.scopeMode ?? "mine") === "mine";
+
+  let baseGroups: Group[];
+
+  if ((props.selectionContext || "A") !== "A") {
+    baseGroups = groups.value;
+  } else {
+    const scope = props.scopeMode ?? "mine";
+    if (scope !== "mine" || props.currentUserNo === null || props.currentUserNo === undefined) {
+      baseGroups = groups.value;
+    } else {
+      baseGroups = filterGroupsByOwner(groups.value, props.currentUserNo);
+    }
+  }
+
+  return shouldKeepZeroCountGroups ? baseGroups : filterZeroCountGroups(baseGroups);
 });
 
 const filterGroupsBySearch = (list: Group[], query: string) => {
@@ -547,10 +582,23 @@ const filterGroupsBySearch = (list: Group[], query: string) => {
   return { filtered, expandIds };
 };
 
+const collectDefaultExpandedIds = (list: Group[]) => {
+  const expandIds = new Set<string>();
+
+  for (const group of list) {
+    expandIds.add(String(group.group_id));
+  }
+
+  return expandIds;
+};
+
 const searchedGroups = computed(() => {
   const query = groupSearchInput.value.trim().toLowerCase();
   if (!query) {
-    return { groups: visibleGroups.value, expandedIds: new Set<string>() };
+    return {
+      groups: visibleGroups.value,
+      expandedIds: collectDefaultExpandedIds(visibleGroups.value),
+    };
   }
   const { filtered, expandIds } = filterGroupsBySearch(visibleGroups.value, query);
   return { groups: filtered, expandedIds: expandIds };
@@ -558,11 +606,14 @@ const searchedGroups = computed(() => {
 
 const fetchGroups = async () => {
   try {
+    const isContextA = (props.selectionContext || "A") === "A";
     const data = await $fetch<{ groups: Group[]; unassigned_count: number }>(`${apiBase.value}/groups`, {
       query: {
-        scope: props.viewMode,
-        userNo: props.currentUserNo ?? undefined,
+        scope: isContextA ? props.viewMode : (props.contextScopeMode ?? "mine"),
+        userNo: isContextA ? (props.currentUserNo ?? undefined) : undefined,
         viewerNo: props.currentUserNo ?? undefined,
+        bookId: props.selectionContext === "B" ? props.contextId ?? undefined : undefined,
+        examId: props.selectionContext === "C" ? props.contextId ?? undefined : undefined,
       },
     });
     groups.value = data.groups;
@@ -668,20 +719,21 @@ const restoreSelectionFromStorage = () => {
   }
 };
 
-/**
- * 특정 문제집(B) 또는 고사(C) 진입 시, 해당 항목에 이미 포함된 문제들을
- * 기본값으로 자동 선택해주는 초기화 프로세스입니다.
- */
-// handleGroupsUpdated moved to top level
+const extractContextQuestions = (data: any): Question[] => {
+  const collection = props.selectionContext === "B" ? data?.items : data?.questions;
+  if (!Array.isArray(collection)) return [];
 
-const initContextSelection = async () => {
+  return collection
+    .map((item: any) => item?.question ?? null)
+    .filter((question: Question | null): question is Question => Boolean(question));
+};
+
+const syncSelectionFromContext = async (options?: { force?: boolean }) => {
   if (props.selectionContext === "A" || !props.contextId) return;
 
   const initKey = `edu_hub_init_${props.selectionContext}_${props.contextId}`;
   const isInitialized = localStorage.getItem(initKey);
-  
-  // 이미 해당 ID로 초기화된 적이 있다면 중단 (기존 드래프트 상태 유지)
-  if (isInitialized) return;
+  if (!options?.force && isInitialized) return;
 
   try {
     const endpoint = props.selectionContext === "B" ? "question-books" : "exams";
@@ -689,34 +741,27 @@ const initContextSelection = async () => {
       headers: getAuthHeader(),
     });
 
-    const questions: Question[] = [];
-    if (props.selectionContext === "B" && data.items) {
-      data.items.forEach((item: any) => { if (item.question) questions.push(item.question); });
-    } else if (props.selectionContext === "C" && data.questions) {
-      data.questions.forEach((item: any) => { if (item.question) questions.push(item.question); });
-    }
+    const questions = extractContextQuestions(data);
+    const nextIds = questions.map((q) => getQuestionIdKey(q.question_id));
+    const nextCache = questions.reduce<Record<string, Question>>((acc, question) => {
+      acc[getQuestionIdKey(question.question_id)] = question;
+      return acc;
+    }, {});
 
-    if (questions.length > 0) {
-      const nextIds = [...selectedQuestionIds.value];
-      const nextCache = { ...selectedQuestionCache.value };
-
-      questions.forEach((q) => {
-        const idKey = getQuestionIdKey(q.question_id);
-        if (!nextIds.includes(idKey)) {
-          nextIds.push(idKey);
-        }
-        nextCache[idKey] = q;
-      });
-
-      selectedQuestionIds.value = nextIds;
-      selectedQuestionCache.value = nextCache;
-    }
-
-    // 초기화 완료 표시 (중복 실행 방지)
+    selectedQuestionIds.value = nextIds;
+    selectedQuestionCache.value = nextCache;
     localStorage.setItem(initKey, "true");
   } catch (err) {
-    console.error("Context selection initialization failed:", err);
+    console.error("Context selection synchronization failed:", err);
   }
+};
+
+/**
+ * 특정 문제집(B) 또는 고사(C) 진입 시, 해당 항목에 이미 포함된 문제들을
+ * 기본값으로 자동 선택해주는 초기화 프로세스입니다.
+ */
+const initContextSelection = async () => {
+  await syncSelectionFromContext();
 };
 
 onMounted(async () => {
@@ -772,6 +817,15 @@ watch(selectedQuestionCache, (newCache) => {
 watch(
   () => props.viewMode,
   async () => {
+    if ((props.selectionContext || "A") !== "A") return;
+    await fetchGroups();
+  },
+);
+
+watch(
+  () => props.contextScopeMode,
+  async () => {
+    if ((props.selectionContext || "A") === "A") return;
     await fetchGroups();
   },
 );
@@ -780,10 +834,20 @@ watch(
   () => props.selectionContext,
   (newContext) => {
     if (newContext === 'B' || newContext === 'C') {
-      emit('change-scope', 'mine');
+      emit('change-context-scope', 'mine');
     }
   },
   { immediate: true }
+);
+
+watch(
+  [() => props.selectionContext, () => props.contextId, () => props.contextScopeMode],
+  async ([context, contextId, contextScope]) => {
+    if ((context === "B" || context === "C") && contextId && (contextScope ?? "mine") === "mine") {
+      await syncSelectionFromContext({ force: true });
+    }
+  },
+  { immediate: false },
 );
 
 watch(
@@ -830,11 +894,7 @@ watch(
             >
               <IconSettings class="settings-icon" />
               <span class="btn-manage-label">그룹 관리</span>
-            </button>
-            <button class="btn-clear-filter" @click="clearAllFilters">
-              <IconUsers class="filter-icon" />
-              {{ (props.selectionContext || 'A') === 'A' ? (props.scopeMode === 'all' ? '전체그룹' : '나의그룹') : '전체' }}
-            </button>
+            </button>           
           </div>
           <div class="group-breadcrumb" v-html="selectedGroupBreadcrumb || '&nbsp;'"></div>
           <div class="group-search">
@@ -859,7 +919,7 @@ watch(
           :selected-group-id="props.selectedGroupId"
           :expanded-ids="searchedGroups.expandedIds"
           :current-user-no="props.currentUserNo"
-
+          :selection-context="props.selectionContext"
           @select-group="handleSelectGroup"
         />
         <div
@@ -941,9 +1001,10 @@ watch(
             <div class="slider-panel">
               <div class="search-row">
                 <div
+                  v-if="(props.selectionContext || 'A') === 'A'"
                   class="scope-toggle"
                   role="tablist"
-                  aria-label="문제 목록 범위 선택"
+                  aria-label="범주 선택"
                 >
                   <button
                     type="button"
@@ -951,18 +1012,56 @@ watch(
                     :class="{ active: (props.scopeMode ?? 'mine') === 'mine' }"
                     :aria-pressed="(props.scopeMode ?? 'mine') === 'mine'"
                     @click="handleScopeChange('mine')"
-                  >
-                    {{ scopeLabelMine }}
-                  </button>
+                  >나의 문제</button>
                   <button
                     type="button"
                     class="scope-btn"
                     :class="{ active: (props.scopeMode ?? 'mine') === 'all' }"
                     :aria-pressed="(props.scopeMode ?? 'mine') === 'all'"
                     @click="handleScopeChange('all')"
-                  >
-                    {{ scopeLabelAll }}
-                  </button>
+                  >그외 문제</button>
+                </div>
+                <div
+                  v-if="props.selectionContext === 'B'"
+                  class="scope-toggle"
+                  role="tablist"
+                  aria-label="범주 선택"
+                >
+                  <button
+                    type="button"
+                    class="scope-btn"
+                    :class="{ active: (props.contextScopeMode ?? 'mine') === 'mine' }"
+                    :aria-pressed="(props.contextScopeMode ?? 'mine') === 'mine'"
+                    @click="handleContextScopeChange('mine')"
+                  >소속 문제</button>
+                  <button
+                    type="button"
+                    class="scope-btn"
+                    :class="{ active: (props.contextScopeMode ?? 'mine') === 'all' }"
+                    :aria-pressed="(props.contextScopeMode ?? 'mine') === 'all'"
+                    @click="handleContextScopeChange('all')"
+                  >그외 문제</button>
+                </div>
+                <div
+                  v-if="props.selectionContext === 'C'"
+                  class="scope-toggle"
+                  role="tablist"
+                  aria-label="범주 선택"
+                >
+                  <button
+                    type="button"
+                    class="scope-btn"
+                    :class="{ active: (props.contextScopeMode ?? 'mine') === 'mine' }"
+                    :aria-pressed="(props.contextScopeMode ?? 'mine') === 'mine'"
+                    @click="handleContextScopeChange('mine')"
+                  >소속 문제</button>
+                  <button
+                    type="button"
+                    class="scope-btn"
+                    :class="{ active: (props.contextScopeMode ?? 'mine') === 'all' }"
+                    :aria-pressed="(props.contextScopeMode ?? 'mine') === 'all'"
+                    @click="handleContextScopeChange('all')"
+                  >그외 문제</button>
                 </div>
                 <select v-model="searchField" class="search-select">
                   <option value="id">문제번호</option>

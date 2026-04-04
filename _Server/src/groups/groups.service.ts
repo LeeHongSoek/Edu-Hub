@@ -5,73 +5,87 @@ import { PrismaService } from '../common/prisma/prisma.service';
 export class GroupsService {
   constructor(private prisma: PrismaService) { }
 
-  // 최상위 그룹(depth 1)을 기준으로 하위 그룹들을 포함하여 조회
-  // 최상위 그룹(depth 1)을 기준으로 하위 그룹들을 포함하여 조회
   async findAll(scope?: string, userNo?: string | number, viewerNo?: string | number, bookId?: string | number, examId?: string | number) {
-    const selector = this.countSelector(scope, userNo, viewerNo, bookId, examId);
-
-    // 메인 쿼리 필터 구성
-    const mainWhere: any = { parent_group_id: null };
     const normalizedScope = String(scope || '').toLowerCase();
+    const groupWhere: any = {};
+    const contextQuestionIds = await this.loadContextQuestionIds(bookId, examId);
+    const selector = this.countSelector(
+      scope,
+      userNo,
+      viewerNo,
+      bookId,
+      examId,
+      contextQuestionIds,
+    );
 
-    // scope=mine일 경우 그룹 목록 자체도 로그인 사용자의 것만 필터링
-    // 단, B, C 환경(문제집/고사 관리)에서는 다른 사람의 그룹에 속한 문항이 포함될 수 있으므로 필터를 해제함
     if (normalizedScope === 'mine' && userNo !== undefined && userNo !== null && !bookId && !examId) {
-      mainWhere.OR = [
+      groupWhere.OR = [
         { creator_no: BigInt(userNo) },
-        { creator_no: BigInt(0) }
+        { creator_no: BigInt(0) },
       ];
     }
 
-    const groups = await this.prisma.group.findMany({
-      where: mainWhere,
+    const flatGroups = await this.prisma.group.findMany({
+      where: groupWhere,
       include: {
         _count: { select: selector },
-        child_groups: {
-          include: {
-            _count: { select: selector },
-            child_groups: {
-              include: {
-                _count: { select: selector },
-                child_groups: {
-                  include: {
-                    _count: { select: selector },
-                  },
-                },
-              },
-            },
-          },
-        },
       },
+      orderBy: [
+        { depth: 'asc' },
+        { group_id: 'asc' },
+      ],
     });
 
-    let hierarchy = this.attachCounts(groups);
+    let hierarchy = this.attachCounts(this.buildHierarchy(flatGroups));
 
-    // 시스템 그룹 중복 제거 및 필터링: creator_no가 0인 경우 ID가 -1, 0인 공식 그룹만 남김
-    hierarchy = hierarchy.filter(group => {
-      if (BigInt(group.creator_no) === BigInt(0)) {
-        return Number(group.group_id) === -1 || Number(group.group_id) === 0;
-      }
-      return true;
-    });
+    if (normalizedScope === 'mine' && userNo !== undefined && userNo !== null && !bookId && !examId) {
+      const ownerNo = BigInt(userNo);
+      const [ownedTotal, unassignedTotal] = await Promise.all([
+        this.prisma.question.count({
+          where: {
+            creator_no: ownerNo,
+            p_question_id: null,
+            is_deleted: { not: 'Y' },
+          },
+        }),
+        this.prisma.question.count({
+          where: {
+            creator_no: ownerNo,
+            group_id: BigInt(0),
+            p_question_id: null,
+            is_deleted: { not: 'Y' },
+          },
+        }),
+      ]);
 
-    // 시스템 특수 그룹 정렬: -1(전체) -> 0(문제분류 없음) -> 기타 시스템 그룹 -> 일반 사용자 그룹
-    hierarchy.sort((a, b) => {
-      const gidA = Number(a.group_id);
-      const gidB = Number(b.group_id);
+      const overrideSystemCounts = (group: any): any => {
+        const groupId = Number(group.group_id);
+        const nextChildren = (group.child_groups ?? []).map((child: any) => overrideSystemCounts(child));
 
-      if (gidA === -1) return -1;
-      if (gidB === -1) return 1;
+        if (groupId === -1) {
+          return {
+            ...group,
+            child_groups: nextChildren,
+            question_count: ownedTotal,
+            question_total: ownedTotal,
+          };
+        }
+        if (groupId === 0) {
+          return {
+            ...group,
+            child_groups: nextChildren,
+            question_count: unassignedTotal,
+            question_total: unassignedTotal,
+          };
+        }
+        return {
+          ...group,
+          child_groups: nextChildren,
+        };
+      };
 
-      if (gidA === 0) return -1;
-      if (gidB === 0) return 1;
-
-      const a0 = BigInt(a.creator_no) === BigInt(0);
-      const b0 = BigInt(b.creator_no) === BigInt(0);
-      if (a0 && !b0) return -1;
-      if (!a0 && b0) return 1;
-      return 0;
-    });
+      hierarchy = hierarchy.map((group) => overrideSystemCounts(group));
+    }
 
     return {
       groups: hierarchy,
@@ -99,25 +113,118 @@ export class GroupsService {
     return groups;
   }
 
-  private countSelector(scope?: string, userNo?: string | number, viewerNo?: string | number, bookId?: string | number, examId?: string | number) {
-    const where: any = { is_deleted: { not: 'Y' } };
+  private buildHierarchy(groups: any[]): any[] {
+    const keptGroups = groups
+      .filter((group) => {
+        if (BigInt(group.creator_no) !== BigInt(0)) return true;
+        return Number(group.group_id) === -1 || Number(group.group_id) === 0;
+      })
+      .map((group) => ({
+        ...group,
+        child_groups: [],
+      }));
+
+    const byId = new Map<string, any>();
+    keptGroups.forEach((group) => {
+      byId.set(String(group.group_id), group);
+    });
+
+    const roots: any[] = [];
+
+    for (const group of keptGroups) {
+      const parentId = group.parent_group_id;
+      if (parentId === null || parentId === undefined) {
+        roots.push(group);
+        continue;
+      }
+
+      const parent = byId.get(String(parentId));
+      if (!parent) {
+        roots.push(group);
+        continue;
+      }
+
+      parent.child_groups.push(group);
+    }
+
+    const sortNodes = (nodes: any[]) => {
+      nodes.sort((a, b) => this.compareGroups(a, b));
+      nodes.forEach((node) => sortNodes(node.child_groups ?? []));
+    };
+
+    sortNodes(roots);
+
+    const wholeRoot = byId.get('-1');
+    if (!wholeRoot) return roots;
+
+    return [wholeRoot];
+  }
+
+  private compareGroups(a: any, b: any) {
+    const gidA = Number(a.group_id);
+    const gidB = Number(b.group_id);
+
+    if (gidA === -1) return -1;
+    if (gidB === -1) return 1;
+
+    if (gidA === 0) return -1;
+    if (gidB === 0) return 1;
+
+    return gidA - gidB;
+  }
+
+  private async loadContextQuestionIds(bookId?: string | number, examId?: string | number) {
+    if (bookId !== undefined && bookId !== null) {
+      const items = await this.prisma.questionBookItem.findMany({
+        where: { book_id: BigInt(bookId) },
+        select: { question_id: true },
+      });
+      return items.map((item) => item.question_id);
+    }
+
+    if (examId !== undefined && examId !== null) {
+      const items = await this.prisma.examQuestion.findMany({
+        where: { exam_id: BigInt(examId) },
+        select: { question_id: true },
+      });
+      return items.map((item) => item.question_id);
+    }
+
+    return [];
+  }
+
+  private countSelector(
+    scope?: string,
+    userNo?: string | number,
+    viewerNo?: string | number,
+    bookId?: string | number,
+    examId?: string | number,
+    contextQuestionIds: bigint[] = [],
+  ) {
+    const where: any = {
+      is_deleted: { not: 'Y' },
+      p_question_id: null,
+    };
     const normalizedScope = String(scope || '').toLowerCase();
 
     // 문제집/고사 컨텍스트 필터링이 있을 경우
     if (bookId !== undefined && bookId !== null || examId !== undefined && examId !== null) {
-      // 사용자의 요청에 따라 B, C 환경의 사이드바는 항상 시스템 전체(내 문제 + 공개 문제)를 보여줌
-      const orConditions: any[] = [{ is_public: true }];
-      if (viewerNo !== undefined && viewerNo !== null) {
-        orConditions.push({ creator_no: BigInt(viewerNo) });
+      if (normalizedScope === 'mine') {
+        where.question_id = { in: contextQuestionIds };
+      } else {
+        const orConditions: any[] = [{ is_public: true }];
+        if (viewerNo !== undefined && viewerNo !== null) {
+          orConditions.push({ creator_no: BigInt(viewerNo) });
+        }
+        where.OR = orConditions;
+        if (contextQuestionIds.length > 0) {
+          where.question_id = { notIn: contextQuestionIds };
+        }
       }
-      where.OR = orConditions;
     } else {
       // 컬렉션 환경이 아닐 때만 기존 scope 필터 적용
       if (normalizedScope === 'mine' && userNo !== undefined && userNo !== null) {
-        where.OR = [
-          { creator_no: BigInt(userNo) },
-          { creator_no: BigInt(0) }
-        ];
+        where.creator_no = BigInt(userNo);
       } else if (normalizedScope === 'all') {
         where.is_public = true;
         if (viewerNo !== undefined && viewerNo !== null) {

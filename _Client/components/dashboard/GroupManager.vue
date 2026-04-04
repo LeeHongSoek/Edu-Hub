@@ -16,10 +16,11 @@ const emit = defineEmits<{
   (e: "updated"): void;
 }>();
 
+const ROOT_GROUP_ID = "-1";
 const groups = ref<Group[]>([]);
 const isSaving = ref(false);
 const newGroupName = ref("");
-const selectedParentId = ref<string | number | null>(null);
+const selectedParentId = ref<string | number | null>(ROOT_GROUP_ID);
 
 const fetchGroups = async () => {
   try {
@@ -37,6 +38,20 @@ const fetchGroups = async () => {
 
 onMounted(fetchGroups);
 
+const findGroup = (list: Group[], id: string | number): Group | null => {
+  for (const group of list) {
+    if (String(group.group_id) === String(id)) return group;
+    const child = findGroup(group.child_groups ?? [], id);
+    if (child) return child;
+  }
+  return null;
+};
+
+const isProtectedSystemGroup = (group: Group) => {
+  const groupId = String(group.group_id);
+  return groupId === "-1" || groupId === "0";
+};
+
 const handleAddGroup = async () => {
   if (!newGroupName.value.trim()) return;
 
@@ -44,27 +59,16 @@ const handleAddGroup = async () => {
   try {
     let depth = 1;
     if (selectedParentId.value) {
-      // Find parent depth
-      const findDepth = (
-        gs: Group[],
-        id: string | number,
-        currentDepth: number,
-      ): number | null => {
-        for (const g of gs) {
-          if (String(g.group_id) === String(id)) return currentDepth;
-          if (g.child_groups) {
-            const d = findDepth(g.child_groups, id, currentDepth + 1);
-            if (d) return d;
-          }
-        }
-        return null;
-      };
-      const parentDepth = findDepth(groups.value, selectedParentId.value, 1);
-      depth = (parentDepth || 1) + 1;
+      if (String(selectedParentId.value) === ROOT_GROUP_ID) {
+        depth = 1;
+      } else {
+        const parentGroup = findGroup(groups.value, selectedParentId.value);
+        depth = Number(parentGroup?.depth || 1) + 1;
+      }
     }
 
-    if (depth > 3) {
-      alert("최대 3단계까지만 생성 가능합니다.");
+    if (depth > 4) {
+      alert("최대 4단계까지만 생성 가능합니다.");
       return;
     }
 
@@ -72,12 +76,13 @@ const handleAddGroup = async () => {
       method: "POST",
       body: {
         name: newGroupName.value,
-        parent_group_id: selectedParentId.value,
+        parent_group_id: selectedParentId.value ?? ROOT_GROUP_ID,
         depth,
         creator_no: props.currentUserNo,
       },
     });
     newGroupName.value = "";
+    selectedParentId.value = ROOT_GROUP_ID;
     await fetchGroups();
     emit("updated");
   } catch (error) {
@@ -136,13 +141,24 @@ const handleDelete = async (group: Group) => {
       <div class="manager-body">
         <div class="add-group-form">
           <select v-model="selectedParentId" class="parent-select">
-            <option :value="null">최상위 그룹으로 추가</option>
             <optgroup v-for="g1 in groups" :key="g1.group_id" :label="g1.name">
-              <option :value="g1.group_id">{{ g1.name }} (L1)</option>
+              <option :value="g1.group_id">
+                {{ String(g1.group_id) === ROOT_GROUP_ID ? `${g1.name} 하위 (ROOT)` : `${g1.name} (L1)` }}
+              </option>
               <template v-for="g2 in g1.child_groups" :key="g2.group_id">
                 <option :value="g2.group_id">
-                  &nbsp;&nbsp;↳ {{ g2.name }} (L2)
+                  &nbsp;&nbsp;↳ {{ g2.name }} (L1)
                 </option>
+                <template v-for="g3 in g2.child_groups" :key="g3.group_id">
+                  <option :value="g3.group_id">
+                    &nbsp;&nbsp;&nbsp;&nbsp;↳ {{ g3.name }} (L2)
+                  </option>
+                  <template v-for="g4 in g3.child_groups" :key="g4.group_id">
+                    <option :value="g4.group_id">
+                      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;↳ {{ g4.name }} (L3)
+                    </option>
+                  </template>
+                </template>
               </template>
             </optgroup>
           </select>
@@ -164,9 +180,9 @@ const handleDelete = async (group: Group) => {
         <div class="group-tree-admin">
           <div v-for="g1 in groups" :key="g1.group_id" class="admin-item-l1">
             <div class="item-row">
-              <span class="depth-badge l1">L1</span>
+              <span class="depth-badge root">ROOT</span>
               <span class="item-name">{{ g1.name }}</span>
-              <div class="item-actions">
+              <div v-if="!isProtectedSystemGroup(g1)" class="item-actions">
                 <button @click="handleRename(g1)">
                   <IconPencil class="action-icon" />
                 </button>
@@ -182,9 +198,9 @@ const handleDelete = async (group: Group) => {
               class="admin-item-l2"
             >
               <div class="item-row">
-                <span class="depth-badge l2">L2</span>
+                <span class="depth-badge l1">L1</span>
                 <span class="item-name">{{ g2.name }}</span>
-                <div class="item-actions">
+                <div v-if="!isProtectedSystemGroup(g2)" class="item-actions">
                   <button @click="handleRename(g2)">
                     <IconPencil class="action-icon" />
                   </button>
@@ -200,15 +216,53 @@ const handleDelete = async (group: Group) => {
                 class="admin-item-l3"
               >
                 <div class="item-row">
-                  <span class="depth-badge l3">L3</span>
+                  <span class="depth-badge l2">L2</span>
                   <span class="item-name">{{ g3.name }}</span>
-                  <div class="item-actions">
+                  <div v-if="!isProtectedSystemGroup(g3)" class="item-actions">
                     <button @click="handleRename(g3)">
                       <IconPencil class="action-icon" />
                     </button>
                     <button @click="handleDelete(g3)">
                       <IconTrash class="action-icon" />
                     </button>
+                  </div>
+                </div>
+
+                <div
+                  v-for="g4 in g3.child_groups"
+                  :key="g4.group_id"
+                  class="admin-item-l4"
+                >
+                  <div class="item-row">
+                    <span class="depth-badge l3">L3</span>
+                    <span class="item-name">{{ g4.name }}</span>
+                    <div v-if="!isProtectedSystemGroup(g4)" class="item-actions">
+                      <button @click="handleRename(g4)">
+                        <IconPencil class="action-icon" />
+                      </button>
+                      <button @click="handleDelete(g4)">
+                        <IconTrash class="action-icon" />
+                      </button>
+                    </div>
+                  </div>
+
+                  <div
+                    v-for="g5 in g4.child_groups"
+                    :key="g5.group_id"
+                    class="admin-item-l5"
+                  >
+                    <div class="item-row">
+                      <span class="depth-badge l4">L4</span>
+                      <span class="item-name">{{ g5.name }}</span>
+                      <div v-if="!isProtectedSystemGroup(g5)" class="item-actions">
+                        <button @click="handleRename(g5)">
+                          <IconPencil class="action-icon" />
+                        </button>
+                        <button @click="handleDelete(g5)">
+                          <IconTrash class="action-icon" />
+                        </button>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -348,18 +402,28 @@ const handleDelete = async (group: Group) => {
 }
 
 .item-actions button {
-  background: none;
-  border: none;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 10px;
+  width: 2rem;
+  height: 2rem;
   cursor: pointer;
-  filter: grayscale(1);
-  transition: filter 0.2s;
+  color: #e2e8f0;
+  transition:
+    background 0.2s,
+    border-color 0.2s,
+    color 0.2s,
+    transform 0.2s;
   display: inline-flex;
   align-items: center;
   justify-content: center;
 }
 
 .item-actions button:hover {
-  filter: grayscale(0);
+  background: rgba(99, 102, 241, 0.12);
+  border-color: rgba(129, 140, 248, 0.45);
+  color: #ffffff;
+  transform: translateY(-1px);
 }
 
 .depth-badge {
@@ -369,17 +433,25 @@ const handleDelete = async (group: Group) => {
   font-weight: 700;
 }
 
-.l1 {
+.root {
   background: rgba(99, 102, 241, 0.2);
-  color: #818cf8;
+  color: #c4b5fd;
 }
-.l2 {
+.l1 {
   background: rgba(16, 185, 129, 0.2);
   color: #34d399;
 }
-.l3 {
+.l2 {
   background: rgba(245, 158, 11, 0.2);
   color: #fbbf24;
+}
+.l3 {
+  background: rgba(34, 197, 94, 0.2);
+  color: #86efac;
+}
+.l4 {
+  background: rgba(236, 72, 153, 0.2);
+  color: #f9a8d4;
 }
 
 .admin-item-l2 {
@@ -387,6 +459,12 @@ const handleDelete = async (group: Group) => {
   border-left: 1px dashed rgba(255, 255, 255, 0.1);
 }
 .admin-item-l3 {
+  margin-left: 1.5rem;
+}
+.admin-item-l4 {
+  margin-left: 1.5rem;
+}
+.admin-item-l5 {
   margin-left: 1.5rem;
 }
 </style>

@@ -40,12 +40,13 @@ const isSourceDetail = computed(
   () => activeBookId.value !== undefined || activeExamId.value !== undefined,
 );
 const questionScope = computed<"mine" | "all">(() => {
-  if (isSourceDetail.value) {
-    if (route.query.scope === "mine" || route.query.mine === "true")
-      return "mine";
-    return "all";
-  }
   if (route.query.scope === "all" || route.query.mine === "false") return "all";
+  return "mine";
+});
+
+const contextQuestionScope = computed<"mine" | "all">(() => {
+  if (!isSourceDetail.value) return "mine";
+  if (route.query.contextScope === "all") return "all";
   return "mine";
 });
 
@@ -65,15 +66,20 @@ const requestBody = computed(() => {
     }
   } else {
     // 특정 문제집/고사 진입 상태 (Context B or C)
-    if (questionScope.value === "all") {
-      // "전체 문제" (B, C 환경에서도 A의 '전체'와 동일하게 모든 공개 문항 조회)
+    if (contextQuestionScope.value === "all") {
+      // "그외 문제": 이미 연결된 문항을 제외한 공개/내 문항 조회
       body.public_only = true;
       if (userInfo.value) {
         body.viewer_no = userInfo.value.user_no;
       }
-      // 이전에 적용했던 exclude 필터를 제거하여 전체 라이브러리를 보여줌
+      if (activeExamId.value !== undefined) {
+        body.exclude_exam_id = activeExamId.value;
+      }
+      if (activeBookId.value !== undefined) {
+        body.exclude_book_id = activeBookId.value;
+      }
     } else {
-      // "해당 문제" (이미 포함된 문제만 조회)
+      // "소속 문제" (이미 포함된 문제만 조회)
       if (userInfo.value) {
         body.viewer_no = userInfo.value.user_no;
       }
@@ -173,7 +179,7 @@ watch(
 );
 
 watch(
-  () => [route.query.scope, route.query.mine],
+  () => [route.query.scope, route.query.mine, route.query.contextScope],
   () => {
     currentPage.value = 1;
   },
@@ -241,6 +247,20 @@ const setQuestionScope = async (scope: "mine" | "all") => {
   await router.replace({ query: nextQuery });
 };
 
+const setContextQuestionScope = async (scope: "mine" | "all") => {
+  const nextQuery: Record<string, string> = {};
+
+  for (const [key, value] of Object.entries(route.query)) {
+    if (typeof value === "string") {
+      nextQuery[key] = value;
+    }
+  }
+
+  nextQuery.contextScope = scope;
+  currentPage.value = 1;
+  await router.replace({ query: nextQuery });
+};
+
 const handleCopyQuestion = async (question: Question) => {
   if (!userInfo.value) {
     alert("문제를 내 계정으로 가져오려면 로그인이 필요합니다.");
@@ -284,6 +304,7 @@ const contextId = computed(() => {
         :list-subtitle="activeSourceLabel"
         :show-scope-toggle="true"
         :scope-mode="questionScope"
+        :context-scope-mode="contextQuestionScope"
         :show-error="!!(error && !questionResponse && !pending)"
         :error-message="'문제를 불러오지 못했습니다. 백엔드 서버가 실행 중인지 확인해 주세요.'"
         :questions="questionResponse?.items || []"
@@ -301,6 +322,7 @@ const contextId = computed(() => {
         :context-id="contextId"
         @refresh="refresh"
         @change-scope="setQuestionScope"
+        @change-context-scope="setContextQuestionScope"
         @change-group="handleGroupChange"
         @search="handleSearch"
         @reset-search="handleResetSearch"

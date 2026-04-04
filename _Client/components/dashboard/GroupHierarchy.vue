@@ -7,6 +7,7 @@ const props = defineProps<{
   selectedGroupId?: string | number | null;
   expandedIds?: Set<string | number> | null;
   currentUserNo?: string | number | null;
+  selectionContext?: "A" | "B" | "C";
 }>();
 
 const emit = defineEmits<{
@@ -25,6 +26,7 @@ const emit = defineEmits<{
       :selected-group-id="selectedGroupId"
       :expanded-ids="expandedIds"
       :current-user-no="currentUserNo"
+      :selection-context="selectionContext"
       :depth="0"
       @select-group="emit('select-group', $event)"
     />
