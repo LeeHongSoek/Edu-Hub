@@ -324,7 +324,7 @@ model EnmLogType {
 model UserLog {
   log_id         BigInt    @id @default(autoincrement())
   user_no        BigInt
-  logtype        String    @db.Char(1)
+  logtype        String    @map("logtype_id") @db.Char(1)
   obj_id         BigInt
   user_content   String?   @db.Text
   score          Int?      @default(0)
