@@ -66,17 +66,12 @@ const requestBody = computed(() => {
   } else {
     // 특정 문제집/고사 진입 상태 (Context B or C)
     if (questionScope.value === "all") {
-      // "그외 문제" (기존에 포함되지 않은 전체 문제 조회)
+      // "전체 문제" (B, C 환경에서도 A의 '전체'와 동일하게 모든 공개 문항 조회)
       body.public_only = true;
       if (userInfo.value) {
         body.viewer_no = userInfo.value.user_no;
       }
-      if (activeExamId.value !== undefined) {
-        body.exclude_exam_id = activeExamId.value;
-      }
-      if (activeBookId.value !== undefined) {
-        body.exclude_book_id = activeBookId.value;
-      }
+      // 이전에 적용했던 exclude 필터를 제거하여 전체 라이브러리를 보여줌
     } else {
       // "해당 문제" (이미 포함된 문제만 조회)
       if (userInfo.value) {

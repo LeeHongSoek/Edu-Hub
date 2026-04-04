@@ -7,6 +7,10 @@ import IconTrash from "~/assets/icons/IconTrash.svg?component";
 
 const { apiBase, token, getAuthHeader } = useApi();
 
+const props = defineProps<{
+  currentUserNo?: string | number | bigint | null;
+}>();
+
 const emit = defineEmits<{
   (e: "close"): void;
   (e: "updated"): void;
@@ -19,7 +23,13 @@ const selectedParentId = ref<string | number | null>(null);
 
 const fetchGroups = async () => {
   try {
-    groups.value = await $fetch<Group[]>(`${apiBase.value}/groups`);
+    const params: any = {
+      scope: "mine",
+      userNo: props.currentUserNo,
+    };
+    const queryStr = new URLSearchParams(params).toString();
+    const data = await $fetch<any>(`/api/groups?${queryStr}`);
+    groups.value = data?.groups || [];
   } catch (error) {
     console.error("서버 통신 오류(fetch) groups:", error);
   }
@@ -64,7 +74,7 @@ const handleAddGroup = async () => {
         name: newGroupName.value,
         parent_group_id: selectedParentId.value,
         depth,
-        creator_no: 1, // TODO: dynamic user ID
+        creator_no: props.currentUserNo,
       },
     });
     newGroupName.value = "";

@@ -46,6 +46,10 @@ const rawQuestionCount = (g: any) =>
 
 const totalQuestionCount = (g: any): number => {
   if (!g) return 0;
+  // 서버에서 이미 계산된 question_total이 있으면 우선 사용하고, 없으면 재귀 계산함
+  if (g.question_total !== undefined && g.question_total !== null) {
+    return Number(g.question_total);
+  }
   const own = Number(rawQuestionCount(g)) || 0;
   const children =
     Array.isArray(g.child_groups)

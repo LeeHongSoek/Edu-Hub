@@ -10,8 +10,10 @@ export class GroupsController {
     @Query('scope') scope?: string,
     @Query('userNo') userNo?: string | number,
     @Query('viewerNo') viewerNo?: string | number,
+    @Query('bookId') bookId?: string | number,
+    @Query('examId') examId?: string | number,
   ) {
-    return this.groupsService.getHierarchy(scope, userNo, viewerNo);
+    return this.groupsService.getHierarchy(scope, userNo, viewerNo, bookId, examId);
   }
 
   @Post()

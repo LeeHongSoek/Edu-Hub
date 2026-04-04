@@ -58,7 +58,7 @@ const triggerToast = (msg: string) => {
   showToast.value = true;
   toastTimer = setTimeout(() => {
     showToast.value = false;
-  }, 1000);
+  }, 1800); // 부드러운 노출 시간 유지
 };
 // --------------------------
 
@@ -140,6 +140,20 @@ const emit = defineEmits<{
   (e: "copy-question", question: Question): void;
 }>();
 
+// --- [로컬 스토리지 키 관리] ---
+const currentKeys = computed(() => {
+  const userNo = props.currentUserNo || "guest";
+  const context = props.selectionContext || "A";
+  const id = props.contextId || "default";
+  const prefix = `edu_hub_sel_${userNo}_${context}_${id}`;
+  return {
+    ids: `${prefix}_ids`,
+    cache: `${prefix}_cache`,
+    user: `${prefix}_user`,
+  };
+});
+// ----------------------------
+
 const handleSelectGroup = (groupId: string | number | null) => {
   emit("change-group", groupId);
 };
@@ -156,6 +170,15 @@ const clearAllFilters = () => {
   groupSearchInput.value = "";
   emit("change-group", null);
   emit("reset-search");
+  
+  if (props.selectionContext === "A") {
+    // A 환경일 경우 '전체' <-> '나의그룹' 토글
+    const nextScope = props.scopeMode === "all" ? "mine" : "all";
+    emit("change-scope", nextScope);
+  } else {
+    // B, C 환경일 경우에도 '전체' 버튼 클릭 시 '그외 문제'(all) 스코프로 전환하여 A의 '전체'와 일관성 유지
+    emit("change-scope", "all");
+  }
 };
 
 const applySearch = () => {
@@ -252,6 +275,10 @@ const toggleSelectAllVisible = async (checked: boolean) => {
 
   if (syncPromises.length > 0) {
     try {
+      if (!isContextA) {
+        const msg = checked ? "선택한 문항을 모두 '해당 문제'로 이전합니다" : "선택한 문항을 모두 '그외 문제'로 이전합니다";
+        triggerToast(msg);
+      }
       await Promise.all(syncPromises);
       emit('refresh');
     } catch (err) {
@@ -299,7 +326,7 @@ const toggleQuestionSelected = async (questionId: string | number | bigint, chec
     await syncContextSelection(questionId, checked);
     emit('refresh');
   }
-}
+};
 
 const canEditQuestion = (question: Question) => {
   if (props.currentUserNo === undefined || props.currentUserNo === null)
@@ -583,14 +610,13 @@ const deleteSelectedQuestions = async () => {
   }
 };
 
+const handleGroupsUpdated = () => {
+  fetchGroups();
+};
+
 const openBulkSolveModal = () => {
   if (selectedQuestionCount.value < 5) {
     alert("모아 풀기는 문제를 5개 이상 선택해야 시작할 수 있습니다.");
-    return;
-  }
-
-  if (bulkSolveQuestions.value.length < 5) {
-    alert("선택한 문제 정보를 확인한 뒤 다시 시도해주세요.");
     return;
   }
 
@@ -606,7 +632,7 @@ const STORAGE_KEYS = {
 };
 
 // 현재 환경에 맞는 키를 가져오는 computed
-const currentKeys = computed(() => STORAGE_KEYS[props.selectionContext || "A"]);
+// Outdated currentKeys declaration removed
 
 /**
  * 브라우저 저장소(localStorage)에서 이전에 선택했던 문제 정보를 불러옵니다.
@@ -647,6 +673,8 @@ const restoreSelectionFromStorage = () => {
  * 특정 문제집(B) 또는 고사(C) 진입 시, 해당 항목에 이미 포함된 문제들을
  * 기본값으로 자동 선택해주는 초기화 프로세스입니다.
  */
+// handleGroupsUpdated moved to top level
+
 const initContextSelection = async () => {
   if (props.selectionContext === "A" || !props.contextId) return;
 
@@ -795,7 +823,7 @@ watch(
       <div class="group-overlay">
         <div class="group-overlay-header">
           <span>문제 그룹</span>
-          <div class="header-actions">
+          <div v-if="(props.selectionContext || 'A') === 'A'" class="header-actions">
             <button
               class="btn-manage-groups"
               title="그룹 관리"
@@ -806,7 +834,7 @@ watch(
             </button>
             <button class="btn-clear-filter" @click="clearAllFilters">
               <IconUsers class="filter-icon" />
-              전체
+              {{ (props.selectionContext || 'A') === 'A' ? (props.scopeMode === 'all' ? '나의그룹' : '전체') : '전체' }}
             </button>
           </div>
           <div class="group-breadcrumb" v-html="selectedGroupBreadcrumb || '&nbsp;'"></div>
@@ -965,7 +993,8 @@ watch(
                 </button>
               </div>
               <div class="slider-row">
-                 <input
+                <input
+                  v-if="(props.selectionContext || 'A') === 'A'"
                   type="checkbox"
                   class="copy-checkbox"
                   aria-label="전체 문제 선택"
@@ -975,7 +1004,7 @@ watch(
                 />
                 <span class="summary-text"
                   >총 {{ props.totalItems }}문제
-                  <span v-if="(props.selectionContext || 'A') === 'A'" class="selected-count">
+                  <span class="selected-count">
                     · {{ selectedQuestionCount }}개 선택됨
                   </span>
                 </span
@@ -1042,19 +1071,20 @@ watch(
                   <h3 class="question-title">{{ q.title }}</h3>
                 </div>
                 <div class="question-group-path">
-                  <span
-                    v-if="q.creator?.username && shouldShowQuestionOwner(q)"
-                    class="question-owner"
-                    >{{ q.creator?.username }}</span
-                  >
+                  <span>{{
+                    q.group ? formatGroupPath(q.group) : "문제 분류 없음"
+                  }}</span>
                   <span
                     v-if="q.creator?.username && shouldShowQuestionOwner(q)"
                     class="question-separator"
                     >·</span
                   >
-                  <span>{{
-                    q.group ? formatGroupPath(q.group) : "문제 분류 없음"
-                  }}</span>
+                  <span
+                    v-if="q.creator?.username && shouldShowQuestionOwner(q)"
+                    class="question-owner"
+                    >{{ q.creator?.username }}</span
+                  >
+                  
                 </div>
               </div>
 
@@ -1099,8 +1129,9 @@ watch(
     <!-- 그룹 관리 오버레이 -->
     <GroupManager
       v-if="showGroupManager"
+      :current-user-no="props.currentUserNo"
       @close="showGroupManager = false"
-      @updated="fetchGroups"
+      @updated="handleGroupsUpdated"
     />
 
     <!-- 문제 수정 오버레이 -->
@@ -1136,7 +1167,7 @@ watch(
       @close="showBulkSolveModal = false"
     />
 
-    <!-- 토스트 알림 오버레이 -->
+    <!-- 토스트 알림 오버레이 (원복) -->
     <Transition name="toast-fade">
       <div v-if="showToast" class="toast-overlay">
         {{ toastMessage }}
@@ -1803,36 +1834,43 @@ watch(
   margin-bottom: 1.5rem;
 }
 
-/* 토스트 알림 스타일 */
+/* 토스트 알림 스타일 (대형) */
 .toast-overlay {
   position: fixed;
-  bottom: 5rem;
+  bottom: 6rem; /* 위치 약간 상향 */
   left: 50%;
   transform: translateX(-50%);
-  background: rgba(30, 41, 59, 0.95);
-  backdrop-filter: blur(12px);
-  color: #f8fafc;
-  padding: 0.75rem 1.75rem;
-  border-radius: 999px;
-  font-weight: 700;
-  font-size: 0.95rem;
+  background: rgba(30, 41, 59, 0.98);
+  backdrop-filter: blur(16px);
+  color: #818cf8; /* 강조 색상 적용 */
+  padding: 1.5rem 3rem; /* 크기 2배 확대 */
+  border-radius: 20px; /* 둥근 사각형 느낌으로 변경 */
+  font-weight: 800;
+  font-size: 1.8rem; /* 폰트 2배 확대 */
   box-shadow: 
-    0 10px 15px -3px rgba(0, 0, 0, 0.3),
-    0 0 0 1px rgba(129, 140, 248, 0.25);
+    0 20px 25px -5px rgba(0, 0, 0, 0.4),
+    0 0 0 2px rgba(129, 140, 248, 0.4);
   z-index: 10000;
   white-space: nowrap;
   pointer-events: none;
 }
 
-.toast-fade-enter-active,
-.toast-fade-leave-active {
-  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+.toast-fade-enter-active {
+  transition: all 0.3s ease-out;
 }
 
-.toast-fade-enter-from,
-.toast-fade-leave-to {
+.toast-fade-leave-active {
+  transition: all 1.2s cubic-bezier(0.4, 0, 0.2, 1); /* 스르르 효과 유지 */
+}
+
+.toast-fade-enter-from {
   opacity: 0;
   transform: translate(-50%, 1rem);
+}
+
+.toast-fade-leave-to {
+  opacity: 0;
+  transform: translate(-50%, 1.5rem);
 }
 
 
