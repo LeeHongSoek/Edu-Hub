@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, UseGuards, Request, UnauthorizedException, Param, Query, Patch } from '@nestjs/common';
+import { Controller, Get, Post, Body, UseGuards, Request, UnauthorizedException, Param, Query, Patch, Delete } from '@nestjs/common';
 import { ExamsService } from './exams.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
@@ -79,5 +79,19 @@ export class ExamsController {
     const userNoVal = req.user?.user_no || req.user?.userNo;
     if (!userNoVal) throw new UnauthorizedException();
     return this.examsService.findById(BigInt(id), BigInt(userNoVal));
+  }
+
+  @Post(':id/items')
+  async addItem(@Request() req: any, @Param('id') id: string, @Body('question_id') questionId: string) {
+    const userNoVal = req.user?.user_no || req.user?.userNo;
+    if (!userNoVal) throw new UnauthorizedException();
+    return this.examsService.addItem(BigInt(id), BigInt(userNoVal), BigInt(questionId));
+  }
+
+  @Delete(':id/items/:qId')
+  async removeItem(@Request() req: any, @Param('id') id: string, @Param('qId') qId: string) {
+    const userNoVal = req.user?.user_no || req.user?.userNo;
+    if (!userNoVal) throw new UnauthorizedException();
+    return this.examsService.removeItem(BigInt(id), BigInt(userNoVal), BigInt(qId));
   }
 }

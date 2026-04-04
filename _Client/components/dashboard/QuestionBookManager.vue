@@ -410,7 +410,7 @@ const setScope = (scope: "mine" | "all") => {
                 class="book-separator"
                 >·</span
               >
-              <span>문제 수: {{ book.items?.length || 0 }}개</span>
+              <span class="book-name-link" @click="viewBookDetails(book.book_id)" >문제 수: {{ book.items?.length || 0 }}개</span>
             </span>
           </div>
           <div class="book-card-body">
@@ -705,6 +705,8 @@ const setScope = (scope: "mine" | "all") => {
 .book-name-link {
   cursor: pointer;
   transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
 }
 
 .book-name-link:hover {

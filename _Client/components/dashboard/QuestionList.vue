@@ -34,17 +34,33 @@ const props = defineProps<{
   totalItems: number;
   pageSize: number;
   viewMode: "mine" | "all";
-  hideGroupOverlay?: boolean;
+  selectionContext?: "A" | "B" | "C";
+  contextId?: string | number | null;
 }>();
 
 // API 설정 통합
-const { apiBase } = useApi();
+const { apiBase, getAuthHeader } = useApi();
 
 const groups = ref<Group[]>([]);
 const selectedQuestionForSolve = ref<Question | null>(null);
 const selectedQuestionForEdit = ref<Question | null>(null);
 const showGroupManager = ref(false);
 const unassignedCount = ref(0);
+
+// --- [토스트 메시지 관리] ---
+const showToast = ref(false);
+const toastMessage = ref("");
+let toastTimer: any = null;
+
+const triggerToast = (msg: string) => {
+  if (toastTimer) clearTimeout(toastTimer);
+  toastMessage.value = msg;
+  showToast.value = true;
+  toastTimer = setTimeout(() => {
+    showToast.value = false;
+  }, 1000);
+};
+// --------------------------
 
 // --- [문제 선택 데이터 관리 (메모리)] ---
 // selectedQuestionIds: 선택한 문제들의 ID를 담는 배열 (실시간 화면 연동용)
@@ -97,6 +113,17 @@ const sliderPercentage = computed(() => {
   if (props.totalPages <= 1) return 0;
   return ((sliderValue.value - 1) / (props.totalPages - 1)) * 100;
 });
+
+const scopeLabelMine = computed(() => {
+  if (props.selectionContext === "A") return "나의 문제";
+  return "해당 문제";
+});
+
+const scopeLabelAll = computed(() => {
+  if (props.selectionContext === "A") return "전체 문제";
+  return "그외 문제";
+});
+
 const selectedQuestionCount = computed(() => selectedQuestionIds.value.length);
 const canDeleteQuestions = computed(() => selectedQuestionCount.value > 0);
 const canBulkSolveQuestions = computed(() => selectedQuestionCount.value >= 5);
@@ -161,7 +188,9 @@ const isQuestionSelected = (questionId: string | number | bigint) =>
 
 const isAllVisibleSelected = computed(() => {
   if (props.questions.length === 0) return false;
-  const selectableQuestions = props.questions.filter((q) => canEditQuestion(q) || props.viewMode === 'all');
+  // B, C 환경에서는 모든 문제가 선택 가능하므로 canEditQuestion 체크를 건너뜁니다.
+  const isContextA = (props.selectionContext || 'A') === 'A';
+  const selectableQuestions = props.questions.filter((q) => !isContextA || canEditQuestion(q) || props.viewMode === 'all');
   if (selectableQuestions.length === 0) return false;
   return selectableQuestions.every((q) => isQuestionSelected(q.question_id));
 });
@@ -171,10 +200,63 @@ const isSomeVisibleSelected = computed(() => {
   return selectedCount > 0 && !isAllVisibleSelected.value;
 });
 
-const toggleSelectAllVisible = (checked: boolean) => {
+/**
+ * 환경 B(문제집) 또는 C(고사)일 때, 선택 변경 사항을 백엔드에 즉시 반영합니다.
+ */
+const syncContextSelection = async (questionId: string | number | bigint, isAdded: boolean) => {
+  if (props.selectionContext === "A" || !props.contextId) return;
+
+  try {
+    const endpoint = props.selectionContext === "B" ? "question-books" : "exams";
+    if (isAdded) {
+      await $fetch(`${apiBase.value}/${endpoint}/${props.contextId}/items`, {
+        method: "POST",
+        headers: getAuthHeader(),
+        body: { question_id: String(questionId) },
+      });
+    } else {
+      await $fetch(`${apiBase.value}/${endpoint}/${props.contextId}/items/${questionId}`, {
+        method: "DELETE",
+        headers: getAuthHeader(),
+      });
+    }
+  } catch (err) {
+    console.error(`Failed to sync selection for context ${props.selectionContext}:`, err);
+  }
+};
+
+const toggleSelectAllVisible = async (checked: boolean) => {
+  const isContextA = (props.selectionContext || 'A') === 'A';
+  const syncPromises: Promise<any>[] = [];
+
   for (const q of props.questions) {
-    if (!canEditQuestion(q) && props.viewMode !== 'all') continue;
-    toggleQuestionSelected(q.question_id, checked);
+    if (isContextA && !canEditQuestion(q) && props.viewMode !== 'all') continue;
+    
+    // 로컬 상태 즉시 변경
+    const idKey = getQuestionIdKey(q.question_id);
+    const currentlySelected = isQuestionSelected(q.question_id);
+    if (currentlySelected !== checked) {
+      if (checked) {
+        selectedQuestionIds.value.push(idKey);
+        selectedQuestionCache.value[idKey] = q;
+      } else {
+        selectedQuestionIds.value = selectedQuestionIds.value.filter((id) => id !== idKey);
+        delete selectedQuestionCache.value[idKey];
+      }
+      // 컨텍스트 환경일 경우 백엔드 동기화 대기열 추가
+      if (!isContextA) {
+        syncPromises.push(syncContextSelection(q.question_id, checked));
+      }
+    }
+  }
+
+  if (syncPromises.length > 0) {
+    try {
+      await Promise.all(syncPromises);
+      emit('refresh');
+    } catch (err) {
+      console.error("Bulk sync failed:", err);
+    }
   }
 };
 
@@ -190,25 +272,34 @@ const rememberSelectedQuestion = (questionId: string | number | bigint) => {
   };
 };
 
-const toggleQuestionSelected = (
-  questionId: string | number | bigint,
-  checked: boolean,
-) => {
+const toggleQuestionSelected = async (questionId: string | number | bigint, checked: boolean) => {
   const idKey = getQuestionIdKey(questionId);
+  const question = props.questions.find((q) => q.question_id === questionId);
+
   if (checked) {
     if (!selectedQuestionIds.value.includes(idKey)) {
-      selectedQuestionIds.value = [...selectedQuestionIds.value, idKey];
+      selectedQuestionIds.value.push(idKey);
     }
-    rememberSelectedQuestion(questionId);
-    return;
+    if (question) {
+      selectedQuestionCache.value[idKey] = question;
+    }
+  } else {
+    selectedQuestionIds.value = selectedQuestionIds.value.filter(
+      (id) => id !== idKey,
+    );
+    const nextCache = { ...selectedQuestionCache.value };
+    delete nextCache[idKey];
+    selectedQuestionCache.value = nextCache;
   }
-  selectedQuestionIds.value = selectedQuestionIds.value.filter(
-    (id) => id !== idKey,
-  );
-  const nextCache = { ...selectedQuestionCache.value };
-  delete nextCache[idKey];
-  selectedQuestionCache.value = nextCache;
-};
+
+  // 컨텍스트 환경일 경우 백엔드 동기화 및 리프레시
+  if (props.selectionContext !== "A") {
+    const msg = checked ? "'해당 문제'로 이전합니다" : "'그외 문제'로 이전합니다";
+    triggerToast(msg);
+    await syncContextSelection(questionId, checked);
+    emit('refresh');
+  }
+}
 
 const canEditQuestion = (question: Question) => {
   if (props.currentUserNo === undefined || props.currentUserNo === null)
@@ -481,8 +572,10 @@ const deleteSelectedQuestions = async () => {
     }
     selectedQuestionIds.value = [];
     selectedQuestionCache.value = {};
-    localStorage.removeItem(STORAGE_KEY_IDS);
-    localStorage.removeItem(STORAGE_KEY_CACHE);
+    const keys = currentKeys.value;
+    localStorage.removeItem(keys.ids);
+    localStorage.removeItem(keys.cache);
+    localStorage.removeItem(keys.user);
     emit("refresh");
   } catch (error) {
     console.error("문제 삭제 오류:", error);
@@ -505,18 +598,23 @@ const openBulkSolveModal = () => {
 };
 
 // --- [문제 선택 데이터 관리 (영구 저장용 키)] ---
-// 브라우저의 localStorage에 저장할 때 사용하는 고유 키 값들입니다.
-const STORAGE_KEY_IDS = "edu_hub_selected_question_ids";
-const STORAGE_KEY_CACHE = "edu_hub_selected_question_cache";
-const STORAGE_KEY_USER = "edu_hub_selected_question_user";
-// -----------------------------------------------
+// 진입 환경(Context)별로 저장 키를 분리하여 독립적인 선택 상태를 유지합니다.
+const STORAGE_KEYS = {
+  A: { ids: "edu_hub_ids_A", cache: "edu_hub_cache_A", user: "edu_hub_user_A" },
+  B: { ids: "edu_hub_ids_B", cache: "edu_hub_cache_B", user: "edu_hub_user_B" },
+  C: { ids: "edu_hub_ids_C", cache: "edu_hub_cache_C", user: "edu_hub_user_C" },
+};
+
+// 현재 환경에 맞는 키를 가져오는 computed
+const currentKeys = computed(() => STORAGE_KEYS[props.selectionContext || "A"]);
 
 /**
  * 브라우저 저장소(localStorage)에서 이전에 선택했던 문제 정보를 불러옵니다.
  * 보안을 위해 현재 로그인한 사용자와 저장된 사용자 ID가 일치할 때만 복구합니다.
  */
 const restoreSelectionFromStorage = () => {
-  const savedUser = localStorage.getItem(STORAGE_KEY_USER);
+  const keys = currentKeys.value;
+  const savedUser = localStorage.getItem(keys.user);
   const currentUser = String(props.currentUserNo || "");
   
   // 만약 저장된 사용자 ID와 현재 사용자 ID가 다르면 복구하지 않음
@@ -525,8 +623,8 @@ const restoreSelectionFromStorage = () => {
     return;
   }
 
-  const savedIds = localStorage.getItem(STORAGE_KEY_IDS);
-  const savedCache = localStorage.getItem(STORAGE_KEY_CACHE);
+  const savedIds = localStorage.getItem(keys.ids);
+  const savedCache = localStorage.getItem(keys.cache);
 
   if (savedIds) {
     try {
@@ -545,8 +643,58 @@ const restoreSelectionFromStorage = () => {
   }
 };
 
+/**
+ * 특정 문제집(B) 또는 고사(C) 진입 시, 해당 항목에 이미 포함된 문제들을
+ * 기본값으로 자동 선택해주는 초기화 프로세스입니다.
+ */
+const initContextSelection = async () => {
+  if (props.selectionContext === "A" || !props.contextId) return;
+
+  const initKey = `edu_hub_init_${props.selectionContext}_${props.contextId}`;
+  const isInitialized = localStorage.getItem(initKey);
+  
+  // 이미 해당 ID로 초기화된 적이 있다면 중단 (기존 드래프트 상태 유지)
+  if (isInitialized) return;
+
+  try {
+    const endpoint = props.selectionContext === "B" ? "question-books" : "exams";
+    const data = await $fetch<any>(`${apiBase.value}/${endpoint}/${props.contextId}`, {
+      headers: getAuthHeader(),
+    });
+
+    const questions: Question[] = [];
+    if (props.selectionContext === "B" && data.items) {
+      data.items.forEach((item: any) => { if (item.question) questions.push(item.question); });
+    } else if (props.selectionContext === "C" && data.questions) {
+      data.questions.forEach((item: any) => { if (item.question) questions.push(item.question); });
+    }
+
+    if (questions.length > 0) {
+      const nextIds = [...selectedQuestionIds.value];
+      const nextCache = { ...selectedQuestionCache.value };
+
+      questions.forEach((q) => {
+        const idKey = getQuestionIdKey(q.question_id);
+        if (!nextIds.includes(idKey)) {
+          nextIds.push(idKey);
+        }
+        nextCache[idKey] = q;
+      });
+
+      selectedQuestionIds.value = nextIds;
+      selectedQuestionCache.value = nextCache;
+    }
+
+    // 초기화 완료 표시 (중복 실행 방지)
+    localStorage.setItem(initKey, "true");
+  } catch (err) {
+    console.error("Context selection initialization failed:", err);
+  }
+};
+
 onMounted(async () => {
   restoreSelectionFromStorage();
+  await initContextSelection(); // 컨텍스트별 자동 선택 실행
 
   await fetchGroups();
   searchInput.value = props.appliedSearchKeyword;
@@ -559,9 +707,10 @@ onMounted(async () => {
 const clearSelection = () => {
   selectedQuestionIds.value = [];
   selectedQuestionCache.value = {};
-  localStorage.removeItem(STORAGE_KEY_IDS);
-  localStorage.removeItem(STORAGE_KEY_CACHE);
-  localStorage.removeItem(STORAGE_KEY_USER);
+  const keys = currentKeys.value;
+  localStorage.removeItem(keys.ids);
+  localStorage.removeItem(keys.cache);
+  localStorage.removeItem(keys.user);
 };
 
 // 로그아웃하거나 사용자가 바뀌면 선택 상태 및 필터 초기화
@@ -579,14 +728,16 @@ watch(
 // --- [자동 저장 로직 (Watch)] ---
 // 선택된 문제 ID 목록이 변경될 때마다 브라우저 저장소에 자동으로 백업합니다.
 watch(selectedQuestionIds, (newIds) => {
-  localStorage.setItem(STORAGE_KEY_IDS, JSON.stringify(newIds));
-  localStorage.setItem(STORAGE_KEY_USER, String(props.currentUserNo || ""));
+  const keys = currentKeys.value;
+  localStorage.setItem(keys.ids, JSON.stringify(newIds));
+  localStorage.setItem(keys.user, String(props.currentUserNo || ""));
 }, { deep: true });
 
 // 선택된 문제의 상세 정보(캐시)가 변경될 때마다 브라우저 저장소에 자동으로 백업합니다.
 watch(selectedQuestionCache, (newCache) => {
-  localStorage.setItem(STORAGE_KEY_CACHE, JSON.stringify(newCache));
-  localStorage.setItem(STORAGE_KEY_USER, String(props.currentUserNo || ""));
+  const keys = currentKeys.value;
+  localStorage.setItem(keys.cache, JSON.stringify(newCache));
+  localStorage.setItem(keys.user, String(props.currentUserNo || ""));
 }, { deep: true });
 // ------------------------------
 
@@ -596,6 +747,16 @@ watch(
   async () => {
     await fetchGroups();
   },
+);
+
+watch(
+  () => props.selectionContext,
+  (newContext) => {
+    if (newContext === 'B' || newContext === 'C') {
+      emit('change-scope', 'mine');
+    }
+  },
+  { immediate: true }
 );
 
 watch(
@@ -631,7 +792,7 @@ watch(
 <template>
   <div class="question-list-container">
     <div class="question-list-row">
-      <div v-if="!props.hideGroupOverlay" class="group-overlay">
+      <div class="group-overlay">
         <div class="group-overlay-header">
           <span>문제 그룹</span>
           <div class="header-actions">
@@ -648,7 +809,7 @@ watch(
               전체
             </button>
           </div>
-          <div class="group-breadcrumb">{{ selectedGroupBreadcrumb }}</div>
+          <div class="group-breadcrumb" v-html="selectedGroupBreadcrumb || '&nbsp;'"></div>
           <div class="group-search">
             <input
               v-model="groupSearchInput"
@@ -699,18 +860,19 @@ watch(
                 <h3 class="question-list-title">
                   <IconFileText class="section-icon" />
                   {{
-                    props.hideGroupOverlay && props.listSubtitle
+                    props.selectionContext !== 'A' && props.listSubtitle
                       ? props.listSubtitle
                       : (props.listTitle ?? "문제 목록")
                   }}
                 </h3>
 
-                <div class="action-button-group">
-                  <button class="btn-create" @click="openEditor(null)">
+                <div v-if="(props.selectionContext || 'A') === 'A'"  class="action-button-group">                  
+                  <button   
+                    class="btn-create" @click="openEditor(null)">
                     <IconCreateAction class="btn-action-icon" />
                     새 문제
                   </button>
-                  <button
+                  <button                      
                     class="btn-delete"
                     :disabled="!canDeleteQuestions"
                     @click="deleteSelectedQuestions"
@@ -718,20 +880,21 @@ watch(
                     <IconDeleteAction class="btn-action-icon" />
                     삭제
                   </button>
-                  <button
+                  <button                    
                     class="btn-bulk-action"
                     :disabled="!canBulkSolveQuestions"
                     @click="openBulkSolveModal"
                   >
                     모아<br/>풀기
                   </button>
-                  <button
+                  <button                    
                     class="btn-bulk-action"
                     :disabled="!canDeleteQuestions"
                   >
                     문제집<br/>만들기
                   </button>
                   <button
+                    v-if="(props.selectionContext || 'A') === 'A'"
                     class="btn-bulk-action"
                     :disabled="!canDeleteQuestions"
                   >
@@ -742,8 +905,8 @@ watch(
             </div>
 
             <ManagerNav 
-              :active-page="hideGroupOverlay ? null : 'questions'" 
-              :back-link="hideGroupOverlay ? { to: route.query.book ? '/question-books' : '/exams', label: '되돌아가기' } : null"
+              :active-page="selectionContext === 'A' ? 'questions' : null" 
+              :back-link="selectionContext !== 'A' ? { to: route.query.book ? '/question-books' : '/exams', label: '되돌아가기' } : null"
             />
           </div>
 
@@ -751,7 +914,6 @@ watch(
             <div class="slider-panel">
               <div class="search-row">
                 <div
-                  v-if="props.showScopeToggle && !props.hideGroupOverlay"
                   class="scope-toggle"
                   role="tablist"
                   aria-label="문제 목록 범위 선택"
@@ -763,7 +925,7 @@ watch(
                     :aria-pressed="(props.scopeMode ?? 'mine') === 'mine'"
                     @click="handleScopeChange('mine')"
                   >
-                    나의 문제
+                    {{ scopeLabelMine }}
                   </button>
                   <button
                     type="button"
@@ -772,7 +934,7 @@ watch(
                     :aria-pressed="(props.scopeMode ?? 'mine') === 'all'"
                     @click="handleScopeChange('all')"
                   >
-                    전체 문제
+                    {{ scopeLabelAll }}
                   </button>
                 </div>
                 <select v-model="searchField" class="search-select">
@@ -813,7 +975,7 @@ watch(
                 />
                 <span class="summary-text"
                   >총 {{ props.totalItems }}문제
-                  <span class="selected-count">
+                  <span v-if="(props.selectionContext || 'A') === 'A'" class="selected-count">
                     · {{ selectedQuestionCount }}개 선택됨
                   </span>
                 </span
@@ -883,7 +1045,7 @@ watch(
                   <span
                     v-if="q.creator?.username && shouldShowQuestionOwner(q)"
                     class="question-owner"
-                    >{{ q.creator.username }}</span
+                    >{{ q.creator?.username }}</span
                   >
                   <span
                     v-if="q.creator?.username && shouldShowQuestionOwner(q)"
@@ -902,7 +1064,7 @@ watch(
                   class="copy-checkbox"
                   aria-label="문제 선택"
                   :checked="isQuestionSelected(q.question_id)"
-                  :disabled="!canEditQuestion(q)"
+                  :disabled="(props.selectionContext || 'A') === 'A' && !canEditQuestion(q)"
                   @change="
                     toggleQuestionSelected(
                       q.question_id,
@@ -917,12 +1079,12 @@ watch(
                 <div class="question-actions">
                   
                   <button
-                    v-if="props.viewMode === 'all' && !props.hideGroupOverlay"
+                    v-if="props.viewMode === 'all'"
                     class="btn-copy"
                     @click="emit('copy-question', q)"
                   >복사 후 가져오기</button>
                   <button
-                    v-else-if="canEditQuestion(q) && !props.hideGroupOverlay"
+                    v-else-if="canEditQuestion(q)"
                     class="btn-modify"
                     @click="selectedQuestionForEdit = q"
                   >수정</button>
@@ -951,7 +1113,7 @@ watch(
 
     <!-- 문제 풀기 오버레이 -->
     <QuestionSolver
-      v-if="selectedQuestionForSolve"
+      v-if="selectedQuestionForSolve && selectedQuestionForSolve.question_id"
       :key="selectedQuestionForSolve.question_id"
       :question="selectedQuestionForSolve"
       :has-prev="getPrevQuestion() !== null"
@@ -973,6 +1135,13 @@ watch(
       :log-content="bulkSolveLogContent"
       @close="showBulkSolveModal = false"
     />
+
+    <!-- 토스트 알림 오버레이 -->
+    <Transition name="toast-fade">
+      <div v-if="showToast" class="toast-overlay">
+        {{ toastMessage }}
+      </div>
+    </Transition>
   </div>
 </template>
 
@@ -1625,14 +1794,47 @@ watch(
   z-index: 10;
 }
 
-.slider-panel-border {
+.pagination-panel-border {
   border: 1px solid rgba(255, 255, 255, 0.18);
   border-radius: 10px;
   padding: 1rem 1.25rem;
   background: rgba(15, 23, 42, 0.65);
   box-shadow: 0 20px 60px -22px rgba(15, 23, 42, 1);
-  margin-bottom: 0;
+  margin-bottom: 1.5rem;
 }
+
+/* 토스트 알림 스타일 */
+.toast-overlay {
+  position: fixed;
+  bottom: 5rem;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(30, 41, 59, 0.95);
+  backdrop-filter: blur(12px);
+  color: #f8fafc;
+  padding: 0.75rem 1.75rem;
+  border-radius: 999px;
+  font-weight: 700;
+  font-size: 0.95rem;
+  box-shadow: 
+    0 10px 15px -3px rgba(0, 0, 0, 0.3),
+    0 0 0 1px rgba(129, 140, 248, 0.25);
+  z-index: 10000;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.toast-fade-enter-active,
+.toast-fade-leave-active {
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.toast-fade-enter-from,
+.toast-fade-leave-to {
+  opacity: 0;
+  transform: translate(-50%, 1rem);
+}
+
 
 .slider-panel {
   display: flex;

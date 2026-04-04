@@ -6,6 +6,8 @@ type FindAllParams = {
   groupId?: bigint;
   bookId?: bigint;
   examId?: bigint;
+  excludeBookId?: bigint;
+  excludeExamId?: bigint;
   publicOnly?: boolean;
   viewerNo?: bigint;
   searchField?: 'title' | 'content' | 'id';
@@ -19,15 +21,26 @@ export class QuestionsService {
   constructor(private prisma: PrismaService) {}
 
   // 모든 문제 목록 조회 API (필터링 지원)
-  async findAll({ creatorNo, groupId, bookId, examId, publicOnly, viewerNo, searchField, searchKeyword, page = 1, limit = 10 }: FindAllParams) {
+  async findAll({ 
+    creatorNo, groupId, bookId, examId, excludeBookId, excludeExamId,
+    publicOnly, viewerNo, searchField, searchKeyword, page = 1, limit = 10 
+  }: FindAllParams) {
     const where: any = {};
     // Only fetch parent questions for list view
     where.p_question_id = null;
     where.is_deleted = 'N';
-    if (creatorNo !== undefined) where.creator_no = creatorNo;
-    else if (publicOnly) where.is_public = true;
-    if (creatorNo === undefined && publicOnly && viewerNo !== undefined) {
-      where.creator_no = { not: viewerNo };
+    if (creatorNo !== undefined) {
+      where.creator_no = creatorNo;
+    } else if (publicOnly) {
+      if (viewerNo !== undefined) {
+        // 공개된 문제이거나 내가 만든 문제인 경우 노출
+        where.OR = [
+          { is_public: true },
+          { creator_no: viewerNo }
+        ];
+      } else {
+        where.is_public = true;
+      }
     }
 
     if (groupId !== undefined) {
@@ -77,6 +90,33 @@ export class QuestionsService {
       }
       where.question_id = { in: questionIds };
     }
+
+    // --- [Exclusion Logic] ---
+    let excludedIds: bigint[] = [];
+    if (excludeBookId !== undefined) {
+      const items = await this.prisma.questionBookItem.findMany({
+        where: { book_id: excludeBookId },
+        select: { question_id: true }
+      });
+      excludedIds = [...excludedIds, ...items.map(i => i.question_id)];
+    }
+    if (excludeExamId !== undefined) {
+      const items = await this.prisma.examQuestion.findMany({
+        where: { exam_id: excludeExamId },
+        select: { question_id: true }
+      });
+      excludedIds = [...excludedIds, ...items.map(i => i.question_id)];
+    }
+
+    if (excludedIds.length > 0) {
+      if (where.question_id) {
+        // 만약 이미 IN 조건이 있다면
+        where.question_id = { ...where.question_id, notIn: excludedIds };
+      } else {
+        where.question_id = { notIn: excludedIds };
+      }
+    }
+    // -------------------------
 
     function mergeIds(existing: bigint[] | null, next: bigint[]): bigint[] {
       if (!existing) return next;

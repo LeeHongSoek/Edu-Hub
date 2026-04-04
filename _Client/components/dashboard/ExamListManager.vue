@@ -512,7 +512,7 @@ const deleteSelectedExams = async () => {
             <div class="exam-headline">
               <div class="headline-left">
                 <span class="exam-id">{{ exam.exam_id }}</span> 
-                <span class="exam-count">{{ exam._count?.questions ?? 0 }}문제</span>
+                <span class="exam-count"  @click="viewExamDetails(exam.exam_id)">{{ exam._count?.questions ?? 0 }}문제</span>
                 <span v-if="exam.class?.class_name" class="exam-class-name">{{ exam.class.class_name }}</span>
               </div>
               <span class="exam-period-inline">{{ new Date(exam.start_time).toLocaleDateString("ko-KR") }} ~ {{ new Date(exam.end_time).toLocaleDateString("ko-KR") }}</span>
@@ -971,6 +971,13 @@ const deleteSelectedExams = async () => {
   border-radius: 6px;
   font-weight: 700;
   letter-spacing: -0.01em;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.exam-count:hover {
+  background: rgba(129, 140, 248, 0.22);
+  color: #ffffff;
 }
 
 .exam-separator {

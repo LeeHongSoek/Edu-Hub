@@ -20,6 +20,8 @@ const props = defineProps<{
   pageSize: number;
   viewMode: "mine" | "all";
   hideGroupOverlay?: boolean;
+  selectionContext?: "A" | "B" | "C";
+  contextId?: string | number | null;
 }>();
 
 const emit = defineEmits<{
@@ -52,6 +54,8 @@ const emit = defineEmits<{
     :page-size="props.pageSize"
     :view-mode="props.viewMode"
     :hide-group-overlay="props.hideGroupOverlay"
+    :selection-context="props.selectionContext"
+    :context-id="props.contextId"
     @refresh="emit('refresh')"
     @change-scope="emit('change-scope', $event)"
     @change-group="emit('change-group', $event)"

@@ -162,8 +162,15 @@ export class QuestionBooksService {
     if (!book) throw new NotFoundException('Question book not found');
     if (book.user_no !== userNo) throw new ForbiddenException('Not authorized');
 
-    return this.prisma.questionBookItem.create({
-      data: {
+    return this.prisma.questionBookItem.upsert({
+      where: {
+        book_id_question_id: {
+          book_id: bookId,
+          question_id: questionId,
+        }
+      },
+      update: {}, // 이미 존재하면 아무것도 하지 않음
+      create: {
         book_id: bookId,
         question_id: questionId,
       },
@@ -177,12 +184,10 @@ export class QuestionBooksService {
     if (!book) throw new NotFoundException('Question book not found');
     if (book.user_no !== userNo) throw new ForbiddenException('Not authorized');
 
-    return this.prisma.questionBookItem.delete({
+    return this.prisma.questionBookItem.deleteMany({
       where: {
-        book_id_question_id: {
-          book_id: bookId,
-          question_id: questionId,
-        }
+        book_id: bookId,
+        question_id: questionId,
       },
     });
   }

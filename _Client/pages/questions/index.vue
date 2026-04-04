@@ -63,6 +63,32 @@ const requestBody = computed(() => {
         body.viewer_no = userInfo.value.user_no;
       }
     }
+  } else {
+    // 특정 문제집/고사 진입 상태 (Context B or C)
+    if (questionScope.value === "all") {
+      // "그외 문제" (기존에 포함되지 않은 전체 문제 조회)
+      body.public_only = true;
+      if (userInfo.value) {
+        body.viewer_no = userInfo.value.user_no;
+      }
+      if (activeExamId.value !== undefined) {
+        body.exclude_exam_id = activeExamId.value;
+      }
+      if (activeBookId.value !== undefined) {
+        body.exclude_book_id = activeBookId.value;
+      }
+    } else {
+      // "해당 문제" (이미 포함된 문제만 조회)
+      if (userInfo.value) {
+        body.viewer_no = userInfo.value.user_no;
+      }
+      if (activeExamId.value !== undefined) {
+        body.exam_id = activeExamId.value;
+      }
+      if (activeBookId.value !== undefined) {
+        body.book_id = activeBookId.value;
+      }
+    }
   }
 
   if (selectedGroupId.value !== null) {
@@ -72,14 +98,6 @@ const requestBody = computed(() => {
   if (appliedSearchKeyword.value) {
     body.search_field = appliedSearchField.value;
     body.search_keyword = appliedSearchKeyword.value;
-  }
-
-  if (activeExamId.value !== undefined) {
-    body.exam_id = activeExamId.value;
-  }
-
-  if (activeBookId.value !== undefined) {
-    body.book_id = activeBookId.value;
   }
 
   body.page = currentPage.value;
@@ -246,9 +264,21 @@ const handleCopyQuestion = async (question: Question) => {
     await setQuestionScope("mine");
   } catch (err) {
     console.error("문제 복사 실패:", err);
-    alert("문제를 복사하는 중 오류가 발생했습니다.");
+    alert("문제 복사 중 오류가 발생했습니다.");
   }
 };
+
+const selectionContext = computed(() => {
+  if (activeExamId.value !== undefined) return "C";
+  if (activeBookId.value !== undefined) return "B";
+  return "A";
+});
+
+const contextId = computed(() => {
+  if (activeExamId.value !== undefined) return activeExamId.value;
+  if (activeBookId.value !== undefined) return activeBookId.value;
+  return null;
+});
 </script>
 
 <template>
@@ -272,6 +302,8 @@ const handleCopyQuestion = async (question: Question) => {
         :page-size="questionResponse?.limit || pageSize"
         :view-mode="questionScope"
         :hide-group-overlay="isSourceDetail"
+        :selection-context="selectionContext"
+        :context-id="contextId"
         @refresh="refresh"
         @change-scope="setQuestionScope"
         @change-group="handleGroupChange"

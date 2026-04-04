@@ -143,4 +143,49 @@ export class ExamsService {
 
     return { updatedCount: result.count };
   }
+
+  async addItem(examId: bigint, userNo: bigint, questionId: bigint) {
+    const exam = await this.prisma.exam.findFirst({
+      where: { exam_id: examId, is_deleted: 'N' },
+    });
+    if (!exam) throw new NotFoundException('Exam not found');
+    if (exam.creator_no !== userNo) throw new NotFoundException('Not authorized or not found');
+
+    const lastItem = await this.prisma.examQuestion.findFirst({
+      where: { exam_id: examId },
+      orderBy: { question_order: 'desc' },
+      select: { question_order: true }
+    });
+    const nextOrder = (lastItem?.question_order ?? 0) + 1;
+
+    return this.prisma.examQuestion.upsert({
+      where: {
+        exam_id_question_id: {
+          exam_id: examId,
+          question_id: questionId,
+        }
+      },
+      update: {}, // 이미 존재하면 아무것도 하지 않음
+      create: {
+        exam_id: examId,
+        question_id: questionId,
+        question_order: nextOrder,
+      },
+    });
+  }
+
+  async removeItem(examId: bigint, userNo: bigint, questionId: bigint) {
+    const exam = await this.prisma.exam.findFirst({
+      where: { exam_id: examId, is_deleted: 'N' },
+    });
+    if (!exam) throw new NotFoundException('Exam not found');
+    if (exam.creator_no !== userNo) throw new NotFoundException('Not authorized or not found');
+
+    return this.prisma.examQuestion.deleteMany({
+      where: {
+        exam_id: examId,
+        question_id: questionId,
+      },
+    });
+  }
 }

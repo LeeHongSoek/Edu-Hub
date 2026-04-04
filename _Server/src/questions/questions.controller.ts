@@ -16,6 +16,8 @@ export class QuestionsController {
     @Body('limit') limit?: number,
     @Body('book_id') bookId?: string,
     @Body('exam_id') examId?: string,
+    @Body('exclude_book_id') excludeBookId?: string,
+    @Body('exclude_exam_id') excludeExamId?: string,
     @Body('public_only') publicOnly?: boolean | string,
     @Body('viewer_no') viewerNo?: string,
   ) {
@@ -24,6 +26,8 @@ export class QuestionsController {
       groupId: (groupId && groupId !== 'undefined') ? BigInt(groupId) : undefined,
       bookId: (bookId && bookId !== 'undefined') ? BigInt(bookId) : undefined,
       examId: (examId && examId !== 'undefined') ? BigInt(examId) : undefined,
+      excludeBookId: (excludeBookId && excludeBookId !== 'undefined') ? BigInt(excludeBookId) : undefined,
+      excludeExamId: (excludeExamId && excludeExamId !== 'undefined') ? BigInt(excludeExamId) : undefined,
       publicOnly: publicOnly === true || publicOnly === 'true',
       viewerNo: (viewerNo && viewerNo !== 'undefined') ? BigInt(viewerNo) : undefined,
       searchField: (searchField === 'content' || searchField === 'id') ? searchField : 'title',
