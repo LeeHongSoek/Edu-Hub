@@ -5,17 +5,18 @@ import { PrismaService } from '../common/prisma/prisma.service';
 export class GroupsService {
   constructor(private prisma: PrismaService) {}
 
-  // 최상위 그룹(depth 1)을 기준으로 하위 그룹들을 포함하여 조회
-  // 최상위 그룹(depth 1)을 기준으로 하위 그룹들을 포함하여 조회
+  /**
+   * 그룹 계층 구조 및 문항 수를 조회합니다.
+   */
   async findAll(scope?: string, userNo?: string | number, viewerNo?: string | number, bookId?: string | number, examId?: string | number) {
     const selector = this.countSelector(scope, userNo, viewerNo, bookId, examId);
     
-    // 메인 쿼리 필터 구성
-    const mainWhere: any = { parent_group_id: null };
+    // 메인 쿼리 필터: 최상위 그룹부터 조회
+    const mainWhere: any = { parent_group_id: null, is_deleted: { not: 'Y' } };
     const normalizedScope = String(scope || '').toLowerCase();
     
-    // scope=mine일 경우 그룹 목록 자체도 로그인 사용자의 것만 필터링
-    // 단, B, C 환경(문제집/고사 관리)에서는 다른 사람의 그룹에 속한 문항이 포함될 수 있으므로 필터를 해제함
+    // A 환경의 '나의 문제' 탭에서만 그룹 목록을 내 것으로 한정함
+    // B, C 환경이나 A의 '전체' 탭에서는 모든 사용자의 그룹을 탐색할 수 있어야 함
     if (normalizedScope === 'mine' && userNo !== undefined && userNo !== null && !bookId && !examId) {
       mainWhere.creator_no = BigInt(userNo);
     }
@@ -44,22 +45,19 @@ export class GroupsService {
 
     let hierarchy = this.attachCounts(groups);
     
-    // B, C 환경에서 빈 그룹 필터링 로직 제거 (항상 전체를 보여달라는 요청 반영)
-    /*
-    if (bookId || examId) {
-      const filterEmpty = (nodes: any[]): any[] => {
-        return nodes
-          .filter(node => node.question_total > 0)
-          .map(node => {
-            if (node.child_groups) {
-              node.child_groups = filterEmpty(node.child_groups);
-            }
-            return node;
-          });
-      };
-      hierarchy = filterEmpty(hierarchy);
-    }
-    */
+    // 문항이 0개인 그룹(접근 권한이 없는 타인의 그룹 등)은 숨겨서 목록을 깔끔하게 유지
+    const filterEmpty = (nodes: any[]): any[] => {
+      return nodes
+        .filter(node => node.question_total > 0)
+        .map(node => {
+          const newNode = { ...node };
+          if (newNode.child_groups) {
+            newNode.child_groups = filterEmpty(newNode.child_groups);
+          }
+          return newNode;
+        });
+    };
+    hierarchy = filterEmpty(hierarchy);
 
     const unassignedCount = await this.getUnassignedCount(scope, userNo, viewerNo, bookId, examId);
 
@@ -79,6 +77,9 @@ export class GroupsService {
     return this.prisma.question.count({ where });
   }
 
+  /**
+   * 재귀적으로 하위 그룹의 문항 수를 합산하여 처리합니다.
+   */
   private attachCounts(groups: any[]): any[] {
     const compute = (node: any): number => {
       const own = node?._count?.questions ?? 0;
@@ -94,25 +95,30 @@ export class GroupsService {
     return groups;
   }
 
+  /**
+   * 상황별 문항 집계 필터를 생성합니다.
+   */
   private countSelector(scope?: string, userNo?: string | number, viewerNo?: string | number, bookId?: string | number, examId?: string | number) {
     const where: any = { is_deleted: { not: 'Y' } };
     const normalizedScope = String(scope || '').toLowerCase();
 
-    // 문제집/고사 컨텍스트 필터링이 있을 경우
+    // 1. 컨텍스트별 우선순위 결정
     if (bookId !== undefined && bookId !== null || examId !== undefined && examId !== null) {
-      // 사용자의 요청에 따라 B, C 환경의 사이드바는 항상 시스템 전체(내 문제 + 공개 문제)를 보여줌
+      // [B, C 환경: 문제집/고사 관리]
+      // 사용자의 요청에 따라 사이드바는 항상 '전체 사용자 라이브러리(내 문제 + 모든 공개 문제)'를 집계함
       const orConditions: any[] = [{ is_public: true }];
       if (viewerNo !== undefined && viewerNo !== null) {
         orConditions.push({ creator_no: BigInt(viewerNo) });
       }
       where.OR = orConditions;
     } else {
-      // 컬렉션 환경이 아닐 때만 기존 scope 필터 적용
+      // [A 환경: 메인 관리]
       if (normalizedScope === 'mine' && userNo !== undefined && userNo !== null) {
         where.creator_no = BigInt(userNo);
       } else if (normalizedScope === 'all') {
         where.is_public = true;
         if (viewerNo !== undefined && viewerNo !== null) {
+          // 타인의 공개 문항 중심(Discover)
           where.creator_no = { not: BigInt(viewerNo) };
         }
       }
@@ -121,7 +127,6 @@ export class GroupsService {
     return { questions: { where } };
   }
 
-  // 그룹 생성
   async create(data: any) {
     return this.prisma.group.create({
       data: {
@@ -131,7 +136,6 @@ export class GroupsService {
     });
   }
 
-  // 그룹 수정
   async update(id: string | number, data: any) {
     const groupId = typeof id === 'string' ? BigInt(id) : BigInt(id);
     return this.prisma.group.update({
@@ -140,7 +144,6 @@ export class GroupsService {
     });
   }
 
-  // 그룹 삭제
   async remove(id: string | number) {
     const groupId = typeof id === 'string' ? BigInt(id) : BigInt(id);
     return this.prisma.group.delete({
