@@ -229,7 +229,7 @@ CREATE TABLE `enm_question_types` (
 LOCK TABLES `enm_question_types` WRITE;
 /*!40000 ALTER TABLE `enm_question_types` DISABLE KEYS */;
 INSERT INTO `enm_question_types` VALUES
-('C','복합','복합식(부가자식문제)'),
+('C','복합식','복합식(부가자식문제)'),
 ('M','객관식','객관식(qustion_options 안에 정답여부내장)'),
 ('S','주관식','주관식');
 /*!40000 ALTER TABLE `enm_question_types` ENABLE KEYS */;
@@ -718,7 +718,11 @@ INSERT INTO `exam_questions` VALUES
 (60,70,7,10),
 (60,80,8,10),
 (60,90,9,10),
-(60,100,10,10);
+(60,100,10,10),
+(61,79,36,10),
+(61,81,35,10),
+(61,82,34,10),
+(61,122,37,10);
 /*!40000 ALTER TABLE `exam_questions` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -786,7 +790,7 @@ CREATE TABLE `exams` (
   KEY `fk_exam_class` (`class_id`),
   CONSTRAINT `fk_exam_class` FOREIGN KEY (`class_id`) REFERENCES `classes` (`class_id`) ON DELETE SET NULL,
   CONSTRAINT `fk_exam_creator` FOREIGN KEY (`creator_no`) REFERENCES `users` (`user_no`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=61 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci COMMENT='고사(모의고사 등) 관리 테이블';
+) ENGINE=InnoDB AUTO_INCREMENT=62 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci COMMENT='고사(모의고사 등) 관리 테이블';
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -834,7 +838,8 @@ INSERT INTO `exams` VALUES
 (56,4,15,'개념 마무리 자율 테스트','2026-06-23 19:00:00','2026-06-23 20:00:00','스터디룸',1,NULL,'2026-03-27 21:48:29','N'),
 (58,5,16,'문제집 순환 리뷰','2026-06-27 11:00:00','2026-06-27 12:30:00','온라인',1,NULL,'2026-03-27 21:48:29','N'),
 (59,6,17,'가정 학습 점검','2026-06-29 16:00:00','2026-06-29 17:30:00','자택',1,NULL,'2026-03-27 21:48:29','N'),
-(60,7,18,'기말 마무리 리허설','2026-07-01 09:00:00','2026-07-01 10:30:00','제3 시험장',1,NULL,'2026-03-27 21:48:29','N');
+(60,7,18,'기말 마무리 리허설','2026-07-01 09:00:00','2026-07-01 10:30:00','제3 시험장',1,NULL,'2026-03-27 21:48:29','N'),
+(61,2,NULL,'ㄹㄹㄹㄴㅇㄹㄴㄹㄹㄹㄹㄴㅇㄹㄴ','2026-04-01 11:04:00','2026-04-29 11:04:00','ㄹㄹㄹㅇㅎㅇㄴㅎ',1,'ㄹㄹㄹㄹㅇㅎㄷ','2026-04-03 11:04:24','N');
 /*!40000 ALTER TABLE `exams` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -858,7 +863,7 @@ CREATE TABLE `groups` (
   KEY `fk_group_parent` (`parent_group_id`),
   CONSTRAINT `fk_group_creator` FOREIGN KEY (`creator_no`) REFERENCES `users` (`user_no`) ON DELETE CASCADE,
   CONSTRAINT `fk_group_parent` FOREIGN KEY (`parent_group_id`) REFERENCES `groups` (`group_id`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=54 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci COMMENT='문제 분류 그룹 계층형 테이블';
+) ENGINE=InnoDB AUTO_INCREMENT=101 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci COMMENT='문제 분류 그룹 계층형 테이블';
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -868,39 +873,41 @@ CREATE TABLE `groups` (
 LOCK TABLES `groups` WRITE;
 /*!40000 ALTER TABLE `groups` DISABLE KEYS */;
 INSERT INTO `groups` VALUES
-(1,1,NULL,1,'컴퓨터 공학.','컴공 자료','2026-03-27 21:48:28'),
+(-1,0,NULL,1,'전체','전체','2026-04-04 15:03:06'),
+(0,0,-1,1,'문제분류 없음','문제분류 없음','2026-04-04 15:13:45'),
+(1,1,-1,1,'컴퓨터 공학.','컴공 자료','2026-03-27 21:48:28'),
 (2,1,1,2,'IT 자격증','IT 자격증','2026-03-27 21:48:28'),
 (3,1,2,3,'정보처리기사 실기','2026 기출','2026-03-27 21:48:28'),
-(4,2,NULL,1,'내 공부장','개인 자율 복습','2026-03-27 21:48:28'),
+(4,2,-1,1,'내 공부장','개인 자율 복습','2026-03-27 21:48:28'),
 (5,2,4,2,'오답 노트','틀린 문제들만','2026-03-27 21:48:28'),
 (6,2,5,3,'파이썬 기초','파이썬 복습','2026-03-27 21:48:28'),
-(7,3,NULL,1,'아이 학습 관리','부모 정리 문제','2026-03-27 21:48:28'),
+(7,3,-1,1,'아이 학습 관리','부모 정리 문제','2026-03-27 21:48:28'),
 (8,3,7,2,'영어 단어장','영단어 모음','2026-03-27 21:48:28'),
 (9,3,8,3,'중등 필수 영단어','알아야 할 단어들','2026-03-27 21:48:28'),
-(10,1,NULL,1,'고등 과학','과학 탐구','2026-03-27 21:48:28'),
+(10,1,-1,1,'고등 과학','과학 탐구','2026-03-27 21:48:28'),
 (11,1,10,2,'물리','물리 기초','2026-03-27 21:48:28'),
-(12,1,NULL,1,'고등 수학','수학 기초','2026-03-27 21:48:28'),
+(12,1,-1,1,'고등 수학','수학 기초','2026-03-27 21:48:28'),
 (13,1,12,2,'미적분','미분과 적분','2026-03-27 21:48:28'),
-(14,2,NULL,1,'알고리즘 훈련실','코딩 테스트 대비 문제 분류','2026-03-27 21:48:29'),
+(14,2,-1,1,'알고리즘 훈련실','코딩 테스트 대비 문제 분류','2026-03-27 21:48:29'),
 (15,2,14,2,'자료구조','스택, 큐, 트리, 그래프 중심','2026-03-27 21:48:29'),
 (16,2,14,2,'정렬과 탐색','기본 정렬, 이진 탐색, 투 포인터','2026-03-27 21:48:29'),
-(17,2,NULL,1,'데이터 분석 기초','통계와 데이터 해석','2026-03-27 21:48:29'),
+(17,2,-1,1,'데이터 분석 기초','통계와 데이터 해석','2026-03-27 21:48:29'),
 (18,2,17,2,'통계 기본기','평균, 분산, 확률, 분포','2026-03-27 21:48:29'),
-(19,2,NULL,1,'프론트엔드 실습장','HTML/CSS/JavaScript 학습용','2026-03-27 21:48:29'),
+(19,2,-1,1,'프론트엔드 실습장','HTML/CSS/JavaScript 학습용','2026-03-27 21:48:29'),
 (20,2,19,2,'HTML & CSS','레이아웃과 스타일링','2026-03-27 21:48:29'),
 (21,2,19,2,'JavaScript 기초','비동기와 DOM 제어','2026-03-27 21:48:29'),
 (22,2,15,3,'스택과 큐','선형 자료구조 집중','2026-03-27 21:48:29'),
 (23,2,18,3,'확률 분포','이산/연속 분포 입문','2026-03-27 21:48:29'),
-(24,1,NULL,1,'수학','수학 전반 분류','2026-03-31 21:36:25'),
-(25,2,NULL,1,'영어','영어 전반 분류','2026-03-31 21:36:25'),
-(26,3,NULL,1,'과학','과학 전반 분류','2026-03-31 21:36:25'),
-(27,4,NULL,1,'사회','사회 전반 분류','2026-03-31 21:36:25'),
-(28,5,NULL,1,'코딩','코딩 전반 분류','2026-03-31 21:36:25'),
-(29,6,NULL,1,'데이터','데이터 전반 분류','2026-03-31 21:36:25'),
-(30,7,NULL,1,'국어','국어 전반 분류','2026-03-31 21:36:25'),
-(31,8,NULL,1,'역사','역사 전반 분류','2026-03-31 21:36:25'),
-(32,9,NULL,1,'경제','경제 전반 분류','2026-03-31 21:36:25'),
-(33,10,NULL,1,'예체능','예체능 전반 분류','2026-03-31 21:36:25'),
+(24,1,-1,1,'수학','수학 전반 분류','2026-03-31 21:36:25'),
+(25,2,-1,1,'영어','영어 전반 분류','2026-03-31 21:36:25'),
+(26,3,-1,1,'과학','과학 전반 분류','2026-03-31 21:36:25'),
+(27,4,-1,1,'사회','사회 전반 분류','2026-03-31 21:36:25'),
+(28,5,-1,1,'코딩','코딩 전반 분류','2026-03-31 21:36:25'),
+(29,6,-1,1,'데이터','데이터 전반 분류','2026-03-31 21:36:25'),
+(30,7,-1,1,'국어','국어 전반 분류','2026-03-31 21:36:25'),
+(31,8,-1,1,'역사','역사 전반 분류','2026-03-31 21:36:25'),
+(32,9,-1,1,'경제','경제 전반 분류','2026-03-31 21:36:25'),
+(33,10,-1,1,'예체능','예체능 전반 분류','2026-03-31 21:36:25'),
 (34,11,24,2,'대수','수학 > 대수 세부 주제','2026-03-31 21:36:25'),
 (35,12,24,2,'기하','수학 > 기하 세부 주제','2026-03-31 21:36:25'),
 (36,13,25,2,'문법','영어 > 문법 세부 주제','2026-03-31 21:36:25'),
@@ -1706,63 +1713,62 @@ CREATE TABLE `questionbook_question` (
 LOCK TABLES `questionbook_question` WRITE;
 /*!40000 ALTER TABLE `questionbook_question` DISABLE KEYS */;
 INSERT INTO `questionbook_question` VALUES
-(0,2),
 (1,2),
 (4,2),
 (3,3),
 (1,4),
 (4,4),
+(0,5),
 (4,5),
 (1,6),
 (5,6),
 (3,7),
 (5,7),
 (5,8),
+(0,9),
 (6,9),
 (6,10),
 (6,11),
 (7,12),
-(0,13),
 (7,13),
 (7,14),
+(0,15),
 (8,15),
 (8,16),
-(0,17),
 (8,17),
 (9,18),
+(0,20),
 (9,20),
+(0,21),
 (9,21),
-(10,22),
 (10,23),
-(0,24),
 (10,24),
-(0,25),
 (11,25),
+(0,26),
 (11,26),
-(0,27),
 (11,27),
 (12,28),
 (12,29),
 (12,30),
 (13,31),
-(0,32),
 (13,32),
 (0,33),
 (13,33),
 (14,34),
 (14,35),
 (14,36),
-(0,37),
 (15,37),
 (15,38),
 (15,39),
 (16,40),
+(0,41),
 (16,41),
 (16,42),
-(0,43),
 (17,43),
+(0,44),
 (17,44),
 (24,44),
+(0,45),
 (17,45),
 (24,45),
 (18,46),
@@ -1773,36 +1779,33 @@ INSERT INTO `questionbook_question` VALUES
 (26,48),
 (19,49),
 (26,49),
-(0,50),
 (19,50),
 (27,50),
 (27,51),
+(0,52),
 (28,52),
 (28,53),
 (29,54),
 (29,55),
 (30,56),
-(0,57),
 (30,57),
-(0,58),
 (1,58),
 (19,58),
 (31,58),
 (31,59),
 (32,60),
 (44,60),
-(2,61),
+(0,61),
 (20,61),
 (32,61),
 (44,61),
-(0,62),
-(2,62),
 (33,62),
 (44,62),
 (1,63),
 (20,63),
 (33,63),
 (45,63),
+(0,64),
 (34,64),
 (45,64),
 (34,65),
@@ -1813,11 +1816,11 @@ INSERT INTO `questionbook_question` VALUES
 (46,67),
 (36,68),
 (46,68),
+(0,69),
 (36,69),
 (47,69),
 (37,70),
 (47,70),
-(2,71),
 (20,71),
 (37,71),
 (47,71),
@@ -1826,50 +1829,51 @@ INSERT INTO `questionbook_question` VALUES
 (48,74),
 (49,75),
 (49,76),
+(0,77),
 (49,77),
 (3,78),
 (21,78),
 (38,78),
 (50,78),
-(0,79),
 (38,79),
 (50,79),
 (39,80),
 (50,80),
-(2,81),
+(0,81),
 (21,81),
 (39,81),
 (51,81),
-(0,82),
 (40,82),
 (51,82),
 (40,83),
 (51,83),
 (41,84),
 (52,84),
-(0,85),
 (41,85),
 (52,85),
 (42,86),
 (52,86),
 (42,87),
 (53,87),
-(0,88),
 (3,88),
 (21,88),
 (43,88),
 (53,88),
 (43,89),
 (53,89),
-(0,91),
-(2,91),
 (22,91),
+(0,92),
 (22,98),
 (22,99),
 (23,100),
 (0,101),
 (23,101),
-(23,102);
+(23,102),
+(0,103),
+(2,104),
+(2,105),
+(2,106),
+(0,108);
 /*!40000 ALTER TABLE `questionbook_question` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -1900,7 +1904,7 @@ CREATE TABLE `questionbooks` (
 LOCK TABLES `questionbooks` WRITE;
 /*!40000 ALTER TABLE `questionbooks` DISABLE KEYS */;
 INSERT INTO `questionbooks` VALUES
-(0,0,'오늘의 공개문제','매일 자동으로 갱신되는 추천 문제 세트입니다.','2026-04-02 15:12:20','N'),
+(0,0,'오늘의 공개문제','매일 자동으로 갱신되는 추천 문제 세트입니다.','2026-04-03 15:27:16','N'),
 (1,1,'김철수 3월 오답 정리','틀린 문제만 다시 모아 둔 개인 문제집','2026-03-27 21:48:29','N'),
 (2,2,'김철수 자료구조 집중','자료구조와 알고리즘 관련 문제를 따로 묶은 컬렉션','2026-03-27 21:48:29','N'),
 (3,3,'학부모 체크용 주말 점검','아이와 함께 볼 핵심 문제집','2026-03-27 21:48:29','N'),
@@ -2008,7 +2012,7 @@ INSERT INTO `questions` VALUES
 (4,NULL,4,6,'S','파이썬 - 리스트 기초 (주관식)','파이썬에서 비어있는 리스트를 생성하는 코드를 두 가지 작성하시오.',NULL,'[] 또는 list()','대괄호를 사용하거나 내장 함수 list()를 사용하여 빈 리스트를 만들 수 있습니다.','대괄호 사용',2,1,'N',180,0,'2026-03-27 21:48:28'),
 (5,NULL,5,11,'M','물리 - 뉴턴 제2법칙 (긴 지문형)','수식과 내용에 따르면, 질량 $m$이 2배로 증가할 때 가속도 $a$는 어떻게 변하는가?','다음 지문을 읽고 물음에 답하시오.\n\n> \"물체의 가속도는 작용한 힘에 비례하고 질량에 반비례한다.\"\n\n이를 뉴턴의 제2법칙이라 부르며, 수식으로는 다음과 같이 나타낼 수 있다.\n\n$$ F = m \\cdot a $$\n\n여기서 힘 $F$가 $\\underline{\\text{일정}}$하게 유지될 때, 다음 물음에 답하라.','','수식 $a = \\frac{F}{m}$ 에 대입하여 관계를 파악하세요.','마크다운과 수식을 렌더링하는 테스트입니다.',4,1,'N',300,0,'2026-03-27 21:48:28'),
 (6,NULL,6,13,'M','고등 수학 - 정적분 (라텍스 수식형)','다음 주어지는 미적분 문제의 정적분 수행 결과값으로 알맞은 것은?','함수 $f(x) = x \\sin(x)$ 일 때, 정적분 $\\int_{0}^{\\frac{\\pi}{2}} f(x) dx$ 의 값을 구하시오.\n\n(참고: 필요하다면 부분적분법 $\\int u v\' dx = uv - \\int u\' v dx$ 을 활용하시오.)','','부분적분 $u=x, v\'=\\sin(x)$로 치환하면 $u\'=1, v=-\\cos(x)$이므로, $[-x\\cos(x)]_{0}^{\\frac{\\pi}{2}} + \\int_{0}^{\\frac{\\pi}{2}} \\cos(x)dx$ = $0 + [\\sin(x)]_{0}^{\\frac{\\pi}{2}}$ = $1$이 됩니다.','부분적분법을 활용',5,1,'N',600,0,'2026-03-27 21:48:28'),
-(7,NULL,7,NULL,'M','[영어] 수능 기출 독해','다음 글의 요지로 가장 적절한 것은?',NULL,'3','지문의 내용을 통해 Indigenous stewardship의 효과를 설명하고 있습니다.',NULL,4,1,'N',120,0,'2026-03-27 21:48:28'),
+(7,NULL,7,0,'M','[영어] 수능 기출 독해','다음 글의 요지로 가장 적절한 것은?',NULL,'3','지문의 내용을 통해 Indigenous stewardship의 효과를 설명하고 있습니다.',NULL,4,1,'N',120,0,'2026-03-27 21:48:28'),
 (8,NULL,8,4,'M','HTML 시맨틱 태그','다음 중 HTML 시맨틱 태그의 역할로 가장 알맞은 것은?','문서의 구조와 의미를 분리해 표현하는 개념을 묻는 문제입니다.','1','시맨틱 태그는 문서 구조를 명확히 해 접근성과 유지보수성을 높입니다.','태그가 무엇을 뜻하는지 생각해 보세요.',1,1,'N',60,0,'2026-03-27 21:48:28'),
 (9,NULL,1,5,'M','CSS 박스 모델','다음 중 CSS 박스 모델에서 margin이 의미하는 것은?','요소 주변의 여백 개념을 확인하는 기본 개념 문제입니다.','2','margin은 요소 바깥쪽 공간을 뜻하고, 요소 간 간격을 만드는 데 쓰입니다.','요소 밖의 공간인지, 안쪽의 공간인지 구분해 보세요.',2,1,'N',90,0,'2026-03-27 21:48:28'),
 (10,NULL,2,6,'M','JavaScript 배열 메서드','다음 중 원본 배열을 직접 변경하는 JavaScript 메서드는?','배열 메서드가 원본을 바꾸는지 여부를 묻는 문제입니다.','3','splice는 원본 배열을 수정하고, slice나 map은 새 배열을 반환합니다.','원본 배열을 바꾸는 메서드를 떠올려 보세요.',3,1,'N',120,0,'2026-03-27 21:48:28'),
@@ -2111,30 +2115,30 @@ INSERT INTO `questions` VALUES
 (107,NULL,3,18,'M','김철수 확장 문제 50 - 확률 분포','다음 중 확률 분포에 대한 설명으로 가장 알맞은 것은 무엇인가?','분포의 개념과 기대값/확률 해석을 직관적으로 이해했는지 확인하는 문제입니다.','1','확률 분포는 값 하나가 아니라 값들이 어떤 규칙으로 나타나는지 보는 개념입니다.','하나의 값이 아니라 전체 분포 모양을 보는 개념입니다.',5,1,'N',180,0,'2026-03-27 21:48:29'),
 (108,NULL,2,18,'M','김철수 확장 문제 50 - 확률 분포','다음 중 확률 분포에 대한 설명으로 가장 알맞은 것은 무엇인가?','분포의 개념과 기대값/확률 해석을 직관적으로 이해했는지 확인하는 문제입니다.','1','확률 분포는 값 하나가 아니라 값들이 어떤 규칙으로 나타나는지 보는 개념입니다.','하나의 값이 아니라 전체 분포 모양을 보는 개념입니다.',5,1,'N',180,0,'2026-03-31 03:53:45'),
 (109,NULL,1,18,'M','김철수 확장 문제 50 - 확률 분포','다음 중 확률 분포에 대한 설명으로 가장 알맞은 것은 무엇인가?','분포의 개념과 기대값/확률 해석을 직관적으로 이해했는지 확인하는 문제입니다.','1','확률 분포는 값 하나가 아니라 값들이 어떤 규칙으로 나타나는지 보는 개념입니다.','하나의 값이 아니라 전체 분포 모양을 보는 개념입니다.',5,1,'N',180,0,'2026-03-31 05:27:48'),
-(110,NULL,1,NULL,'S','Reading Passage 1','Read the passage and answer questions 1-5.','Last spring, a small neighborhood turned an empty lot into a community garden. At first, only a few residents joined. They built raised beds, planted herbs, and set up a schedule for watering. By summer, more people visited, sharing seeds and recipes. The garden did more than grow vegetables. It became a place where neighbors who had never spoken before began to talk. When a heat wave arrived, volunteers installed shade cloth and collected rainwater to keep the plants alive. The project showed how shared spaces can strengthen a community.','N/A',NULL,NULL,2,1,'N',0,0,'2026-04-01 08:43:36'),
-(111,110,2,NULL,'M','Passage 1 - Q1','What is the main purpose of the passage?\nA. To compare different kinds of gardens\nB. To describe how a community garden changed a neighborhood\nC. To explain how to build raised beds\nD. To argue against urban farming',NULL,'B','The passage focuses on the social impact of the community garden.',NULL,2,1,'N',0,0,'2026-04-01 08:43:36'),
-(112,110,2,NULL,'M','Passage 1 - Q2','Which detail shows that the garden encouraged community interaction?\nA. Residents planted herbs\nB. People shared seeds and recipes\nC. The lot was empty\nD. Volunteers installed shade cloth',NULL,'B','Sharing seeds and recipes indicates interaction among neighbors.',NULL,2,1,'N',0,0,'2026-04-01 08:43:36'),
-(113,110,2,NULL,'M','Passage 1 - Q3','What happened when the heat wave arrived?\nA. The garden closed\nB. Volunteers added shade and collected rainwater\nC. The plants were removed\nD. Residents stopped visiting',NULL,'B','The passage states volunteers installed shade cloth and collected rainwater.',NULL,2,1,'N',0,0,'2026-04-01 08:43:36'),
-(114,110,2,NULL,'M','Passage 1 - Q4','Which word best describes the tone of the passage?\nA. Critical\nB. Celebratory\nC. Indifferent\nD. Sarcastic',NULL,'B','The passage praises the positive effects of the garden.',NULL,2,1,'N',0,0,'2026-04-01 08:43:36'),
-(115,110,2,NULL,'M','Passage 1 - Q5','What can be inferred about the neighborhood before the garden?\nA. It was already closely connected\nB. It had no available land\nC. Many neighbors did not know each other\nD. It was famous for farming',NULL,'C','The passage notes neighbors who had never spoken began to talk.',NULL,2,1,'N',0,0,'2026-04-01 08:43:36'),
-(116,NULL,1,NULL,'S','Reading Passage 2','Read the passage and answer questions 6-10.','A recent study explored how short naps affect memory. Participants learned a list of word pairs, then either stayed awake or took a 30-minute nap. Later, the napping group recalled more pairs. Researchers suggest that during light sleep the brain replays new information, helping to store it. However, the study also found that longer naps did not improve recall and sometimes left participants groggy. The findings imply that brief naps may be a practical way to boost learning without disrupting daily routines.','N/A',NULL,NULL,3,1,'N',0,0,'2026-04-01 08:43:36'),
-(117,116,2,NULL,'M','Passage 2 - Q6','What did the study compare?\nA. Different types of memory tests\nB. People who napped and people who stayed awake\nC. Morning learning and evening learning\nD. Long naps and no naps only',NULL,'B','The study compared a napping group with a staying-awake group.',NULL,3,1,'N',0,0,'2026-04-01 08:43:36'),
-(118,116,2,NULL,'M','Passage 2 - Q7','Why might a short nap help memory, according to the researchers?\nA. It reduces hunger\nB. The brain replays new information during light sleep\nC. It increases physical strength\nD. It lowers stress permanently',NULL,'B','The passage mentions replay of new information during light sleep.',NULL,3,1,'N',0,0,'2026-04-01 08:43:36'),
-(119,116,2,NULL,'M','Passage 2 - Q8','What was a downside of longer naps in the study?\nA. They improved recall too much\nB. They had no effect and caused grogginess\nC. They caused participants to forget the words entirely\nD. They were not allowed',NULL,'B','Longer naps did not improve recall and left participants groggy.',NULL,3,1,'N',0,0,'2026-04-01 08:43:36'),
-(120,116,2,NULL,'M','Passage 2 - Q9','Which statement best summarizes the conclusion?\nA. Sleep never helps learning\nB. Long naps are better than short naps\nC. Brief naps can boost learning without major disruption\nD. Only students benefit from naps',NULL,'C','The findings imply brief naps are practical and helpful.',NULL,3,1,'N',0,0,'2026-04-01 08:43:36'),
-(121,116,2,NULL,'M','Passage 2 - Q10','What is the primary organizational pattern of the passage?\nA. Problem and solution\nB. Cause and effect\nC. Description of a study and its results\nD. Chronological biography',NULL,'C','It describes the study setup and outcomes.',NULL,3,1,'N',0,0,'2026-04-01 08:43:36'),
-(122,NULL,1,4,'S','Reading Passage 3','Read the passage and answer questions 11-15.','A coastal town decided to replace its aging power plant with wind turbines. Some residents worried that the turbines would spoil the ocean view, while others hoped they would create jobs. After months of debate, the town council approved a smaller project: fewer turbines placed farther offshore. The plan reduced visual impact and still provided enough electricity for public buildings. One year later, surveys showed that most residents supported the project, and local businesses reported increased tourism from visitors interested in clean energy.','N/A','','',1,1,'N',0,1,'2026-04-01 08:43:36'),
-(123,122,2,NULL,'M','Passage 3 - Q11','What was the town replacing?\nA. A bridge\nB. An aging power plant\nC. A fishing port\nD. A highway',NULL,'B','The passage says the town replaced its aging power plant.',NULL,3,1,'N',0,0,'2026-04-01 08:43:36'),
-(124,122,2,NULL,'M','Passage 3 - Q12','How did the town council respond to the debate?\nA. It canceled the project\nB. It approved a smaller offshore project\nC. It built the largest possible project\nD. It delayed the decision for years',NULL,'B','The council approved fewer turbines placed farther offshore.',NULL,3,1,'N',0,0,'2026-04-01 08:43:36'),
-(125,122,2,NULL,'M','Passage 3 - Q13','What was one result after one year?\nA. Residents became less supportive\nB. Electricity prices doubled\nC. Tourism increased because of interest in clean energy\nD. The turbines were removed',NULL,'C','Local businesses reported increased tourism from visitors.',NULL,3,1,'N',0,0,'2026-04-01 08:43:36'),
-(126,122,2,NULL,'M','Passage 3 - Q14','Which concern is mentioned in the passage?\nA. Noise from trains\nB. Loss of ocean view\nC. Damage to farmland\nD. Lack of internet access',NULL,'B','Residents worried the turbines would spoil the ocean view.',NULL,2,1,'N',0,0,'2026-04-01 08:43:36'),
-(127,122,2,NULL,'M','Passage 3 - Q15','What is the main idea of the passage?\nA. Wind energy always faces opposition\nB. Compromise helped a clean energy project succeed\nC. Tourism is the town primary industry\nD. Power plants are safer than turbines',NULL,'B','A smaller offshore plan balanced concerns and benefits.',NULL,3,1,'N',0,0,'2026-04-01 08:43:36'),
-(128,NULL,2,NULL,'S','Reading Passage 4','Read the passage and answer questions 16-20.','An archive recently digitized thousands of historical letters. The project began because the paper was aging and difficult to handle. By scanning the letters and creating searchable transcripts, the archive made the collection available to researchers worldwide. The team also discovered that students were more engaged when they could read the letters online and annotate them. While the digitization required significant time and funding, the archive argued that expanding access was worth the effort.','N/A',NULL,NULL,2,1,'N',0,0,'2026-04-01 08:43:36'),
-(129,128,2,NULL,'M','Passage 4 - Q16','Why did the archive start the digitization project?\nA. The letters were already digital\nB. The paper was aging and hard to handle\nC. Researchers requested paper copies only\nD. The archive wanted to reduce staff',NULL,'B','The passage states the paper was aging and difficult to handle.',NULL,2,1,'N',0,0,'2026-04-01 08:43:36'),
-(130,128,2,NULL,'M','Passage 4 - Q17','What new benefit did the team notice?\nA. Fewer researchers used the archive\nB. Students were more engaged with online access and annotation\nC. The letters lost their historical value\nD. The project required no funding',NULL,'B','Students engaged more when they could read and annotate online.',NULL,2,1,'N',0,0,'2026-04-01 08:43:36'),
-(131,128,2,NULL,'M','Passage 4 - Q18','Which best describes the author perspective?\nA. Skeptical about digitization\nB. Neutral but acknowledging benefits and costs\nC. Angry about technology\nD. Dismissive of researchers',NULL,'B','The passage notes the effort and cost while supporting access.',NULL,2,1,'N',0,0,'2026-04-01 08:43:36'),
-(132,128,2,NULL,'M','Passage 4 - Q19','What does the word expanding most nearly mean in this context?\nA. Reducing\nB. Limiting\nC. Increasing\nD. Hiding',NULL,'C','Expanding access means increasing access.',NULL,2,1,'N',0,0,'2026-04-01 08:43:36'),
-(133,128,2,NULL,'M','Passage 4 - Q20','What is the main idea of the passage?\nA. Digitization preserves and broadens access to historical letters\nB. Online archives are always free\nC. Students dislike reading letters\nD. Archives should stop collecting letters',NULL,'A','The passage emphasizes preservation and wider access.',NULL,2,1,'N',0,0,'2026-04-01 08:43:36');
+(110,NULL,1,0,'C','Reading Passage 1','Read the passage and answer questions 1-5.','Last spring, a small neighborhood turned an empty lot into a community garden. At first, only a few residents joined. They built raised beds, planted herbs, and set up a schedule for watering. By summer, more people visited, sharing seeds and recipes. The garden did more than grow vegetables. It became a place where neighbors who had never spoken before began to talk. When a heat wave arrived, volunteers installed shade cloth and collected rainwater to keep the plants alive. The project showed how shared spaces can strengthen a community.','N/A',NULL,NULL,2,1,'N',0,0,'2026-04-01 08:43:36'),
+(111,110,2,0,'M','Passage 1 - Q1','What is the main purpose of the passage?\nA. To compare different kinds of gardens\nB. To describe how a community garden changed a neighborhood\nC. To explain how to build raised beds\nD. To argue against urban farming',NULL,'B','The passage focuses on the social impact of the community garden.',NULL,2,1,'N',0,0,'2026-04-01 08:43:36'),
+(112,110,2,0,'M','Passage 1 - Q2','Which detail shows that the garden encouraged community interaction?\nA. Residents planted herbs\nB. People shared seeds and recipes\nC. The lot was empty\nD. Volunteers installed shade cloth',NULL,'B','Sharing seeds and recipes indicates interaction among neighbors.',NULL,2,1,'N',0,0,'2026-04-01 08:43:36'),
+(113,110,2,0,'M','Passage 1 - Q3','What happened when the heat wave arrived?\nA. The garden closed\nB. Volunteers added shade and collected rainwater\nC. The plants were removed\nD. Residents stopped visiting',NULL,'B','The passage states volunteers installed shade cloth and collected rainwater.',NULL,2,1,'N',0,0,'2026-04-01 08:43:36'),
+(114,110,2,0,'M','Passage 1 - Q4','Which word best describes the tone of the passage?\nA. Critical\nB. Celebratory\nC. Indifferent\nD. Sarcastic',NULL,'B','The passage praises the positive effects of the garden.',NULL,2,1,'N',0,0,'2026-04-01 08:43:36'),
+(115,110,2,0,'M','Passage 1 - Q5','What can be inferred about the neighborhood before the garden?\nA. It was already closely connected\nB. It had no available land\nC. Many neighbors did not know each other\nD. It was famous for farming',NULL,'C','The passage notes neighbors who had never spoken began to talk.',NULL,2,1,'N',0,0,'2026-04-01 08:43:36'),
+(116,NULL,1,0,'C','Reading Passage 2','Read the passage and answer questions 6-10.','A recent study explored how short naps affect memory. Participants learned a list of word pairs, then either stayed awake or took a 30-minute nap. Later, the napping group recalled more pairs. Researchers suggest that during light sleep the brain replays new information, helping to store it. However, the study also found that longer naps did not improve recall and sometimes left participants groggy. The findings imply that brief naps may be a practical way to boost learning without disrupting daily routines.','N/A',NULL,NULL,3,1,'N',0,0,'2026-04-01 08:43:36'),
+(117,116,2,0,'M','Passage 2 - Q6','What did the study compare?\nA. Different types of memory tests\nB. People who napped and people who stayed awake\nC. Morning learning and evening learning\nD. Long naps and no naps only',NULL,'B','The study compared a napping group with a staying-awake group.',NULL,3,1,'N',0,0,'2026-04-01 08:43:36'),
+(118,116,2,0,'M','Passage 2 - Q7','Why might a short nap help memory, according to the researchers?\nA. It reduces hunger\nB. The brain replays new information during light sleep\nC. It increases physical strength\nD. It lowers stress permanently',NULL,'B','The passage mentions replay of new information during light sleep.',NULL,3,1,'N',0,0,'2026-04-01 08:43:36'),
+(119,116,2,0,'M','Passage 2 - Q8','What was a downside of longer naps in the study?\nA. They improved recall too much\nB. They had no effect and caused grogginess\nC. They caused participants to forget the words entirely\nD. They were not allowed',NULL,'B','Longer naps did not improve recall and left participants groggy.',NULL,3,1,'N',0,0,'2026-04-01 08:43:36'),
+(120,116,2,0,'M','Passage 2 - Q9','Which statement best summarizes the conclusion?\nA. Sleep never helps learning\nB. Long naps are better than short naps\nC. Brief naps can boost learning without major disruption\nD. Only students benefit from naps',NULL,'C','The findings imply brief naps are practical and helpful.',NULL,3,1,'N',0,0,'2026-04-01 08:43:36'),
+(121,116,2,0,'M','Passage 2 - Q10','What is the primary organizational pattern of the passage?\nA. Problem and solution\nB. Cause and effect\nC. Description of a study and its results\nD. Chronological biography',NULL,'C','It describes the study setup and outcomes.',NULL,3,1,'N',0,0,'2026-04-01 08:43:36'),
+(122,NULL,1,4,'C','Reading Passage 3','Read the passage and answer questions 11-15.','A coastal town decided to replace its aging power plant with wind turbines. Some residents worried that the turbines would spoil the ocean view, while others hoped they would create jobs. After months of debate, the town council approved a smaller project: fewer turbines placed farther offshore. The plan reduced visual impact and still provided enough electricity for public buildings. One year later, surveys showed that most residents supported the project, and local businesses reported increased tourism from visitors interested in clean energy.','N/A','','',1,1,'N',0,1,'2026-04-01 08:43:36'),
+(123,122,2,0,'M','Passage 3 - Q11','What was the town replacing?\nA. A bridge\nB. An aging power plant\nC. A fishing port\nD. A highway',NULL,'B','The passage says the town replaced its aging power plant.',NULL,3,1,'N',0,0,'2026-04-01 08:43:36'),
+(124,122,2,0,'M','Passage 3 - Q12','How did the town council respond to the debate?\nA. It canceled the project\nB. It approved a smaller offshore project\nC. It built the largest possible project\nD. It delayed the decision for years',NULL,'B','The council approved fewer turbines placed farther offshore.',NULL,3,1,'N',0,0,'2026-04-01 08:43:36'),
+(125,122,2,0,'M','Passage 3 - Q13','What was one result after one year?\nA. Residents became less supportive\nB. Electricity prices doubled\nC. Tourism increased because of interest in clean energy\nD. The turbines were removed',NULL,'C','Local businesses reported increased tourism from visitors.',NULL,3,1,'N',0,0,'2026-04-01 08:43:36'),
+(126,122,2,0,'M','Passage 3 - Q14','Which concern is mentioned in the passage?\nA. Noise from trains\nB. Loss of ocean view\nC. Damage to farmland\nD. Lack of internet access',NULL,'B','Residents worried the turbines would spoil the ocean view.',NULL,2,1,'N',0,0,'2026-04-01 08:43:36'),
+(127,122,2,0,'M','Passage 3 - Q15','What is the main idea of the passage?\nA. Wind energy always faces opposition\nB. Compromise helped a clean energy project succeed\nC. Tourism is the town primary industry\nD. Power plants are safer than turbines',NULL,'B','A smaller offshore plan balanced concerns and benefits.',NULL,3,1,'N',0,0,'2026-04-01 08:43:36'),
+(128,NULL,2,0,'C','Reading Passage 4 ㄹㄴㄹ;너ㅏㄹ;ㅣㄴ머ㅏㄹ;ㅓ리ㅏ ㅓㅣㅏㅇ너리ㅏㅓ ㅇ리ㅏ 머ㅏㅇ너라ㅣ어라ㅣㄴㅁ ㅓㅣ라마 랑너라','Read the passage and answer questions 16-20.  ㅇㄹ ㅁ말;ㅣ ㅣ알 ㅓㅏㅇ러 ㅏ마 ㅏ멀;ㅏ ;ㅇㄹ ㅏ;ㅣㅁㅇㄴ라ㅣ ㅏㅣ;ㅁ ㅏㄹ ;ㅣ망ㄹ;ㅣ ㅏㅣ;ㅁㅇㄴ ㅏ;ㅣ망니 ㅏㅣ;ㅁㅇ날 ㅏㄹㅁㅈㅇㄹ ㅁㄴㅇ리; ㅏㄹ이;마 ㄹ;ㅣㅁ 나라ㅣㅁ ㅏ 람ㄴㅇ','An archive recently digitized thousands of historical letters. The project began because the paper was aging and difficult to handle. By scanning the letters and creating searchable transcripts, the archive made the collection available to researchers worldwide. The team also discovered that students were more engaged when they could read the letters online and annotate them. While the digitization required significant time and funding, the archive argued that expanding access was worth the effort.','N/A','','',2,1,'N',0,1,'2026-04-01 08:43:36'),
+(129,128,2,0,'M','Passage 4 - Q16','Why did the archive start the digitization project?\nA. The letters were already digital\nB. The paper was aging and hard to handle\nC. Researchers requested paper copies only\nD. The archive wanted to reduce staff',NULL,'B','The passage states the paper was aging and difficult to handle.',NULL,2,1,'N',0,0,'2026-04-01 08:43:36'),
+(130,128,2,0,'M','Passage 4 - Q17','What new benefit did the team notice?\nA. Fewer researchers used the archive\nB. Students were more engaged with online access and annotation\nC. The letters lost their historical value\nD. The project required no funding',NULL,'B','Students engaged more when they could read and annotate online.',NULL,2,1,'N',0,0,'2026-04-01 08:43:36'),
+(131,128,2,0,'M','Passage 4 - Q18','Which best describes the author perspective?\nA. Skeptical about digitization\nB. Neutral but acknowledging benefits and costs\nC. Angry about technology\nD. Dismissive of researchers',NULL,'B','The passage notes the effort and cost while supporting access.',NULL,2,1,'N',0,0,'2026-04-01 08:43:36'),
+(132,128,2,0,'M','Passage 4 - Q19','What does the word expanding most nearly mean in this context?\nA. Reducing\nB. Limiting\nC. Increasing\nD. Hiding',NULL,'C','Expanding access means increasing access.',NULL,2,1,'N',0,0,'2026-04-01 08:43:36'),
+(133,128,2,0,'M','Passage 4 - Q20','What is the main idea of the passage?\nA. Digitization preserves and broadens access to historical letters\nB. Online archives are always free\nC. Students dislike reading letters\nD. Archives should stop collecting letters',NULL,'A','The passage emphasizes preservation and wider access.',NULL,2,1,'N',0,0,'2026-04-01 08:43:36');
 /*!40000 ALTER TABLE `questions` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -2162,7 +2166,7 @@ CREATE TABLE `solve_results` (
   CONSTRAINT `fk_result_exam` FOREIGN KEY (`exam_id`) REFERENCES `exams` (`exam_id`) ON DELETE CASCADE,
   CONSTRAINT `fk_result_q` FOREIGN KEY (`question_id`) REFERENCES `questions` (`question_id`) ON DELETE CASCADE,
   CONSTRAINT `fk_result_user` FOREIGN KEY (`user_no`) REFERENCES `users` (`user_no`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=39 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci COMMENT='사용자별 문제 풀이 결과';
+) ENGINE=InnoDB AUTO_INCREMENT=41 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci COMMENT='사용자별 문제 풀이 결과';
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -2209,7 +2213,9 @@ INSERT INTO `solve_results` VALUES
 (35,2,98,NULL,'382,393,415,404','1',0,10,'2026-04-01 09:30:49'),
 (36,1,1,NULL,'496','3',0,3,'2026-04-02 00:24:16'),
 (37,1,21,NULL,'80','2',0,26,'2026-04-02 00:24:51'),
-(38,2,108,NULL,'498','1',0,1,'2026-04-02 09:45:29');
+(38,2,108,NULL,'498','1',0,1,'2026-04-02 09:45:29'),
+(39,2,106,NULL,'412','3',1,3,'2026-04-04 09:59:14'),
+(40,2,105,NULL,'400','1',0,1,'2026-04-04 09:59:27');
 /*!40000 ALTER TABLE `solve_results` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -2460,7 +2466,7 @@ CREATE TABLE `users_logs` (
   KEY `idx_log_user` (`user_no`),
   KEY `idx_log_obj` (`obj_id`),
   CONSTRAINT `fk_logs_user` FOREIGN KEY (`user_no`) REFERENCES `users` (`user_no`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=41 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci COMMENT='개인별 문제/문제집/고사 풀이 기록';
+) ENGINE=InnoDB AUTO_INCREMENT=53 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci COMMENT='개인별 문제/문제집/고사 풀이 기록';
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -2509,7 +2515,19 @@ INSERT INTO `users_logs` VALUES
 (37,2,'B',17,'복습 중',5,10,50,'2026-03-29 18:15:09','2026-04-03 12:15:09'),
 (38,4,'B',17,'문제집 풀이 완료',8,10,80,'2026-03-29 11:15:09','2026-04-03 12:15:09'),
 (39,0,'E',35,'최종 답안 제출',94,100,94,'2026-03-29 11:15:09','2026-04-03 12:15:09'),
-(40,0,'B',0,'문제집 풀이 완료',10,10,100,'2026-03-30 08:15:09','2026-04-03 12:15:09');
+(40,0,'B',0,'문제집 풀이 완료',10,10,100,'2026-03-30 08:15:09','2026-04-03 12:15:09'),
+(41,2,'Q',128,'문제보기',0,0,0,'2026-04-03 12:35:06','2026-04-03 21:35:06'),
+(42,2,'B',0,'선택 문제 5문항',1,5,20,'2026-04-03 14:58:28','2026-04-03 23:58:28'),
+(43,2,'B',0,'임의로 6문항을 선택하여 임시문제집 풀이',0,6,0,'2026-04-03 15:02:47','2026-04-04 00:02:47'),
+(44,2,'Q',128,'문제보기',0,0,0,'2026-04-03 15:07:24','2026-04-04 00:07:24'),
+(45,2,'B',0,'임의로 5문항을 선택하여 임시문제집 풀이',0,5,0,'2026-04-03 15:11:44','2026-04-04 00:11:44'),
+(46,2,'B',0,'임의로 7문항을 선택하여 임시문제집 풀이',0,7,0,'2026-04-03 16:27:30','2026-04-04 01:27:30'),
+(47,2,'Q',106,'문제보기',0,0,0,'2026-04-04 09:59:10','2026-04-04 18:59:10'),
+(48,2,'Q',106,'문제풀기',0,0,0,'2026-04-04 09:59:12','2026-04-04 18:59:12'),
+(49,2,'Q',106,'정답확인:정답',1,1,100,'2026-04-04 09:59:14','2026-04-04 18:59:14'),
+(50,2,'Q',105,'문제보기',0,0,0,'2026-04-04 09:59:26','2026-04-04 18:59:26'),
+(51,2,'Q',105,'문제풀기',0,0,0,'2026-04-04 09:59:27','2026-04-04 18:59:27'),
+(52,2,'Q',105,'정답확인:오답',0,1,0,'2026-04-04 09:59:27','2026-04-04 18:59:27');
 /*!40000 ALTER TABLE `users_logs` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -2526,4 +2544,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*M!100616 SET NOTE_VERBOSITY=@OLD_NOTE_VERBOSITY */;
 
--- Dump completed on 2026-04-03 13:49:26
+-- Dump completed on 2026-04-04 19:20:16
