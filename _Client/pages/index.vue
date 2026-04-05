@@ -25,6 +25,9 @@ import NumberAnimation from "vue-number-animation";
 
 const { apiBase } = useApi();
 
+
+const currentRootUrl = ref("");
+
 definePageMeta({ layout: false });
 
 // 페이드인 상태
@@ -75,7 +78,11 @@ function onKeydown(e: KeyboardEvent) {
     closeRegister();
   }
 }
-onMounted(() => window.addEventListener("keydown", onKeydown));
+onMounted(() => {
+ currentRootUrl.value = window.location.origin;
+ window.addEventListener("keydown", onKeydown);
+});
+
 onUnmounted(() => window.removeEventListener("keydown", onKeydown));
 
 // 타이핑 애니메이션
@@ -448,6 +455,7 @@ onMounted(() => {
         <div class="logo">
           <span class="logo-icon">📘</span>
           <span class="logo-text">Edu<em>Hub</em></span>
+          <span v-if="currentRootUrl" class="root-url">{{ currentRootUrl }}</span>
         </div>
         <nav class="nav-links">
           <a
@@ -2443,4 +2451,18 @@ input[type="password"] {
   opacity: 0;
   transform: scale(0.92) translateY(20px);
 }
+
+.root-url {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.3rem 0.65rem;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: #94a3b8;
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+
 </style>
