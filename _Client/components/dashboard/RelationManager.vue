@@ -4,6 +4,7 @@ import IconUsers from "~/assets/icons/IconUsers.svg?component";
 import IconGraphForce from "~/assets/icons/IconGraphForce.svg?component";
 import IconSearch from "~/assets/icons/IconSearch.svg?component";
 import IconClose from "~/assets/icons/IconClose.svg?component";
+import PageSlider from "~/components/PageSlider.vue";
 
 type RelationRoleId = "S" | "T" | "P";
 type TargetKey = "parents" | "teachers" | "students" | "friends";
@@ -176,10 +177,6 @@ const totalPages = computed(() => {
 const isSliderDisabled = computed(
   () => totalPages.value <= 1 || !activePanel.value,
 );
-const sliderPercentage = computed(() => {
-  if (!activePanel.value || totalPages.value <= 1) return 0;
-  return ((activePanel.value.sliderValue - 1) / (totalPages.value - 1)) * 100;
-});
 
 const pageStartItem = computed(() => {
   if (!activePanel.value || activePanel.value.total === 0) return 0;
@@ -235,13 +232,15 @@ const mainDisplaySliderValue = computed(() => {
   if (hasConnectedRelations.value) return relationSliderValue.value;
   return activePanel.value?.sliderValue ?? 1;
 });
-const mainDisplaySliderPercentage = computed(() => {
-  if (mainDisplayTotalPages.value <= 1) return 0;
-  return (
-    ((mainDisplaySliderValue.value - 1) / (mainDisplayTotalPages.value - 1)) *
-    100
-  );
-});
+const updateMainDisplaySliderValue = (value: number) => {
+  if (hasConnectedRelations.value) {
+    relationSliderValue.value = value;
+    return;
+  }
+  if (activePanel.value) {
+    activePanel.value.sliderValue = value;
+  }
+};
 const mainDisplayPageStartItem = computed(() => {
   if (mainDisplayTotal.value === 0) return 0;
   if (hasConnectedRelations.value) return relationPageStartItem.value;
@@ -769,31 +768,22 @@ const clearRelationSearch = async () => {
   }
 };
 
-const handleRelationSliderInput = (event: Event) => {
-  const value = Number((event.target as HTMLInputElement).value);
-  if (hasConnectedRelations.value) {
-    relationSliderValue.value = value;
-    return;
-  }
-  if (activePanel.value) {
-    activePanel.value.sliderValue = value;
-  }
-};
-
-const commitRelationSliderValue = async () => {
+const commitRelationSliderValue = async (page?: number) => {
   if (hasConnectedRelations.value) {
     relationCurrentPage.value = Math.min(
-      Math.max(relationSliderValue.value, 1),
+      Math.max(page ?? relationSliderValue.value, 1),
       relationTotalPagesComputed.value,
     );
+    relationSliderValue.value = relationCurrentPage.value;
     await loadRelations();
     return;
   }
   if (!activePanel.value || !activeTargetKey.value) return;
   activePanel.value.currentPage = Math.min(
-    Math.max(activePanel.value.sliderValue, 1),
+    Math.max(page ?? activePanel.value.sliderValue, 1),
     mainDisplayTotalPages.value,
   );
+  activePanel.value.sliderValue = activePanel.value.currentPage;
   await fetchCandidates(activeTargetKey.value);
 };
 
@@ -887,20 +877,14 @@ const clearSearch = async () => {
   await fetchCandidates(activeTargetKey.value);
 };
 
-const handleSliderInput = (event: Event) => {
-  if (!activePanel.value) return;
-  activePanel.value.sliderValue = Number(
-    (event.target as HTMLInputElement).value,
-  );
-};
-
-const commitSliderValue = async () => {
+const commitSliderValue = async (page?: number) => {
   if (!activePanel.value || !activeTargetKey.value) return;
   const panel = activePanel.value;
   panel.currentPage = Math.min(
-    Math.max(panel.sliderValue, 1),
+    Math.max(page ?? panel.sliderValue, 1),
     totalPages.value,
   );
+  panel.sliderValue = panel.currentPage;
   await fetchCandidates(activeTargetKey.value);
 };
 
@@ -1039,35 +1023,14 @@ watch(
         <div class="slider-row">
           <span class="summary-text">총 {{ mainDisplayTotal }}건</span>
           <div class="page-slider-section">
-            <div
-              class="slider-wrapper"
-              :class="{ disabled: mainDisplaySliderDisabled }"
-            >
-              <span class="slider-limit">1</span>
-              <div class="slider-track-container">
-                <input
-                  type="range"
-                  :min="1"
-                  :max="mainDisplayTotalPages"
-                  :value="mainDisplaySliderValue"
-                  class="page-slider"
-                  :disabled="mainDisplaySliderDisabled"
-                  @input="handleRelationSliderInput"
-                  @change="commitRelationSliderValue"
-                />
-                <div
-                  class="slider-fill"
-                  :style="{ width: mainDisplaySliderPercentage + '%' }"
-                ></div>
-                <div
-                  class="slider-tooltip"
-                  :style="{ left: mainDisplaySliderPercentage + '%' }"
-                >
-                  {{ mainDisplaySliderValue }}
-                </div>
-              </div>
-              <span class="slider-limit">{{ mainDisplayTotalPages }}</span>
-            </div>
+            <PageSlider
+              :model-value="mainDisplaySliderValue"
+              :max="mainDisplayTotalPages"
+              :disabled="mainDisplaySliderDisabled"
+              postfix="페이지"
+              @update:model-value="updateMainDisplaySliderValue"
+              @commit="commitRelationSliderValue"
+            />
           </div>
           <span class="range-text"
             >{{ mainDisplayPageStartItem }}-{{ mainDisplayPageEndItem }}번째 항목 표시
@@ -1221,35 +1184,18 @@ watch(
                       >총 {{ activePanel.total }}명</span
                     >
                     <div class="page-slider-section">
-                      <div
-                        class="slider-wrapper"
-                        :class="{ disabled: isSliderDisabled }"
-                      >
-                        <span class="slider-limit">1</span>
-                        <div class="slider-track-container">
-                          <input
-                            type="range"
-                            :min="1"
-                            :max="totalPages"
-                            :value="activePanel.sliderValue"
-                            class="page-slider"
-                            :disabled="isSliderDisabled"
-                            @input="handleSliderInput"
-                            @change="commitSliderValue"
-                          />
-                          <div
-                            class="slider-fill"
-                            :style="{ width: sliderPercentage + '%' }"
-                          ></div>
-                          <div
-                            class="slider-tooltip"
-                            :style="{ left: sliderPercentage + '%' }"
-                          >
-                            {{ activePanel.sliderValue }}
-                          </div>
-                        </div>
-                        <span class="slider-limit">{{ totalPages }}</span>
-                      </div>
+                      <PageSlider
+                        :model-value="activePanel.sliderValue"
+                        :max="totalPages"
+                        :disabled="isSliderDisabled"
+                        postfix="페이지"
+                        @update:model-value="
+                          (value) => {
+                            activePanel.sliderValue = value;
+                          }
+                        "
+                        @commit="commitSliderValue"
+                      />
                     </div>
                     <span class="range-text"
                       >{{ pageStartItem }}-{{ pageEndItem }}번째 항목 표시

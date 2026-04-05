@@ -7,6 +7,7 @@ import GroupManager from "~/components/dashboard/GroupManager.vue";
 import QuestionEditor from "~/components/dashboard/QuestionEditor.vue";
 import QuestionSolver from "~/components/dashboard/QuestionSolver.vue";
 import DailyQuestionsModal from "~/components/DailyQuestionsModal.vue";
+import PageSlider from "~/components/PageSlider.vue";
 import IconSettings from "~/assets/icons/IconSettings.svg?component";
 import IconFileText from "~/assets/icons/IconFileText.svg?component";
 import IconCreateAction from "~/assets/icons/IconCreateAction.svg?component";
@@ -95,24 +96,14 @@ watch(
 );
 
 let debounceTimer: any = null;
-const handleSliderInput = (e: Event) => {
-  const value = parseInt((e.target as HTMLInputElement).value);
-  sliderValue.value = value;
-};
-
-const commitSliderValue = () => {
+const commitSliderValue = (page?: number) => {
   if (debounceTimer) {
     clearTimeout(debounceTimer);
     debounceTimer = null;
   }
 
-  goToPage(sliderValue.value);
+  goToPage(page ?? sliderValue.value);
 };
-
-const sliderPercentage = computed(() => {
-  if (props.totalPages <= 1) return 0;
-  return ((sliderValue.value - 1) / (props.totalPages - 1)) * 100;
-});
 
 
 const selectedQuestionCount = computed(() => selectedQuestionIds.value.length);
@@ -1107,36 +1098,13 @@ watch(
                 </span
                 >
                 <div class="page-slider-section">
-                  <div
-                    class="slider-wrapper"
-                    :class="{ disabled: isSliderDisabled }"
-                  >
-                    <span class="slider-limit">1</span>
-                    <div class="slider-track-container">
-                      <input
-                        type="range"
-                        :min="1"
-                        :max="props.totalPages"
-                        :value="sliderValue"
-                        class="page-slider"
-                        @input="handleSliderInput"
-                        @change="commitSliderValue"
-                        :disabled="isSliderDisabled"
-                      />
-                      <div
-                        class="slider-fill"
-                        :style="{ width: sliderPercentage + '%' }"
-                      ></div>
-                      <div
-                        v-if="!isSliderDisabled"
-                        class="slider-tooltip"
-                        :style="{ left: sliderPercentage + '%' }"
-                      >
-                        {{ sliderValue }}
-                      </div>
-                    </div>
-                    <span class="slider-limit">{{ props.totalPages }}</span>
-                  </div>
+                  <PageSlider
+                    v-model="sliderValue"
+                    :max="props.totalPages"
+                    :disabled="isSliderDisabled"
+                    postfix="페이지"
+                    @commit="commitSliderValue"
+                  />
                 </div>
                 <span class="range-text"
                   >{{ pageStartItem }}-{{ pageEndItem }}번째 문제 표시

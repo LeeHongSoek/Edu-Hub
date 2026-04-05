@@ -33,11 +33,9 @@ export class QuestionsService {
       where.creator_no = creatorNo;
     } else if (publicOnly) {
       if (viewerNo !== undefined) {
-        // 공개된 문제이거나 내가 만든 문제인 경우 노출
-        where.OR = [
-          { is_public: true },
-          { creator_no: viewerNo }
-        ];
+        // '그외 문제'는 공개 문제 중 내 문제를 제외하고 노출
+        where.is_public = true;
+        where.creator_no = { not: viewerNo };
       } else {
         where.is_public = true;
       }

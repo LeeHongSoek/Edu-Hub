@@ -4,6 +4,7 @@ import IconCalendar from "~/assets/icons/IconCalendar.svg?component";
 import IconFileText from "~/assets/icons/IconFileText.svg?component";
 import IconBook from "~/assets/icons/IconBook.svg?component";
 import IconPencil from "~/assets/icons/IconPencil.svg?component";
+import PageSlider from "~/components/PageSlider.vue";
 
 const logs = ref<any[]>([]);
 const totalLogs = ref(0);
@@ -60,17 +61,8 @@ watch(currentPage, fetchLogs);
 
 const totalPages = computed(() => Math.max(1, Math.ceil(totalLogs.value / pageSize.value)));
 const isSliderDisabled = computed(() => totalPages.value <= 1);
-const sliderPercentage = computed(() => {
-  if (totalPages.value <= 1) return 0;
-  return ((sliderValue.value - 1) / (totalPages.value - 1)) * 100;
-});
-
-const handleSliderInput = (e: Event) => {
-  sliderValue.value = Number((e.target as HTMLInputElement).value);
-};
-
-const commitSliderValue = () => {
-  currentPage.value = sliderValue.value;
+const commitSliderValue = (page?: number) => {
+  currentPage.value = page ?? sliderValue.value;
 };
 
 const handleSearch = () => {
@@ -155,26 +147,13 @@ const formatTime = (dateStr: string) => {
     <div v-else class="log-content-area">
        <!-- Pagination Slider -->
       <div class="pagination-area">
-        <div class="slider-container" :class="{ disabled: isSliderDisabled }">
-          <span class="slider-label">1</span>
-          <div class="slider-track-wrap">
-            <input 
-              type="range" 
-              :min="1" 
-              :max="totalPages" 
-              :value="sliderValue" 
-              class="page-slider"
-              @input="handleSliderInput"
-              @change="commitSliderValue"
-              :disabled="isSliderDisabled"
-            />
-            <div class="slider-fill" :style="{ width: sliderPercentage + '%' }"></div>
-            <div v-if="!isSliderDisabled" class="slider-tooltip" :style="{ left: sliderPercentage + '%' }">
-              {{ sliderValue }}
-            </div>
-          </div>
-          <span class="slider-label">{{ totalPages }}</span>
-        </div>
+        <PageSlider
+          v-model="sliderValue"
+          :max="totalPages"
+          :disabled="isSliderDisabled"
+          postfix="페이지"
+          @commit="commitSliderValue"
+        />
         <div class="page-info">
           {{ currentPage }} / {{ totalPages }}
         </div>

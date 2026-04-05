@@ -67,7 +67,7 @@ const requestBody = computed(() => {
   } else {
     // 특정 문제집/고사 진입 상태 (Context B or C)
     if (contextQuestionScope.value === "all") {
-      // "그외 문제": 이미 연결된 문항을 제외한 공개/내 문항 조회
+      // "그외 문제": 이미 연결된 문항을 제외한 공개 문항 조회(내 문항 제외)
       body.public_only = true;
       if (userInfo.value) {
         body.viewer_no = userInfo.value.user_no;

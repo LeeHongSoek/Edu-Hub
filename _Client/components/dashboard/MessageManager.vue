@@ -3,6 +3,7 @@ import { computed, onMounted, ref, watch } from "vue";
 import IconMessage from "~/assets/icons/IconMessage.svg?component";
 import IconSearch from "~/assets/icons/IconSearch.svg?component";
 import IconClose from "~/assets/icons/IconClose.svg?component";
+import PageSlider from "~/components/PageSlider.vue";
 
 type MessageRoleId = "S" | "T" | "P";
 
@@ -76,10 +77,6 @@ const messageSummary = computed(() => {
 });
 
 const messageIsSliderDisabled = computed(() => messageTotalPages.value <= 1);
-const messageSliderPercentage = computed(() => {
-  if (messageTotalPages.value <= 1) return 0;
-  return ((messageSliderValue.value - 1) / (messageTotalPages.value - 1)) * 100;
-});
 const messagePageStartItem = computed(() => {
   if (messageTotal.value === 0) return 0;
   return (messageCurrentPage.value - 1) * messagePageSize + 1;
@@ -91,12 +88,6 @@ const messagePageEndItem = computed(() =>
 const recipientIsSliderDisabled = computed(
   () => recipientTotalPages.value <= 1,
 );
-const recipientSliderPercentage = computed(() => {
-  if (recipientTotalPages.value <= 1) return 0;
-  return (
-    ((recipientSliderValue.value - 1) / (recipientTotalPages.value - 1)) * 100
-  );
-});
 const recipientPageStartItem = computed(() => {
   if (recipientTotal.value === 0) return 0;
   return (recipientCurrentPage.value - 1) * recipientPageSize + 1;
@@ -191,15 +182,12 @@ const clearMessageSearch = async () => {
   await loadMessages();
 };
 
-const handleMessageSliderInput = (event: Event) => {
-  messageSliderValue.value = Number((event.target as HTMLInputElement).value);
-};
-
-const commitMessageSliderValue = async () => {
+const commitMessageSliderValue = async (page?: number) => {
   messageCurrentPage.value = Math.min(
-    Math.max(messageSliderValue.value, 1),
+    Math.max(page ?? messageSliderValue.value, 1),
     messageTotalPages.value,
   );
+  messageSliderValue.value = messageCurrentPage.value;
   await loadMessages();
 };
 
@@ -305,15 +293,12 @@ const clearRecipientSearch = async () => {
   await loadRecipients();
 };
 
-const handleRecipientSliderInput = (event: Event) => {
-  recipientSliderValue.value = Number((event.target as HTMLInputElement).value);
-};
-
-const commitRecipientSliderValue = async () => {
+const commitRecipientSliderValue = async (page?: number) => {
   recipientCurrentPage.value = Math.min(
-    Math.max(recipientSliderValue.value, 1),
+    Math.max(page ?? recipientSliderValue.value, 1),
     recipientTotalPages.value,
   );
+  recipientSliderValue.value = recipientCurrentPage.value;
   await loadRecipients();
 };
 
@@ -459,35 +444,13 @@ onMounted(() => {
         <div v-if="messageTotal > 0" class="slider-row">
           <span class="summary-text">총 {{ messageTotal }}건</span>
           <div class="page-slider-section">
-            <div
-              class="slider-wrapper"
-              :class="{ disabled: messageIsSliderDisabled }"
-            >
-              <span class="slider-limit">1</span>
-              <div class="slider-track-container">
-                <input
-                  type="range"
-                  :min="1"
-                  :max="messageTotalPages"
-                  :value="messageSliderValue"
-                  class="page-slider"
-                  :disabled="messageIsSliderDisabled"
-                  @input="handleMessageSliderInput"
-                  @change="commitMessageSliderValue"
-                />
-                <div
-                  class="slider-fill"
-                  :style="{ width: messageSliderPercentage + '%' }"
-                ></div>
-                <div
-                  class="slider-tooltip"
-                  :style="{ left: messageSliderPercentage + '%' }"
-                >
-                  {{ messageSliderValue }}
-                </div>
-              </div>
-              <span class="slider-limit">{{ messageTotalPages }}</span>
-            </div>
+            <PageSlider
+              v-model="messageSliderValue"
+              :max="messageTotalPages"
+              :disabled="messageIsSliderDisabled"
+              postfix="페이지"
+              @commit="commitMessageSliderValue"
+            />
           </div>
           <span class="range-text"
             >{{ messagePageStartItem }}-{{ messagePageEndItem }}번째 항목 표시
@@ -582,35 +545,13 @@ onMounted(() => {
             <div class="slider-row">
               <span class="summary-text">총 {{ recipientTotal }}명</span>
               <div class="page-slider-section">
-                <div
-                  class="slider-wrapper"
-                  :class="{ disabled: recipientIsSliderDisabled }"
-                >
-                  <span class="slider-limit">1</span>
-                  <div class="slider-track-container">
-                    <input
-                      type="range"
-                      :min="1"
-                      :max="recipientTotalPages"
-                      :value="recipientSliderValue"
-                      class="page-slider"
-                      :disabled="recipientIsSliderDisabled"
-                      @input="handleRecipientSliderInput"
-                      @change="commitRecipientSliderValue"
-                    />
-                    <div
-                      class="slider-fill"
-                      :style="{ width: recipientSliderPercentage + '%' }"
-                    ></div>
-                    <div
-                      class="slider-tooltip"
-                      :style="{ left: recipientSliderPercentage + '%' }"
-                    >
-                      {{ recipientSliderValue }}
-                    </div>
-                  </div>
-                  <span class="slider-limit">{{ recipientTotalPages }}</span>
-                </div>
+                <PageSlider
+                  v-model="recipientSliderValue"
+                  :max="recipientTotalPages"
+                  :disabled="recipientIsSliderDisabled"
+                  postfix="페이지"
+                  @commit="commitRecipientSliderValue"
+                />
               </div>
               <span class="range-text"
                 >{{ recipientPageStartItem }}-{{ recipientPageEndItem }}번째

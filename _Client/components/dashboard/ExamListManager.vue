@@ -5,6 +5,7 @@ import IconCalendar from "~/assets/icons/IconCalendar.svg?component";
 import ManagerNav from "~/components/dashboard/ManagerNav.vue";
 import IconCreateAction from "~/assets/icons/IconCreateAction.svg?component";
 import IconDeleteAction from "~/assets/icons/IconDeleteAction.svg?component";
+import PageSlider from "~/components/PageSlider.vue";
 
 const props = withDefaults(
   defineProps<{
@@ -92,10 +93,6 @@ const pageStartItem = computed(() => {
 const pageEndItem = computed(() =>
   Math.min(currentPage.value * pageSize, filteredExams.value.length),
 );
-const sliderPercentage = computed(() => {
-  if (totalPages.value <= 1) return 0;
-  return ((sliderValue.value - 1) / (totalPages.value - 1)) * 100;
-});
 const selectedExamCount = computed(() => selectedExamIds.value.length);
 const canDeleteExams = computed(() => selectedExamCount.value > 0);
 
@@ -170,10 +167,6 @@ const setScope = (scope: "mine" | "all") => {
   });
 };
 
-const handleSliderInput = (e: Event) => {
-  sliderValue.value = Number((e.target as HTMLInputElement).value);
-};
-
 const goToPage = (page: number) => {
   const normalized = Math.min(Math.max(page, 1), totalPages.value);
   if (normalized !== currentPage.value) {
@@ -181,8 +174,8 @@ const goToPage = (page: number) => {
   }
 };
 
-const commitSliderValue = () => {
-  goToPage(sliderValue.value);
+const commitSliderValue = (page?: number) => {
+  goToPage(page ?? sliderValue.value);
 };
 
 const applyExamSearch = () => {
@@ -470,35 +463,13 @@ const deleteSelectedExams = async () => {
               >총 {{ filteredExams.length }}개의 고사집</span
             >
             <div class="page-slider-section">
-              <div
-                class="slider-wrapper"
-                :class="{ disabled: isSliderDisabled }"
-              >
-                <span class="slider-limit">1</span>
-                <div class="slider-track-container">
-                  <input
-                    type="range"
-                    :min="1"
-                    :max="totalPages"
-                    :value="sliderValue"
-                    class="page-slider"
-                    @input="handleSliderInput"
-                    @change="commitSliderValue"
-                    :disabled="isSliderDisabled"
-                  />
-                  <div
-                    class="slider-fill"
-                    :style="{ width: sliderPercentage + '%' }"
-                  ></div>
-                  <div
-                    class="slider-tooltip"
-                    :style="{ left: sliderPercentage + '%' }"
-                  >
-                    {{ sliderValue }}
-                  </div>
-                </div>
-                <span class="slider-limit">{{ totalPages }}</span>
-              </div>
+              <PageSlider
+                v-model="sliderValue"
+                :max="totalPages"
+                :disabled="isSliderDisabled"
+                postfix="페이지"
+                @commit="commitSliderValue"
+              />
             </div>
             <span class="range-text"
               >{{ pageStartItem }}-{{ pageEndItem }}번째 항목 표시 중</span
