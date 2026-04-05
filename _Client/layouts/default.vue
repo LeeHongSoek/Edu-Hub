@@ -25,6 +25,7 @@ const showMessagePopover = ref(false);
 const messageList = ref<any[]>([]);
 const messageLoading = ref(false);
 const messageError = ref("");
+const currentRootUrl = ref("");
 let messageHideTimer: ReturnType<typeof setTimeout> | null = null;
 const userCookie = useCookie<UserCookiePayload | string | null>("user_info");
 const { apiBase, getAuthHeader } = useApi();
@@ -122,6 +123,8 @@ const closeMessagePopover = () => {
 };
 
 onMounted(() => {
+  currentRootUrl.value = window.location.origin;
+
   if (userInfo.value) {
     handleMessageBadgeClick("mount");
     return;
@@ -146,6 +149,7 @@ onMounted(() => {
           <IconFeedback class="icon-feedback" />
           옴브즈먼
         </a>
+        <span v-if="currentRootUrl" class="root-url">{{ currentRootUrl }}</span>
       </div>
       <nav class="nav-links">
         <template v-if="userInfo">
@@ -508,6 +512,19 @@ onMounted(() => {
 
 .ombudsman-link:hover {
   color: #818cf8 !important;
+}
+
+.root-url {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.3rem 0.65rem;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: #94a3b8;
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
 }
 
 .my-questions-link {
