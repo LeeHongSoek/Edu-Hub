@@ -96,23 +96,29 @@ model ClassStudent {
 
   @@id([class_id, student_no])
   @@index([student_no], map: "fk_cs_student")
-  @@map("class_students")
+  @@map("brg_class_student")
+}
+
+enum ApprovalStatus {
+  Y
+  N
 }
 
 model UserRelation {
-  relation_id      BigInt          @id @default(autoincrement())
   user_no_1        BigInt
   user_no_2        BigInt
   relation_type_id String          @db.VarChar(20)
+  approval         ApprovalStatus?
   created_at       DateTime?       @default(now()) @db.DateTime(0)
   relation_type    EnmRelationType @relation(fields: [relation_type_id], references: [relation_type_id], onUpdate: Restrict, map: "fk_rel_type")
   user1            User            @relation("User1Relations", fields: [user_no_1], references: [user_no], onDelete: Cascade, onUpdate: Restrict, map: "fk_rel_user1")
   user2            User            @relation("User2Relations", fields: [user_no_2], references: [user_no], onDelete: Cascade, onUpdate: Restrict, map: "fk_rel_user2")
 
+  @@id([user_no_1, user_no_2])
   @@index([relation_type_id], map: "fk_rel_type")
   @@index([user_no_1], map: "fk_rel_user1")
   @@index([user_no_2], map: "fk_rel_user2")
-  @@map("user_relations")
+  @@map("brg_user_relations")
 }
 
 model UserMessage {
@@ -453,5 +459,5 @@ model QuestionBookItem {
 
   @@id([book_id, question_id])
   @@index([question_id], map: "fk_uqbi_q")
-  @@map("questionbook_question")
+  @@map("brg_questionbook_question")
 }

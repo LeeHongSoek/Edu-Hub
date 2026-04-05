@@ -301,7 +301,7 @@ export class DashboardService {
     return {
       items: items.map((relation) => ({
         ...relation,
-        relation_id: relation.relation_id.toString(),
+        relation_id: `${relation.user_no_1.toString()}_${relation.user_no_2.toString()}`,
         user_no_1: relation.user_no_1.toString(),
         user_no_2: relation.user_no_2.toString(),
       })),
@@ -476,6 +476,7 @@ export class DashboardService {
           user_no_1: userNo,
           user_no_2: targetUserNoBigInt,
           relation_type_id: relationPair.forward,
+          approval: 'Y',
           created_at: now,
         },
       }),
@@ -484,6 +485,7 @@ export class DashboardService {
           user_no_1: targetUserNoBigInt,
           user_no_2: userNo,
           relation_type_id: relationPair.reverse,
+          approval: 'Y',
           created_at: now,
         },
       }),
@@ -509,11 +511,11 @@ export class DashboardService {
     const [forward, reverse] = await Promise.all([
       this.prisma.userRelation.findFirst({
         where: { user_no_1: userNo, user_no_2: targetUserNoBigInt },
-        select: { relation_id: true },
+        select: { user_no_1: true, user_no_2: true },
       }),
       this.prisma.userRelation.findFirst({
         where: { user_no_1: targetUserNoBigInt, user_no_2: userNo },
-        select: { relation_id: true },
+        select: { user_no_1: true, user_no_2: true },
       }),
     ]);
 
@@ -522,8 +524,22 @@ export class DashboardService {
     }
 
     await this.prisma.$transaction([
-      ...(forward ? [this.prisma.userRelation.delete({ where: { relation_id: forward.relation_id } })] : []),
-      ...(reverse ? [this.prisma.userRelation.delete({ where: { relation_id: reverse.relation_id } })] : []),
+      ...(forward ? [this.prisma.userRelation.delete({
+        where: {
+          user_no_1_user_no_2: {
+            user_no_1: forward.user_no_1,
+            user_no_2: forward.user_no_2,
+          },
+        },
+      })] : []),
+      ...(reverse ? [this.prisma.userRelation.delete({
+        where: {
+          user_no_1_user_no_2: {
+            user_no_1: reverse.user_no_1,
+            user_no_2: reverse.user_no_2,
+          },
+        },
+      })] : []),
     ]);
 
     return {
@@ -774,7 +790,7 @@ export class DashboardService {
           user_no_1: userNo,
           user_no_2: receiverNoBigInt,
         },
-        select: { relation_id: true },
+        select: { user_no_1: true },
       }),
     ]);
 
