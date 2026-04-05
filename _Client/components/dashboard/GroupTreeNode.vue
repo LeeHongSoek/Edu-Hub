@@ -189,7 +189,7 @@ const toggleExpand = (event: Event) => {
   border-color: rgba(165, 180, 252, 0.7);
 }
 
-.node-content.is-all-group .name-label {
+.node-content.is-selected .name-label {
   text-decoration: underline;
   text-underline-offset: 0.18rem;
 }

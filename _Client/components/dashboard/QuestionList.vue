@@ -444,13 +444,12 @@ const formatGroupPath = (group: Group) => {
   const parts: string[] = [];
   let current: Group | undefined = group;
   while (current) {
-    parts.unshift(current.name);
+    if (current.name !== "전체") {
+      parts.unshift(current.name);
+    }
     current = current.parent_group;
   }
-  while (parts.length < 3) {
-    parts.push("");
-  }
-  return parts.join(" / ");
+  return parts.length > 0 ? parts.join(" / ") : "미분류";
 };
 
 const findGroupPath = (
@@ -1193,14 +1192,13 @@ watch(
                   aria-label="문제 선택"
                   :checked="isQuestionSelected(q.question_id)"
                   :disabled="(props.selectionContext || 'A') === 'A' && !canEditQuestion(q)"
-                  @change="
-                    toggleQuestionSelected(
-                      q.question_id,
-                      ($event.target as HTMLInputElement).checked,
-                    )
-                  "
-                />
-                <div class="question-content">
+                  @change="toggleQuestionSelected(q.question_id, ($event.target as HTMLInputElement).checked)"/>
+                <div 
+                  class="question-content"
+                  :class="{ 'is-interactive': !((props.selectionContext || 'A') === 'A' && !canEditQuestion(q)) }"
+                  @click="!((props.selectionContext || 'A') === 'A' && !canEditQuestion(q)) && toggleQuestionSelected(q.question_id, !isQuestionSelected(q.question_id))"
+                  :style="{ cursor: ((props.selectionContext || 'A') === 'A' && !canEditQuestion(q)) ? 'default' : 'pointer' }"
+                >
                   <LatexRenderer :text="q.question" class="question-preview" />
                 </div>
 
@@ -1698,6 +1696,13 @@ watch(
   display: flex;
   align-items: center;
   min-width: 0;
+  transition: background-color 0.2s ease;
+  border-radius: 6px;
+  padding: 4px;
+}
+
+.question-content.is-interactive:hover {
+  background-color: rgba(255, 255, 255, 0.06);
 }
 
 .question-title {
