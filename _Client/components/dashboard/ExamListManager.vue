@@ -206,10 +206,7 @@ const createForm = ref({
   end_time: "",
   location: "",
   is_auto_score: true,
-  class_id: "", // 추가
 });
-
-const taughtClasses = ref<any[]>([]); // 추가
 
 const isEditingExam = computed(() => editingExamId.value !== "");
 const modalTitle = computed(() =>
@@ -239,11 +236,9 @@ const openCreateModal = async () => {
     end_time: "",
     location: "",
     is_auto_score: true,
-    class_id: "",
   };
   createError.value = "";
   showCreateModal.value = true;
-  await fetchTaughtClasses(); // 모달 열 때 클래스 목록 로드
 };
 
 const openEditModal = async (exam: any) => {
@@ -255,22 +250,9 @@ const openEditModal = async (exam: any) => {
     end_time: toLocalDateTimeInputValue(exam.end_time),
     location: exam.location || "",
     is_auto_score: exam.is_auto_score ?? true,
-    class_id: exam.class_id ? String(exam.class_id) : "",
   };
   createError.value = "";
   showCreateModal.value = true;
-  await fetchTaughtClasses();
-};
-
-const fetchTaughtClasses = async () => {
-  try {
-    const data = await $fetch(`${apiBase.value}/dashboard/classes`, {
-      headers: getAuthHeader(),
-    });
-    taughtClasses.value = (data as any).classes || [];
-  } catch (err) {
-    console.error("클래스 목록 로드 실패:", err);
-  }
 };
 
 const closeCreateModal = () => {
@@ -301,7 +283,6 @@ const submitExamForm = async () => {
       end_time: createForm.value.end_time,
       location: createForm.value.location.trim() || undefined,
       is_auto_score: createForm.value.is_auto_score,
-      class_id: createForm.value.class_id ? Number(createForm.value.class_id) : null,
     };
 
     if (isEditingExam.value) {
@@ -331,6 +312,14 @@ const submitExamForm = async () => {
 };
 
 const getExamIdKey = (examId: number | string | bigint) => String(examId);
+
+const getExamClassNames = (exam: any) => {
+  const links = Array.isArray(exam?.class_exam_links) ? exam.class_exam_links : [];
+  const names = links
+    .map((link: any) => link?.class?.class_name)
+    .filter((name: string | undefined | null): name is string => Boolean(name));
+  return names;
+};
 
 const isExamSelected = (examId: number | string | bigint) =>
   selectedExamIds.value.includes(getExamIdKey(examId));
@@ -484,7 +473,12 @@ const deleteSelectedExams = async () => {
               <div class="headline-left">
                 <span class="exam-id">{{ exam.exam_id }}</span> 
                 <span class="exam-count"  @click="viewExamDetails(exam.exam_id)">{{ exam._count?.questions ?? 0 }}문제</span>
-                <span v-if="exam.class?.class_name" class="exam-class-name">{{ exam.class.class_name }}</span>
+                <span
+                  v-if="getExamClassNames(exam).length"
+                  class="exam-class-name"
+                >
+                  {{ getExamClassNames(exam).join(", ") }}
+                </span>
               </div>
               <span class="exam-period-inline">{{ new Date(exam.start_time).toLocaleDateString("ko-KR") }} ~ {{ new Date(exam.end_time).toLocaleDateString("ko-KR") }}</span>
             </div>
@@ -541,27 +535,6 @@ const deleteSelectedExams = async () => {
                 autocomplete="off"
               />
             </div>
-
-            <div class="form-group">
-              <label for="exam-class" class="form-label"
-                >대상 클래스 <span class="optional">(선택)</span></label
-              >
-              <select
-                id="exam-class"
-                v-model="createForm.class_id"
-                class="form-input"
-              >
-                <option value="">선택하지 않음</option>
-                <option
-                  v-for="cls in taughtClasses"
-                  :key="cls.classId"
-                  :value="cls.classId"
-                >
-                  {{ cls.className }}
-                </option>
-              </select>
-            </div>
-
 
             <div class="form-row form-row-datetime">
               <div class="form-group">

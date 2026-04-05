@@ -32,7 +32,6 @@ export class ExamsController {
       end_time: string;
       location?: string;
       is_auto_score?: boolean;
-      class_id?: string;
     },
   ) {
     const userNoVal = req.user?.user_no || req.user?.userNo;
@@ -51,7 +50,6 @@ export class ExamsController {
       end_time: string;
       location?: string;
       is_auto_score?: boolean;
-      class_id?: string | number | null;
     },
   ) {
     const userNoVal = req.user?.user_no || req.user?.userNo;

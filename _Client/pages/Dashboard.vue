@@ -8,6 +8,8 @@ import RelationManager from "~/components/dashboard/RelationManager.vue";
 import MessageManager from "~/components/dashboard/MessageManager.vue";
 import QuestionBookManager from "~/components/dashboard/QuestionBookManager.vue";
 import ExamListManager from "~/components/dashboard/ExamListManager.vue";
+import ClassMemberManagerModal from "~/components/dashboard/ClassMemberManagerModal.vue";
+import ClassExamManagerModal from "~/components/dashboard/ClassExamManagerModal.vue";
 import ManagerNav from "~/components/dashboard/ManagerNav.vue";
 import IconGraduationCap from "~/assets/icons/IconGraduationCap.svg?component";
 import IconBoard from "~/assets/icons/IconBoard.svg?component";
@@ -69,6 +71,10 @@ const messageThreadTarget = ref<any | null>(null);
 const classList = ref<DashboardClassItem[]>([]);
 const classListLoading = ref(false);
 const classListError = ref("");
+const showClassMemberManager = ref(false);
+const selectedClassForMembers = ref<DashboardClassItem | null>(null);
+const showClassExamManager = ref(false);
+const selectedClassForExams = ref<DashboardClassItem | null>(null);
 const currentRoleId = computed(() => userInfo.value?.role_id || userInfo.value?.role || "");
 
 const shouldShowClassList = computed(
@@ -116,6 +122,34 @@ const openClassExams = async (item: DashboardClassItem) => {
       className: item.className,
     },
   });
+};
+
+const openClassMemberManager = (item: DashboardClassItem) => {
+  selectedClassForMembers.value = item;
+  showClassMemberManager.value = true;
+};
+
+const closeClassMemberManager = () => {
+  showClassMemberManager.value = false;
+  selectedClassForMembers.value = null;
+};
+
+const handleClassMembersSaved = async () => {
+  await fetchClassList();
+};
+
+const openClassExamManager = (item: DashboardClassItem) => {
+  selectedClassForExams.value = item;
+  showClassExamManager.value = true;
+};
+
+const closeClassExamManager = () => {
+  showClassExamManager.value = false;
+  selectedClassForExams.value = null;
+};
+
+const handleClassExamsSaved = async () => {
+  await fetchClassList();
 };
 
 const openMessageCompose = async (user: any) => {
@@ -390,13 +424,20 @@ onUnmounted(() => {
                   <button class="class-link" @click="openClassExams(item)">
                     {{ item.className }}
                   </button>
-                  <span>{{ item.examCount }}개</span>
+                  
                 </div>
                 <p v-if="userInfo.role_id === 'S'" class="class-card-meta">
                   담당 선생님:
                   {{ item.teacherName || `#${item.teacherNo ?? "-"}` }}
                 </p>
-                <p v-else class="class-card-meta">수강생 수: {{ item.studentCount }}명</p>
+                <div v-else class="class-card-meta-row">
+                  <button class="class-manage-btn" @click="openClassExamManager(item)">
+                    연결 고사 ({{ item.examCount }})관리
+                  </button>
+                  <button class="class-manage-btn" @click="openClassMemberManager(item)">
+                    클래스 구성원 ({{ item.studentCount }})관리
+                  </button>
+                </div>
               </article>
             </div>
           </section>
@@ -415,6 +456,20 @@ onUnmounted(() => {
         </div>
       </div>
     </div>
+
+    <ClassMemberManagerModal
+      :open="showClassMemberManager"
+      :class-item="selectedClassForMembers"
+      @close="closeClassMemberManager"
+      @saved="handleClassMembersSaved"
+    />
+
+    <ClassExamManagerModal
+      :open="showClassExamManager"
+      :class-item="selectedClassForExams"
+      @close="closeClassExamManager"
+      @saved="handleClassExamsSaved"
+    />
 
     <!-- 수락 대기 요청 모달 -->
     <Teleport to="body">
@@ -742,6 +797,30 @@ onUnmounted(() => {
   margin: 0;
   color: #94a3b8;
   font-size: 0.9rem;
+}
+
+.class-card-meta-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.class-manage-btn {
+  appearance: none;
+  border: 1px solid rgba(99, 102, 241, 0.24);
+  background: rgba(99, 102, 241, 0.12);
+  color: #c7d2fe;
+  border-radius: 999px;
+  padding: 0.42rem 0.78rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.class-manage-btn:hover {
+  background: rgba(99, 102, 241, 0.18);
 }
 
 .class-list-state {

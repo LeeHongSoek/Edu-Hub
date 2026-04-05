@@ -76,13 +76,13 @@ model User {
 }
 
 model Class {
-  class_id   BigInt         @id @default(autoincrement())
-  teacher_no BigInt
-  class_name String         @db.VarChar(100)
-  created_at DateTime?      @default(now()) @db.DateTime(0)
-  students   ClassStudent[]
-  teacher    User           @relation("TeacherClasses", fields: [teacher_no], references: [user_no], onDelete: Cascade, onUpdate: Restrict, map: "fk_class_teacher")
-  exams      Exam[]
+  class_id         BigInt         @id @default(autoincrement())
+  teacher_no       BigInt
+  class_name       String         @db.VarChar(100)
+  created_at       DateTime?      @default(now()) @db.DateTime(0)
+  students         ClassStudent[]
+  class_exam_links ClassExam[]
+  teacher          User           @relation("TeacherClasses", fields: [teacher_no], references: [user_no], onDelete: Cascade, onUpdate: Restrict, map: "fk_class_teacher")
 
   @@index([teacher_no], map: "fk_class_teacher")
   @@map("classes")
@@ -97,6 +97,17 @@ model ClassStudent {
   @@id([class_id, student_no])
   @@index([student_no], map: "fk_cs_student")
   @@map("brg_class_student")
+}
+
+model ClassExam {
+  class_id BigInt
+  exam_id  BigInt
+  class    Class @relation(fields: [class_id], references: [class_id], onDelete: Cascade, onUpdate: Restrict, map: "fk_ce_class")
+  exam     Exam  @relation(fields: [exam_id], references: [exam_id], onDelete: Cascade, onUpdate: Restrict, map: "fk_ce_exam")
+
+  @@id([class_id, exam_id])
+  @@index([exam_id], map: "fk_ce_exam")
+  @@map("brg_class_exam")
 }
 
 enum ApprovalStatus {
@@ -248,24 +259,22 @@ model QuestionTag {
 }
 
 model Exam {
-  exam_id       BigInt         @id @default(autoincrement())
-  creator_no    BigInt
-  class_id      BigInt?
-  exam_name     String         @db.VarChar(255)
-  start_time    DateTime       @db.DateTime(0)
-  end_time      DateTime       @db.DateTime(0)
-  location      String?        @db.VarChar(100)
-  is_auto_score Boolean?       @default(true)
-  description   String?        @db.Text
-  is_deleted    IsDeleted      @default(N)
-  created_at    DateTime?      @default(now()) @db.DateTime(0)
-  questions     ExamQuestion[]
-  results       ExamResult[]
-  class         Class?         @relation(fields: [class_id], references: [class_id], onUpdate: Restrict, map: "fk_exam_class")
-  creator       User           @relation(fields: [creator_no], references: [user_no], onDelete: Cascade, onUpdate: Restrict, map: "fk_exam_creator")
-  solves        SolveResult[]
+  exam_id          BigInt         @id @default(autoincrement())
+  creator_no       BigInt
+  exam_name        String         @db.VarChar(255)
+  start_time       DateTime       @db.DateTime(0)
+  end_time         DateTime       @db.DateTime(0)
+  location         String?        @db.VarChar(100)
+  is_auto_score    Boolean?       @default(true)
+  description      String?        @db.Text
+  is_deleted       IsDeleted      @default(N)
+  created_at       DateTime?      @default(now()) @db.DateTime(0)
+  questions        ExamQuestion[]
+  results          ExamResult[]
+  class_exam_links ClassExam[]
+  creator          User           @relation(fields: [creator_no], references: [user_no], onDelete: Cascade, onUpdate: Restrict, map: "fk_exam_creator")
+  solves           SolveResult[]
 
-  @@index([class_id], map: "fk_exam_class")
   @@index([creator_no], map: "fk_exam_creator")
   @@map("exams")
 }

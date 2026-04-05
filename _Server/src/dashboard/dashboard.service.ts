@@ -29,19 +29,32 @@ export class DashboardService {
     if (normalizedRoleId === 'S') {
       const memberships = await this.prisma.classStudent.findMany({
         where: { student_no: userNo },
-        include: {
+        select: {
+          class_id: true,
           class: {
-            include: {
+            select: {
+              class_id: true,
+              class_name: true,
+              created_at: true,
               teacher: {
                 select: {
                   user_no: true,
                   username: true,
                 },
               },
-              _count: {
+              students: {
                 select: {
-                  students: true,
-                  exams: true,
+                  student_no: true,
+                },
+              },
+              class_exam_links: {
+                where: {
+                  exam: {
+                    is_deleted: 'N',
+                  },
+                },
+                select: {
+                  exam_id: true,
                 },
               },
             },
@@ -60,8 +73,8 @@ export class DashboardService {
           className: membership.class.class_name,
           teacherNo: membership.class.teacher.user_no.toString(),
           teacherName: membership.class.teacher.username,
-          studentCount: membership.class._count.students,
-          examCount: membership.class._count.exams,
+          studentCount: membership.class.students.length,
+          examCount: membership.class.class_exam_links.length,
           createdAt: membership.class.created_at,
         }));
     }
@@ -69,11 +82,25 @@ export class DashboardService {
     if (normalizedRoleId === 'T') {
       const classes = await this.prisma.class.findMany({
         where: { teacher_no: userNo },
-        include: {
+        select: {
+          class_id: true,
+          class_name: true,
+          teacher_no: true,
+          created_at: true,
           _count: {
             select: {
               students: true,
-              exams: true,
+            },
+          },
+          class_exam_links: {
+            where: {
+              exam: {
+                creator_no: userNo,
+                is_deleted: 'N',
+              },
+            },
+            select: {
+              exam_id: true,
             },
           },
         },
@@ -86,12 +113,327 @@ export class DashboardService {
         teacherNo: classroom.teacher_no.toString(),
         teacherName: null,
         studentCount: classroom._count.students,
-        examCount: classroom._count.exams,
+        examCount: classroom.class_exam_links.length,
         createdAt: classroom.created_at,
       }));
     }
 
     return [];
+  }
+
+  async getClassMemberManagerData(userNo: bigint, classId: string | number | bigint) {
+    const classIdBigInt = BigInt(classId);
+    const classroom = await this.prisma.class.findFirst({
+      where: {
+        class_id: classIdBigInt,
+        teacher_no: userNo,
+      },
+      select: {
+        class_id: true,
+        class_name: true,
+        teacher_no: true,
+        students: {
+          include: {
+            student: {
+              select: {
+                user_no: true,
+                username: true,
+                user_id: true,
+              },
+            },
+          },
+          orderBy: {
+            student: {
+              username: 'asc',
+            },
+          },
+        },
+      },
+    });
+
+    if (!classroom) {
+      throw new NotFoundException('관리할 수 있는 클래스를 찾지 못했습니다.');
+    }
+
+    const relationTypeIds = ['TEACHER_PUPIL', 'PUPIL_TEACHER'];
+    const connectedRelations = await this.prisma.userRelation.findMany({
+      where: {
+        approval: 'Y',
+        relation_type_id: { in: relationTypeIds },
+        OR: [{ user_no_1: userNo }, { user_no_2: userNo }],
+      },
+      include: {
+        user1: {
+          select: {
+            user_no: true,
+            username: true,
+            user_id: true,
+            role_id: true,
+          },
+        },
+        user2: {
+          select: {
+            user_no: true,
+            username: true,
+            user_id: true,
+            role_id: true,
+          },
+        },
+      },
+      orderBy: { created_at: 'desc' },
+    });
+
+    const assignedStudents = classroom.students.map((membership) => ({
+      userNo: membership.student.user_no.toString(),
+      username: membership.student.username,
+      userId: membership.student.user_id,
+    }));
+
+    const assignedSet = new Set(assignedStudents.map((student) => student.userNo));
+    const availableMap = new Map<string, { userNo: string; username: string; userId: string }>();
+
+    for (const relation of connectedRelations) {
+      const counterpart =
+        relation.user_no_1.toString() === userNo.toString()
+          ? relation.user2
+          : relation.user1;
+
+      if (!counterpart || counterpart.role_id !== 'S') continue;
+      const key = counterpart.user_no.toString();
+      if (assignedSet.has(key) || availableMap.has(key)) continue;
+
+      availableMap.set(key, {
+        userNo: key,
+        username: counterpart.username,
+        userId: counterpart.user_id,
+      });
+    }
+
+    const sortUsers = (list: Array<{ userNo: string; username: string; userId: string }>) =>
+      [...list].sort((a, b) => {
+        const byName = a.username.localeCompare(b.username, 'ko');
+        if (byName !== 0) return byName;
+        return a.userId.localeCompare(b.userId, 'ko');
+      });
+
+    return {
+      classId: classroom.class_id.toString(),
+      className: classroom.class_name,
+      assignedStudents: sortUsers(assignedStudents),
+      availableStudents: sortUsers(Array.from(availableMap.values())),
+    };
+  }
+
+  async updateClassMembers(
+    userNo: bigint,
+    classId: string | number | bigint,
+    studentNos: Array<string | number>,
+  ) {
+    const classIdBigInt = BigInt(classId);
+    const classroom = await this.prisma.class.findFirst({
+      where: {
+        class_id: classIdBigInt,
+        teacher_no: userNo,
+      },
+      select: {
+        class_id: true,
+      },
+    });
+
+    if (!classroom) {
+      throw new NotFoundException('관리할 수 있는 클래스를 찾지 못했습니다.');
+    }
+
+    const normalizedIds = Array.from(
+      new Set(
+        (Array.isArray(studentNos) ? studentNos : [])
+          .map((studentNo) => String(studentNo))
+          .filter(Boolean),
+      ),
+    );
+
+    if (normalizedIds.length > 0) {
+      const allowedStudents = await this.getClassMemberManagerData(userNo, classIdBigInt);
+      const allowedSet = new Set(
+        [...allowedStudents.assignedStudents, ...allowedStudents.availableStudents].map(
+          (student) => student.userNo,
+        ),
+      );
+
+      for (const studentNo of normalizedIds) {
+        if (!allowedSet.has(studentNo)) {
+          throw new BadRequestException('담당 학생만 클래스에 배정할 수 있습니다.');
+        }
+      }
+    }
+
+    await this.prisma.$transaction([
+      this.prisma.classStudent.deleteMany({
+        where: {
+          class_id: classIdBigInt,
+        },
+      }),
+      ...(normalizedIds.length > 0
+        ? [
+            this.prisma.classStudent.createMany({
+              data: normalizedIds.map((studentNo) => ({
+                class_id: classIdBigInt,
+                student_no: BigInt(studentNo),
+              })),
+            }),
+          ]
+        : []),
+    ]);
+
+    return this.getClassMemberManagerData(userNo, classIdBigInt);
+  }
+
+  async getClassExamManagerData(userNo: bigint, classId: string | number | bigint) {
+    const classIdBigInt = BigInt(classId);
+    const classroom = await this.prisma.class.findFirst({
+      where: {
+        class_id: classIdBigInt,
+        teacher_no: userNo,
+      },
+      select: {
+        class_id: true,
+        class_name: true,
+      },
+    });
+
+    if (!classroom) {
+      throw new NotFoundException('관리할 수 있는 클래스를 찾지 못했습니다.');
+    }
+
+    const exams = await this.prisma.exam.findMany({
+      where: {
+        creator_no: userNo,
+        is_deleted: 'N',
+      },
+      select: {
+        exam_id: true,
+        exam_name: true,
+        class_exam_links: {
+          select: {
+            class_id: true,
+            class: {
+              select: {
+                class_name: true,
+              },
+            },
+          },
+        },
+        _count: {
+          select: {
+            questions: true,
+          },
+        },
+        created_at: true,
+      },
+      orderBy: [
+        { created_at: 'desc' },
+        { exam_id: 'desc' },
+      ],
+    });
+
+    const assignedExams = exams
+      .filter((exam) =>
+        exam.class_exam_links.some(
+          (link) => link.class_id.toString() === classIdBigInt.toString(),
+        ),
+      )
+      .map((exam) => ({
+        examId: exam.exam_id.toString(),
+        examName: exam.exam_name,
+        questionCount: exam._count.questions,
+        linkedClassName: classroom.class_name,
+      }));
+
+    const availableExams = exams
+      .filter(
+        (exam) =>
+          !exam.class_exam_links.some(
+            (link) => link.class_id.toString() === classIdBigInt.toString(),
+          ),
+      )
+      .map((exam) => ({
+        examId: exam.exam_id.toString(),
+        examName: exam.exam_name,
+        questionCount: exam._count.questions,
+        linkedClassName:
+          exam.class_exam_links.length > 0
+            ? exam.class_exam_links.map((link) => link.class.class_name).join(", ")
+            : null,
+      }));
+
+    return {
+      classId: classroom.class_id.toString(),
+      className: classroom.class_name,
+      assignedExams,
+      availableExams,
+    };
+  }
+
+  async updateClassExams(
+    userNo: bigint,
+    classId: string | number | bigint,
+    examIds: Array<string | number>,
+  ) {
+    const classIdBigInt = BigInt(classId);
+    const classroom = await this.prisma.class.findFirst({
+      where: {
+        class_id: classIdBigInt,
+        teacher_no: userNo,
+      },
+      select: { class_id: true },
+    });
+
+    if (!classroom) {
+      throw new NotFoundException('관리할 수 있는 클래스를 찾지 못했습니다.');
+    }
+
+    const normalizedExamIds = Array.from(
+      new Set(
+        (Array.isArray(examIds) ? examIds : [])
+          .map((examId) => String(examId))
+          .filter(Boolean),
+      ),
+    );
+
+    if (normalizedExamIds.length > 0) {
+      const ownedExamCount = await this.prisma.exam.count({
+        where: {
+          exam_id: { in: normalizedExamIds.map((examId) => BigInt(examId)) },
+          creator_no: userNo,
+          is_deleted: 'N',
+        },
+      });
+
+      if (ownedExamCount !== normalizedExamIds.length) {
+        throw new BadRequestException('본인이 만든 고사만 클래스에 연결할 수 있습니다.');
+      }
+    }
+
+    await this.prisma.$transaction([
+      this.prisma.classExam.deleteMany({
+        where: {
+          class_id: classIdBigInt,
+        },
+      }),
+      ...(normalizedExamIds.length > 0
+        ? [
+            this.prisma.classExam.createMany({
+              data: normalizedExamIds.map((examId) => ({
+                class_id: classIdBigInt,
+                exam_id: BigInt(examId),
+              })),
+              skipDuplicates: true,
+            }),
+          ]
+        : []),
+    ]);
+
+    return this.getClassExamManagerData(userNo, classIdBigInt);
   }
 
   private async getStudentStats(userNo: bigint) {

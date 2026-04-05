@@ -28,6 +28,56 @@ export class DashboardController {
     return this.dashboardService.getClassList(BigInt(userNoVal), roleId);
   }
 
+  @Get('classes/:classId/members')
+  async getClassMembers(@Request() req, @Param('classId') classId: string) {
+    const userNoVal = req.user?.user_no || req.user?.userNo;
+    if (!userNoVal) throw new UnauthorizedException();
+    return this.dashboardService.getClassMemberManagerData(
+      BigInt(userNoVal),
+      classId,
+    );
+  }
+
+  @Put('classes/:classId/members')
+  async updateClassMembers(
+    @Request() req,
+    @Param('classId') classId: string,
+    @Body() body: { studentNos?: Array<string | number> },
+  ) {
+    const userNoVal = req.user?.user_no || req.user?.userNo;
+    if (!userNoVal) throw new UnauthorizedException();
+    return this.dashboardService.updateClassMembers(
+      BigInt(userNoVal),
+      classId,
+      body?.studentNos ?? [],
+    );
+  }
+
+  @Get('classes/:classId/exams')
+  async getClassExams(@Request() req, @Param('classId') classId: string) {
+    const userNoVal = req.user?.user_no || req.user?.userNo;
+    if (!userNoVal) throw new UnauthorizedException();
+    return this.dashboardService.getClassExamManagerData(
+      BigInt(userNoVal),
+      classId,
+    );
+  }
+
+  @Put('classes/:classId/exams')
+  async updateClassExams(
+    @Request() req,
+    @Param('classId') classId: string,
+    @Body() body: { examIds?: Array<string | number> },
+  ) {
+    const userNoVal = req.user?.user_no || req.user?.userNo;
+    if (!userNoVal) throw new UnauthorizedException();
+    return this.dashboardService.updateClassExams(
+      BigInt(userNoVal),
+      classId,
+      body?.examIds ?? [],
+    );
+  }
+
   @Get('relations')
   async getRelations(
     @Request() req,

@@ -14,7 +14,6 @@ export class ExamsService {
       end_time: string;
       location?: string;
       is_auto_score?: boolean;
-      class_id?: string;
     },
   ) {
     return this.prisma.exam.create({
@@ -26,11 +25,14 @@ export class ExamsService {
         end_time: new Date(data.end_time),
         location: data.location || null,
         is_auto_score: data.is_auto_score ?? true,
-        class_id: data.class_id ? BigInt(data.class_id) : null,
       },
       include: {
         creator: { select: { user_no: true, username: true } },
-        class: true,
+        class_exam_links: {
+          include: {
+            class: true,
+          },
+        },
         _count: { select: { questions: true } },
       },
     });
@@ -46,7 +48,6 @@ export class ExamsService {
       end_time: string;
       location?: string;
       is_auto_score?: boolean;
-      class_id?: string | number | null;
     },
   ) {
     const existing = await this.prisma.exam.findFirst({
@@ -71,11 +72,14 @@ export class ExamsService {
         end_time: new Date(data.end_time),
         location: data.location || null,
         is_auto_score: data.is_auto_score ?? true,
-        class_id: data.class_id ? BigInt(data.class_id) : null,
       },
       include: {
         creator: { select: { user_no: true, username: true } },
-        class: true,
+        class_exam_links: {
+          include: {
+            class: true,
+          },
+        },
         _count: { select: { questions: true } },
       },
     });
@@ -91,14 +95,22 @@ export class ExamsService {
     }
 
     if (classId) {
-      where.class_id = classId;
+      where.class_exam_links = {
+        some: {
+          class_id: classId,
+        },
+      };
     }
 
     return this.prisma.exam.findMany({
       where,
       include: {
         creator: { select: { user_no: true, username: true } },
-        class: true,
+        class_exam_links: {
+          include: {
+            class: true,
+          },
+        },
         _count: { select: { questions: true } }
       },
       orderBy: { created_at: 'desc' },
@@ -110,7 +122,11 @@ export class ExamsService {
       where: { exam_id: examId, is_deleted: 'N' },
       include: {
         creator: { select: { user_no: true, username: true } },
-        class: true,
+        class_exam_links: {
+          include: {
+            class: true,
+          },
+        },
         questions: {
           include: {
             question: true,
