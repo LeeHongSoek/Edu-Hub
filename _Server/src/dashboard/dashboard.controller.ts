@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, Post, Query, UseGuards, Request, UnauthorizedException, BadRequestException } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Post, Put, Query, UseGuards, Request, UnauthorizedException, BadRequestException } from '@nestjs/common';
 import { DashboardService } from './dashboard.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
@@ -72,6 +72,22 @@ export class DashboardController {
       Number(page),
       Number(limit),
     );
+  }
+
+  @Get('relations/pending')
+  async getPendingRelations(@Request() req) {
+    const userNoVal = req.user?.user_no || req.user?.userNo;
+    if (!userNoVal) throw new UnauthorizedException();
+    return this.dashboardService.getPendingRelations(BigInt(userNoVal));
+  }
+
+  @Put('relations/:targetUserNo/approval')
+  async updateRelationApproval(@Request() req, @Param('targetUserNo') targetUserNo: string, @Body() body: { action: 'accept' | 'reject' }) {
+    const userNoVal = req.user?.user_no || req.user?.userNo;
+    if (!userNoVal) throw new UnauthorizedException();
+    if (body.action !== 'accept' && body.action !== 'reject') throw new BadRequestException('올바르지 않은 처리 방식입니다.');
+    
+    return this.dashboardService.updateRelationApproval(BigInt(userNoVal), targetUserNo, body.action);
   }
 
   @Post('relations')

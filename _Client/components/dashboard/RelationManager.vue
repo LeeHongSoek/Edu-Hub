@@ -904,9 +904,11 @@ const commitSliderValue = async () => {
   await fetchCandidates(activeTargetKey.value);
 };
 
-const toggleCandidateRelation = async (user: any, event: Event) => {
+const toggleCandidateRelation = async (user: any, event: Event | boolean) => {
   if (!activeTarget.value) return;
-  const checked = (event.target as HTMLInputElement).checked;
+  const checked = typeof event === 'boolean' 
+    ? event 
+    : (event?.target as HTMLInputElement)?.checked;
   submittingUserId.value = String(user.user_no);
 
   try {
@@ -1096,6 +1098,7 @@ watch(
         v-for="rel in relations"
         :key="rel.relation_id"
         class="relation-item"
+        v-show="rel.approval === 'Y'"
       >
         <div class="relation-row">
           <div class="relation-user">
@@ -1131,17 +1134,25 @@ watch(
         :key="user.user_no"
         class="candidate-item"
       >
-        <label class="candidate-row">
-          <input
-            class="relation-checkbox"
-            type="checkbox"
-            :checked="user.isConnected"
-            :disabled="submittingUserId === user.user_no"
-            @change="toggleCandidateRelation(user, $event)"
-          />
-          <span class="candidate-name">{{ user.username }}</span>
-          <span class="candidate-id">{{ user.user_id }}</span>
-        </label>
+        <div class="candidate-row">
+          <div class="candidate-info">
+            <input
+              class="relation-checkbox"
+              type="checkbox"
+              :checked="user.isConnected"
+              disabled
+            />
+            <span class="candidate-name">{{ user.username }}</span>
+            <span class="candidate-id">{{ user.user_id }}</span>
+          </div>
+          <button
+            class="btn-relation-request"
+            :disabled="submittingUserId === user.user_no || user.approval === null || user.approval === 'N'"
+            @click="toggleCandidateRelation(user, !user.isConnected)"
+          >
+            {{ user.approval === null ? '요청중..' : user.approval === 'N' ? '거절!' : user.isConnected ? '해제' : '관계 요청' }}
+          </button>
+        </div>
       </div>
     </TransitionGroup>
 
@@ -1265,17 +1276,25 @@ watch(
                   :key="user.user_no"
                   class="candidate-item"
                 >
-                  <label class="candidate-row">
-                    <input
-                      class="relation-checkbox"
-                      type="checkbox"
-                      :checked="user.isConnected"
-                      :disabled="submittingUserId === user.user_no"
-                      @change="toggleCandidateRelation(user, $event)"
-                    />
-                    <span class="candidate-name">{{ user.username }}</span>
-                    <span class="candidate-id">{{ user.user_id }}</span>
-                  </label>
+                  <div class="candidate-row">
+                    <div class="candidate-info">
+                      <input
+                        class="relation-checkbox"
+                        type="checkbox"
+                        :checked="user.isConnected"
+                        disabled
+                      />
+                      <span class="candidate-name">{{ user.username }}</span>
+                      <span class="candidate-id">{{ user.user_id }}</span>
+                    </div>
+                    <button
+                      class="btn-relation-request"
+                      :disabled="submittingUserId === user.user_no || user.approval === null || user.approval === 'N'"
+                      @click="toggleCandidateRelation(user, !user.isConnected)"
+                    >
+                      {{ user.approval === null ? '요청중..' : user.approval === 'N' ? '거절!' : user.isConnected ? '해제' : '관계 요청' }}
+                    </button>
+                  </div>
                 </div>
               </TransitionGroup>
 
@@ -2168,6 +2187,30 @@ watch(
   align-items: center;
 }
 
+.relation-checkbox {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  border: 1.5px solid rgba(255, 255, 255, 0.2);
+  border-radius: 3px;
+  background-color: inherit;
+  transform: scale(1.6);
+  margin: 0 0.8rem 0 0.5rem;
+  pointer-events: none;
+  cursor: not-allowed;
+  transition: all 0.2s ease;
+}
+
+.relation-checkbox:checked {
+  background-color: inherit;
+  border-color: rgba(255, 255, 255, 0.2);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='20 6 9 17 4 12'%3E%3C/polyline%3E%3C/svg%3E");
+  background-size: 85%;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
 .candidate-name {
   color: #c7d2fe;
   margin: 0;
@@ -2187,11 +2230,43 @@ watch(
 .candidate-row {
   display: flex;
   align-items: center;
-  justify-content: flex-start;
+  justify-content: space-between;
   gap: 0.5rem;
   min-width: 0;
   width: 100%;
   overflow: hidden;
+}
+
+.candidate-info {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.btn-relation-request {
+  margin-left: auto;
+  background: transparent;
+  border: 1px solid rgba(129, 140, 248, 0.4);
+  color: #818cf8;
+  padding: 0.35rem 0.65rem;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+}
+
+.btn-relation-request:hover:not(:disabled) {
+  background: rgba(129, 140, 248, 0.15);
+  border-color: #818cf8;
+}
+
+.btn-relation-request:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .relation-badge {

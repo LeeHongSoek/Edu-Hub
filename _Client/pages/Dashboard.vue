@@ -200,6 +200,48 @@ const typePhrase = async () => {
   typePhrase();
 };
 
+type PendingRelation = {
+  user_no: string;
+  username: string;
+  user_id: string;
+  role_id: string;
+  relation_type_id: string;
+  description: string;
+  created_at: string;
+};
+
+const pendingRelations = ref<PendingRelation[]>([]);
+const currentPendingRequest = computed(() => pendingRelations.value[0] || null);
+const isPendingActionLoading = ref(false);
+
+const fetchPendingRelations = async () => {
+  try {
+    const data = await $fetch<PendingRelation[]>(`${apiBase.value}/dashboard/relations/pending`, { headers: getAuthHeader() });
+    pendingRelations.value = Array.isArray(data) ? data : [];
+  } catch (err) {
+    console.error("수락 대기 요청 조회 실패:", err);
+  }
+};
+
+const handlePendingAction = async (action: 'accept' | 'reject') => {
+  if (!currentPendingRequest.value) return;
+  isPendingActionLoading.value = true;
+  try {
+    await $fetch(`${apiBase.value}/dashboard/relations/${currentPendingRequest.value.user_no}/approval`, {
+      method: "PUT",
+      headers: getAuthHeader(),
+      body: { action }
+    });
+    // 성공 후 리스트에서 제거
+    pendingRelations.value.shift();
+  } catch (err) {
+    console.error("요청 처리 실패:", err);
+    alert("처리 중 오류가 발생했습니다.");
+  } finally {
+    isPendingActionLoading.value = false;
+  }
+};
+
 onMounted(() => {
   if (!userInfo.value) {
     navigateTo("/");
@@ -207,7 +249,9 @@ onMounted(() => {
   }
 
   fetchClassList();
+  fetchPendingRelations();
 
+  isPendingActionLoading.value = false;
   isTypingActive.value = true;
   cursorInterval = setInterval(() => {
     showCursor.value = !showCursor.value;
@@ -371,6 +415,43 @@ onUnmounted(() => {
         </div>
       </div>
     </div>
+
+    <!-- 수락 대기 요청 모달 -->
+    <Teleport to="body">
+      <Transition name="modal-fade">
+        <div v-if="currentPendingRequest" class="alert-modal-overlay">
+          <div class="alert-modal-card">
+            <div class="alert-modal-header">
+              <IconUsers class="alert-icon" />
+              <h2>새로운 관계 요청</h2>
+            </div>
+            <div class="alert-modal-body">
+              <p>
+                <strong>{{ currentPendingRequest.username }}</strong>
+                ({{ currentPendingRequest.description || '인맥' }}) 님이 연결을 요청했습니다.
+              </p>
+              <p class="alert-subtext">수락하시겠습니까?</p>
+            </div>
+            <div class="alert-modal-actions">
+              <button
+                class="btn-reject"
+                :disabled="isPendingActionLoading"
+                @click="handlePendingAction('reject')"
+              >
+                거절
+              </button>
+              <button
+                class="btn-accept"
+                :disabled="isPendingActionLoading"
+                @click="handlePendingAction('accept')"
+              >
+                {{ isPendingActionLoading ? '처리중...' : '수락' }}
+              </button>
+            </div>
+          </div>
+        </div>
+      </Transition>
+    </Teleport>
   </div>
 </template>
 

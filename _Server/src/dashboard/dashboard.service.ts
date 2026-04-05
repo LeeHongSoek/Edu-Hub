@@ -207,6 +207,7 @@ export class DashboardService {
     const targetFilter = this.resolveRelationTargetFilter(userRoleId, target);
 
     const where: any = {
+      approval: 'Y',
       OR: [{ user_no_1: userNo }, { user_no_2: userNo }],
     };
 
@@ -355,16 +356,23 @@ export class DashboardService {
       select: {
         user_no_1: true,
         user_no_2: true,
+        approval: true,
       },
     });
 
-    const connectedUserNos = new Set<string>();
+    const connectedUserMap = new Map<string, { isConnected: boolean; approval: string | null }>();
     for (const relation of connectedRelations) {
       if (relation.user_no_1.toString() !== userNo.toString()) {
-        connectedUserNos.add(relation.user_no_1.toString());
+        connectedUserMap.set(relation.user_no_1.toString(), {
+          isConnected: relation.approval === 'Y',
+          approval: relation.approval === null ? 'null' : relation.approval,
+        });
       }
       if (relation.user_no_2.toString() !== userNo.toString()) {
-        connectedUserNos.add(relation.user_no_2.toString());
+        connectedUserMap.set(relation.user_no_2.toString(), {
+          isConnected: relation.approval === 'Y',
+          approval: relation.approval === null ? 'null' : relation.approval,
+        });
       }
     }
 
@@ -410,11 +418,15 @@ export class DashboardService {
     ]);
 
     return {
-      items: items.map((user) => ({
-        ...user,
-        user_no: user.user_no.toString(),
-        isConnected: connectedUserNos.has(user.user_no.toString()),
-      })),
+      items: items.map((user) => {
+        const connInfo = connectedUserMap.get(user.user_no.toString());
+        return {
+          ...user,
+          user_no: user.user_no.toString(),
+          isConnected: connInfo?.isConnected || false,
+          approval: connInfo?.approval === 'null' ? null : connInfo?.approval,
+        };
+      }),
       page: safePage,
       limit: safeLimit,
       total,
@@ -470,30 +482,19 @@ export class DashboardService {
 
     const now = new Date();
 
-    await this.prisma.$transaction([
-      this.prisma.userRelation.create({
-        data: {
-          user_no_1: userNo,
-          user_no_2: targetUserNoBigInt,
-          relation_type_id: relationPair.forward,
-          approval: 'Y',
-          created_at: now,
-        },
-      }),
-      this.prisma.userRelation.create({
-        data: {
-          user_no_1: targetUserNoBigInt,
-          user_no_2: userNo,
-          relation_type_id: relationPair.reverse,
-          approval: 'Y',
-          created_at: now,
-        },
-      }),
-    ]);
+    await this.prisma.userRelation.create({
+      data: {
+        user_no_1: userNo,
+        user_no_2: targetUserNoBigInt,
+        relation_type_id: relationPair.forward,
+        approval: null,
+        created_at: now,
+      },
+    });
 
     return {
       ok: true,
-      message: `${target.username} 님과의 연결을 저장했습니다.`,
+      message: `${target.username} 님에게 연결을 요청했습니다.`,
     };
   }
 
@@ -564,6 +565,105 @@ export class DashboardService {
     };
 
     return map[sourceRoleId]?.[targetRoleId] ?? null;
+  }
+
+  async getPendingRelations(userNo: bigint) {
+    const pending = await this.prisma.userRelation.findMany({
+      where: {
+        user_no_2: userNo,
+        approval: null,
+      },
+      include: {
+        user1: {
+          select: {
+            user_no: true,
+            user_id: true,
+            username: true,
+            role_id: true,
+          },
+        },
+        relation_type: true,
+      },
+      orderBy: { created_at: 'desc' },
+    });
+
+    return pending.map((rel) => ({
+      user_no: rel.user_no_1.toString(),
+      username: rel.user1.username,
+      user_id: rel.user1.user_id,
+      role_id: rel.user1.role_id,
+      relation_type_id: rel.relation_type_id,
+      description: rel.relation_type?.description || '',
+      created_at: rel.created_at,
+    }));
+  }
+
+  async updateRelationApproval(userNo: bigint, targetUserNo: string | number | bigint, action: 'accept' | 'reject') {
+    const targetUserNoBigInt = BigInt(targetUserNo);
+
+    const pendingRelation = await this.prisma.userRelation.findFirst({
+      where: {
+        user_no_1: targetUserNoBigInt,
+        user_no_2: userNo,
+        approval: null,
+      },
+    });
+
+    if (!pendingRelation) {
+      throw new NotFoundException('요청을 찾을 수 없거나 이미 처리되었습니다.');
+    }
+
+    if (action === 'reject') {
+      await this.prisma.userRelation.update({
+        where: {
+          user_no_1_user_no_2: {
+            user_no_1: targetUserNoBigInt,
+            user_no_2: userNo,
+          },
+        },
+        data: { approval: 'N' },
+      });
+      return { ok: true, message: '요청을 거절했습니다.' };
+    }
+
+    const [me, target] = await Promise.all([
+      this.prisma.user.findUnique({ where: { user_no: userNo }, select: { role_id: true, username: true } }),
+      this.prisma.user.findUnique({ where: { user_no: targetUserNoBigInt }, select: { role_id: true, username: true } }),
+    ]);
+
+    if (!me || !target) throw new NotFoundException('사용자 정보를 찾을 수 없습니다.');
+
+    const relationPair = this.resolveRelationPair(me.role_id, target.role_id);
+
+    await this.prisma.$transaction([
+      this.prisma.userRelation.update({
+        where: {
+          user_no_1_user_no_2: {
+            user_no_1: targetUserNoBigInt,
+            user_no_2: userNo,
+          },
+        },
+        data: { approval: 'Y' },
+      }),
+      this.prisma.userRelation.upsert({
+        where: {
+          user_no_1_user_no_2: {
+            user_no_1: userNo,
+            user_no_2: targetUserNoBigInt,
+          },
+        },
+        update: { approval: 'Y' },
+        create: {
+          user_no_1: userNo,
+          user_no_2: targetUserNoBigInt,
+          relation_type_id: relationPair ? relationPair.forward : pendingRelation.relation_type_id,
+          approval: 'Y',
+          created_at: new Date(),
+        },
+      }),
+    ]);
+
+    return { ok: true, message: `${target.username} 님의 요청을 수락했습니다.` };
   }
 
   async getMessages(
