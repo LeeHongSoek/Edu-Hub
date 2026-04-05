@@ -1584,8 +1584,8 @@ watch(
   gap: 0.18rem;
   min-width: 72px;
   height: 48px;
-  padding: 0.45rem 0.7rem;
-  border: none;
+  padding: 0.45rem 0.35rem;
+  border: 1px solid rgba(148, 163, 184, 0.3);
   border-radius: 8px;
   background: transparent;
   color: #94a3b8;
@@ -2124,6 +2124,7 @@ watch(
 .action-button-group {
   display: flex !important;
   align-items: center !important;
+  gap: 0.35rem;
   background: rgba(15, 23, 42, 0.4);
   padding: 4px;
   border-radius: 12px;
@@ -2138,7 +2139,7 @@ watch(
   justify-content: center;
   gap: 0.35rem;
   height: 32px;
-  padding: 0 0.95rem;
+  padding: 0 0.475rem;
   border: none;
   font-size: 0.9rem;
   font-weight: 700;
@@ -2158,6 +2159,7 @@ watch(
 .btn-delete {
   background: transparent;
   color: #94a3b8;
+  border: 1px solid rgba(148, 163, 184, 0.3);
   border-radius: 8px;
   margin-left: 2px;
 }
