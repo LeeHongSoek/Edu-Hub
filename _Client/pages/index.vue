@@ -5,6 +5,7 @@ import LatexRenderer from "~/components/LatexRenderer.vue";
 import DailyQuestionsModal from "~/components/DailyQuestionsModal.vue";
 import VuePdfEmbed from "vue-pdf-embed";
 import manualPdfUrl from "~/assets/Edu-Hub_Project_Manual.pdf?url";
+import erdImgUrl from "~/assets/Edu-Hub_ERD.png?url";
 import IconShield from "~/assets/icons/IconShield.svg?component";
 import IconCheck from "~/assets/icons/IconCheck.svg?component";
 import IconSparkle from "~/assets/icons/IconSparkle.svg?component";
@@ -37,6 +38,52 @@ const isLoaded = ref(false);
 const showIntro = ref(false);
 const showManual = ref(false);
 const manualPdfSrc = manualPdfUrl;
+const manualActiveTab = ref<'pdf'|'erd'|'github'>('pdf');
+
+const erdScale = ref(1);
+const erdPanX = ref(0);
+const erdPanY = ref(0);
+let isDraggingErd = false;
+let startX = 0;
+let startY = 0;
+
+function resetErdZoom() {
+  erdScale.value = 1;
+  erdPanX.value = 0;
+  erdPanY.value = 0;
+}
+
+function handleErdWheel(e: WheelEvent) {
+  if (manualActiveTab.value !== 'erd') return;
+  e.preventDefault();
+  const zoomFactor = 0.1;
+  if (e.deltaY < 0) {
+    erdScale.value = Math.min(erdScale.value + zoomFactor, 5);
+  } else {
+    erdScale.value = Math.max(erdScale.value - zoomFactor, 0.5);
+  }
+}
+
+function handleErdMousedown(e: MouseEvent) {
+  isDraggingErd = true;
+  startX = e.clientX - erdPanX.value;
+  startY = e.clientY - erdPanY.value;
+}
+
+function handleErdMousemove(e: MouseEvent) {
+  if (!isDraggingErd) return;
+  erdPanX.value = e.clientX - startX;
+  erdPanY.value = e.clientY - startY;
+}
+
+function handleErdMouseup() {
+  isDraggingErd = false;
+}
+
+function handleErdMouseleave() {
+  isDraggingErd = false;
+}
+
 let introTimer: any = null;
 
 function syncBodyScrollLock() {
@@ -844,19 +891,69 @@ onMounted(() => {
         >
           <div class="modal-header manual-modal-header">
             <span class="modal-badge">Edu-Hub 매뉴얼 </span>
-            <!-- <h2 class="modal-title">Edu-Hub_Project_Manual.pdf</h2> -->
+            <div class="manual-tabs">
+              <button 
+                :class="['manual-tab-btn', { active: manualActiveTab === 'pdf' }]"
+                @click="manualActiveTab = 'pdf'"
+              >
+                <IconManual width="16" height="16" /> 요약 통계
+              </button>
+              <button 
+                :class="['manual-tab-btn', { active: manualActiveTab === 'erd' }]"
+                @click="manualActiveTab = 'erd'"
+              >
+                <IconEye width="16" height="16" /> 데이터 구조 ERD
+              </button>
+              <button 
+                :class="['manual-tab-btn', { active: manualActiveTab === 'github' }]"
+                @click="manualActiveTab = 'github'"
+              >
+                <IconSparkle width="16" height="16" /> Github
+              </button>
+            </div>
             <button class="modal-close" @click="closeManual" aria-label="닫기">
               <IconClose width="20" height="20" />
             </button>
           </div>
 
-          <div class="manual-pdf-wrap">
-            <ClientOnly>
-              <VuePdfEmbed class="manual-pdf" :source="manualPdfSrc" />
-              <template #fallback>
-                <div class="manual-loading">메뉴얼을 불러오는 중입니다...</div>
-              </template>
-            </ClientOnly>
+          <div class="manual-viewer-area">
+            <div v-show="manualActiveTab === 'pdf'" class="manual-pdf-wrap">
+              <ClientOnly>
+                <VuePdfEmbed class="manual-pdf" :source="manualPdfSrc" />
+                <template #fallback>
+                  <div class="manual-loading">메뉴얼을 불러오는 중입니다...</div>
+                </template>
+              </ClientOnly>
+            </div>
+
+            <div v-show="manualActiveTab === 'erd'" class="erd-container"
+              @wheel="handleErdWheel"
+              @mousedown="handleErdMousedown"
+              @mousemove="handleErdMousemove"
+              @mouseup="handleErdMouseup"
+              @mouseleave="handleErdMouseleave"
+            >
+              <img 
+                :src="erdImgUrl" 
+                class="erd-img"
+                :style="{ transform: `translate(${erdPanX}px, ${erdPanY}px) scale(${erdScale})` }"
+                draggable="false"
+              />
+              <button class="erd-reset-btn" @click="resetErdZoom" title="원래 크기로">
+                <IconEye width="16" height="16" /> 화면맞춤
+              </button>
+            </div>
+
+            <div v-if="manualActiveTab === 'github'" class="github-container">
+              <div class="github-placeholder">
+                <IconSparkle width="48" height="48" class="github-placeholder-icon" />
+                <h3>Github 저장소 안내</h3>
+                <p>보안 정책(X-Frame-Options)으로 인해 Github 페이지를 모달 내에 직접 표시할 수 없습니다.</p>
+                <a href="https://github.com/LeeHongSoek/Edu-Hub" target="_blank" rel="noopener noreferrer" class="btn-github-link">
+                  새 창에서 Github 열기
+                </a>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -2197,9 +2294,12 @@ input[type="password"] {
 .manual-modal {
   max-width: min(1180px, 98vw);
   width: 98%;
-  max-height: 92vh;
-  padding-bottom: 1.5rem;
-  overflow-x: hidden;
+  height: 90vh; /* Fixed height across all tabs */
+  padding: 1.5rem !important; /* Ensure content touches exactly where we want */
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 0 !important; /* Removes the 1.5rem gap inherited from .modal-box */
 }
 
 .manual-modal-header {
@@ -2243,10 +2343,10 @@ input[type="password"] {
   flex: 1;
   overflow-y: auto;
   overflow-x: hidden;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 5px;
-  padding: 1rem;
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  padding: 1.5rem;
   scrollbar-width: auto;
   scrollbar-color: rgba(165, 180, 252, 0.9) rgba(255, 255, 255, 0.08);
 }
@@ -2465,4 +2565,177 @@ input[type="password"] {
   letter-spacing: 0.01em;
 }
 
+.manual-tabs {
+  display: flex;
+  gap: 4px;
+  background-color: transparent;
+  padding: 0;
+  border-radius: 0;
+  border: none;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  margin-top: 16px;
+  width: 100%;
+}
+.manual-tab-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 18px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  border-radius: 6px 6px 0 0;
+  color: rgba(255, 255, 255, 0.6);
+  background: rgba(255, 255, 255, 0.05);
+  transition: all 0.2s;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-bottom: none;
+  cursor: pointer;
+}
+.manual-tab-btn:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.8);
+}
+.manual-tab-btn.active {
+  background-color: #2b2d31; /* Dark theme body color example from image */
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-bottom: none;
+  position: relative;
+}
+.manual-tab-btn.active::after {
+  content: "";
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: #2b2d31; /* Matches active tab to cover the bottom border */
+}
+.manual-modal-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  padding-bottom: 0 !important;
+  margin-bottom: 0 !important;
+}
+.manual-modal-header .modal-close {
+  position: absolute;
+  right: 24px;
+  top: 24px;
+}
+.manual-viewer-area {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  position: relative;
+  overflow: hidden;
+  background-color: #2b2d31; /* Match the active tab */
+  border-radius: 0 0 12px 12px;
+  border-left: 1px solid rgba(255, 255, 255, 0.1);
+  border-right: 1px solid rgba(255, 255, 255, 0.1);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  margin-top: 0 !important;
+}
+.erd-container {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  background-color: transparent;
+  cursor: grab;
+  position: relative;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.erd-container:active {
+  cursor: grabbing;
+}
+.erd-img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  transform-origin: center center;
+  will-change: transform;
+  pointer-events: none; /* Let container handle events */
+  user-select: none;
+  -webkit-user-drag: none;
+}
+.erd-reset-btn {
+  position: absolute;
+  bottom: 20px;
+  right: 20px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--color-text-main);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  transition: all 0.2s;
+}
+.erd-reset-btn:hover {
+  background: var(--color-bg-sub);
+  transform: translateY(-2px);
+}
+.github-container {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: transparent;
+}
+.github-placeholder {
+  text-align: center;
+  padding: 40px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  max-width: 400px;
+}
+.github-placeholder-icon {
+  opacity: 0.7;
+  margin-bottom: 8px;
+}
+.github-placeholder h3 {
+  font-size: 1.25rem;
+  color: #fff;
+  margin: 0;
+}
+.github-placeholder p {
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 0.95rem;
+  line-height: 1.5;
+  margin: 0;
+}
+.btn-github-link {
+  margin-top: 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  background-color: var(--color-primary);
+  color: #fff;
+  text-decoration: none;
+  font-weight: 500;
+  border-radius: 8px;
+  transition: all 0.2s;
+}
+.btn-github-link:hover {
+  filter: brightness(1.1);
+  transform: translateY(-2px);
+}
 </style>
