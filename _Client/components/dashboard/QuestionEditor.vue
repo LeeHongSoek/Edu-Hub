@@ -117,19 +117,8 @@ const handleDelete = async () => {
 <template>
   <div class="editor-overlay">
     <div class="editor-card">
-      <div class="editor-header">
-        <div class="header-left">
-          <span class="badge">문제 수정</span>
-          <h2 class="editor-title">{{ question.title }}</h2>
-        </div>
-        <button class="btn-close" @click="emit('close')">
-          <IconClose class="close-icon" />
-        </button>
-      </div>
-
       <div class="editor-body">
-        <div class="form-section">
-          <h3>기본 정보</h3>
+        <div class="form-section"> 
           <div class="form-group">
             <label>문제 제목</label>
             <input
@@ -150,15 +139,13 @@ const handleDelete = async () => {
             <div class="form-group flex-small">
               <label>난이도 (1-5)</label>
               <div class="slider-field">
-                <input
-                  v-model.number="editData.difficulty"
-                  type="range"
-                  min="1"
-                  max="5"
-                  step="1"
-                  class="range-input"
-                />
-                <div class="slider-meta">{{ editData.difficulty }}</div>
+                <PageSlider
+                      v-model="editData.difficulty"
+                      :min="1"
+                      :max="5"
+                        postfix=""
+                        :show-limits="false"
+                    />
               </div>
             </div>
             <div class="form-group flex-small">
@@ -173,15 +160,12 @@ const handleDelete = async () => {
             <div class="form-group flex-small">
               <label>평점 (1-5)</label>
               <div class="slider-field">
-                <input
-                  v-model.number="editData.rating"
-                  type="range"
-                  min="1"
-                  max="5"
-                  step="1"
-                  class="range-input"
-                />
-                <div class="slider-meta">{{ editData.rating }}</div>
+                <PageSlider
+                      v-model="editData.rating"
+                      :max="5"
+                        postfix="점"
+                        :show-limits="false"
+                    />
               </div>
             </div>
           </div>

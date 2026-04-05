@@ -8,11 +8,13 @@ const props = withDefaults(
     max: number;
     disabled?: boolean;
     postfix?: string;
+    showLimits?: boolean;
   }>(),
   {
     min: 1,
     disabled: false,
     postfix: "",
+    showLimits: true,
   },
 );
 
@@ -40,7 +42,7 @@ const handleChange = (event: Event) => {
 
 <template>
   <div class="page-slider-control" :class="{ disabled }">
-    <span class="slider-limit">{{ min }}</span>
+    <span v-if="showLimits" class="slider-limit">{{ min }}</span>
     <div class="slider-track-container">
       <input
         type="range"
@@ -61,12 +63,13 @@ const handleChange = (event: Event) => {
         {{ modelValue }}{{ postfix }}
       </div>
     </div>
-    <span class="slider-limit">{{ safeMax }}</span>
+    <span v-if="showLimits" class="slider-limit">{{ safeMax }}</span>
   </div>
 </template>
 
 <style scoped>
 .page-slider-control {
+  --slider-accent: rgba(92, 96, 222, 0.7);
   display: flex;
   align-items: center;
   gap: 0.85rem;
@@ -117,17 +120,17 @@ const handleChange = (event: Event) => {
   appearance: none;
   width: 20px;
   height: 20px;
-  background: #6366f1;
+  background: var(--slider-accent);
   border-radius: 50%;
   cursor: pointer;
-  box-shadow: 0 0 15px rgba(99, 102, 241, 0.4);
+  box-shadow: 0 0 12px rgba(99, 102, 241, 0.22);
   border: 2px solid #fff;
 }
 
 .slider-fill {
   position: absolute;
   height: 6px;
-  background: linear-gradient(90deg, #6366f1, #a855f7);
+  background: var(--slider-accent);
   border-radius: 3px;
   top: 50%;
   transform: translateY(-50%);
@@ -139,7 +142,7 @@ const handleChange = (event: Event) => {
   position: absolute;
   top: 32px;
   transform: translateX(-50%);
-  background: #6366f1;
+  background: var(--slider-accent);
   color: white;
   padding: 2px 8px;
   border-radius: 6px;
@@ -161,6 +164,6 @@ const handleChange = (event: Event) => {
   transform: translateX(-50%);
   border-left: 4px solid transparent;
   border-right: 4px solid transparent;
-  border-bottom: 4px solid #6366f1;
+  border-bottom: 4px solid var(--slider-accent);
 }
 </style>

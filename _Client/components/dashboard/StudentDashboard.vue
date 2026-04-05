@@ -50,7 +50,7 @@ const getDefaultDailyStats = () => {
 
 const fetchStats = async () => {
   try {
-    console.log("토큰값=", token.value);
+    console.log("[프런트엔드:토큰값]=", token.value);
     const data: any = await $fetch(`${apiBase.value}/dashboard/stats`, {
       headers: getAuthHeader(),
     });
