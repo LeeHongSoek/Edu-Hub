@@ -5,6 +5,10 @@ import { PrismaService } from '../common/prisma/prisma.service';
 export class ExamsService {
   constructor(private prisma: PrismaService) {}
 
+  private toDbLocalDate(date = new Date()) {
+    return new Date(date.getTime() - date.getTimezoneOffset() * 60000);
+  }
+
   private async writeExamLog(
     userNo: bigint,
     examId: bigint,
@@ -22,7 +26,7 @@ export class ExamsService {
         score,
         total_score: totalScore,
         score100,
-        last_played_at: new Date(),
+        last_played_at: this.toDbLocalDate(),
       },
     });
   }

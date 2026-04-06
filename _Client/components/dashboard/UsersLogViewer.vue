@@ -15,12 +15,12 @@ const loading = ref(true);
 
 const filterTypes = [
   { id: "all", label: "전체", color: "#636663" },
+  { id: "L", label: "로그인", icon: IconHome, color: "#64748b" },
   { id: "Q", label: "문제", icon: IconFileText, color: "#6366f1" },
   { id: "B", label: "문제집", icon: IconBook, color: "#10b981" },
   { id: "E", label: "고사", icon: IconPencil, color: "#f59e0b" },
   { id: "C", label: "클래스", icon: IconClassRoom, color: "#06b6d4" },
   { id: "R", label: "관계", icon: IconUsers, color: "#a855f7" },
-  { id: "L", label: "로그인", icon: IconHome, color: "#64748b" },
 ];
 
 const selectedType = ref("all");
@@ -102,7 +102,12 @@ const getLogTypeInfo = (type: string) => {
 };
 
 const formatResult = (log: any) => {
-  if (log.logtype === "Q" || log.score == null || log.total_score == null)
+  if (
+    log.logtype !== "Q" ||
+    log.score == null ||
+    log.total_score == null ||
+    Number(log.total_score) <= 0
+  )
     return null;
   const scoreText = `${log.score}/${log.total_score}`;
   const percentText = log.score100 !== undefined ? `(${log.score100}점)` : "";
@@ -112,11 +117,31 @@ const formatResult = (log: any) => {
 const formatTime = (dateStr: string) => {
   const date = new Date(dateStr);
   return date.toLocaleString("ko-KR", {
+    timeZone: "Asia/Seoul",
     month: "short",
     day: "numeric",
     hour: "2-digit",
     minute: "2-digit",
   });
+};
+
+const formatRecentTime = (dateStr: string) => {
+  const date = new Date(dateStr);
+  const diffMs = Date.now() - date.getTime();
+  const diffMinutes = Math.floor(diffMs / 60000);
+
+  if (diffMinutes >= 0 && diffMinutes < 60) {
+    return `${Math.max(1, diffMinutes)}분 전`;
+  }
+
+  return formatTime(dateStr);
+};
+
+const isRecentTime = (dateStr: string) => {
+  const date = new Date(dateStr);
+  const diffMs = Date.now() - date.getTime();
+  const diffMinutes = Math.floor(diffMs / 60000);
+  return diffMinutes >= 0 && diffMinutes < 60;
 };
 </script>
 
@@ -201,7 +226,12 @@ const formatTime = (dateStr: string) => {
                 class="log-action-memo"
                 :title="log.title"
                 >{{ log.title }}</span>
-              <span class="log-time">{{ formatTime(log.last_played_at) }}</span>
+              <span
+                class="log-time"
+                :class="{ 'log-time-recent': isRecentTime(log.created_at || log.last_played_at) }"
+                >{{
+                  formatRecentTime(log.created_at || log.last_played_at)
+                }}</span>
             </div>
             <div class="log-title-row">
               <div class="log-title" :title="log.user_content">
@@ -474,6 +504,11 @@ const formatTime = (dateStr: string) => {
   color: #64748b;
   font-weight: 500;
   flex-shrink: 0;
+}
+
+.log-time-recent {
+  color: #f8fafc;
+  font-weight: 800;
 }
 
 .log-title-row {

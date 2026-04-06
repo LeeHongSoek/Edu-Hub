@@ -1,9 +1,14 @@
 import { Injectable } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import { PrismaService } from '../common/prisma/prisma.service';
 
 @Injectable()
 export class UserLogsService {
   constructor(private prisma: PrismaService) {}
+
+  private toDbLocalDate(date = new Date()) {
+    return new Date(date.getTime() - date.getTimezoneOffset() * 60000);
+  }
 
   private async resolveLogTitle(log: {
     logtype: string;
@@ -74,7 +79,7 @@ export class UserLogsService {
         score: data.score || 0,
         total_score: data.total_score || 0,
         score100: data.score100 || 0,
-        last_played_at: new Date(),
+        last_played_at: this.toDbLocalDate(),
       },
     });
   }
@@ -96,18 +101,38 @@ export class UserLogsService {
       where.user_content = { contains: search };
     }
 
-    const [logs, total] = await Promise.all([
-      this.prisma.userLog.findMany({
-        where,
-        include: {
-          type: true,
-        },
-        orderBy: { last_played_at: 'desc' },
-        skip: (page - 1) * limit,
-        take: limit,
-      }),
-      this.prisma.userLog.count({ where }),
+    const filters = [
+      Prisma.sql`user_no = ${userNo}`,
+      ...(logtype && logtype !== 'all'
+        ? [Prisma.sql`logtype_id = ${logtype}`]
+        : []),
+      ...(search
+        ? [Prisma.sql`user_content LIKE ${`%${search}%`}`]
+        : []),
+    ];
+
+    const whereSql =
+      filters.length > 0
+        ? Prisma.sql`WHERE ${Prisma.join(filters, ' AND ')}`
+        : Prisma.empty;
+
+    const [logs, totalResult] = await Promise.all([
+      this.prisma.$queryRaw<any[]>(Prisma.sql`
+        SELECT *
+        FROM users_logs
+        ${whereSql}
+        ORDER BY created_at DESC, log_id DESC
+        LIMIT ${limit}
+        OFFSET ${(page - 1) * limit}
+      `),
+      this.prisma.$queryRaw<Array<{ total: bigint }>>(Prisma.sql`
+        SELECT COUNT(*) AS total
+        FROM users_logs
+        ${whereSql}
+      `),
     ]);
+
+    const total = Number(totalResult[0]?.total ?? 0);
 
     // Resolve titles for polymorphic obj_id (only for paginated items)
     const resolvedLogs = await Promise.all(
@@ -127,13 +152,13 @@ export class UserLogsService {
   }
 
   async findByObject(userNo: bigint, logtype: string, objId: bigint) {
-    return this.prisma.userLog.findMany({
-      where: {
-        user_no: userNo,
-        logtype: logtype,
-        obj_id: objId,
-      },
-      orderBy: { last_played_at: 'desc' },
-    });
+    return this.prisma.$queryRaw(Prisma.sql`
+      SELECT *
+      FROM users_logs
+      WHERE user_no = ${userNo}
+        AND logtype_id = ${logtype}
+        AND obj_id = ${objId}
+      ORDER BY created_at DESC, log_id DESC
+    `);
   }
 }

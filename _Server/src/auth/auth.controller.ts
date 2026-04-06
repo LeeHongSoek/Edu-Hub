@@ -38,4 +38,11 @@ export class AuthController {
     const userNo = BigInt(req.user.user_no);
     return this.authService.updateProfile(userNo, body);
   }
+
+  @UseGuards(JwtAuthGuard)
+  @Post('logout')
+  async logout(@Request() req, @Body() body: { reason?: 'manual' | 'expired' | 'invalid' }) {
+    const userNo = BigInt(req.user.user_no);
+    return this.authService.logout(userNo, req.user.username, body?.reason || 'manual');
+  }
 }

@@ -18,10 +18,32 @@ const decodeJwtPayload = (token: string) => {
 export const useAuthSession = () => {
   const authToken = useCookie<string | null>("auth_token");
   const userCookie = useCookie<string | null>("user_info");
+  const { apiBase } = useApi();
+
+  const writeLogoutLog = async (
+    reason: "manual" | "expired" | "invalid",
+  ) => {
+    if (!authToken.value || !userCookie.value) return;
+
+    try {
+      await $fetch(`${apiBase.value}/auth/logout`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${authToken.value}`,
+        },
+        body: {
+          reason,
+        },
+      });
+    } catch {
+      // logout logging should not block session cleanup
+    }
+  };
 
   const clearSession = async (
     reason: "manual" | "expired" | "invalid" = "manual",
   ) => {
+    await writeLogoutLog(reason);
     authToken.value = null;
     userCookie.value = null;
 

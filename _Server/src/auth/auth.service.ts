@@ -10,6 +10,10 @@ export class AuthService {
     private jwtService: JwtService,
   ) { }
 
+  private toDbLocalDate(date = new Date()) {
+    return new Date(date.getTime() - date.getTimezoneOffset() * 60000);
+  }
+
   async validateUser(userId: string, pass: string): Promise<any> {
     const user = await this.prisma.user.findUnique({
       where: { user_id: userId },
@@ -29,6 +33,19 @@ export class AuthService {
       WHERE user_no = ${user.user_no}
     `;
 
+    await this.prisma.userLog.create({
+      data: {
+        user_no: user.user_no,
+        logtype: 'L',
+        obj_id: BigInt(0),
+        user_content: `로그인 성공: 사용자 #${user.user_no.toString()} [${user.username}]`,
+        score: 1,
+        total_score: 1,
+        score100: 100,
+        last_played_at: this.toDbLocalDate(),
+      },
+    });
+
     const payload = {
       username: user.username,
       sub: user.user_no.toString(),
@@ -46,6 +63,34 @@ export class AuthService {
         msgAlert: 'none'
       }
     };
+  }
+
+  async logout(
+    userNo: bigint,
+    username?: string,
+    reason: 'manual' | 'expired' | 'invalid' = 'manual',
+  ) {
+    const reasonText =
+      reason === 'manual'
+        ? '로그아웃'
+        : reason === 'expired'
+          ? '세션 만료로 자동 로그아웃'
+          : '인증 오류로 강제 로그아웃';
+
+    await this.prisma.userLog.create({
+      data: {
+        user_no: userNo,
+        logtype: 'L',
+        obj_id: BigInt(0),
+        user_content: `${reasonText}: 사용자 #${userNo.toString()} [${username || '이름 없음'}]`,
+        score: 0,
+        total_score: 1,
+        score100: 0,
+        last_played_at: this.toDbLocalDate(),
+      },
+    });
+
+    return { ok: true };
   }
 
   async register(userData: any) {

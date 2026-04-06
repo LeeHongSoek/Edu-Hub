@@ -5,6 +5,10 @@ import { PrismaService } from '../common/prisma/prisma.service';
 export class QuestionBooksService {
   constructor(private prisma: PrismaService) { }
 
+  private toDbLocalDate(date = new Date()) {
+    return new Date(date.getTime() - date.getTimezoneOffset() * 60000);
+  }
+
   private async writeBookLog(
     userNo: bigint,
     bookId: bigint,
@@ -22,7 +26,7 @@ export class QuestionBooksService {
         score,
         total_score: totalScore,
         score100,
-        last_played_at: new Date(),
+        last_played_at: this.toDbLocalDate(),
       },
     });
   }

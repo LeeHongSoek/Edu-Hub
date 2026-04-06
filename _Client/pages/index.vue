@@ -23,8 +23,10 @@ import IconClose from "~/assets/icons/IconClose.svg?component";
 import IconInfo from "~/assets/icons/IconInfo.svg?component";
 import IconManual from "~/assets/icons/IconManual.svg?component";
 import NumberAnimation from "vue-number-animation";
+import { useAuthSession } from "~/composables/useAuthSession";
 
 const { apiBase } = useApi();
+const { clearSession } = useAuthSession();
 
 const currentRootUrl = ref("");
 
@@ -184,12 +186,7 @@ const loggedInUser = computed(() => {
 const showUserModal = ref(false);
 
 function handleLogout() {
-  const token = useCookie("auth_token");
-  token.value = null;
-  userCookie.value = null;
-  if (typeof window !== "undefined") {
-    sessionStorage.setItem("auth_logout_reason", "manual");
-  }
+  void clearSession("manual");
 }
 
 // 비밀번호 표시 토글
