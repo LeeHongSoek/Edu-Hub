@@ -90,14 +90,12 @@ const toggleExpand = (event: Event) => {
         'is-owned': isOwned,
         'is-all-group': isAllGroup,
       }"
-      @click="emit('select-group', group.group_id)"
-    >
+      @click="emit('select-group', group.group_id)">
       <span
         v-if="group.child_groups && group.child_groups.length > 0"
         class="toggle-icon"
         :class="{ 'is-expanded': isExpanded }"
-        @click="toggleExpand"
-      >
+        @click="toggleExpand">
         <IconArrowRight class="toggle-icon-svg" />
       </span>
       <span v-else class="bullet">•</span>
@@ -109,8 +107,7 @@ const toggleExpand = (event: Event) => {
 
     <div
       v-if="isExpanded && group.child_groups && group.child_groups.length > 0"
-      class="child-nodes"
-    >
+      class="child-nodes">
       <GroupTreeNode
         v-for="child in group.child_groups"
         :key="child.group_id"

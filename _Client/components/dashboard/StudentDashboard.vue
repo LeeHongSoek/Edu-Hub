@@ -142,8 +142,7 @@ const chartOptions = {
       <div class="stat-info">
         <span class="label">총 푼 문제</span>
         <span class="value"
-          >{{ stats.totalSolved }} / {{ stats.totalViewed }}개</span
-        >
+          >{{ stats.totalSolved }} / {{ stats.totalViewed }}개</span>
       </div>
     </div>
 

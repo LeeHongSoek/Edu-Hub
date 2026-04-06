@@ -115,8 +115,7 @@ const formatTime = (dateStr: string) => {
             :key="type.id"
             :class="{ active: selectedType === type.id }"
             :style="{ '--active-color': type.color }"
-            @click="selectedType = type.id"
-          >
+            @click="selectedType = type.id">
             <component :is="type.icon" v-if="type.icon" class="filter-btn-icon" />
             {{ type.label }}
           </button>

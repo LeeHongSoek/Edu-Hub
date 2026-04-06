@@ -880,8 +880,7 @@ watch(
             <button
               class="btn-manage-groups"
               title="그룹 관리"
-              @click="showGroupManager = true"
-            >
+              @click="showGroupManager = true">
               <IconSettings class="settings-icon" />
               <span class="btn-manage-label">그룹 관리</span>
             </button>           
@@ -897,8 +896,7 @@ watch(
             <button
               v-if="groupSearchInput"
               class="group-search-clear"
-              @click="groupSearchInput = ''"
-            >
+              @click="groupSearchInput = ''">
               초기화
             </button>
           </div>
@@ -914,8 +912,7 @@ watch(
         />
         <div
           v-if="groupSearchInput && searchedGroups.groups.length === 0"
-          class="group-search-empty"
-        >
+          class="group-search-empty">
           검색 결과가 없습니다.
         </div>
       </div>
@@ -952,29 +949,25 @@ watch(
                   <button                      
                     class="btn-delete"
                     :disabled="!canDeleteQuestions"
-                    @click="deleteSelectedQuestions"
-                  >
+                    @click="deleteSelectedQuestions">
                     <IconDeleteAction class="btn-action-icon" />
                     삭제
                   </button>
                   <button                    
                     class="btn-bulk-action"
                     :disabled="!canBulkSolveQuestions"
-                    @click="openBulkSolveModal"
-                  >
+                    @click="openBulkSolveModal">
                     모아<br/>풀기
                   </button>
                   <button                    
                     class="btn-bulk-action"
-                    :disabled="!canDeleteQuestions"
-                  >
+                    :disabled="!canDeleteQuestions">
                     문제집<br/>만들기
                   </button>
                   <button
                     v-if="(props.selectionContext || 'A') === 'A'"
                     class="btn-bulk-action"
-                    :disabled="!canDeleteQuestions"
-                  >
+                    :disabled="!canDeleteQuestions">
                     고사집<br/>만들기
                   </button>
                 </div>
@@ -994,8 +987,7 @@ watch(
                   v-if="(props.selectionContext || 'A') === 'A'"
                   class="scope-toggle"
                   role="tablist"
-                  aria-label="범주 선택"
-                >
+                  aria-label="범주 선택">
                   <button
                     type="button"
                     class="scope-btn"
@@ -1015,8 +1007,7 @@ watch(
                   v-if="props.selectionContext === 'B'"
                   class="scope-toggle"
                   role="tablist"
-                  aria-label="범주 선택"
-                >
+                  aria-label="범주 선택">
                   <button
                     type="button"
                     class="scope-btn"
@@ -1036,8 +1027,7 @@ watch(
                   v-if="props.selectionContext === 'C'"
                   class="scope-toggle"
                   role="tablist"
-                  aria-label="범주 선택"
-                >
+                  aria-label="범주 선택">
                   <button
                     type="button"
                     class="scope-btn"
@@ -1075,8 +1065,7 @@ watch(
                 <button
                   v-if="props.appliedSearchKeyword || searchInput"
                   class="btn-reset-search"
-                  @click="resetSearch"
-                >
+                  @click="resetSearch">
                   초기화
                 </button>
               </div>
@@ -1095,8 +1084,7 @@ watch(
                   <span class="selected-count">
                     · {{ selectedQuestionCount }}개 선택됨
                   </span>
-                </span
-                >
+                </span>
                 <div class="page-slider-section">
                   <PageSlider
                     v-model="sliderValue"
@@ -1108,8 +1096,7 @@ watch(
                 </div>
                 <span class="range-text"
                   >{{ pageStartItem }}-{{ pageEndItem }}번째 문제 표시
-                  중</span
-                >
+                  중</span>
               </div>
             </div>
           </div>
@@ -1125,8 +1112,7 @@ watch(
             <div
               v-for="q in props.questions"
               :key="q.question_id"
-              class="question-item"
-            >
+              class="question-item">
               <div class="question-header">
                 <div class="question-title-row">
                   <h3 class="question-id">{{ q.question_id }}</h3>
@@ -1142,13 +1128,11 @@ watch(
                   <span
                     v-if="q.creator?.username && shouldShowQuestionOwner(q)"
                     class="question-separator"
-                    >·</span
-                  >
+                    >·</span>
                   <span
                     v-if="q.creator?.username && shouldShowQuestionOwner(q)"
                     class="question-owner"
-                    >{{ q.creator?.username }}</span
-                  >
+                    >{{ q.creator?.username }}</span>
                   
                 </div>
               </div>
@@ -1165,8 +1149,7 @@ watch(
                   class="question-content"
                   :class="{ 'is-interactive': !((props.selectionContext || 'A') === 'A' && !canEditQuestion(q)) }"
                   @click="!((props.selectionContext || 'A') === 'A' && !canEditQuestion(q)) && toggleQuestionSelected(q.question_id, !isQuestionSelected(q.question_id))"
-                  :style="{ cursor: ((props.selectionContext || 'A') === 'A' && !canEditQuestion(q)) ? 'default' : 'pointer' }"
-                >
+                  :style="{ cursor: ((props.selectionContext || 'A') === 'A' && !canEditQuestion(q)) ? 'default' : 'pointer' }">
                   <LatexRenderer :text="q.question" class="question-preview" />
                 </div>
 

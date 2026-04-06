@@ -167,8 +167,7 @@ const saveMembers = async () => {
               <section
                 class="member-list-panel"
                 @dragover.prevent
-                @drop.prevent="handleDrop('assigned')"
-              >
+                @drop.prevent="handleDrop('assigned')">
                 <div class="member-list-header">
                   <strong>클래스 소속 학생</strong>
                   <span>{{ assignedStudents.length }}명</span>
@@ -180,8 +179,7 @@ const saveMembers = async () => {
                     class="member-chip"
                     draggable="true"
                     @dragstart="handleDragStart(student, 'assigned')"
-                    @dragend="handleDragEnd"
-                  >
+                    @dragend="handleDragEnd">
                     <span class="member-name">{{ student.username }}</span>
                     <span class="member-id">{{ student.userId }}</span>
                   </button>
@@ -196,8 +194,7 @@ const saveMembers = async () => {
               <section
                 class="member-list-panel"
                 @dragover.prevent
-                @drop.prevent="handleDrop('available')"
-              >
+                @drop.prevent="handleDrop('available')">
                 <div class="member-list-header">
                   <strong>담당 학생 중 미배정</strong>
                   <span>{{ availableStudents.length }}명</span>
@@ -209,8 +206,7 @@ const saveMembers = async () => {
                     class="member-chip"
                     draggable="true"
                     @dragstart="handleDragStart(student, 'available')"
-                    @dragend="handleDragEnd"
-                  >
+                    @dragend="handleDragEnd">
                     <span class="member-name">{{ student.username }}</span>
                     <span class="member-id">{{ student.userId }}</span>
                   </button>

@@ -337,30 +337,26 @@ onUnmounted(() => {
         <button
           :class="{ active: activeTab === 'stats' }"
           :aria-pressed="activeTab === 'stats'"
-          @click="activeTab = 'stats'"
-        >
+          @click="activeTab = 'stats'">
           <IconChart class="tab-icon" /> 요약 통계
         </button>
         <button
           :class="{ active: activeTab === 'relations' }"
           :aria-pressed="activeTab === 'relations'"
-          @click="activeTab = 'relations'"
-        >
+          @click="activeTab = 'relations'">
           <IconUsers class="tab-icon" /> 관계 관리
         </button>
         <button
           :class="{ active: activeTab === 'messages' }"
           :aria-pressed="activeTab === 'messages'"
-          @click="activeTab = 'messages'"
-        >
+          @click="activeTab = 'messages'">
           <IconMessage class="tab-icon" /> 메시지 함
         </button>
         <button
           v-if="shouldShowClassList"
           :class="{ active: activeTab === 'classes' }"
           :aria-pressed="activeTab === 'classes'"
-          @click="activeTab = 'classes'"
-        >
+          @click="activeTab = 'classes'">
           <IconClassRoom class="tab-icon" /> {{ classTabLabel }}
         </button>
 
@@ -368,8 +364,7 @@ onUnmounted(() => {
           v-if="userInfo.role_id === 'S'"
           :class="{ active: activeTab === 'logs' }"
           :aria-pressed="activeTab === 'logs'"
-          @click="activeTab = 'logs'"
-        >
+          @click="activeTab = 'logs'">
           <IconCalendar class="tab-icon" /> 활동 로그
         </button>
       </div>
@@ -418,8 +413,7 @@ onUnmounted(() => {
               <article
                 v-for="item in classList"
                 :key="item.classId"
-                class="class-card"
-              >
+                class="class-card">
                 <div class="class-card-top">
                   <button class="class-link" >
                     {{ item.className }}
@@ -491,15 +485,13 @@ onUnmounted(() => {
               <button
                 class="btn-reject"
                 :disabled="isPendingActionLoading"
-                @click="handlePendingAction('reject')"
-              >
+                @click="handlePendingAction('reject')">
                 거절
               </button>
               <button
                 class="btn-accept"
                 :disabled="isPendingActionLoading"
-                @click="handlePendingAction('accept')"
-              >
+                @click="handlePendingAction('accept')">
                 {{ isPendingActionLoading ? '처리중...' : '수락' }}
               </button>
             </div>

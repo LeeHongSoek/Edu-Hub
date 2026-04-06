@@ -20,24 +20,21 @@ defineProps<{
       <NuxtLink
         :to="isDashboard ? '/questions?mine=true' : '/questions'"
         class="nav-btn"
-        :class="{ active: activePage === 'questions' }"
-      >
+        :class="{ active: activePage === 'questions' }">
         <IconFileText class="nav-icon" />
         문제 목록
       </NuxtLink>
       <NuxtLink
         to="/question-books"
         class="nav-btn"
-        :class="{ active: activePage === 'books' }"
-      >
+        :class="{ active: activePage === 'books' }">
         <IconBook class="nav-icon" />
         문제집 목록
       </NuxtLink>
       <NuxtLink
         to="/exams"
         class="nav-btn"
-        :class="{ active: activePage === 'exams' }"
-      >
+        :class="{ active: activePage === 'exams' }">
         <IconPencil class="nav-icon" />
         고사집 목록
       </NuxtLink>

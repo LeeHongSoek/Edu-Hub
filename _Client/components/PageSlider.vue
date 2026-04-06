@@ -58,8 +58,7 @@ const handleChange = (event: Event) => {
       <div
         v-if="!disabled"
         class="slider-tooltip"
-        :style="{ left: percentage + '%' }"
-      >
+        :style="{ left: percentage + '%' }">
         {{ modelValue }}{{ postfix }}
       </div>
     </div>

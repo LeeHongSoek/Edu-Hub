@@ -144,8 +144,7 @@ onMounted(() => {
           v-if="userInfo"
           href="#"
           class="ombudsman-link"
-          @click.prevent="showOmbudsmanModal = true"
-        >
+          @click.prevent="showOmbudsmanModal = true">
           <IconFeedback class="icon-feedback" />
           옴브즈먼
         </a>
@@ -154,14 +153,12 @@ onMounted(() => {
       <nav class="nav-links">
         <template v-if="userInfo">
           <NuxtLink to="/dashboard" class="nav-path-box path-home">
-            <IconHome class="icon-home" />
-            홈(대시보드)
+            <IconHome class="icon-home" />홈(대시보드)
           </NuxtLink>
           <a
             href="#"
             class="user-greeting"
-            @click.prevent="showUserModal = true"
-          >
+            @click.prevent="showUserModal = true">
             <IconUser class="icon-user" />
             {{ userInfo.username }} <{{ userInfo.user_no }}>님
           </a>
@@ -169,8 +166,7 @@ onMounted(() => {
             to="/dashboard?tab=messages&view=received"
             class="message-badge"
             title="받은 메시지 확인"
-            @click.prevent="handleMessageBadgeClick('click')"
-          >
+            @click.prevent="handleMessageBadgeClick('click')">
             <IconMessage class="icon-message" aria-hidden="true" />
             <!-- [{{ userInfo.msgAlert }}] -->
           </NuxtLink>         

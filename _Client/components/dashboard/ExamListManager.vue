@@ -450,15 +450,13 @@ const deleteSelectedExams = async () => {
               v-if="showScopeToggle"
               class="scope-toggle"
               role="tablist"
-              aria-label="고사집 범위 선택"
-            >
+              aria-label="고사집 범위 선택">
               <button
                 type="button"
                 class="scope-btn"
                 :class="{ active: listScope === 'mine' }"
                 :aria-pressed="listScope === 'mine'"
-                @click="setScope('mine')"
-              >
+                @click="setScope('mine')">
                 나의 고사집
               </button>
               <button
@@ -466,8 +464,7 @@ const deleteSelectedExams = async () => {
                 class="scope-btn"
                 :class="{ active: listScope === 'all' }"
                 :aria-pressed="listScope === 'all'"
-                @click="setScope('all')"
-              >
+                @click="setScope('all')">
                 전체 고사집
               </button>
             </div>
@@ -482,15 +479,13 @@ const deleteSelectedExams = async () => {
             <button
               v-if="examSearchQuery"
               class="btn-reset-search"
-              @click="clearExamSearch"
-            >
+              @click="clearExamSearch">
               초기화
             </button>
           </div>
           <div class="slider-row">
             <span class="summary-text"
-              >총 {{ filteredExams.length }}개의 고사집</span
-            >
+              >총 {{ filteredExams.length }}개의 고사집</span>
             <div class="page-slider-section">
               <PageSlider
                 v-model="sliderValue"
@@ -501,8 +496,7 @@ const deleteSelectedExams = async () => {
               />
             </div>
             <span class="range-text"
-              >{{ pageStartItem }}-{{ pageEndItem }}번째 항목 표시 중</span
-            >
+              >{{ pageStartItem }}-{{ pageEndItem }}번째 항목 표시 중</span>
           </div>
         </div>
       </div>
@@ -574,14 +568,12 @@ const deleteSelectedExams = async () => {
               <select
                 id="exam-class"
                 v-model="createForm.classId"
-                class="form-input"
-              >
+                class="form-input">
                 <option value="">지정클래스 없음</option>
                 <option
                   v-for="classItem in assignableClasses"
                   :key="classItem.classId"
-                  :value="classItem.classId"
-                >
+                  :value="classItem.classId">
                   {{ classItem.className }}
                 </option>
               </select>

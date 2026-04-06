@@ -212,13 +212,11 @@ onBeforeUnmount(() => {
   <div
     ref="rootRef"
     class="datetime-picker"
-    :class="`size-${normalizedSize}`"
-  >
+    :class="`size-${normalizedSize}`">
     <button
       type="button"
       class="form-input form-input-datetime form-input-datetime-trigger"
-      @click.stop="openPicker"
-    >
+      @click.stop="openPicker">
       <span class="datetime-trigger-value">{{ displayValue }}</span>
       <IconCalendar class="datetime-trigger-icon" />
     </button>
@@ -227,8 +225,7 @@ onBeforeUnmount(() => {
       v-if="isOpen"
       class="datetime-popover"
       :class="{ 'align-right': align === 'right' }"
-      @click.stop
-    >
+      @click.stop>
       <div class="datetime-popover-header">
         <button type="button" class="picker-nav-btn" @click="shiftPickerMonth(-1)">‹</button>
         <strong>{{ pickerMonthLabel }}</strong>
@@ -251,8 +248,7 @@ onBeforeUnmount(() => {
             'is-today': cell.isToday,
           }"
           @click="selectPickerDay(cell.value)"
-          @dblclick="selectPickerDay(cell.value, true)"
-        >
+          @dblclick="selectPickerDay(cell.value, true)">
           {{ cell.label }}
         </button>
       </div>

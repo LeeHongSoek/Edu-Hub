@@ -304,8 +304,7 @@ const setScope = (scope: "mine" | "all") => {
               v-if="showScopeToggle"
               class="scope-toggle"
               role="tablist"
-              aria-label="문제집 범위 선택"
-            >
+              aria-label="문제집 범위 선택">
               <button
                 type="button"
                 class="scope-btn"
@@ -338,15 +337,13 @@ const setScope = (scope: "mine" | "all") => {
             <button
               v-if="searchQuery"
               class="btn-reset-search"
-              @click="clearSearch"
-            >
+              @click="clearSearch">
               초기화
             </button>
           </div>
           <div class="slider-row">
             <span class="summary-text"
-              >총 {{ filteredBooks.length }}개 문제집</span
-            >
+              >총 {{ filteredBooks.length }}개 문제집</span>
             <div class="page-slider-section">
               <PageSlider
                 v-model="sliderValue"
@@ -357,8 +354,7 @@ const setScope = (scope: "mine" | "all") => {
               />
             </div>
             <span class="range-text"
-              >{{ pageStartItem }}-{{ pageEndItem }}번째 항목 표시 중</span
-            >
+              >{{ pageStartItem }}-{{ pageEndItem }}번째 항목 표시 중</span>
           </div>
         </div>
       </div>
@@ -376,8 +372,7 @@ const setScope = (scope: "mine" | "all") => {
                   !isCurrentUserOwner(book.creator.user_no)
                 "
                 class="book-owner-badge"
-                >{{ book.creator.username }}</span
-              >
+                >{{ book.creator.username }}</span>
             </div>
             <div class="book-headline-right">
               <span class="book-count-badge" >
@@ -404,8 +399,7 @@ const setScope = (scope: "mine" | "all") => {
                 <span
                   class="book-title"
                   :class="{ selectable: isCurrentUserOwner(book.creator?.user_no) }"
-                  @click="toggleBookSelectedByTitle(book)"
-                >
+                  @click="toggleBookSelectedByTitle(book)">
                   {{ book.book_name }}
                 </span>
               </h4>
@@ -413,8 +407,7 @@ const setScope = (scope: "mine" | "all") => {
             </div>
             <div
               v-if="isCurrentUserOwner(book.creator?.user_no)"
-              class="book-card-actions"
-            >
+              class="book-card-actions">
               <button class="btn-view btn-card-action" @click="openEditModal(book)">수정</button>
               <button class="btn-start btn-card-action" @click="viewBookDetails(book.book_id)">문제등록</button>
             </div>
@@ -427,8 +420,7 @@ const setScope = (scope: "mine" | "all") => {
     <div
       v-if="showCreateModal"
       class="modal-overlay"
-      @click.self="closeCreateModal"
-    >
+      @click.self="closeCreateModal">
       <div class="modal-content">
         <div class="modal-header">
           <h3>{{ modalTitle }}</h3>

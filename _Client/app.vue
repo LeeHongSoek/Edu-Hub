@@ -5,8 +5,7 @@
     class="mobile-blocker"
     role="dialog"
     aria-modal="true"
-    aria-labelledby="mobile-blocker-title"
-  >
+    aria-labelledby="mobile-blocker-title">
     <div class="mobile-blocker-card">
       <div class="mobile-blocker-badge">PC 전용</div>
       <h1 id="mobile-blocker-title">이 서비스는 PC에서만 이용할 수 있습니다</h1>
