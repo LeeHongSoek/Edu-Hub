@@ -263,9 +263,6 @@ const isRecentTime = (dateStr: string) => {
                 >{{
                   formatRecentTime(log.created_at)
                 }}</span>
-              <span class="log-time-detail" v-if="log.created_at">
-                {{ formatExactTime(log.created_at) }}
-              </span>
             </div>
             <div class="log-title-row">
               <div class="log-title" :title="log.user_content">
