@@ -875,7 +875,7 @@ watch(
     <div class="question-list-row">
       <div class="group-overlay">
         <div class="group-overlay-header">
-          <span>문제 그룹</span>
+          <span>문제분류 그룹</span>
           <div v-if="(props.selectionContext || 'A') === 'A'" class="header-actions">
             <button
               class="btn-manage-groups"
@@ -2157,6 +2157,8 @@ watch(
   font-size: 0.7rem;
   font-weight: 600;
   color: #94a3b8;
+  text-decoration: underline;
+  text-underline-offset: 0.16em;
   text-transform: none;
   letter-spacing: 0;
   white-space: nowrap;

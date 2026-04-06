@@ -153,12 +153,10 @@ onMounted(() => {
       </div>
       <nav class="nav-links">
         <template v-if="userInfo">
-          <div class="nav-path-box">
-            <NuxtLink to="/dashboard" class="path-home">
-              <IconHome class="icon-home" />
-              홈(대시보드)
-            </NuxtLink>
-          </div>
+          <NuxtLink to="/dashboard" class="nav-path-box path-home">
+            <IconHome class="icon-home" />
+            홈(대시보드)
+          </NuxtLink>
           <a
             href="#"
             class="user-greeting"
@@ -442,8 +440,10 @@ onMounted(() => {
   backdrop-filter: blur(4px);
   font-size: 0.9rem;
   color: #94a3b8;
+  text-decoration: none;
+  cursor: pointer;
 }
-.nav-path-box .path-home {
+.nav-path-box.path-home {
   display: flex;
   align-items: center;
   gap: 0.3rem;
