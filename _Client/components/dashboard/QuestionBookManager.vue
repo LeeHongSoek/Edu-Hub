@@ -220,6 +220,11 @@ const toggleBookSelected = (
   selectedBookIds.value = selectedBookIds.value.filter((id) => id !== idKey);
 };
 
+const toggleBookSelectedByTitle = (book: any) => {
+  if (!isCurrentUserOwner(book.creator?.user_no)) return;
+  toggleBookSelected(book.book_id, !isBookSelected(book.book_id));
+};
+
 const deleteSelectedBooks = async () => {
   if (!canDeleteBooks.value) return;
   const ok = window.confirm(
@@ -360,56 +365,59 @@ const setScope = (scope: "mine" | "all") => {
       <div class="book-grid">
         <div v-for="book in pagedBooks" :key="book.book_id" class="book-card">
           <div class="book-card-head">
-            <span class="book-id">{{ book.book_id }}</span>
-            <p class="book-description">
-              {{ book.description || "설명 없음" }}
-            </p>
-            <span class="book-meta">
+            <div class="book-headline-left">
+              <span class="book-id">{{ book.book_id }}</span>
+               <p class="book-description">
+                {{ book.description || "설명 없음" }}
+              </p>
               <span
                 v-if="
                   book.creator?.username &&
                   !isCurrentUserOwner(book.creator.user_no)
                 "
-                class="book-owner"
+                class="book-owner-badge"
                 >{{ book.creator.username }}</span
               >
-              <span
-                v-if="
-                  book.creator?.username &&
-                  !isCurrentUserOwner(book.creator.user_no)
-                "
-                class="book-separator"
-                >·</span
-              >
-              <span class="book-name-link" @click="viewBookDetails(book.book_id)" >문제 수: {{ book.items?.length || 0 }}개</span>
-            </span>
+            </div>
+            <div class="book-headline-right">
+              <span class="book-count-badge" >
+                {{ book.items?.length || 0 }} 문제
+              </span>
+            </div>
           </div>
           <div class="book-card-body">
-            <h4>
-              <input
-                type="checkbox"
-                class="copy-checkbox"
-                aria-label="문제집 선택"
-                :checked="isBookSelected(book.book_id)"
-                :disabled="!isCurrentUserOwner(book.creator?.user_no)"
-                @change="
-                  toggleBookSelected(
-                    book.book_id,
-                    ($event.target as HTMLInputElement).checked,
-                  )
-                "
-              />
-              <span class="book-title book-name-link" @click="viewBookDetails(book.book_id)">
-                {{ book.book_name }}
-              </span>
-            </h4>
-            <button
+            <div class="book-main">
+              <h4>
+                <input
+                  type="checkbox"
+                  class="copy-checkbox"
+                  aria-label="문제집 선택"
+                  :checked="isBookSelected(book.book_id)"
+                  :disabled="!isCurrentUserOwner(book.creator?.user_no)"
+                  @change="
+                    toggleBookSelected(
+                      book.book_id,
+                      ($event.target as HTMLInputElement).checked,
+                    )
+                  "
+                />
+                <span
+                  class="book-title"
+                  :class="{ selectable: isCurrentUserOwner(book.creator?.user_no) }"
+                  @click="toggleBookSelectedByTitle(book)"
+                >
+                  {{ book.book_name }}
+                </span>
+              </h4>
+             
+            </div>
+            <div
               v-if="isCurrentUserOwner(book.creator?.user_no)"
-              class="btn-view btn-card-action"
-              @click="openEditModal(book)"
+              class="book-card-actions"
             >
-              문제집 수정
-            </button>
+              <button class="btn-view btn-card-action" @click="openEditModal(book)">수정</button>
+              <button class="btn-start btn-card-action" @click="viewBookDetails(book.book_id)">문제등록</button>
+            </div>
           </div>
         </div>
       </div>
@@ -612,49 +620,66 @@ const setScope = (scope: "mine" | "all") => {
 .book-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 1rem;
+  gap: 0.625rem;
   margin-top: 1rem;
 }
 
 .book-card {
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  border-radius: 10px;
-  padding: 1rem 1.5rem;
+  background: rgba(30, 41, 59, 0.4);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 16px;
+  padding: 1.25rem 1.5rem;
   display: flex;
   flex-direction: column;
-  gap: 0.45rem;
+  gap: 0.3rem;
   transition:
-    border 0.3s,
-    transform 0.3s;
+    all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .book-card:hover {
-  border-color: #6366f1;
-  transform: translateY(-3px);
+  background: rgba(30, 41, 59, 0.4);
+  transform: none;
+  border-color: rgba(255, 255, 255, 0.05);
+  box-shadow: none;
 }
 
-.book-card-head,
-.book-card-body {
+.book-card-head {
   display: flex;
   justify-content: space-between;
   align-items: center;
   gap: 1rem;
 }
 
+.book-card-body {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+}
+
+.book-headline-left {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.book-headline-right {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
 .book-card-body h4 {
   color: #f8fafc;
   margin: 0;
   font-size: 1.1rem;
-  display: inline-flex;
+  display: flex;
   align-items: center;
-  gap: 0.35rem;
-  flex-wrap: wrap;
-  flex: 1;
-}
-
-.book-id {
-  color: #e2e8f0;
+  gap: 0.15rem;
+  width: 100%;
 }
 
 .book-id {
@@ -664,26 +689,44 @@ const setScope = (scope: "mine" | "all") => {
   margin: 0;
 }
 
-.book-separator {
-  color: #64748b;
-  font-weight: 700;
-}
-
 .book-title {
   color: #f8fafc;
 }
 
-.book-name-link {
+.book-title.selectable {
   cursor: pointer;
-  transition: all 0.2s ease;
-  display: inline-flex;
-  align-items: center;
 }
 
-.book-name-link:hover {
-  color: #818cf8;
-  text-decoration: underline;
-  text-underline-offset: 4px;
+.book-main {
+  display: flex;
+  flex-direction: column;
+  gap: 0.22rem;
+  min-width: 0;
+  flex: 1;
+}
+
+
+.book-card-actions {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  margin-left: auto;
+  flex-shrink: 0;
+  gap: 0;
+}
+
+.book-card-actions .btn-card-action + .btn-card-action {
+  margin-left: -1px;
+}
+
+.book-card-actions .btn-card-action:first-child {
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+.book-card-actions .btn-card-action:last-child {
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
 }
 
 .btn-card-action {
@@ -729,7 +772,7 @@ const setScope = (scope: "mine" | "all") => {
   display: inline-flex;
   flex-shrink: 0;
   align-self: center;
-  margin-right: 0.05rem;
+  margin-right: 0.22rem;
 }
 
 .copy-checkbox:checked {
@@ -754,23 +797,53 @@ const setScope = (scope: "mine" | "all") => {
   cursor: not-allowed;
 }
 
-.book-card-head p {
+.book-description {
   color: #94a3b8;
-  font-size: 0.88rem;
+  font-size: 0.85rem;
   margin: 0;
   line-height: 1.4;
-  flex: 1;
   font-weight: 500;
 }
 
-.book-meta {
+.book-owner-badge {
   display: inline-flex;
   align-items: center;
-  gap: 0.35rem;
-  font-size: 0.8rem;
-  color: #64748b;
-  font-weight: 600;
+  justify-content: center;
+  padding: 0.16rem 0.55rem;
+  border-radius: 999px;
+  background: rgba(56, 189, 248, 0.12);
+  border: 1px solid rgba(56, 189, 248, 0.2);
+  color: #7dd3fc;
+  font-size: 0.72rem;
+  font-weight: 700;
+  line-height: 1;
   white-space: nowrap;
+}
+
+.book-count-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 74px;
+  min-width: 74px;
+  max-width: 74px;
+  flex: 0 0 74px;
+  box-sizing: border-box;
+  padding: 0.08rem 0.3rem;
+  border-radius: 6px;
+  background: rgba(129, 140, 248, 0.1);
+  color: #818cf8;
+  font-size: 0.72rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.book-count-badge:hover {
+  background: rgba(129, 140, 248, 0.22);
+  color: #ffffff;
 }
 
 

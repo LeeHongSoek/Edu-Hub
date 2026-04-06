@@ -26,7 +26,6 @@ export class ExamsController {
   async create(
     @Request() req: any,
     @Body() body: {
-      classId?: string;
       exam_name: string;
       description?: string;
       start_time: string;
@@ -45,7 +44,6 @@ export class ExamsController {
     @Request() req: any,
     @Param('id') id: string,
     @Body() body: {
-      classId?: string;
       exam_name: string;
       description?: string;
       start_time: string;

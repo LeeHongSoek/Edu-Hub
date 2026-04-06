@@ -8,7 +8,6 @@ export class ExamsService {
   async create(
     creatorNo: bigint,
     data: {
-      classId?: string;
       exam_name: string;
       description?: string;
       start_time: string;
@@ -17,22 +16,6 @@ export class ExamsService {
       is_auto_score?: boolean;
     },
   ) {
-    const selectedClassId = data.classId ? BigInt(data.classId) : null;
-
-    if (selectedClassId) {
-      const classroom = await this.prisma.class.findFirst({
-        where: {
-          class_id: selectedClassId,
-          teacher_no: creatorNo,
-        },
-        select: { class_id: true },
-      });
-
-      if (!classroom) {
-        throw new NotFoundException('Class not found');
-      }
-    }
-
     return this.prisma.exam.create({
       data: {
         creator_no: creatorNo,
@@ -42,15 +25,6 @@ export class ExamsService {
         end_time: new Date(data.end_time),
         location: data.location || null,
         is_auto_score: data.is_auto_score ?? true,
-        ...(selectedClassId
-          ? {
-              class_exam_links: {
-                create: {
-                  class_id: selectedClassId,
-                },
-              },
-            }
-          : {}),
       },
       include: {
         creator: { select: { user_no: true, username: true } },
@@ -68,7 +42,6 @@ export class ExamsService {
     examId: bigint,
     creatorNo: bigint,
     data: {
-      classId?: string;
       exam_name: string;
       description?: string;
       start_time: string;
@@ -89,21 +62,6 @@ export class ExamsService {
     if (!existing) {
       throw new NotFoundException('Exam not found');
     }
-    const selectedClassId = data.classId ? BigInt(data.classId) : null;
-
-    if (selectedClassId) {
-      const classroom = await this.prisma.class.findFirst({
-        where: {
-          class_id: selectedClassId,
-          teacher_no: creatorNo,
-        },
-        select: { class_id: true },
-      });
-
-      if (!classroom) {
-        throw new NotFoundException('Class not found');
-      }
-    }
 
     return this.prisma.exam.update({
       where: { exam_id: examId },
@@ -114,16 +72,6 @@ export class ExamsService {
         end_time: new Date(data.end_time),
         location: data.location || null,
         is_auto_score: data.is_auto_score ?? true,
-        class_exam_links: {
-          deleteMany: {},
-          ...(selectedClassId
-            ? {
-                create: {
-                  class_id: selectedClassId,
-                },
-              }
-            : {}),
-        },
       },
       include: {
         creator: { select: { user_no: true, username: true } },

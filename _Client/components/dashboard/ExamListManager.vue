@@ -513,17 +513,11 @@ const deleteSelectedExams = async () => {
               <div class="headline-left">
                 <span class="exam-id">{{ exam.exam_id }}</span> 
                
-                <span class="exam-class-name">
-                  {{
-                    getExamClassNames(exam).length
-                      ? getExamClassNames(exam).join(", ")
-                      : "지정클래스 없음"
-                  }}
-                </span>
+                <span class="exam-class-badge">지정 클래스 {{ getExamClassNames(exam).length ?? 0 }}개</span>                
               </div>
               <div class="headline-right">
                 <span class="exam-period-inline">{{ new Date(exam.start_time).toLocaleDateString("ko-KR") }} ~ {{ new Date(exam.end_time).toLocaleDateString("ko-KR") }}</span>
-                <span class="exam-count" @click="viewExamDetails(exam.exam_id)">{{ exam._count?.questions ?? 0 }} 문제</span>
+                <span class="exam-count">{{ exam._count?.questions ?? 0 }} 문제</span>
               </div>
             </div>
             <h4>
@@ -540,33 +534,25 @@ const deleteSelectedExams = async () => {
                   )
                 "
               />
-              <span
-                class="exam-name-link"
-                :class="{ selectable: isCurrentUserOwner(exam.creator?.user_no) }"
-                @click="toggleExamSelectedByName(exam)"
-              >
-                {{ exam.exam_name }}
+              <span class="exam-name-wrap">
+                <span
+                  class="exam-name-link"
+                  :class="{ selectable: isCurrentUserOwner(exam.creator?.user_no) }"
+                  @click="toggleExamSelectedByName(exam)"
+                >{{ exam.exam_name }}</span>
+                <span class="exam-hover-card">
+                  <strong>위치</strong>
+                  <span>{{ exam.location || "장소 미지정" }}</span>
+                  <strong>설명</strong>
+                  <span>{{ exam.description || "설명 없음" }}</span>
+                </span>
               </span>
-              <div
-                v-if="isCurrentUserOwner(exam.creator?.user_no)"
-                class="exam-card-actions"
-              >
-                <button
-                  class="btn-start btn-card-action"
-                  @click="openEditModal(exam)"
-                >
-                  수정
-                </button>
-                <button
-                  class="btn-start btn-card-action"
-                  @click="viewExamDetails(exam.exam_id)"
-                >
-                  문제등록
-                </button>
+              <div v-if="isCurrentUserOwner(exam.creator?.user_no)" class="exam-card-actions">
+                <button class="btn-start btn-card-action" @click="openEditModal(exam)">수정</button>
+                <button class="btn-start btn-card-action" @click="viewExamDetails(exam.exam_id)">문제등록</button>
               </div>
             </h4>
-          </div>         
-        
+          </div>
         </div>
       </div>
     </div>
@@ -584,7 +570,7 @@ const deleteSelectedExams = async () => {
 
           <form class="modal-form" @submit.prevent="submitExamForm">
             <div class="form-group">
-              <label for="exam-class" class="form-label">지정 클래스</label>
+              
               <select
                 id="exam-class"
                 v-model="createForm.classId"
@@ -833,14 +819,17 @@ const deleteSelectedExams = async () => {
   display: flex;
   flex-direction: column;
   gap: 1.25rem;
+  position: relative;
+  overflow: visible;
   transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .exam-card:hover {
-  background: rgba(30, 41, 59, 0.6);
-  transform: translateY(-4px);
-  border-color: rgba(129, 140, 248, 0.25);
-  box-shadow: 0 12px 30px -10px rgba(0, 0, 0, 0.4);
+  background: rgba(30, 41, 59, 0.4);
+  transform: none;
+  border-color: rgba(255, 255, 255, 0.05);
+  box-shadow: none;
+  z-index: 10;
 }
 
 .exam-info {
@@ -911,8 +900,59 @@ const deleteSelectedExams = async () => {
   flex: 1;
 }
 
+.exam-name-wrap {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  display: inline-flex;
+  align-items: center;
+}
+
 .exam-name-link.selectable {
   cursor: pointer;
+}
+
+.exam-name-wrap:hover .exam-hover-card {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+.exam-hover-card {
+  position: absolute;
+  left: 0;
+  top: calc(100% + 0.65rem);
+  z-index: 20;
+  min-width: 280px;
+  max-width: 420px;
+  padding: 0.9rem 1rem;
+  border-radius: 14px;
+  border: 1px solid rgba(129, 140, 248, 0.28);
+  background: rgba(15, 23, 42, 0.96);
+  box-shadow: 0 18px 40px -18px rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(12px);
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.45rem 0.75rem;
+  opacity: 0;
+  transform: translateY(6px);
+  pointer-events: none;
+  transition: opacity 0.18s ease, transform 0.18s ease;
+}
+
+.exam-hover-card strong {
+  color: #c7d2fe;
+  font-size: 0.78rem;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.exam-hover-card span {
+  color: #e2e8f0;
+  font-size: 0.92rem;
+  line-height: 1.45;
+  white-space: normal;
+  word-break: break-word;
 }
 
 .exam-card-actions {
@@ -1031,6 +1071,21 @@ const deleteSelectedExams = async () => {
 .exam-count:hover {
   background: rgba(129, 140, 248, 0.22);
   color: #ffffff;
+}
+
+.exam-class-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.12rem 0.55rem;
+  border-radius: 999px;
+  background: rgba(56, 189, 248, 0.12);
+  border: 1px solid rgba(56, 189, 248, 0.2);
+  color: #7dd3fc;
+  font-size: 0.72rem;
+  font-weight: 700;
+  line-height: 1;
+  white-space: nowrap;
 }
 
 .exam-separator {
