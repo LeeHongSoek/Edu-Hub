@@ -421,7 +421,7 @@ onUnmounted(() => {
                 class="class-card"
               >
                 <div class="class-card-top">
-                  <button class="class-link" @click="openClassExams(item)">
+                  <button class="class-link" >
                     {{ item.className }}
                   </button>
                   

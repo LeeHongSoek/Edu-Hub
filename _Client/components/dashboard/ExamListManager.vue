@@ -28,6 +28,7 @@ const listScope = ref<"mine" | "all">(
 const selectedExamIds = ref<string[]>([]);
 const examSearchInput = ref("");
 const examSearchQuery = ref("");
+const assignableClasses = ref<Array<{ classId: string; className: string }>>([]);
 const userCookie = useCookie("user_info");
 const userInfo = computed(() => {
   if (!userCookie.value) return null;
@@ -200,6 +201,7 @@ const createLoading = ref(false);
 const createError = ref("");
 const editingExamId = ref<string>("");
 const createForm = ref({
+  classId: "",
   exam_name: "",
   description: "",
   start_time: "",
@@ -228,8 +230,10 @@ const toLocalDateTimeInputValue = (value?: string | Date | null) => {
 };
 
 const openCreateModal = async () => {
+  await fetchAssignableClasses();
   editingExamId.value = "";
   createForm.value = {
+    classId: "",
     exam_name: "",
     description: "",
     start_time: "",
@@ -242,8 +246,13 @@ const openCreateModal = async () => {
 };
 
 const openEditModal = async (exam: any) => {
+  await fetchAssignableClasses();
+  const linkedClassId = Array.isArray(exam?.class_exam_links) && exam.class_exam_links.length > 0
+    ? String(exam.class_exam_links[0]?.class_id ?? "")
+    : "";
   editingExamId.value = String(exam.exam_id);
   createForm.value = {
+    classId: linkedClassId,
     exam_name: exam.exam_name || "",
     description: exam.description || "",
     start_time: toLocalDateTimeInputValue(exam.start_time),
@@ -258,6 +267,31 @@ const openEditModal = async (exam: any) => {
 const closeCreateModal = () => {
   editingExamId.value = "";
   showCreateModal.value = false;
+};
+
+const fetchAssignableClasses = async () => {
+  if (String(userInfo.value?.role_id || userInfo.value?.role || "").toUpperCase() !== "T") {
+    assignableClasses.value = [];
+    return;
+  }
+
+  try {
+    const data = await $fetch<Array<{ classId: string; className: string }>>(
+      `${apiBase.value}/dashboard/classes`,
+      {
+        headers: getAuthHeader(),
+      },
+    );
+    assignableClasses.value = Array.isArray(data)
+      ? data.map((item) => ({
+          classId: String(item.classId),
+          className: item.className,
+        }))
+      : [];
+  } catch (error) {
+    console.error("지정 가능 클래스 조회 실패:", error);
+    assignableClasses.value = [];
+  }
 };
 
 const submitExamForm = async () => {
@@ -277,6 +311,7 @@ const submitExamForm = async () => {
   createError.value = "";
   try {
     const payload = {
+      classId: createForm.value.classId || undefined,
       exam_name: createForm.value.exam_name.trim(),
       description: createForm.value.description.trim() || undefined,
       start_time: createForm.value.start_time,
@@ -336,6 +371,11 @@ const toggleExamSelected = (
     return;
   }
   selectedExamIds.value = selectedExamIds.value.filter((id) => id !== idKey);
+};
+
+const toggleExamSelectedByName = (exam: any) => {
+  if (!isCurrentUserOwner(exam.creator?.user_no)) return;
+  toggleExamSelected(exam.exam_id, !isExamSelected(exam.exam_id));
 };
 
 const deleteSelectedExams = async () => {
@@ -472,15 +512,19 @@ const deleteSelectedExams = async () => {
             <div class="exam-headline">
               <div class="headline-left">
                 <span class="exam-id">{{ exam.exam_id }}</span> 
-                <span class="exam-count"  @click="viewExamDetails(exam.exam_id)">{{ exam._count?.questions ?? 0 }}문제</span>
-                <span
-                  v-if="getExamClassNames(exam).length"
-                  class="exam-class-name"
-                >
-                  {{ getExamClassNames(exam).join(", ") }}
+               
+                <span class="exam-class-name">
+                  {{
+                    getExamClassNames(exam).length
+                      ? getExamClassNames(exam).join(", ")
+                      : "지정클래스 없음"
+                  }}
                 </span>
               </div>
-              <span class="exam-period-inline">{{ new Date(exam.start_time).toLocaleDateString("ko-KR") }} ~ {{ new Date(exam.end_time).toLocaleDateString("ko-KR") }}</span>
+              <div class="headline-right">
+                <span class="exam-period-inline">{{ new Date(exam.start_time).toLocaleDateString("ko-KR") }} ~ {{ new Date(exam.end_time).toLocaleDateString("ko-KR") }}</span>
+                <span class="exam-count" @click="viewExamDetails(exam.exam_id)">{{ exam._count?.questions ?? 0 }} 문제</span>
+              </div>
             </div>
             <h4>
               <input
@@ -496,14 +540,30 @@ const deleteSelectedExams = async () => {
                   )
                 "
               />
-              <span class="exam-name-link" @click="viewExamDetails(exam.exam_id)">{{ exam.exam_name }}</span>
-              <button
-                v-if="isCurrentUserOwner(exam.creator?.user_no)"
-                class="btn-start btn-card-action"
-                @click="openEditModal(exam)"
+              <span
+                class="exam-name-link"
+                :class="{ selectable: isCurrentUserOwner(exam.creator?.user_no) }"
+                @click="toggleExamSelectedByName(exam)"
               >
-                고사집 수정
-              </button>
+                {{ exam.exam_name }}
+              </span>
+              <div
+                v-if="isCurrentUserOwner(exam.creator?.user_no)"
+                class="exam-card-actions"
+              >
+                <button
+                  class="btn-start btn-card-action"
+                  @click="openEditModal(exam)"
+                >
+                  수정
+                </button>
+                <button
+                  class="btn-start btn-card-action"
+                  @click="viewExamDetails(exam.exam_id)"
+                >
+                  문제등록
+                </button>
+              </div>
             </h4>
           </div>         
         
@@ -523,6 +583,23 @@ const deleteSelectedExams = async () => {
           </div>
 
           <form class="modal-form" @submit.prevent="submitExamForm">
+            <div class="form-group">
+              <label for="exam-class" class="form-label">지정 클래스</label>
+              <select
+                id="exam-class"
+                v-model="createForm.classId"
+                class="form-input"
+              >
+                <option value="">지정클래스 없음</option>
+                <option
+                  v-for="classItem in assignableClasses"
+                  :key="classItem.classId"
+                  :value="classItem.classId"
+                >
+                  {{ classItem.className }}
+                </option>
+              </select>
+            </div>
             <div class="form-group">
               <label for="exam-name" class="form-label">고사 이름 <span class="required">*</span></label>
               <input
@@ -769,7 +846,7 @@ const deleteSelectedExams = async () => {
 .exam-info {
   display: flex;
   flex-direction: column;
-  gap: 0.35rem;
+  gap: 0.175rem;
   width: 100%;
 }
 .exam-headline {
@@ -784,6 +861,15 @@ const deleteSelectedExams = async () => {
   display: flex;
   align-items: center;
   gap: 0.4rem;
+}
+
+.headline-right {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.3rem;
+  margin-left: auto;
+  flex-shrink: 0;
 }
 
 .exam-period-inline,
@@ -812,7 +898,7 @@ const deleteSelectedExams = async () => {
 .exam-info h4 {
   display: flex;
   align-items: center;
-  gap: 0.35rem;
+  gap: 0.15rem;
   color: #f8fafc;
   margin: 0;
   font-size: 1.15rem;
@@ -821,19 +907,35 @@ const deleteSelectedExams = async () => {
 }
 
 .exam-name-link {
-  cursor: pointer;
-  transition: all 0.2s ease;
   min-width: 0;
+  flex: 1;
 }
 
-.exam-name-link:hover {
-  color: #818cf8;
-  text-decoration: underline;
-  text-underline-offset: 4px;
+.exam-name-link.selectable {
+  cursor: pointer;
 }
 
-.exam-info .btn-card-action {
+.exam-card-actions {
   margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0;
+  flex-shrink: 0;
+}
+
+.exam-card-actions .btn-card-action + .btn-card-action {
+  margin-left: -1px;
+}
+
+.exam-card-actions .btn-card-action:first-child {
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+.exam-card-actions .btn-card-action:last-child {
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
 }
 
 .copy-checkbox {
@@ -850,7 +952,7 @@ const deleteSelectedExams = async () => {
   display: inline-flex;
   flex-shrink: 0;
   align-self: center;
-  margin-right: 0.6rem;
+  margin-right: 0.22rem;
 }
 
 .copy-checkbox:checked {
@@ -911,9 +1013,16 @@ const deleteSelectedExams = async () => {
   font-size: 0.72rem;
   color: #818cf8;
   background: rgba(129, 140, 248, 0.1);
-  padding: 0.15rem 0.5rem;
+  width: 70px;
+  min-width: 70px;
+  max-width: 70px;
+  flex: 0 0 70px;
+  box-sizing: border-box;
+  justify-content: center;
+  padding: 0.08rem 0.03rem;
   border-radius: 6px;
   font-weight: 700;
+  font-variant-numeric: tabular-nums;
   letter-spacing: -0.01em;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -1126,7 +1235,7 @@ const deleteSelectedExams = async () => {
 .exam-list {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 1.25rem;
+  gap: 0.625rem;
 }
 
 @media (max-width: 1024px) {
