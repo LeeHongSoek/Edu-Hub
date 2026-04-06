@@ -14,6 +14,7 @@ import { UserLogsModule } from './user-logs/user-logs.module';
 import { QuestionBooksModule } from './question-books/question-books.module';
 import { ExamsModule } from './exams/exams.module';
 import { SolveResultsModule } from './solve-results/solve-results.module';
+import { SysLogsModule } from './sys-logs/sys-logs.module';
 import { DemoModule } from './demo/demo.module';
 
 @Module({
@@ -36,6 +37,7 @@ import { DemoModule } from './demo/demo.module';
     QuestionBooksModule,
     ExamsModule,
     SolveResultsModule,
+    SysLogsModule,
     DemoModule,
   ],
   controllers: [AppController],

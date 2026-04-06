@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, computed, nextTick } from "vue";
+import { ref, onMounted, onUnmounted, computed, nextTick, watch } from "vue";
 import StudentDashboard from "~/components/dashboard/StudentDashboard.vue";
 import TeacherDashboard from "~/components/dashboard/TeacherDashboard.vue";
 import ParentDashboard from "~/components/dashboard/ParentDashboard.vue";
@@ -19,6 +19,7 @@ import IconUsers from "~/assets/icons/IconUsers.svg?component";
 import IconMessage from "~/assets/icons/IconMessage.svg?component";
 import IconCalendar from "~/assets/icons/IconCalendar.svg?component";
 import IconClassRoom from "~/assets/icons/IconClassRoom.svg?component";
+import PageSlider from "~/components/PageSlider.vue";
 import { useUserLog } from "~/composables/useUserLog";
 
 type UserCookiePayload = {
@@ -107,6 +108,97 @@ const logDashboardAction = async (
   });
 };
 
+const SYS_LOG_LIMIT = 1;
+
+type SysLogEntry = { content?: string; created_at?: string | null };
+const sysLogItems = ref<SysLogEntry[]>([]);
+const sysLogSearchInput = ref("");
+const sysLogSearchQuery = ref("");
+const sysLogPage = ref(1);
+const sysLogTotal = ref(0);
+const sysLogLoading = ref(false);
+const sysLogSlider = ref(1);
+
+const fetchSysLogs = async () => {
+  sysLogLoading.value = true;
+  try {
+    const data = await $fetch<any>(`${apiBase.value}/sys-logs`, {
+      headers: getAuthHeader(),
+      query: {
+        q: sysLogSearchQuery.value,
+        page: sysLogPage.value,
+        limit: SYS_LOG_LIMIT,
+      },
+    });
+    sysLogItems.value = data.items ?? [];
+    sysLogTotal.value = Number(data.total ?? 0) || 0;
+    sysLogSlider.value = sysLogPage.value;
+  } catch (error) {
+    console.error("시스템 로그 조회 실패:", error);
+    sysLogItems.value = [];
+    sysLogTotal.value = 0;
+  } finally {
+    sysLogLoading.value = false;
+  }
+};
+
+const sysLogTotalPages = computed(() =>
+  Math.max(1, Math.ceil(sysLogTotal.value / SYS_LOG_LIMIT)),
+);
+const latestSysLog = computed(() => sysLogItems.value[0] ?? null);
+const formattedSysLogContent = computed(() =>
+  ((latestSysLog.value?.content ?? "") as string).replace(/\\n/g, "\n"),
+);
+const currentSysLogCreatedAt = computed(() => {
+  if (!latestSysLog.value?.created_at) return "";
+  const raw = latestSysLog.value.created_at.trim();
+  const parsed = new Date(raw.replace(" ", "T"));
+  if (Number.isNaN(parsed.getTime())) return "";
+  return parsed.toLocaleString("ko-KR", {
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: false,
+  });
+});
+
+const refreshSysLogs = () => {
+  fetchSysLogs();
+};
+
+const applySysLogSearch = () => {
+  sysLogSearchQuery.value = sysLogSearchInput.value.trim();
+  sysLogPage.value = 1;
+  fetchSysLogs();
+  writeUserLog("V", 0, {
+    user_content: `시스템 로그 검색: "${sysLogSearchQuery.value}"`,
+  });
+};
+
+const clearSysLogSearch = () => {
+  sysLogSearchInput.value = "";
+  sysLogSearchQuery.value = "";
+  sysLogPage.value = 1;
+  fetchSysLogs();
+  writeUserLog("V", 0, {
+    user_content: "시스템 로그 검색어 초기화",
+  });
+};
+
+const updateSysLogPage = (page: number) => {
+  const normalized = Math.min(Math.max(page, 1), sysLogTotalPages.value);
+  if (normalized !== sysLogPage.value) {
+    sysLogPage.value = normalized;
+  }
+};
+
+watch([() => activeTab.value, () => sysLogPage.value], () => {
+  if (activeTab.value === "sys-logs") {
+    fetchSysLogs();
+  }
+});
+
 const setActiveTab = (tab: string) => {
   if (activeTab.value === tab) return;
   activeTab.value = tab;
@@ -117,6 +209,7 @@ const setActiveTab = (tab: string) => {
     messages: "메시지 함",
     classes: classTabLabel.value,
     logs: "활동 로그",
+    "sys-logs": "시스템 로그",
   };
   void logDashboardAction("V", 0, `대시보드 탭 전환: ${labelMap[tab] || tab}`);
 };
@@ -450,12 +543,14 @@ onUnmounted(() => {
           <IconChart class="tab-icon" /> 요약 통계
         </button>
         <button
+          v-if="userInfo.role_id !== 'A'"
           :class="{ active: activeTab === 'relations' }"
           :aria-pressed="activeTab === 'relations'"
           @click="setActiveTab('relations')">
           <IconUsers class="tab-icon" /> 관계 관리
         </button>
         <button
+          v-if="userInfo.role_id !== 'A'"
           :class="{ active: activeTab === 'messages' }"
           :aria-pressed="activeTab === 'messages'"
           @click="setActiveTab('messages')">
@@ -475,6 +570,14 @@ onUnmounted(() => {
           :aria-pressed="activeTab === 'logs'"
           @click="setActiveTab('logs')">
           <IconCalendar class="tab-icon" /> 활동 로그
+        </button>
+
+        <button
+          v-if="userInfo.role_id === 'A'"
+          :class="{ active: activeTab === 'sys-logs' }"
+          :aria-pressed="activeTab === 'sys-logs'"
+          @click="setActiveTab('sys-logs')">
+          <IconCalendar class="tab-icon" /> 시스템 로그
         </button>
       </div>
 
@@ -553,6 +656,56 @@ onUnmounted(() => {
 
         <div v-else-if="activeTab === 'logs'">
           <UsersLogViewer />
+        </div>
+
+        <div v-else-if="activeTab === 'sys-logs'">
+          <section class="sys-log-panel">
+            <div class="sys-log-controls">
+              <div class="sys-log-search">
+                <input
+                  v-model="sysLogSearchInput"
+                  type="text"
+                  placeholder="검색어 입력 (content 기준)"
+                  @keyup.enter="applySysLogSearch"
+                />
+                <button class="btn-search-highlight" @click="applySysLogSearch">
+                  검색
+                </button>
+                <button class="btn-refresh" @click="refreshSysLogs">
+                  새로고침
+                </button>
+                <button
+                  v-if="sysLogSearchQuery"
+                  class="btn-reset-search"
+                  @click="clearSysLogSearch">
+                  초기화
+                </button>
+              </div>
+              <div class="sys-log-meta">
+                <span class="meta-item">
+                  {{ sysLogPage }} / {{ sysLogTotalPages }} 페이지
+                </span>
+                <span class="meta-item" v-if="currentSysLogCreatedAt">
+                  생성: {{ currentSysLogCreatedAt }}
+                </span>
+              </div>
+            </div>
+            <div class="sys-log-textarea">
+              <textarea
+                readonly
+                :value="formattedSysLogContent"
+              ></textarea>
+            </div>
+            <div class="sys-log-pagination">
+              <PageSlider
+                v-model="sysLogSlider"
+                :max="sysLogTotalPages"
+                :disabled="sysLogTotalPages <= 1"
+                postfix="페이지"
+                @commit="updateSysLogPage"
+              />
+            </div>
+          </section>
         </div>
 
         <div v-else-if="activeTab === 'question-books'">
@@ -798,6 +951,110 @@ onUnmounted(() => {
   transform: none;
   z-index: 3;
   box-shadow: none;
+}
+
+.sys-log-panel {
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid rgba(148, 163, 184, 0.3);
+  border-radius: 16px;
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.sys-log-controls {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.sys-log-search {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.sys-log-search input {
+  background: rgba(15, 23, 42, 0.9);
+  border: 1px solid rgba(148, 163, 184, 0.4);
+  border-radius: 10px;
+  padding: 0.55rem 0.75rem;
+  color: #e2e8f0;
+  min-width: 260px;
+}
+
+.sys-log-search button {
+  background: transparent;
+  border: 1px solid transparent;
+  color: #c7d2fe;
+  padding: 0.35rem 0.85rem;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.btn-search-highlight {
+  background: linear-gradient(135deg, #6366f1, #818cf8);
+  border: none;
+  color: #fff;
+}
+
+.sys-log-meta {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+  flex-wrap: wrap;
+  color: #c7d2fe;
+  font-size: 0.9rem;
+}
+
+.sys-log-textarea {
+  width: 100%;
+  flex: 1;
+  min-height: 360px;
+  background: rgba(15, 23, 42, 0.92);
+  border-radius: 14px;
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  box-sizing: border-box;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.sys-log-textarea textarea {
+  width: 100%;
+  flex: 1;
+  min-height: 0;
+  background: transparent;
+  border: none;
+  padding: 0;
+  color: #e2e8f0;
+  font-family: "Pretendard", "IBM Plex Mono", monospace;
+  resize: none;
+  white-space: pre;
+  overflow: auto;
+}
+
+.btn-refresh {
+  background: rgba(99, 102, 241, 0.15);
+  border: 1px solid rgba(99, 102, 241, 0.6);
+  color: #c7d2fe;
+  border-radius: 8px;
+  padding: 0.45rem 0.9rem;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.sys-log-pagination {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 1rem;
 }
 
 .dashboard-tabs button:focus-visible {

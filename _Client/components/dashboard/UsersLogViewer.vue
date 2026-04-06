@@ -128,8 +128,16 @@ const formatResult = (log: any) => {
   return parts.length ? parts.join(" · ") : null;
 };
 
+const parseToLocalDate = (value?: string | null) => {
+  if (!value) {
+    return new Date(NaN);
+  }
+  const normalized = value.includes("T") ? value : value.replace(" ", "T");
+  return new Date(normalized);
+};
+
 const formatTime = (dateStr: string) => {
-  const date = new Date(dateStr);
+  const date = parseToLocalDate(dateStr);
   return date.toLocaleString("ko-KR", {
     timeZone: "Asia/Seoul",
     month: "short",
@@ -139,8 +147,17 @@ const formatTime = (dateStr: string) => {
   });
 };
 
+const formatExactTime = (dateStr: string) => {
+  const date = parseToUtcDate(dateStr);
+  if (Number.isNaN(date.getTime())) return "--";
+  const pad = (value: number) => String(value).padStart(2, "0");
+  return `${pad(date.getDate())}.${pad(date.getMonth() + 1)} ${pad(
+    date.getHours(),
+  )}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
+};
+
 const formatRecentTime = (dateStr: string) => {
-  const date = new Date(dateStr);
+  const date = parseToLocalDate(dateStr);
   const diffMs = Date.now() - date.getTime();
   const diffMinutes = Math.floor(diffMs / 60000);
 
@@ -152,7 +169,7 @@ const formatRecentTime = (dateStr: string) => {
 };
 
 const isRecentTime = (dateStr: string) => {
-  const date = new Date(dateStr);
+  const date = parseToLocalDate(dateStr);
   const diffMs = Date.now() - date.getTime();
   const diffMinutes = Math.floor(diffMs / 60000);
   return diffMinutes >= 0 && diffMinutes < 60;
@@ -246,6 +263,9 @@ const isRecentTime = (dateStr: string) => {
                 >{{
                   formatRecentTime(log.created_at)
                 }}</span>
+              <span class="log-time-detail" v-if="log.created_at">
+                {{ formatExactTime(log.created_at) }}
+              </span>
             </div>
             <div class="log-title-row">
               <div class="log-title" :title="log.user_content">
@@ -518,6 +538,14 @@ const isRecentTime = (dateStr: string) => {
   color: #64748b;
   font-weight: 500;
   flex-shrink: 0;
+}
+
+.log-time-detail {
+  font-size: 0.65rem;
+  color: #94a3b8;
+  letter-spacing: 0.02em;
+  margin-left: 0.35rem;
+  white-space: nowrap;
 }
 
 .log-time-recent {

@@ -3,6 +3,7 @@ import { AppModule } from './app.module';
 import { appendFileSync, existsSync, mkdirSync, rmSync } from 'fs';
 import { resolve } from 'path';
 import type { NextFunction, Request, Response } from 'express';
+import { Prisma } from '@prisma/client';
 import { PrismaService } from './common/prisma/prisma.service';
 
 (BigInt.prototype as any).toJSON = function () {
@@ -368,12 +369,21 @@ async function bootstrap() {
           const logResData = `[API통신_데이터_응답]\n${JSON.stringify(logEntry.payload.response, null, tabSize)}\n`;
 
           const logContent = logHeader + logReqData + logResData;
+
           appendFileSync(logPath, logContent);
-          void prisma.sysLog.create({
-            data: {
-              content: logContent,
-            },
-          }).catch(() => {});
+          if (!logHeader.includes('/api/sys-logs')) {
+            const now = new Date();
+            const local = new Date(now.getTime() - now.getTimezoneOffset() * 60000);
+            const createdAt = local
+              .toISOString()
+              .slice(0, 19)
+              .replace('T', ' ');
+            void prisma
+              .$executeRaw(
+                Prisma.sql`INSERT INTO sys_logs (content, created_at) VALUES (${logContent}, ${createdAt})`,
+              )
+              .catch(() => {});
+          }
         } catch { }
 
         // // 콘솔 출력

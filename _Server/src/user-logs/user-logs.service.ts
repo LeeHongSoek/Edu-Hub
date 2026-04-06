@@ -135,7 +135,7 @@ export class UserLogsService {
           total_score,
           score100,
           time_taken,
-          DATE_FORMAT(created_at, '%Y-%m-%dT%H:%i:%s+09:00') AS created_at
+          DATE_FORMAT(CONVERT_TZ(created_at, @@session.time_zone, '+09:00'), '%Y-%m-%dT%H:%i:%s') AS created_at
         FROM users_logs
         ${whereSql}
         ORDER BY created_at DESC, log_id DESC
@@ -180,7 +180,7 @@ export class UserLogsService {
         total_score,
         score100,
         time_taken,
-        DATE_FORMAT(created_at, '%Y-%m-%dT%H:%i:%s+09:00') AS created_at
+        DATE_FORMAT(CONVERT_TZ(created_at, @@session.time_zone, '+09:00'), '%Y-%m-%dT%H:%i:%s') AS created_at
       FROM users_logs
       WHERE user_no = ${userNo}
         AND logtype_id = ${logtype}
