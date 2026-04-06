@@ -190,8 +190,7 @@ const saveExams = async () => {
               <section
                 class="exam-list-panel"
                 @dragover.prevent
-                @drop.prevent="handleDrop('assigned')"
-              >
+                @drop.prevent="handleDrop('assigned')">
                 <div class="exam-list-header">
                   <strong>이 클래스에 연결된 고사</strong>
                   <span>{{ assignedExams.length }}개</span>
@@ -203,12 +202,10 @@ const saveExams = async () => {
                     class="exam-chip"
                     draggable="true"
                     @dragstart="handleDragStart(exam, 'assigned')"
-                    @dragend="handleDragEnd"
-                  >
+                    @dragend="handleDragEnd">
                     <span class="exam-name">{{ exam.examName }}</span>
                     <span class="exam-meta"
-                      >문항 {{ exam.questionCount }}개</span
-                    >
+                      >문항 {{ exam.questionCount }}개</span>
                   </button>
                   <div v-if="assignedExams.length === 0" class="exam-empty">
                     아직 연결된 고사가 없습니다.
@@ -221,8 +218,7 @@ const saveExams = async () => {
               <section
                 class="exam-list-panel"
                 @dragover.prevent
-                @drop.prevent="handleDrop('available')"
-              >
+                @drop.prevent="handleDrop('available')">
                 <div class="exam-list-header">
                   <strong>내 다른 고사</strong>
                   <span>{{ availableExams.length }}개</span>
@@ -234,8 +230,7 @@ const saveExams = async () => {
                     class="exam-chip"
                     draggable="true"
                     @dragstart="handleDragStart(exam, 'available')"
-                    @dragend="handleDragEnd"
-                  >
+                    @dragend="handleDragEnd">
                     <span class="exam-name">{{ exam.examName }}</span>
                     <span class="exam-meta">
                       문항 {{ exam.questionCount }}개
@@ -257,8 +252,7 @@ const saveExams = async () => {
               <button
                 class="btn-primary"
                 :disabled="saving || !hasChanges"
-                @click="saveExams"
-              >
+                @click="saveExams">
                 {{ saving ? "저장 중..." : "저장" }}
               </button>
             </div>

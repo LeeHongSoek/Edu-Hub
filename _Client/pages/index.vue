@@ -516,16 +516,14 @@ onMounted(() => {
             v-if="!loggedInUser"
             href="#"
             @click.prevent="openIntro"
-            class="intro-link"
-          >
+            class="intro-link">
             <IconInfo class="icon-info" />소개
           </a>
           <a
             v-if="!loggedInUser"
             href="#"
             @click.prevent="openManual"
-            class="intro-link manual-link"
-          >
+            class="intro-link manual-link">
             <IconManual class="icon-manual" />메뉴얼
           </a>
           <template v-if="loggedInUser">
@@ -533,14 +531,12 @@ onMounted(() => {
               <span class="path-home"><IconHome class="icon-home" />홈</span>
               <span class="path-sep">&gt;</span>
               <NuxtLink to="/questions" class="path-current"
-                >문제 목록</NuxtLink
-              >
+                >문제 목록</NuxtLink>
             </div>
             <a
               href="#"
               class="user-greeting"
-              @click.prevent="showUserModal = true"
-            >
+              @click.prevent="showUserModal = true">
               <IconUser class="icon-user" />
               {{ loggedInUser.username }}님
             </a>
@@ -588,8 +584,7 @@ onMounted(() => {
             <transition name="fade">
               <div
                 v-if="showTicker && tickerQuestions.length > 0"
-                class="ticker-box"
-              >
+                class="ticker-box">
                 <div class="ticker-label">
                   <span class="ticker-dot"></span>
                   최신 등록문제 리스트
@@ -602,8 +597,7 @@ onMounted(() => {
                         ...tickerQuestions,
                       ]"
                       :key="idx"
-                      class="ticker-item"
-                    >
+                      class="ticker-item">
                       <span class="t-id">#{{ q.question_id }}</span>
                       <LatexRenderer
                         class="t-text"
@@ -700,8 +694,7 @@ onMounted(() => {
               <button
                 type="button"
                 class="btn-public"
-                @click="handlePublicQuestions"
-              >
+                @click="handlePublicQuestions">
                 오늘의 공개문제</button
               >를 풀어보세요
             </p>
@@ -733,8 +726,7 @@ onMounted(() => {
                     type="button"
                     class="pw-toggle"
                     @click="showLoginPw = !showLoginPw"
-                    aria-label="비밀번호 보기"
-                  >
+                    aria-label="비밀번호 보기">
                     <IconEye v-if="!showLoginPw" width="18" height="18" />
                     <IconEyeOff v-else width="18" height="18" />
                   </button>
@@ -769,8 +761,7 @@ onMounted(() => {
             <p class="join-text">
               계정이 없으신가요?&nbsp;
               <a href="#" class="link-accent" @click.prevent="openRegister"
-                >무료 회원가입 →</a
-              >
+                >무료 회원가입 →</a>
             </p>
 
             <div class="badge-row">
@@ -794,16 +785,14 @@ onMounted(() => {
           class="modal-box"
           role="dialog"
           aria-modal="true"
-          aria-label="AI Edu-Hub 소개"
-        >
+          aria-label="AI Edu-Hub 소개">
           <button class="modal-close" @click="closeIntro" aria-label="닫기">
             <IconClose width="20" height="20" />
           </button>
 
           <div class="modal-header">
             <span class="modal-badge"
-              ><IconBook class="badge-icon" /> AI Edu-Hub 소개</span
-            >
+              ><IconBook class="badge-icon" /> AI Edu-Hub 소개</span>
             <h2 class="modal-title">
               사진 한 장으로 시작하는<br /><em>우리 반 맞춤형 스마트 학습지</em>
             </h2>
@@ -896,8 +885,7 @@ onMounted(() => {
           class="modal-box manual-modal"
           role="dialog"
           aria-modal="true"
-          aria-label="Edu-Hub 프로젝트 메뉴얼"
-        >
+          aria-label="Edu-Hub 프로젝트 메뉴얼">
           <div class="modal-header manual-modal-header">
             <span class="modal-badge">Edu-Hub 매뉴얼 </span>
             <div class="manual-tabs">
@@ -906,8 +894,7 @@ onMounted(() => {
                   'manual-tab-btn',
                   { active: manualActiveTab === 'pdf' },
                 ]"
-                @click="manualActiveTab = 'pdf'"
-              >
+                @click="manualActiveTab = 'pdf'">
                 <IconManual width="16" height="16" /> 요약 통계
               </button>
               <button
@@ -915,8 +902,7 @@ onMounted(() => {
                   'manual-tab-btn',
                   { active: manualActiveTab === 'erd' },
                 ]"
-                @click="manualActiveTab = 'erd'"
-              >
+                @click="manualActiveTab = 'erd'">
                 <IconEye width="16" height="16" /> 데이터 구조 ERD
               </button>
               <button
@@ -924,8 +910,7 @@ onMounted(() => {
                   'manual-tab-btn',
                   { active: manualActiveTab === 'github' },
                 ]"
-                @click="manualActiveTab = 'github'"
-              >
+                @click="manualActiveTab = 'github'">
                 <IconSparkle width="16" height="16" /> Github
               </button>
             </div>
@@ -953,8 +938,7 @@ onMounted(() => {
               @mousedown="handleErdMousedown"
               @mousemove="handleErdMousemove"
               @mouseup="handleErdMouseup"
-              @mouseleave="handleErdMouseleave"
-            >
+              @mouseleave="handleErdMouseleave">
               <img
                 :src="erdImgUrl"
                 class="erd-img"
@@ -966,8 +950,7 @@ onMounted(() => {
               <button
                 class="erd-reset-btn"
                 @click="resetErdZoom"
-                title="원래 크기로"
-              >
+                title="원래 크기로">
                 <IconEye width="16" height="16" /> 화면맞춤
               </button>
             </div>
@@ -988,8 +971,7 @@ onMounted(() => {
                   href="https://github.com/LeeHongSoek/Edu-Hub"
                   target="_blank"
                   rel="noopener noreferrer"
-                  class="btn-github-link"
-                >
+                  class="btn-github-link">
                   새 창에서 Github 열기
                 </a>
               </div>
@@ -1006,22 +988,19 @@ onMounted(() => {
       <div
         v-if="showRegister"
         class="modal-backdrop"
-        @click.self="closeRegister"
-      >
+        @click.self="closeRegister">
         <div
           class="modal-box reg-modal"
           role="dialog"
           aria-modal="true"
-          aria-label="회원가입"
-        >
+          aria-label="회원가입">
           <button class="modal-close" @click="closeRegister" aria-label="닫기">
             <IconClose width="20" height="20" />
           </button>
 
           <div class="modal-header">
             <span class="modal-badge"
-              ><IconSparkle class="badge-icon" /> 환영합니다</span
-            >
+              ><IconSparkle class="badge-icon" /> 환영합니다</span>
             <h2 class="modal-title">EduHub 회원가입</h2>
             <p class="modal-lead">
               쉽고 빠른 가입으로 스마트한 학습을 시작하세요.
@@ -1047,15 +1026,13 @@ onMounted(() => {
                     type="button"
                     class="btn-check"
                     @click="checkId"
-                    :disabled="checkingId"
-                  >
+                    :disabled="checkingId">
                     {{ checkingId ? "..." : "중복확인" }}
                   </button>
                 </div>
                 <p
                   v-if="isIdChecked"
-                  :class="['id-status', isIdAvailable ? 'success' : 'fail']"
-                >
+                  :class="['id-status', isIdAvailable ? 'success' : 'fail']">
                   {{
                     isIdAvailable
                       ? "사용 가능한 아이디입니다."
@@ -1093,8 +1070,7 @@ onMounted(() => {
                     type="button"
                     class="pw-toggle"
                     @click="showRegPw = !showRegPw"
-                    aria-label="비밀번호 보기"
-                  >
+                    aria-label="비밀번호 보기">
                     <IconEye v-if="!showRegPw" width="18" height="18" />
                     <IconEyeOff v-else width="18" height="18" />
                   </button>
@@ -1112,8 +1088,7 @@ onMounted(() => {
                     type="button"
                     class="pw-toggle"
                     @click="showRegPwConfirm = !showRegPwConfirm"
-                    aria-label="비밀번호 보기"
-                  >
+                    aria-label="비밀번호 보기">
                     <IconEye v-if="!showRegPwConfirm" width="18" height="18" />
                     <IconEyeOff v-else width="18" height="18" />
                   </button>
@@ -1124,16 +1099,13 @@ onMounted(() => {
                 <div class="role-selector">
                   <label
                     ><input type="radio" v-model="regRole" value="S" />
-                    학생</label
-                  >
+                    학생</label>
                   <label
                     ><input type="radio" v-model="regRole" value="T" />
-                    선생님</label
-                  >
+                    선생님</label>
                   <label
                     ><input type="radio" v-model="regRole" value="P" />
-                    학부모</label
-                  >
+                    학부모</label>
                 </div>
               </div>
             </div>

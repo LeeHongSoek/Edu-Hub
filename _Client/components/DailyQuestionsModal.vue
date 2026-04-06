@@ -419,8 +419,7 @@ onUnmounted(() => {
             <div class="q-header-right">
               <span class="q-badge">
                 {{ formatGroupPath((currentQuestion as any).group) }} :
-                {{ maskName((currentQuestion as any).creator?.username) }}</span
-              >
+                {{ maskName((currentQuestion as any).creator?.username) }}</span>
             </div>
           </div>
 
@@ -442,8 +441,7 @@ onUnmounted(() => {
               :class="{
                 'is-selected': currentSelectedOpt === opt.option_id,
               }"
-              @click="selectOption(opt.option_id)"
-            >
+              @click="selectOption(opt.option_id)">
               <span class="opt-num">{{ opt.option_number }}</span>
               <span class="opt-text"
                 ><LatexRenderer :text="opt.content"
@@ -458,15 +456,13 @@ onUnmounted(() => {
           <button
             class="btn-action prev-btn"
             :disabled="currentIndex === 0"
-            @click="goPrev"
-          >
+            @click="goPrev">
             &larr; 이전 문제
           </button>
           <button
             v-if="hasCurrentHint && !showHint"
             class="btn-hint-toggle"
-            @click="showHint = !showHint"
-          >
+            @click="showHint = !showHint">
             힌트보기
           </button>
         </div>
@@ -476,8 +472,7 @@ onUnmounted(() => {
             <div
               class="footer-hint"
               v-if="showHint && currentQuestion.hint"
-              :key="currentQuestion.question_id"
-            >
+              :key="currentQuestion.question_id">
               <div class="hint-body">
                 <IconHintBulb class="hint-icon" />
                 <span class="hint-text">{{ currentQuestion.hint }}</span>
@@ -492,8 +487,7 @@ onUnmounted(() => {
         <button
           class="btn-action next-btn"
           :disabled="currentIndex === questions.length - 1"
-          @click="goNext"
-        >
+          @click="goNext">
           다음 문제 &rarr;
         </button>
       </div>
@@ -531,8 +525,7 @@ onUnmounted(() => {
               ref="scoreGradeRef"
               class="score-grade"
               :class="gradeResult.charAt(0)"
-              :style="scoreGradeStyle"
-            >
+              :style="scoreGradeStyle">
               {{ gradeResult }}
             </div>
           </div>
@@ -542,8 +535,7 @@ onUnmounted(() => {
           <div
             v-for="(q, i) in questions"
             :key="q.question_id"
-            class="detail-item"
-          >
+            class="detail-item">
             <div class="detail-title">
               <span class="detail-num">{{ i + 1 }}번</span>
               <span class="detail-name">{{ q.title }}</span>

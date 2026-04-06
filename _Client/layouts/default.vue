@@ -140,8 +140,7 @@ onMounted(() => {
           v-if="userInfo"
           href="#"
           class="ombudsman-link"
-          @click.prevent="showOmbudsmanModal = true"
-        >
+          @click.prevent="showOmbudsmanModal = true">
           <IconFeedback class="icon-feedback" />
           옴브즈먼
         </a>
@@ -155,8 +154,7 @@ onMounted(() => {
           <a
             href="#"
             class="user-greeting"
-            @click.prevent="showUserModal = true"
-          >
+            @click.prevent="showUserModal = true">
             <IconUser class="icon-user" />
             {{ userInfo.username }} <{{ userInfo.user_no }}>님
           </a>
@@ -164,8 +162,7 @@ onMounted(() => {
             to="/dashboard?tab=messages&view=received"
             class="message-badge"
             title="받은 메시지 확인"
-            @click.prevent="handleMessageBadgeClick('click')"
-          >
+            @click.prevent="handleMessageBadgeClick('click')">
             <IconMessage class="icon-message" aria-hidden="true" />
             <!-- [{{ userInfo.msgAlert }}] -->
           </NuxtLink>
@@ -196,8 +193,7 @@ onMounted(() => {
           <li
             v-for="msg in messageList"
             :key="msg.message_id"
-            class="popover-item"
-          >
+            class="popover-item">
             <div class="popover-item-top">
               <span class="from">{{
                 msg.sender?.username || "발신자 없음"

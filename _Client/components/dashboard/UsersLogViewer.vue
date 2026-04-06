@@ -122,8 +122,7 @@ const formatTime = (dateStr: string) => {
             :key="type.id"
             :class="{ active: selectedType === type.id }"
             :style="{ '--active-color': type.color }"
-            @click="selectedType = type.id"
-          >
+            @click="selectedType = type.id">
             <component
               :is="type.icon"
               v-if="type.icon"
@@ -173,8 +172,7 @@ const formatTime = (dateStr: string) => {
         <div v-for="log in logs" :key="log.log_id" class="log-card">
           <div
             class="log-type-indicator"
-            :style="{ backgroundColor: getLogTypeInfo(log.logtype).color }"
-          >
+            :style="{ backgroundColor: getLogTypeInfo(log.logtype).color }">
             <component
               :is="getLogTypeInfo(log.logtype).icon"
               class="type-icon"
@@ -190,8 +188,7 @@ const formatTime = (dateStr: string) => {
                 v-if="log.user_content"
                 class="log-action-memo"
                 :title="log.title"
-                >{{ log.title }}</span
-              >
+                >{{ log.title }}</span>
               <span class="log-time">{{ formatTime(log.last_played_at) }}</span>
             </div>
             <div class="log-title-row">

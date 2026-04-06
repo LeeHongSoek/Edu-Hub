@@ -600,14 +600,12 @@ const submitReview = async () => {
           class="solver-title"
           :class="{ 'has-hint': !!question.content }"
           @mouseenter="scheduleHintTooltip"
-          @mouseleave="clearHintTooltip"
-        >
+          @mouseleave="clearHintTooltip">
           {{ question.title }}
           <Transition name="fade">
             <div
               v-if="question.content && showHintTooltip"
-              class="question-hint-bubble"
-            >
+              class="question-hint-bubble">
               <div class="hint-bubble-label">힌트</div>
               <LatexRenderer :text="question.content" />
             </div>
@@ -631,8 +629,7 @@ const submitReview = async () => {
           <div
             v-for="(child, idx) in childQuestions"
             :key="child.question_id"
-            class="child-question-card"
-          >
+            class="child-question-card">
             <div class="child-question-header">
               <div class="child-question-meta">
                 <span class="child-number">Q{{ idx + 1 }}</span>
@@ -649,8 +646,7 @@ const submitReview = async () => {
             </div>
             <div
               v-if="child.question_type_id?.toUpperCase() === 'M'"
-              class="child-options"
-            >
+              class="child-options">
               <div
                 v-for="opt in child.options || []"
                 :key="opt.option_id"
@@ -668,8 +664,7 @@ const submitReview = async () => {
                     ) &&
                     !opt.is_answer,
                 }"
-                @click="toggleChildOption(child, opt.option_id)"
-              >
+                @click="toggleChildOption(child, opt.option_id)">
                 <span class="child-option-number">{{ opt.option_number }}</span>
                 <span class="child-option-text">
                   <LatexRenderer :text="opt.content" />
@@ -697,8 +692,7 @@ const submitReview = async () => {
                 :class="{
                   correct: getChildState(child).isCorrect,
                   wrong: !getChildState(child).isCorrect,
-                }"
-              >
+                }">
                 <div class="child-result-label">
                   {{
                     getChildState(child).isCorrect
@@ -718,8 +712,7 @@ const submitReview = async () => {
             type="button"
             class="child-submit-all-btn"
             :disabled="!canSubmitAllChildQuestions"
-            @click="handleFinishAllChildren()"
-          >
+            @click="handleFinishAllChildren()">
             세부연계문제 정답 확인
           </button>
         </div>
@@ -727,12 +720,10 @@ const submitReview = async () => {
         <!-- 객관식 보기 영역 (M: 객관식) -->
         <div
           v-if="question.question_type_id?.toUpperCase() === 'M'"
-          class="options-list"
-        >
+          class="options-list">
           <div
             v-if="!question.options || question.options.length === 0"
-            class="no-options"
-          >
+            class="no-options">
             등록된 보기가 없습니다.
           </div>
           <div
@@ -747,8 +738,7 @@ const submitReview = async () => {
                 selectedOptionIds.includes(opt.option_id) &&
                 !opt.is_answer,
             }"
-            @click="toggleOption(opt.option_id)"
-          >
+            @click="toggleOption(opt.option_id)">
             <span class="option-number">{{ opt.option_number }}</span>
             <span class="option-text">
               <LatexRenderer :text="opt.content" />
@@ -759,8 +749,7 @@ const submitReview = async () => {
         <!-- 주관식 입력 영역 -->
         <div
           v-else-if="!isCompositeParentQuestion"
-          class="answer-input-container"
-        >
+          class="answer-input-container">
           <input
             v-model="userAnswer"
             type="text"
@@ -780,8 +769,7 @@ const submitReview = async () => {
               ? selectedOptionIds.length === 0
               : !userAnswer
           "
-          @click="handleFinish()"
-        >
+          @click="handleFinish()">
           정답 확인
         </button>
       </div>
@@ -800,8 +788,7 @@ const submitReview = async () => {
                   :key="i"
                   class="star"
                   :class="{ 'is-active': i <= (question.rating || 0) }"
-                  >★</span
-                >
+                  >★</span>
               </div>
               <button class="btn-inline-comment" @click="openReviewModal">
                 <IconMessage class="inline-icon" /> 의견 남기기
@@ -813,8 +800,7 @@ const submitReview = async () => {
         <div class="footer-slider-nav">
           <div
             v-if="currentIndex !== undefined && totalQuestions !== undefined"
-            class="solver-slider-section"
-          >
+            class="solver-slider-section">
             <span class="solver-slider-limit">1</span>
             <div class="solver-slider-track-container">
               <input
@@ -832,8 +818,7 @@ const submitReview = async () => {
               ></div>
               <div
                 class="solver-slider-tooltip"
-                :style="{ left: questionSliderPercentage + '%' }"
-              >
+                :style="{ left: questionSliderPercentage + '%' }">
                 {{ questionSliderValue }}
               </div>
             </div>
@@ -848,8 +833,7 @@ const submitReview = async () => {
       <div
         v-if="showModal"
         class="modal-overlay"
-        @click.self="showModal = false"
-      >
+        @click.self="showModal = false">
         <div class="modal-content" :class="modalType">
           <div class="modal-icon">
             <IconCheck v-if="modalType === 'success'" class="modal-icon-svg" />
@@ -870,8 +854,7 @@ const submitReview = async () => {
       <div
         v-if="showReviewModal"
         class="modal-overlay"
-        @click.self="showReviewModal = false"
-      >
+        @click.self="showReviewModal = false">
         <div class="modal-content review-modal-content">
           <div class="modal-header">
             <h3 class="modal-title">문제 의견 및 평가</h3>
@@ -890,8 +873,7 @@ const submitReview = async () => {
                   class="star"
                   :class="{ 'is-active': i <= newRating }"
                   @click="newRating = i"
-                  >★</span
-                >
+                  >★</span>
               </div>
             </div>
             <textarea
@@ -902,8 +884,7 @@ const submitReview = async () => {
             <button
               class="btn-primary"
               @click="submitReview"
-              :disabled="isSubmittingReview"
-            >
+              :disabled="isSubmittingReview">
               {{ isSubmittingReview ? "등록 중..." : "작성하기" }}
             </button>
           </div>
@@ -919,8 +900,7 @@ const submitReview = async () => {
               <div
                 v-for="review in reviews"
                 :key="review.review_id"
-                class="review-item"
-              >
+                class="review-item">
                 <div class="review-header">
                   <span class="review-author">{{
                     review.user?.username || "익명"
@@ -931,8 +911,7 @@ const submitReview = async () => {
                       :key="i"
                       class="star-small"
                       :class="{ 'is-active': i <= review.rating }"
-                      >★</span
-                    >
+                      >★</span>
                   </div>
                   <span class="review-date">{{
                     new Date(review.created_at).toLocaleDateString()

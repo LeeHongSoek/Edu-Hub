@@ -207,15 +207,13 @@ onMounted(fetchMyReports);
                   <button
                     v-if="searchQuery"
                     class="btn-reset-search"
-                    @click="clearSearch"
-                  >
+                    @click="clearSearch">
                     초기화
                   </button>
                 </div>
                 <div v-if="filteredReports.length > 0" class="slider-row">
                   <span class="summary-text"
-                    >총 {{ filteredReports.length }}건의 제보</span
-                  >
+                    >총 {{ filteredReports.length }}건의 제보</span>
                   <div class="page-slider-section">
                     <PageSlider
                       v-model="sliderValue"
@@ -227,8 +225,7 @@ onMounted(fetchMyReports);
                   </div>
                   <span class="range-text"
                     >{{ pageStartItem }}-{{ pageEndItem }}번째 항목 표시
-                    중</span
-                  >
+                    중</span>
                 </div>
               </div>
             </div>
@@ -244,19 +241,16 @@ onMounted(fetchMyReports);
               <TransitionGroup
                 name="report-slide"
                 tag="div"
-                class="report-list"
-              >
+                class="report-list">
                 <div
                   v-for="report in paginatedReports"
                   :key="report.report_id"
-                  class="report-item"
-                >
+                  class="report-item">
                   <div class="report-main">
                     <div class="report-meta">
                       <span
                         class="category-badge"
-                        :class="report.category.toLowerCase()"
-                      >
+                        :class="report.category.toLowerCase()">
                         {{
                           categories.find((c) => c.value === report.category)
                             ?.label
@@ -274,8 +268,7 @@ onMounted(fetchMyReports);
                         </button>
                         <button
                           class="btn-icon"
-                          @click="deleteReport(report.report_id)"
-                        >
+                          @click="deleteReport(report.report_id)">
                           <IconTrash class="action-icon" />
                         </button>
                       </div>
@@ -294,8 +287,7 @@ onMounted(fetchMyReports);
                 <option
                   v-for="cat in categories"
                   :key="cat.value"
-                  :value="cat.value"
-                >
+                  :value="cat.value">
                   {{ cat.label }}
                 </option>
               </select>

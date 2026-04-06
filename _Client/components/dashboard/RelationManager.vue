@@ -1009,8 +1009,7 @@ watch(
         <button
           class="btn-add"
           :disabled="relationTargets.length === 0"
-          @click="openConnectModal"
-        >
+          @click="openConnectModal">
           + 연결 관리
         </button>
       </div>
@@ -1025,8 +1024,7 @@ watch(
               :key="target.key"
               class="target-tab"
               :class="{ active: activeTargetKey === target.key }"
-              @click="selectTarget(target.key)"
-            >
+              @click="selectTarget(target.key)">
               {{ target.label }}
             </button>
           </div>
@@ -1043,8 +1041,7 @@ watch(
           <button
             v-if="relationSearchQuery"
             class="btn-reset-search"
-            @click="clearRelationSearch"
-          >
+            @click="clearRelationSearch">
             초기화
           </button>
         </div>
@@ -1063,8 +1060,7 @@ watch(
           </div>
           <span class="range-text"
             >{{ mainDisplayPageStartItem }}-{{ mainDisplayPageEndItem }}번째
-            항목 표시 중</span
-          >
+            항목 표시 중</span>
         </div>
       </div>
     </div>
@@ -1072,8 +1068,7 @@ watch(
     <div v-if="relationLoading" class="loading">불러오는 중...</div>
     <div
       v-else-if="!hasConnectedRelations && !hasCandidateResults"
-      class="empty"
-    >
+      class="empty">
       {{
         relationSearchQuery
           ? "검색 결과가 없습니다."
@@ -1084,21 +1079,18 @@ watch(
       v-else-if="hasConnectedRelations"
       name="relation-slide"
       tag="div"
-      class="relation-list"
-    >
+      class="relation-list">
       <div
         v-for="rel in relations"
         :key="rel.relation_id"
         class="relation-item"
-        v-show="rel.approval === 'Y'"
-      >
+        v-show="rel.approval === 'Y'">
         <div class="relation-row">
           <div class="relation-user">
             <button
               type="button"
               class="user-name-button"
-              @click="emit('open-message-thread', getRelationTargetUser(rel))"
-            >
+              @click="emit('open-message-thread', getRelationTargetUser(rel))">
               <span class="user-name">{{
                 getRelationTargetUser(rel)?.username
               }}</span>
@@ -1111,8 +1103,7 @@ watch(
             <span class="relation-badge">{{ relationBadgeLabel(rel) }}</span>
             <button
               class="relation-message-btn"
-              @click="emit('compose-message', getRelationTargetUser(rel))"
-            >
+              @click="emit('compose-message', getRelationTargetUser(rel))">
               메시지
             </button>
           </div>
@@ -1123,13 +1114,11 @@ watch(
       v-else
       name="candidate-slide"
       tag="div"
-      class="candidate-list candidate-list-main"
-    >
+      class="candidate-list candidate-list-main">
       <div
         v-for="user in activePanel?.items || []"
         :key="user.user_no"
-        class="candidate-item"
-      >
+        class="candidate-item">
         <div class="candidate-row">
           <div class="candidate-info">
             <input
@@ -1148,8 +1137,7 @@ watch(
               user.approval === null ||
               user.approval === 'N'
             "
-            @click="toggleCandidateRelation(user, !user.isConnected)"
-          >
+            @click="toggleCandidateRelation(user, !user.isConnected)">
             {{
               user.approval === null
                 ? "요청중.."
@@ -1167,8 +1155,7 @@ watch(
     <div
       v-if="showConnectModal"
       class="modal-overlay"
-      @click.self="closeConnectModal"
-    >
+      @click.self="closeConnectModal">
       <div class="modal-card">
         <div class="modal-header">
           <div>
@@ -1182,8 +1169,7 @@ watch(
                 :key="target.key"
                 class="target-tab"
                 :class="{ active: activeTargetKey === target.key }"
-                @click="selectTarget(target.key)"
-              >
+                @click="selectTarget(target.key)">
                 {{ target.label }}
               </button>
             </div>
@@ -1198,8 +1184,7 @@ watch(
             <div
               v-if="activeTarget && activePanel"
               :key="activeTarget.key"
-              class="target-panel"
-            >
+              class="target-panel">
               <div class="pagination-panel-border">
                 <div class="slider-panel">
                   <div class="search-row">
@@ -1218,16 +1203,14 @@ watch(
                     <button
                       v-if="activePanel.searchQuery"
                       class="btn-reset-search"
-                      @click="clearSearch"
-                    >
+                      @click="clearSearch">
                       초기화
                     </button>
                   </div>
 
                   <div class="slider-row">
                     <span class="summary-text"
-                      >총 {{ activePanel.total }}명</span
-                    >
+                      >총 {{ activePanel.total }}명</span>
                     <div class="page-slider-section">
                       <PageSlider
                         :model-value="activePanel.sliderValue"
@@ -1244,8 +1227,7 @@ watch(
                     </div>
                     <span class="range-text"
                       >{{ pageStartItem }}-{{ pageEndItem }}번째 항목 표시
-                      중</span
-                    >
+                      중</span>
                   </div>
                 </div>
               </div>
@@ -1260,13 +1242,11 @@ watch(
                 v-else
                 name="candidate-slide"
                 tag="div"
-                class="candidate-list"
-              >
+                class="candidate-list">
                 <div
                   v-for="user in activePanel.items"
                   :key="user.user_no"
-                  class="candidate-item"
-                >
+                  class="candidate-item">
                   <div class="candidate-row">
                     <div class="candidate-info">
                       <input
@@ -1285,8 +1265,7 @@ watch(
                         user.approval === null ||
                         user.approval === 'N'
                       "
-                      @click="toggleCandidateRelation(user, !user.isConnected)"
-                    >
+                      @click="toggleCandidateRelation(user, !user.isConnected)">
                       {{
                         user.approval === null
                           ? "요청중.."
@@ -1313,8 +1292,7 @@ watch(
     <div
       v-if="showGraphModal"
       class="graph-modal-overlay"
-      @click.self="closeGraphModal"
-    >
+      @click.self="closeGraphModal">
       <div class="graph-modal-card">
         <div class="graph-modal-header">
           <div>
@@ -1340,8 +1318,7 @@ watch(
             class="graph-svg"
             :viewBox="`0 0 ${graphWidth} ${graphHeight}`"
             role="img"
-            aria-label="인맥 네트워크 그래프"
-          >
+            aria-label="인맥 네트워크 그래프">
             <defs>
               <!-- 글로우 필터: 호버 시 빛나게 -->
               <filter id="glow-sm" x="-50%" y="-50%" width="200%" height="200%">
@@ -1382,8 +1359,7 @@ watch(
                 :transform="`translate(${node.x}, ${node.y})`"
                 @mouseenter="hoveredGraphNodeId = node.id"
                 @mouseleave="hoveredGraphNodeId = ''"
-                style="cursor: default"
-              >
+                style="cursor: default">
                 <!-- 호버 글로우 링 -->
                 <circle
                   v-if="hoveredGraphNodeId === node.id"
@@ -1416,8 +1392,7 @@ watch(
                         ? 'label-group'
                         : 'label-person'
                   "
-                  y="0.35em"
-                >
+                  y="0.35em">
                   {{ node.label }}
                 </text>
               </g>

@@ -176,8 +176,7 @@ const handleDelete = async () => {
               <optgroup
                 v-for="g1 in groups"
                 :key="g1.group_id"
-                :label="g1.name"
-              >
+                :label="g1.name">
                 <option :value="g1.group_id">{{ g1.name }} (L1)</option>
                 <template v-for="g2 in g1.child_groups" :key="g2.group_id">
                   <option :value="g2.group_id">
@@ -186,8 +185,7 @@ const handleDelete = async () => {
                   <option
                     v-for="g3 in g2.child_groups"
                     :key="g3.group_id"
-                    :value="g3.group_id"
-                  >
+                    :value="g3.group_id">
                     &nbsp;&nbsp;&nbsp;&nbsp;↳ {{ g3.name }} (L3)
                   </option>
                 </template>
@@ -235,8 +233,7 @@ const handleDelete = async () => {
             <div
               v-for="(opt, index) in editData.options"
               :key="index"
-              class="option-edit-item"
-            >
+              class="option-edit-item">
               <div class="opt-num">{{ (index as number) + 1 }}</div>
               <input
                 v-model="opt.content"
@@ -250,8 +247,7 @@ const handleDelete = async () => {
               </label>
               <button
                 class="btn-remove-opt"
-                @click="removeOption(index as number)"
-              >
+                @click="removeOption(index as number)">
                 &times;
               </button>
             </div>
