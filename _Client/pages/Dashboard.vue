@@ -92,7 +92,7 @@ const classListTitle = computed(() =>
 );
 
 const logDashboardAction = async (
-  logtype: "L" | "C" | "R",
+  logtype: "L" | "C" | "R" | "V",
   objId: string | number | bigint,
   userContent: string,
   score = 0,
@@ -111,8 +111,6 @@ const setActiveTab = (tab: string) => {
   if (activeTab.value === tab) return;
   activeTab.value = tab;
 
-  const logtype: "L" | "C" | "R" =
-    tab === "classes" ? "C" : tab === "relations" ? "R" : "L";
   const labelMap: Record<string, string> = {
     stats: "요약 통계",
     relations: "관계 관리",
@@ -120,7 +118,7 @@ const setActiveTab = (tab: string) => {
     classes: classTabLabel.value,
     logs: "활동 로그",
   };
-  void logDashboardAction(logtype, 0, `대시보드 탭 전환: ${labelMap[tab] || tab}`);
+  void logDashboardAction("V", 0, `대시보드 탭 전환: ${labelMap[tab] || tab}`);
 };
 
 const fetchClassList = async () => {
@@ -472,7 +470,7 @@ onUnmounted(() => {
         </button>
 
         <button
-          v-if="userInfo.role_id === 'S'"
+          v-if="userInfo.role_id === 'S' || userInfo.role_id === 'A'"
           :class="{ active: activeTab === 'logs' }"
           :aria-pressed="activeTab === 'logs'"
           @click="setActiveTab('logs')">

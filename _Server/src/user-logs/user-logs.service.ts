@@ -66,6 +66,10 @@ export class UserLogsService {
       return '로그인 / 접속';
     }
 
+    if (log.logtype === 'V') {
+      return '화면 / 버튼 활동';
+    }
+
     return 'Unknown Item';
   }
 

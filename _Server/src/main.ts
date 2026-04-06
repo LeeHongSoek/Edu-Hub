@@ -367,7 +367,13 @@ async function bootstrap() {
 
           const logResData = `[API통신_데이터_응답]\n${JSON.stringify(logEntry.payload.response, null, tabSize)}\n`;
 
-          appendFileSync(logPath, logHeader + logReqData + logResData);
+          const logContent = logHeader + logReqData + logResData;
+          appendFileSync(logPath, logContent);
+          void prisma.sysLog.create({
+            data: {
+              content: logContent,
+            },
+          }).catch(() => {});
         } catch { }
 
         // // 콘솔 출력

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from "vue";
+import { computed, ref, watch } from "vue";
 
 const props = withDefaults(
   defineProps<{
@@ -23,20 +23,47 @@ const emit = defineEmits<{
   (event: "commit", value: number): void;
 }>();
 
+const localValue = ref(props.modelValue);
+const isDragging = ref(false);
+
+watch(
+  () => props.modelValue,
+  (newVal) => {
+    if (!isDragging.value) {
+      localValue.value = newVal;
+    }
+  }
+);
+
 const safeMax = computed(() => Math.max(props.max, props.min));
 const percentage = computed(() => {
   if (safeMax.value <= props.min) return 0;
-  return ((props.modelValue - props.min) / (safeMax.value - props.min)) * 100;
+  return ((localValue.value - props.min) / (safeMax.value - props.min)) * 100;
 });
 
+const displayValue = computed(() => Math.round(localValue.value));
+
 const handleInput = (event: Event) => {
-  emit("update:modelValue", Number((event.target as HTMLInputElement).value));
+  isDragging.value = true;
+  localValue.value = Number((event.target as HTMLInputElement).value);
+  emit("update:modelValue", Math.round(localValue.value));
 };
 
 const handleChange = (event: Event) => {
-  const value = Number((event.target as HTMLInputElement).value);
-  emit("update:modelValue", value);
-  emit("commit", value);
+  isDragging.value = false;
+  const finalValue = Math.round(Number((event.target as HTMLInputElement).value));
+  localValue.value = finalValue;
+  emit("update:modelValue", finalValue);
+  emit("commit", finalValue);
+};
+
+const handlePointerUp = () => {
+  if (isDragging.value) {
+    const finalValue = Math.round(localValue.value);
+    localValue.value = finalValue;
+    emit("update:modelValue", finalValue);
+    isDragging.value = false;
+  }
 };
 </script>
 
@@ -48,18 +75,21 @@ const handleChange = (event: Event) => {
         type="range"
         :min="min"
         :max="safeMax"
-        :value="modelValue"
+        step="0.01"
+        :value="localValue"
         class="page-slider"
         :disabled="disabled"
         @input="handleInput"
         @change="handleChange"
+        @pointerup="handlePointerUp"
+        @touchend="handlePointerUp"
       />
       <div class="slider-fill" :style="{ width: percentage + '%' }"></div>
       <div
         v-if="!disabled"
         class="slider-tooltip"
         :style="{ left: percentage + '%' }">
-        {{ modelValue }}{{ postfix }}
+        {{ displayValue }}{{ postfix }}
       </div>
     </div>
     <span v-if="showLimits" class="slider-limit">{{ safeMax }}</span>

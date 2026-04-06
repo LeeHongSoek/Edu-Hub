@@ -3,8 +3,11 @@ import IconFileText from "~/assets/icons/IconFileText.svg?component";
 import IconBook from "~/assets/icons/IconBook.svg?component";
 import IconPencil from "~/assets/icons/IconPencil.svg?component";
 import IconArrowUp from "~/assets/icons/IconArrowUp.svg?component";
+import { useUserLog } from "~/composables/useUserLog";
 
-defineProps<{
+const { writeUserLog } = useUserLog();
+
+const props = defineProps<{
   activePage?: "questions" | "books" | "exams" | null;
   backLink?: {
     to: string;
@@ -12,6 +15,12 @@ defineProps<{
   } | null;
   isDashboard?: boolean;
 }>();
+
+const logManagerNav = async (label: string) => {
+  await writeUserLog("V", 0, {
+    user_content: `상단 이동 버튼 클릭: ${label}`,
+  });
+};
 </script>
 
 <template>
@@ -20,28 +29,31 @@ defineProps<{
       <NuxtLink
         :to="isDashboard ? '/questions?mine=true' : '/questions'"
         class="nav-btn"
-        :class="{ active: activePage === 'questions' }">
+        :class="{ active: activePage === 'questions' }"
+        @click="logManagerNav('문제 목록')">
         <IconFileText class="nav-icon" />
         문제 목록
       </NuxtLink>
       <NuxtLink
         to="/question-books"
         class="nav-btn"
-        :class="{ active: activePage === 'books' }">
+        :class="{ active: activePage === 'books' }"
+        @click="logManagerNav('문제집 목록')">
         <IconBook class="nav-icon" />
         문제집 목록
       </NuxtLink>
       <NuxtLink
         to="/exams"
         class="nav-btn"
-        :class="{ active: activePage === 'exams' }">
+        :class="{ active: activePage === 'exams' }"
+        @click="logManagerNav('고사집 목록')">
         <IconPencil class="nav-icon" />
         고사집 목록
       </NuxtLink>
     </template>
 
     <template v-else>
-      <NuxtLink :to="backLink.to" class="nav-btn">
+      <NuxtLink :to="backLink.to" class="nav-btn" @click="logManagerNav(backLink.label)">
         {{ backLink.label }}
         <IconArrowUp class="nav-icon" style="transform: rotate(-270deg)" />
       </NuxtLink>

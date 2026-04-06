@@ -17,13 +17,48 @@
 /*M!100616 SET @OLD_NOTE_VERBOSITY=@@NOTE_VERBOSITY, NOTE_VERBOSITY=0 */;
 
 --
--- Table structure for table `class_students`
+-- Table structure for table `brg_class_exam`
 --
 
-DROP TABLE IF EXISTS `class_students`;
+DROP TABLE IF EXISTS `brg_class_exam`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8mb4 */;
-CREATE TABLE `class_students` (
+CREATE TABLE `brg_class_exam` (
+  `class_id` bigint(20) NOT NULL COMMENT '학급 ID',
+  `exam_id` bigint(20) NOT NULL COMMENT '고사 고유 ID',
+  PRIMARY KEY (`class_id`,`exam_id`),
+  KEY `fk_ce_exam` (`exam_id`),
+  CONSTRAINT `fk_ce_class` FOREIGN KEY (`class_id`) REFERENCES `classes` (`class_id`) ON DELETE CASCADE,
+  CONSTRAINT `fk_ce_exam` FOREIGN KEY (`exam_id`) REFERENCES `exams` (`exam_id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci COMMENT='학급별 고 매핑 테이블';
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `brg_class_exam`
+--
+
+LOCK TABLES `brg_class_exam` WRITE;
+/*!40000 ALTER TABLE `brg_class_exam` DISABLE KEYS */;
+INSERT INTO `brg_class_exam` VALUES
+(1,1),
+(8,1),
+(15,1),
+(8,27),
+(1,35),
+(15,35),
+(8,53),
+(15,53);
+/*!40000 ALTER TABLE `brg_class_exam` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `brg_class_student`
+--
+
+DROP TABLE IF EXISTS `brg_class_student`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8mb4 */;
+CREATE TABLE `brg_class_student` (
   `class_id` bigint(20) NOT NULL COMMENT '학급 ID',
   `student_no` bigint(20) NOT NULL COMMENT '학생 식별번호',
   PRIMARY KEY (`class_id`,`student_no`),
@@ -34,12 +69,12 @@ CREATE TABLE `class_students` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Dumping data for table `class_students`
+-- Dumping data for table `brg_class_student`
 --
 
-LOCK TABLES `class_students` WRITE;
-/*!40000 ALTER TABLE `class_students` DISABLE KEYS */;
-INSERT INTO `class_students` VALUES
+LOCK TABLES `brg_class_student` WRITE;
+/*!40000 ALTER TABLE `brg_class_student` DISABLE KEYS */;
+INSERT INTO `brg_class_student` VALUES
 (1,2),
 (4,2),
 (8,2),
@@ -52,6 +87,7 @@ INSERT INTO `class_students` VALUES
 (15,4),
 (20,4),
 (6,5),
+(8,5),
 (12,5),
 (16,5),
 (21,5),
@@ -65,7 +101,6 @@ INSERT INTO `class_students` VALUES
 (6,11),
 (10,11),
 (13,11),
-(15,11),
 (20,11),
 (3,12),
 (7,12),
@@ -92,6 +127,7 @@ INSERT INTO `class_students` VALUES
 (18,20),
 (4,22),
 (6,22),
+(8,22),
 (9,22),
 (13,22),
 (17,22),
@@ -101,7 +137,251 @@ INSERT INTO `class_students` VALUES
 (10,23),
 (14,23),
 (18,23);
-/*!40000 ALTER TABLE `class_students` ENABLE KEYS */;
+/*!40000 ALTER TABLE `brg_class_student` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `brg_questionbook_question`
+--
+
+DROP TABLE IF EXISTS `brg_questionbook_question`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8mb4 */;
+CREATE TABLE `brg_questionbook_question` (
+  `book_id` bigint(20) NOT NULL,
+  `question_id` bigint(20) NOT NULL,
+  PRIMARY KEY (`book_id`,`question_id`),
+  KEY `fk_uqbi_q` (`question_id`),
+  CONSTRAINT `fk_uqbi_book` FOREIGN KEY (`book_id`) REFERENCES `questionbooks` (`book_id`) ON DELETE CASCADE,
+  CONSTRAINT `fk_uqbi_q` FOREIGN KEY (`question_id`) REFERENCES `questions` (`question_id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci COMMENT='문제집에 포함된 문제 매핑';
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `brg_questionbook_question`
+--
+
+LOCK TABLES `brg_questionbook_question` WRITE;
+/*!40000 ALTER TABLE `brg_questionbook_question` DISABLE KEYS */;
+INSERT INTO `brg_questionbook_question` VALUES
+(1,2),
+(4,2),
+(3,3),
+(1,4),
+(4,4),
+(4,5),
+(1,6),
+(5,6),
+(0,7),
+(3,7),
+(5,7),
+(5,8),
+(0,9),
+(6,9),
+(6,10),
+(0,11),
+(6,11),
+(7,12),
+(7,13),
+(7,14),
+(8,15),
+(8,16),
+(8,17),
+(9,18),
+(9,20),
+(9,21),
+(0,23),
+(10,23),
+(10,24),
+(11,25),
+(11,26),
+(11,27),
+(12,28),
+(12,29),
+(12,30),
+(0,31),
+(13,31),
+(0,32),
+(13,32),
+(13,33),
+(14,34),
+(14,35),
+(14,36),
+(15,37),
+(15,38),
+(15,39),
+(16,40),
+(0,41),
+(16,41),
+(16,42),
+(17,43),
+(17,44),
+(24,44),
+(17,45),
+(24,45),
+(18,46),
+(25,46),
+(18,47),
+(25,47),
+(18,48),
+(26,48),
+(0,49),
+(19,49),
+(26,49),
+(19,50),
+(27,50),
+(27,51),
+(28,52),
+(28,53),
+(29,54),
+(29,55),
+(30,56),
+(30,57),
+(0,58),
+(1,58),
+(19,58),
+(31,58),
+(31,59),
+(32,60),
+(44,60),
+(20,61),
+(32,61),
+(44,61),
+(33,62),
+(44,62),
+(1,63),
+(20,63),
+(33,63),
+(45,63),
+(34,64),
+(45,64),
+(0,65),
+(34,65),
+(45,65),
+(35,66),
+(46,66),
+(0,67),
+(35,67),
+(46,67),
+(36,68),
+(46,68),
+(36,69),
+(47,69),
+(37,70),
+(47,70),
+(0,71),
+(20,71),
+(37,71),
+(47,71),
+(48,72),
+(48,73),
+(0,74),
+(48,74),
+(49,75),
+(49,76),
+(49,77),
+(3,78),
+(21,78),
+(38,78),
+(50,78),
+(38,79),
+(50,79),
+(39,80),
+(50,80),
+(21,81),
+(39,81),
+(51,81),
+(40,82),
+(51,82),
+(40,83),
+(51,83),
+(41,84),
+(52,84),
+(0,85),
+(41,85),
+(52,85),
+(42,86),
+(52,86),
+(42,87),
+(53,87),
+(3,88),
+(21,88),
+(43,88),
+(53,88),
+(0,89),
+(43,89),
+(53,89),
+(22,91),
+(0,92),
+(0,97),
+(22,98),
+(22,99),
+(23,100),
+(23,101),
+(23,102),
+(0,104),
+(2,104),
+(2,105),
+(0,107),
+(0,108),
+(10,122),
+(2,128);
+/*!40000 ALTER TABLE `brg_questionbook_question` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `brg_user_relations`
+--
+
+DROP TABLE IF EXISTS `brg_user_relations`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8mb4 */;
+CREATE TABLE `brg_user_relations` (
+  `user_no_1` bigint(20) NOT NULL COMMENT '사용자 1 (주체)',
+  `user_no_2` bigint(20) NOT NULL COMMENT '사용자 2 (대상)',
+  `relation_type_id` varchar(20) NOT NULL COMMENT '관계 유형 (enm_relation_types 참조)',
+  `approval` enum('Y','N') DEFAULT NULL COMMENT '상대방 승인여부',
+  `created_at` datetime NOT NULL DEFAULT current_timestamp() COMMENT '관계 생성 일시',
+  KEY `fk_rel_user1` (`user_no_1`),
+  KEY `fk_rel_user2` (`user_no_2`),
+  KEY `fk_rel_type` (`relation_type_id`),
+  CONSTRAINT `fk_rel_type` FOREIGN KEY (`relation_type_id`) REFERENCES `enm_relation_types` (`relation_type_id`),
+  CONSTRAINT `fk_rel_user1` FOREIGN KEY (`user_no_1`) REFERENCES `users` (`user_no`) ON DELETE CASCADE,
+  CONSTRAINT `fk_rel_user2` FOREIGN KEY (`user_no_2`) REFERENCES `users` (`user_no`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci COMMENT='사용자 간 관계 매핑 테이블';
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `brg_user_relations`
+--
+
+LOCK TABLES `brg_user_relations` WRITE;
+/*!40000 ALTER TABLE `brg_user_relations` DISABLE KEYS */;
+INSERT INTO `brg_user_relations` VALUES
+(1,2,'TEACHER_PUPIL','Y','2026-03-27 21:48:29'),
+(1,5,'TEACHER_PUPIL','Y','2026-04-01 04:28:23'),
+(1,10,'TEACHER_PUPIL','Y','2026-04-01 04:28:25'),
+(1,22,'TEACHER_PUPIL','Y','2026-04-01 04:28:25'),
+(2,1,'PUPIL_TEACHER','Y','2026-03-27 21:48:29'),
+(2,3,'CHILD_PARENT','Y','2026-03-27 21:48:29'),
+(2,7,'PUPIL_TEACHER','Y','2026-03-31 13:23:35'),
+(2,13,'PUPIL_TEACHER','Y','2026-03-30 08:20:42'),
+(2,14,'CHILD_PARENT','Y','2026-03-30 07:56:15'),
+(2,15,'FRIEND','Y','2026-04-01 03:48:39'),
+(3,2,'PARENT_CHILD','Y','2026-03-27 21:48:29'),
+(3,22,'PARENT_CHILD','Y','2026-04-01 05:49:24'),
+(5,1,'PUPIL_TEACHER','Y','2026-04-01 04:28:23'),
+(7,2,'TEACHER_PUPIL','Y','2026-03-31 13:23:35'),
+(10,1,'PUPIL_TEACHER','Y','2026-04-01 04:28:25'),
+(13,2,'TEACHER_PUPIL','Y','2026-03-30 08:20:42'),
+(14,2,'PARENT_CHILD','Y','2026-03-30 07:56:15'),
+(15,2,'FRIEND','Y','2026-04-01 03:48:39'),
+(22,1,'PUPIL_TEACHER','Y','2026-04-01 04:28:25'),
+(22,3,'CHILD_PARENT','Y','2026-04-01 05:49:24'),
+(2,4,'FRIEND',NULL,'2026-04-05 08:34:02'),
+(2,5,'FRIEND',NULL,'2026-04-05 08:36:54'),
+(1,4,'TEACHER_PUPIL',NULL,'2026-04-06 04:38:47');
+/*!40000 ALTER TABLE `brg_user_relations` ENABLE KEYS */;
 UNLOCK TABLES;
 
 --
@@ -175,8 +455,13 @@ LOCK TABLES `enm_logtype` WRITE;
 /*!40000 ALTER TABLE `enm_logtype` DISABLE KEYS */;
 INSERT INTO `enm_logtype` VALUES
 ('B','문제집'),
+('C','클래스'),
 ('E','고사'),
-('Q','문제');
+('L','로그인'),
+('Q','문제'),
+('R','다른 Role 사용자간 관계'),
+('S','SystemLog (0 번사용자만 열람가능)'),
+('V','기타(버튼누름,화면진입,검색 시 검색어,...)');
 /*!40000 ALTER TABLE `enm_logtype` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -286,6 +571,7 @@ CREATE TABLE `enm_roles` (
 LOCK TABLES `enm_roles` WRITE;
 /*!40000 ALTER TABLE `enm_roles` DISABLE KEYS */;
 INSERT INTO `enm_roles` VALUES
+('A','ADMIN','관리자'),
 ('P','PARENT','학부모'),
 ('S','STUDENT','학생'),
 ('T','TEACHER','교사');
@@ -321,15 +607,101 @@ INSERT INTO `exam_questions` VALUES
 (1,1,1,50),
 (1,2,2,50),
 (1,3,1,10),
+(1,4,96,10),
+(1,5,95,10),
+(1,6,94,10),
+(1,7,93,10),
+(1,8,92,10),
+(1,10,91,10),
+(1,11,90,10),
+(1,12,89,10),
 (1,13,2,10),
+(1,14,88,10),
+(1,15,87,10),
+(1,16,86,10),
+(1,18,85,10),
+(1,19,84,10),
+(1,20,83,10),
+(1,21,82,10),
+(1,22,81,10),
 (1,23,3,10),
+(1,24,80,10),
+(1,26,79,10),
+(1,27,78,10),
+(1,28,77,10),
+(1,29,76,10),
+(1,30,75,10),
+(1,31,74,10),
+(1,32,73,10),
 (1,33,4,10),
+(1,34,72,10),
+(1,35,71,10),
+(1,36,70,10),
+(1,37,69,10),
+(1,38,68,10),
+(1,39,67,10),
+(1,40,66,10),
+(1,42,65,10),
 (1,43,5,10),
+(1,44,64,10),
+(1,45,63,10),
+(1,46,62,10),
+(1,47,61,10),
+(1,48,60,10),
+(1,50,59,10),
+(1,51,58,10),
+(1,52,57,10),
 (1,53,6,10),
+(1,54,56,10),
+(1,55,55,10),
+(1,56,54,10),
+(1,58,53,10),
+(1,59,52,10),
+(1,60,51,10),
+(1,61,50,10),
+(1,62,49,10),
 (1,63,7,10),
+(1,64,48,10),
+(1,66,47,10),
+(1,67,46,10),
+(1,68,45,10),
+(1,69,44,10),
+(1,70,43,10),
+(1,71,42,10),
+(1,72,41,10),
 (1,73,8,10),
+(1,74,40,10),
+(1,75,39,10),
+(1,76,38,10),
+(1,77,37,10),
+(1,78,36,10),
+(1,79,35,10),
+(1,80,34,10),
+(1,82,33,10),
 (1,83,9,10),
+(1,84,32,10),
+(1,85,31,10),
+(1,86,30,10),
+(1,87,29,10),
+(1,88,28,10),
+(1,90,27,10),
+(1,91,26,10),
+(1,92,25,10),
 (1,93,10,10),
+(1,94,24,10),
+(1,95,23,10),
+(1,96,22,10),
+(1,98,21,10),
+(1,99,20,10),
+(1,100,19,10),
+(1,101,18,10),
+(1,102,17,10),
+(1,103,16,10),
+(1,104,15,10),
+(1,106,14,10),
+(1,107,13,10),
+(1,108,12,10),
+(1,128,11,10),
 (2,1,1,50),
 (2,2,2,50),
 (2,6,1,10),
@@ -788,7 +1160,6 @@ CREATE TABLE `exams` (
   PRIMARY KEY (`exam_id`),
   KEY `fk_exam_creator` (`creator_no`),
   KEY `fk_exam_class` (`class_id`),
-  CONSTRAINT `fk_exam_class` FOREIGN KEY (`class_id`) REFERENCES `classes` (`class_id`) ON DELETE SET NULL,
   CONSTRAINT `fk_exam_creator` FOREIGN KEY (`creator_no`) REFERENCES `users` (`user_no`) ON DELETE CASCADE
 ) ENGINE=InnoDB AUTO_INCREMENT=62 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci COMMENT='고사(모의고사 등) 관리 테이블';
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -800,7 +1171,7 @@ CREATE TABLE `exams` (
 LOCK TABLES `exams` WRITE;
 /*!40000 ALTER TABLE `exams` DISABLE KEYS */;
 INSERT INTO `exams` VALUES
-(1,1,1,'1월 정보처리 기초 모의고사 (교사 생성)','2026-01-20 14:00:00','2026-01-20 15:00:00','온라인 CBT',1,NULL,'2026-03-27 21:48:29','N'),
+(1,1,8,'1월 정보처리 기초 모의고사 (교사 생성)','2026-01-20 14:00:00','2026-01-20 15:00:00','온라인 CBT',1,'ㄴㅇㄹㄴㅁㄹㅇㄴ','2026-03-27 21:48:29','N'),
 (2,2,2,'2월 정기 테스트 (교사 생성)','2026-02-15 10:00:00','2026-02-15 11:00:00','제1 시험장',1,NULL,'2026-03-27 21:48:29','N'),
 (3,3,3,'전국 단위 공개 시험 (교사 생성)','2026-03-01 13:00:00','2026-03-01 13:30:00','온라인',1,NULL,'2026-03-27 21:48:29','N'),
 (4,4,4,'내 약점 파악 모의고사 (학생 자율)','2026-03-22 18:00:00','2026-03-22 19:00:00','내 책상',1,NULL,'2026-03-27 21:48:29','N'),
@@ -808,7 +1179,7 @@ INSERT INTO `exams` VALUES
 (24,6,6,'4월 정기 점검 모의고사 (교사 생성)','2026-04-05 09:00:00','2026-04-05 10:30:00','제2 시험장',1,NULL,'2026-03-27 21:48:29','N'),
 (25,7,7,'중간 실전 모의고사','2026-04-12 13:00:00','2026-04-12 14:30:00','온라인',1,NULL,'2026-03-27 21:48:29','N'),
 (26,8,8,'내 진도 점검 자율 시험','2026-04-18 19:00:00','2026-04-18 20:00:00','집',1,NULL,'2026-03-27 21:48:29','N'),
-(27,1,9,'깊이 있는 알고리즘 챌린지','2026-04-20 20:00:00','2026-04-20 22:00:00','스터디룸',1,NULL,'2026-03-27 21:48:29','N'),
+(27,1,1,'깊이 있는 알고리즘 챌린지','2026-04-20 20:00:00','2026-04-20 22:00:00','스터디룸',1,'ㄹㄴㅇㄹㄴㅁㄹㄴㅁㅇㄹㅇㄴ','2026-03-27 21:48:29','N'),
 (28,2,10,'학부모와 함께 하는 복습 타임','2026-04-22 18:00:00','2026-04-22 19:30:00','자택',1,NULL,'2026-03-27 21:48:29','N'),
 (29,3,11,'실전문제 풀이 마라톤','2026-04-27 14:00:00','2026-04-27 16:00:00','제1 시험장',1,NULL,'2026-03-27 21:48:29','N'),
 (30,4,12,'AI 추천 오답 집중','2026-04-30 10:00:00','2026-04-30 11:00:00','온라인',1,NULL,'2026-03-27 21:48:29','N'),
@@ -816,7 +1187,7 @@ INSERT INTO `exams` VALUES
 (32,6,14,'리더십 문제풀이 챌린지','2026-05-05 20:00:00','2026-05-05 21:00:00','스터디룸',1,NULL,'2026-03-27 21:48:29','N'),
 (33,7,15,'고사 대비 복습 세션','2026-05-08 10:00:00','2026-05-08 11:30:00','제3 시험장',1,NULL,'2026-03-27 21:48:29','N'),
 (34,8,16,'비대면 알고리즘 묶음 모의고사','2026-05-10 13:00:00','2026-05-10 14:30:00','온라인',1,NULL,'2026-03-27 21:48:29','N'),
-(35,1,17,'정리와 정답 흐름 점검','2026-05-12 18:00:00','2026-05-12 19:15:00','청정 독서실',1,NULL,'2026-03-27 21:48:29','N'),
+(35,1,1,'정리와 정답 흐름 점검','2026-05-12 18:00:00','2026-05-12 19:15:00','청정 독서실',1,NULL,'2026-03-27 21:48:29','N'),
 (36,2,18,'부모님과 함께하는 수학 연습','2026-05-14 16:00:00','2026-05-14 17:30:00','자택',1,NULL,'2026-03-27 21:48:29','N'),
 (38,3,19,'수식과 그래프 실전','2026-05-18 20:00:00','2026-05-18 21:00:00','스터디룸',1,NULL,'2026-03-27 21:48:29','N'),
 (39,4,20,'English+Algorithm 콤보','2026-05-20 11:00:00','2026-05-20 12:00:00','제1 시험장',1,NULL,'2026-03-27 21:48:29','N'),
@@ -824,7 +1195,7 @@ INSERT INTO `exams` VALUES
 (41,6,1,'파이널 프로젝트 리허설','2026-05-24 19:30:00','2026-05-24 21:00:00','스튜디오',1,NULL,'2026-03-27 21:48:29','N'),
 (42,7,2,'AI 추천 오답 분석회','2026-05-26 14:30:00','2026-05-26 16:00:00','온라인',1,NULL,'2026-03-27 21:48:29','N'),
 (43,8,3,'학부모 모의고사 회고','2026-05-28 10:00:00','2026-05-28 11:30:00','자택',1,NULL,'2026-03-27 21:48:29','N'),
-(44,1,4,'모의고사 실전리뷰','2026-05-30 15:00:00','2026-05-30 16:30:00','제2 시험장',1,NULL,'2026-03-27 21:48:29','N'),
+(44,1,NULL,'모의고사 실전리뷰','2026-05-30 15:00:00','2026-05-30 16:30:00','제2 시험장',1,'sdfsafdsafd','2026-03-27 21:48:29','N'),
 (45,2,5,'교사 추천 빠른 풀이','2026-06-01 09:00:00','2026-06-01 10:00:00','제1 시험장',1,NULL,'2026-03-27 21:48:29','N'),
 (46,3,6,'개념 정리 서술형','2026-06-03 18:00:00','2026-06-03 19:30:00','스터디룸',1,NULL,'2026-03-27 21:48:29','N'),
 (48,4,7,'보강 + 학부모 설명회','2026-06-07 18:30:00','2026-06-07 20:00:00','자택',1,NULL,'2026-03-27 21:48:29','N'),
@@ -863,7 +1234,7 @@ CREATE TABLE `groups` (
   KEY `fk_group_parent` (`parent_group_id`),
   CONSTRAINT `fk_group_creator` FOREIGN KEY (`creator_no`) REFERENCES `users` (`user_no`) ON DELETE CASCADE,
   CONSTRAINT `fk_group_parent` FOREIGN KEY (`parent_group_id`) REFERENCES `groups` (`group_id`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=101 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci COMMENT='문제 분류 그룹 계층형 테이블';
+) ENGINE=InnoDB AUTO_INCREMENT=102 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci COMMENT='문제 분류 그룹 계층형 테이블';
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -1690,194 +2061,6 @@ INSERT INTO `question_tags` VALUES
 UNLOCK TABLES;
 
 --
--- Table structure for table `questionbook_question`
---
-
-DROP TABLE IF EXISTS `questionbook_question`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8mb4 */;
-CREATE TABLE `questionbook_question` (
-  `book_id` bigint(20) NOT NULL,
-  `question_id` bigint(20) NOT NULL,
-  PRIMARY KEY (`book_id`,`question_id`),
-  KEY `fk_uqbi_q` (`question_id`),
-  CONSTRAINT `fk_uqbi_book` FOREIGN KEY (`book_id`) REFERENCES `questionbooks` (`book_id`) ON DELETE CASCADE,
-  CONSTRAINT `fk_uqbi_q` FOREIGN KEY (`question_id`) REFERENCES `questions` (`question_id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci COMMENT='문제집에 포함된 문제 매핑';
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `questionbook_question`
---
-
-LOCK TABLES `questionbook_question` WRITE;
-/*!40000 ALTER TABLE `questionbook_question` DISABLE KEYS */;
-INSERT INTO `questionbook_question` VALUES
-(1,2),
-(4,2),
-(3,3),
-(1,4),
-(4,4),
-(0,5),
-(4,5),
-(1,6),
-(5,6),
-(3,7),
-(5,7),
-(5,8),
-(0,9),
-(6,9),
-(6,10),
-(6,11),
-(7,12),
-(7,13),
-(7,14),
-(0,15),
-(8,15),
-(8,16),
-(8,17),
-(9,18),
-(0,20),
-(9,20),
-(0,21),
-(9,21),
-(10,23),
-(10,24),
-(11,25),
-(0,26),
-(11,26),
-(11,27),
-(12,28),
-(12,29),
-(12,30),
-(13,31),
-(13,32),
-(0,33),
-(13,33),
-(14,34),
-(14,35),
-(14,36),
-(15,37),
-(15,38),
-(15,39),
-(16,40),
-(0,41),
-(16,41),
-(16,42),
-(17,43),
-(0,44),
-(17,44),
-(24,44),
-(0,45),
-(17,45),
-(24,45),
-(18,46),
-(25,46),
-(18,47),
-(25,47),
-(18,48),
-(26,48),
-(19,49),
-(26,49),
-(19,50),
-(27,50),
-(27,51),
-(0,52),
-(28,52),
-(28,53),
-(29,54),
-(29,55),
-(30,56),
-(30,57),
-(1,58),
-(19,58),
-(31,58),
-(31,59),
-(32,60),
-(44,60),
-(0,61),
-(20,61),
-(32,61),
-(44,61),
-(33,62),
-(44,62),
-(1,63),
-(20,63),
-(33,63),
-(45,63),
-(0,64),
-(34,64),
-(45,64),
-(34,65),
-(45,65),
-(35,66),
-(46,66),
-(35,67),
-(46,67),
-(36,68),
-(46,68),
-(0,69),
-(36,69),
-(47,69),
-(37,70),
-(47,70),
-(20,71),
-(37,71),
-(47,71),
-(48,72),
-(48,73),
-(48,74),
-(49,75),
-(49,76),
-(0,77),
-(49,77),
-(3,78),
-(21,78),
-(38,78),
-(50,78),
-(38,79),
-(50,79),
-(39,80),
-(50,80),
-(0,81),
-(21,81),
-(39,81),
-(51,81),
-(40,82),
-(51,82),
-(40,83),
-(51,83),
-(41,84),
-(52,84),
-(41,85),
-(52,85),
-(42,86),
-(52,86),
-(42,87),
-(53,87),
-(3,88),
-(21,88),
-(43,88),
-(53,88),
-(43,89),
-(53,89),
-(22,91),
-(0,92),
-(22,98),
-(22,99),
-(23,100),
-(0,101),
-(23,101),
-(23,102),
-(0,103),
-(2,104),
-(2,105),
-(2,106),
-(0,108);
-/*!40000 ALTER TABLE `questionbook_question` ENABLE KEYS */;
-UNLOCK TABLES;
-
---
 -- Table structure for table `questionbooks`
 --
 
@@ -1904,7 +2087,7 @@ CREATE TABLE `questionbooks` (
 LOCK TABLES `questionbooks` WRITE;
 /*!40000 ALTER TABLE `questionbooks` DISABLE KEYS */;
 INSERT INTO `questionbooks` VALUES
-(0,0,'오늘의 공개문제','매일 자동으로 갱신되는 추천 문제 세트입니다.','2026-04-03 15:27:16','N'),
+(0,0,'오늘의 공개문제','매일 자동으로 갱신되는 추천 문제 세트입니다.','2026-04-05 15:02:05','N'),
 (1,1,'김철수 3월 오답 정리','틀린 문제만 다시 모아 둔 개인 문제집','2026-03-27 21:48:29','N'),
 (2,2,'김철수 자료구조 집중','자료구조와 알고리즘 관련 문제를 따로 묶은 컬렉션','2026-03-27 21:48:29','N'),
 (3,3,'학부모 체크용 주말 점검','아이와 함께 볼 핵심 문제집','2026-03-27 21:48:29','N'),
@@ -2133,7 +2316,7 @@ INSERT INTO `questions` VALUES
 (125,122,2,0,'M','Passage 3 - Q13','What was one result after one year?\nA. Residents became less supportive\nB. Electricity prices doubled\nC. Tourism increased because of interest in clean energy\nD. The turbines were removed',NULL,'C','Local businesses reported increased tourism from visitors.',NULL,3,1,'N',0,0,'2026-04-01 08:43:36'),
 (126,122,2,0,'M','Passage 3 - Q14','Which concern is mentioned in the passage?\nA. Noise from trains\nB. Loss of ocean view\nC. Damage to farmland\nD. Lack of internet access',NULL,'B','Residents worried the turbines would spoil the ocean view.',NULL,2,1,'N',0,0,'2026-04-01 08:43:36'),
 (127,122,2,0,'M','Passage 3 - Q15','What is the main idea of the passage?\nA. Wind energy always faces opposition\nB. Compromise helped a clean energy project succeed\nC. Tourism is the town primary industry\nD. Power plants are safer than turbines',NULL,'B','A smaller offshore plan balanced concerns and benefits.',NULL,3,1,'N',0,0,'2026-04-01 08:43:36'),
-(128,NULL,2,0,'C','Reading Passage 4 ㄹㄴㄹ;너ㅏㄹ;ㅣㄴ머ㅏㄹ;ㅓ리ㅏ ㅓㅣㅏㅇ너리ㅏㅓ ㅇ리ㅏ 머ㅏㅇ너라ㅣ어라ㅣㄴㅁ ㅓㅣ라마 랑너라','Read the passage and answer questions 16-20.  ㅇㄹ ㅁ말;ㅣ ㅣ알 ㅓㅏㅇ러 ㅏ마 ㅏ멀;ㅏ ;ㅇㄹ ㅏ;ㅣㅁㅇㄴ라ㅣ ㅏㅣ;ㅁ ㅏㄹ ;ㅣ망ㄹ;ㅣ ㅏㅣ;ㅁㅇㄴ ㅏ;ㅣ망니 ㅏㅣ;ㅁㅇ날 ㅏㄹㅁㅈㅇㄹ ㅁㄴㅇ리; ㅏㄹ이;마 ㄹ;ㅣㅁ 나라ㅣㅁ ㅏ 람ㄴㅇ','An archive recently digitized thousands of historical letters. The project began because the paper was aging and difficult to handle. By scanning the letters and creating searchable transcripts, the archive made the collection available to researchers worldwide. The team also discovered that students were more engaged when they could read the letters online and annotate them. While the digitization required significant time and funding, the archive argued that expanding access was worth the effort.','N/A','','',2,1,'N',0,1,'2026-04-01 08:43:36'),
+(128,NULL,2,0,'M','Reading Passage 4 ㄹㄴㄹ;너ㅏㄹ;ㅣㄴ머ㅏㄹ;ㅓ리ㅏ ㅓㅣㅏㅇ너리ㅏㅓ ㅇ리ㅏ 머ㅏㅇ너라ㅣ어라ㅣㄴㅁ ㅓㅣ라마 랑너라','Read the passage and answer questions 16-20.  ㅇㄹ ㅁ말;ㅣ ㅣ알 ㅓㅏㅇ러 ㅏ마 ㅏ멀;ㅏ ;ㅇㄹ ㅏ;ㅣㅁㅇㄴ라ㅣ ㅏㅣ;ㅁ ㅏㄹ ;ㅣ망ㄹ;ㅣ ㅏㅣ;ㅁㅇㄴ ㅏ;ㅣ망니 ㅏㅣ;ㅁㅇ날 ㅏㄹㅁㅈㅇㄹ ㅁㄴㅇ리; ㅏㄹ이;마 ㄹ;ㅣㅁ 나라ㅣㅁ ㅏ 람ㄴㅇ','An archive recently digitized thousands of historical letters. The project began because the paper was aging and difficult to handle. By scanning the letters and creating searchable transcripts, the archive made the collection available to researchers worldwide. The team also discovered that students were more engaged when they could read the letters online and annotate them. While the digitization required significant time and funding, the archive argued that expanding access was worth the effort.','N/A','','',2,1,'N',0,1,'2026-04-01 08:43:36'),
 (129,128,2,0,'M','Passage 4 - Q16','Why did the archive start the digitization project?\nA. The letters were already digital\nB. The paper was aging and hard to handle\nC. Researchers requested paper copies only\nD. The archive wanted to reduce staff',NULL,'B','The passage states the paper was aging and difficult to handle.',NULL,2,1,'N',0,0,'2026-04-01 08:43:36'),
 (130,128,2,0,'M','Passage 4 - Q17','What new benefit did the team notice?\nA. Fewer researchers used the archive\nB. Students were more engaged with online access and annotation\nC. The letters lost their historical value\nD. The project required no funding',NULL,'B','Students engaged more when they could read and annotate online.',NULL,2,1,'N',0,0,'2026-04-01 08:43:36'),
 (131,128,2,0,'M','Passage 4 - Q18','Which best describes the author perspective?\nA. Skeptical about digitization\nB. Neutral but acknowledging benefits and costs\nC. Angry about technology\nD. Dismissive of researchers',NULL,'B','The passage notes the effort and cost while supporting access.',NULL,2,1,'N',0,0,'2026-04-01 08:43:36'),
@@ -2166,7 +2349,7 @@ CREATE TABLE `solve_results` (
   CONSTRAINT `fk_result_exam` FOREIGN KEY (`exam_id`) REFERENCES `exams` (`exam_id`) ON DELETE CASCADE,
   CONSTRAINT `fk_result_q` FOREIGN KEY (`question_id`) REFERENCES `questions` (`question_id`) ON DELETE CASCADE,
   CONSTRAINT `fk_result_user` FOREIGN KEY (`user_no`) REFERENCES `users` (`user_no`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=41 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci COMMENT='사용자별 문제 풀이 결과';
+) ENGINE=InnoDB AUTO_INCREMENT=43 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci COMMENT='사용자별 문제 풀이 결과';
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -2215,7 +2398,9 @@ INSERT INTO `solve_results` VALUES
 (37,1,21,NULL,'80','2',0,26,'2026-04-02 00:24:51'),
 (38,2,108,NULL,'498','1',0,1,'2026-04-02 09:45:29'),
 (39,2,106,NULL,'412','3',1,3,'2026-04-04 09:59:14'),
-(40,2,105,NULL,'400','1',0,1,'2026-04-04 09:59:27');
+(40,2,105,NULL,'400','1',0,1,'2026-04-04 09:59:27'),
+(41,2,98,NULL,'393','1',0,1,'2026-04-06 06:46:08'),
+(42,2,90,NULL,'374','3',0,1,'2026-04-06 08:01:32');
 /*!40000 ALTER TABLE `solve_results` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -2330,61 +2515,6 @@ INSERT INTO `user_messages` VALUES
 UNLOCK TABLES;
 
 --
--- Table structure for table `user_relations`
---
-
-DROP TABLE IF EXISTS `user_relations`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8mb4 */;
-CREATE TABLE `user_relations` (
-  `relation_id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '관계 고유 ID',
-  `user_no_1` bigint(20) NOT NULL COMMENT '사용자 1 (주체)',
-  `user_no_2` bigint(20) NOT NULL COMMENT '사용자 2 (대상)',
-  `relation_type_id` varchar(20) NOT NULL COMMENT '관계 유형 (enm_relation_types 참조)',
-  `created_at` datetime DEFAULT current_timestamp() COMMENT '관계 생성 일시',
-  PRIMARY KEY (`relation_id`),
-  KEY `fk_rel_user1` (`user_no_1`),
-  KEY `fk_rel_user2` (`user_no_2`),
-  KEY `fk_rel_type` (`relation_type_id`),
-  CONSTRAINT `fk_rel_type` FOREIGN KEY (`relation_type_id`) REFERENCES `enm_relation_types` (`relation_type_id`),
-  CONSTRAINT `fk_rel_user1` FOREIGN KEY (`user_no_1`) REFERENCES `users` (`user_no`) ON DELETE CASCADE,
-  CONSTRAINT `fk_rel_user2` FOREIGN KEY (`user_no_2`) REFERENCES `users` (`user_no`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=33 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci COMMENT='사용자 간 관계 매핑 테이블';
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `user_relations`
---
-
-LOCK TABLES `user_relations` WRITE;
-/*!40000 ALTER TABLE `user_relations` DISABLE KEYS */;
-INSERT INTO `user_relations` VALUES
-(1,1,2,'TEACHER_PUPIL','2026-03-27 21:48:29'),
-(2,2,1,'PUPIL_TEACHER','2026-03-27 21:48:29'),
-(3,3,2,'PARENT_CHILD','2026-03-27 21:48:29'),
-(4,2,3,'CHILD_PARENT','2026-03-27 21:48:29'),
-(5,2,14,'CHILD_PARENT','2026-03-30 07:56:15'),
-(6,14,2,'PARENT_CHILD','2026-03-30 07:56:15'),
-(17,2,13,'PUPIL_TEACHER','2026-03-30 08:20:42'),
-(18,13,2,'TEACHER_PUPIL','2026-03-30 08:20:42'),
-(19,2,7,'PUPIL_TEACHER','2026-03-31 13:23:35'),
-(20,7,2,'TEACHER_PUPIL','2026-03-31 13:23:35'),
-(21,2,10,'FRIEND','2026-04-01 03:48:38'),
-(22,10,2,'FRIEND','2026-04-01 03:48:38'),
-(23,2,15,'FRIEND','2026-04-01 03:48:39'),
-(24,15,2,'FRIEND','2026-04-01 03:48:39'),
-(25,1,5,'TEACHER_PUPIL','2026-04-01 04:28:23'),
-(26,5,1,'PUPIL_TEACHER','2026-04-01 04:28:23'),
-(27,1,10,'TEACHER_PUPIL','2026-04-01 04:28:25'),
-(28,10,1,'PUPIL_TEACHER','2026-04-01 04:28:25'),
-(29,1,22,'TEACHER_PUPIL','2026-04-01 04:28:25'),
-(30,22,1,'PUPIL_TEACHER','2026-04-01 04:28:25'),
-(31,3,22,'PARENT_CHILD','2026-04-01 05:49:24'),
-(32,22,3,'CHILD_PARENT','2026-04-01 05:49:24');
-/*!40000 ALTER TABLE `user_relations` ENABLE KEYS */;
-UNLOCK TABLES;
-
---
 -- Table structure for table `users`
 --
 
@@ -2399,13 +2529,14 @@ CREATE TABLE `users` (
   `email` varchar(255) NOT NULL COMMENT '이메일 주소',
   `role_id` char(1) NOT NULL COMMENT '사용자 권한 코드 (enm_roles 참조)',
   `is_withdrawn` enum('Y','N') DEFAULT 'N' COMMENT '탈퇴 여부 (Y: 탈퇴, N: 활동중)',
+  `last_loged_at` datetime DEFAULT current_timestamp() COMMENT '마지막 로그인 시간',
   `created_at` datetime DEFAULT current_timestamp() COMMENT '가입 일시',
   PRIMARY KEY (`user_no`),
   UNIQUE KEY `user_id` (`user_id`),
   UNIQUE KEY `email` (`email`),
   KEY `fk_user_role` (`role_id`),
   CONSTRAINT `fk_user_role` FOREIGN KEY (`role_id`) REFERENCES `enm_roles` (`role_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=29 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci COMMENT='사용자 정보 테이블';
+) ENGINE=InnoDB AUTO_INCREMENT=30 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci COMMENT='사용자 정보 테이블';
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -2415,32 +2546,32 @@ CREATE TABLE `users` (
 LOCK TABLES `users` WRITE;
 /*!40000 ALTER TABLE `users` DISABLE KEYS */;
 INSERT INTO `users` VALUES
-(0,'0','none','무명','noname@edu-hub.com','S','N','2026-04-02 10:41:31'),
-(1,'t','$2b$10$w0fA4tbVaov4l2Osw6lzyOiwvEUmv9dPVCwFzN4DdVVPHXE2Tdb0u','제이미','teacher1@edu-hub.com','T','N','2026-03-27 21:48:28'),
-(2,'s','$2b$10$w0fA4tbVaov4l2Osw6lzyOiwvEUmv9dPVCwFzN4DdVVPHXE2Tdb0u','김철수','student1@edu-hub.com','S','N','2026-03-27 21:48:28'),
-(3,'p','$2b$10$w0fA4tbVaov4l2Osw6lzyOiwvEUmv9dPVCwFzN4DdVVPHXE2Tdb0u','이영희','parent1@edu-hub.com','P','N','2026-03-27 21:48:28'),
-(4,'ss','$2b$10$w0fA4tbVaov4l2Osw6lzyOiwvEUmv9dPVCwFzN4DdVVPHXE2Tdb0u','마이클','aaa@aa.aaa','S','N','2026-03-27 21:48:28'),
-(5,'x','$2b$10$w0fA4tbVaov4l2Osw6lzyOiwvEUmv9dPVCwFzN4DdVVPHXE2Tdb0u','x','x@x.c','S','N','2026-03-27 13:48:19'),
-(6,'t2','$2b$10$w0fA4tbVaov4l2Osw6lzyOiwvEUmv9dPVCwFzN4DdVVPHXE2Tdb0u','최하늘','teacher2@edu-hub.com','T','N','2026-03-30 09:00:00'),
-(7,'t3','$2b$10$w0fA4tbVaov4l2Osw6lzyOiwvEUmv9dPVCwFzN4DdVVPHXE2Tdb0u','윤서준','teacher3@edu-hub.com','T','N','2026-03-30 09:00:00'),
-(8,'p2','$2b$10$w0fA4tbVaov4l2Osw6lzyOiwvEUmv9dPVCwFzN4DdVVPHXE2Tdb0u','한미정','parent2@edu-hub.com','P','N','2026-03-30 09:00:00'),
-(9,'p3','$2b$10$w0fA4tbVaov4l2Osw6lzyOiwvEUmv9dPVCwFzN4DdVVPHXE2Tdb0u','오지은','parent3@edu-hub.com','P','N','2026-03-30 09:00:00'),
-(10,'s2','$2b$10$w0fA4tbVaov4l2Osw6lzyOiwvEUmv9dPVCwFzN4DdVVPHXE2Tdb0u','강민준','student2@edu-hub.com','S','N','2026-03-30 09:00:00'),
-(11,'s3','$2b$10$w0fA4tbVaov4l2Osw6lzyOiwvEUmv9dPVCwFzN4DdVVPHXE2Tdb0u','서예린','student3@edu-hub.com','S','N','2026-03-30 09:00:00'),
-(12,'s4','$2b$10$w0fA4tbVaov4l2Osw6lzyOiwvEUmv9dPVCwFzN4DdVVPHXE2Tdb0u','정우진','student4@edu-hub.com','S','N','2026-03-30 09:00:00'),
-(13,'t4','$2b$10$w0fA4tbVaov4l2Osw6lzyOiwvEUmv9dPVCwFzN4DdVVPHXE2Tdb0u','김도윤','teacher4@edu-hub.com','T','N','2026-03-30 09:00:00'),
-(14,'p4','$2b$10$w0fA4tbVaov4l2Osw6lzyOiwvEUmv9dPVCwFzN4DdVVPHXE2Tdb0u','배수현','parent4@edu-hub.com','P','N','2026-03-30 09:00:00'),
-(15,'s5','$2b$10$w0fA4tbVaov4l2Osw6lzyOiwvEUmv9dPVCwFzN4DdVVPHXE2Tdb0u','이도현','student5@edu-hub.com','S','N','2026-03-30 09:00:00'),
-(16,'t5','$2b$10$w0fA4tbVaov4l2Osw6lzyOiwvEUmv9dPVCwFzN4DdVVPHXE2Tdb0u','황유진','teacher5@edu-hub.com','T','N','2026-03-30 09:00:00'),
-(17,'p5','$2b$10$w0fA4tbVaov4l2Osw6lzyOiwvEUmv9dPVCwFzN4DdVVPHXE2Tdb0u','문지후','parent5@edu-hub.com','P','N','2026-03-30 09:00:00'),
-(18,'s6','$2b$10$w0fA4tbVaov4l2Osw6lzyOiwvEUmv9dPVCwFzN4DdVVPHXE2Tdb0u','임서윤','student6@edu-hub.com','S','N','2026-03-30 09:00:00'),
-(19,'t6','$2b$10$w0fA4tbVaov4l2Osw6lzyOiwvEUmv9dPVCwFzN4DdVVPHXE2Tdb0u','장민서','teacher6@edu-hub.com','T','N','2026-03-30 09:00:00'),
-(20,'s7','$2b$10$w0fA4tbVaov4l2Osw6lzyOiwvEUmv9dPVCwFzN4DdVVPHXE2Tdb0u','홍지호','student7@edu-hub.com','S','N','2026-03-30 09:00:00'),
-(21,'p6','$2b$10$w0fA4tbVaov4l2Osw6lzyOiwvEUmv9dPVCwFzN4DdVVPHXE2Tdb0u','윤하린','parent6@edu-hub.com','P','N','2026-03-30 09:00:00'),
-(22,'s8','$2b$10$w0fA4tbVaov4l2Osw6lzyOiwvEUmv9dPVCwFzN4DdVVPHXE2Tdb0u','고서진','student8@edu-hub.com','S','N','2026-03-30 09:00:00'),
-(23,'s9','$2b$10$w0fA4tbVaov4l2Osw6lzyOiwvEUmv9dPVCwFzN4DdVVPHXE2Tdb0u','차유나','student9@edu-hub.com','S','N','2026-03-30 09:00:00'),
-(24,'t7','$2b$10$w0fA4tbVaov4l2Osw6lzyOiwvEUmv9dPVCwFzN4DdVVPHXE2Tdb0u','송태영','teacher7@edu-hub.com','T','N','2026-03-30 09:00:00'),
-(25,'p7','$2b$10$w0fA4tbVaov4l2Osw6lzyOiwvEUmv9dPVCwFzN4DdVVPHXE2Tdb0u','신가은','parent7@edu-hub.com','P','N','2026-03-30 09:00:00');
+(0,'admin','$2b$10$4WResykZp8B0OA56j29uXuC7eSeSvRjOoN2usuzPeACAYquHQROM6','최종관리자','admin@edu-hub.com','A','N','2026-04-06 17:37:05','2026-04-02 10:41:31'),
+(1,'t','$2b$10$w0fA4tbVaov4l2Osw6lzyOiwvEUmv9dPVCwFzN4DdVVPHXE2Tdb0u','제이미','teacher1@edu-hub.com','T','N',NULL,'2026-03-27 21:48:28'),
+(2,'s','$2b$10$w0fA4tbVaov4l2Osw6lzyOiwvEUmv9dPVCwFzN4DdVVPHXE2Tdb0u','김철수','student1@edu-hub.com','S','N','2026-04-06 17:36:18','2026-03-27 21:48:28'),
+(3,'p','$2b$10$w0fA4tbVaov4l2Osw6lzyOiwvEUmv9dPVCwFzN4DdVVPHXE2Tdb0u','이영희','parent1@edu-hub.com','P','N',NULL,'2026-03-27 21:48:28'),
+(4,'ss','$2b$10$w0fA4tbVaov4l2Osw6lzyOiwvEUmv9dPVCwFzN4DdVVPHXE2Tdb0u','마이클','aaa@aa.aaa','S','N',NULL,'2026-03-27 21:48:28'),
+(5,'x','$2b$10$w0fA4tbVaov4l2Osw6lzyOiwvEUmv9dPVCwFzN4DdVVPHXE2Tdb0u','x','x@x.c','S','N',NULL,'2026-03-27 13:48:19'),
+(6,'t2','$2b$10$w0fA4tbVaov4l2Osw6lzyOiwvEUmv9dPVCwFzN4DdVVPHXE2Tdb0u','최하늘','teacher2@edu-hub.com','T','N',NULL,'2026-03-30 09:00:00'),
+(7,'t3','$2b$10$w0fA4tbVaov4l2Osw6lzyOiwvEUmv9dPVCwFzN4DdVVPHXE2Tdb0u','윤서준','teacher3@edu-hub.com','T','N',NULL,'2026-03-30 09:00:00'),
+(8,'p2','$2b$10$w0fA4tbVaov4l2Osw6lzyOiwvEUmv9dPVCwFzN4DdVVPHXE2Tdb0u','한미정','parent2@edu-hub.com','P','N',NULL,'2026-03-30 09:00:00'),
+(9,'p3','$2b$10$w0fA4tbVaov4l2Osw6lzyOiwvEUmv9dPVCwFzN4DdVVPHXE2Tdb0u','오지은','parent3@edu-hub.com','P','N',NULL,'2026-03-30 09:00:00'),
+(10,'s2','$2b$10$w0fA4tbVaov4l2Osw6lzyOiwvEUmv9dPVCwFzN4DdVVPHXE2Tdb0u','강민준','student2@edu-hub.com','S','N',NULL,'2026-03-30 09:00:00'),
+(11,'s3','$2b$10$w0fA4tbVaov4l2Osw6lzyOiwvEUmv9dPVCwFzN4DdVVPHXE2Tdb0u','서예린','student3@edu-hub.com','S','N',NULL,'2026-03-30 09:00:00'),
+(12,'s4','$2b$10$w0fA4tbVaov4l2Osw6lzyOiwvEUmv9dPVCwFzN4DdVVPHXE2Tdb0u','정우진','student4@edu-hub.com','S','N',NULL,'2026-03-30 09:00:00'),
+(13,'t4','$2b$10$w0fA4tbVaov4l2Osw6lzyOiwvEUmv9dPVCwFzN4DdVVPHXE2Tdb0u','김도윤','teacher4@edu-hub.com','T','N',NULL,'2026-03-30 09:00:00'),
+(14,'p4','$2b$10$w0fA4tbVaov4l2Osw6lzyOiwvEUmv9dPVCwFzN4DdVVPHXE2Tdb0u','배수현','parent4@edu-hub.com','P','N',NULL,'2026-03-30 09:00:00'),
+(15,'s5','$2b$10$w0fA4tbVaov4l2Osw6lzyOiwvEUmv9dPVCwFzN4DdVVPHXE2Tdb0u','이도현','student5@edu-hub.com','S','N',NULL,'2026-03-30 09:00:00'),
+(16,'t5','$2b$10$w0fA4tbVaov4l2Osw6lzyOiwvEUmv9dPVCwFzN4DdVVPHXE2Tdb0u','황유진','teacher5@edu-hub.com','T','N',NULL,'2026-03-30 09:00:00'),
+(17,'p5','$2b$10$w0fA4tbVaov4l2Osw6lzyOiwvEUmv9dPVCwFzN4DdVVPHXE2Tdb0u','문지후','parent5@edu-hub.com','P','N',NULL,'2026-03-30 09:00:00'),
+(18,'s6','$2b$10$w0fA4tbVaov4l2Osw6lzyOiwvEUmv9dPVCwFzN4DdVVPHXE2Tdb0u','임서윤','student6@edu-hub.com','S','N',NULL,'2026-03-30 09:00:00'),
+(19,'t6','$2b$10$w0fA4tbVaov4l2Osw6lzyOiwvEUmv9dPVCwFzN4DdVVPHXE2Tdb0u','장민서','teacher6@edu-hub.com','T','N',NULL,'2026-03-30 09:00:00'),
+(20,'s7','$2b$10$w0fA4tbVaov4l2Osw6lzyOiwvEUmv9dPVCwFzN4DdVVPHXE2Tdb0u','홍지호','student7@edu-hub.com','S','N',NULL,'2026-03-30 09:00:00'),
+(21,'p6','$2b$10$w0fA4tbVaov4l2Osw6lzyOiwvEUmv9dPVCwFzN4DdVVPHXE2Tdb0u','윤하린','parent6@edu-hub.com','P','N',NULL,'2026-03-30 09:00:00'),
+(22,'s8','$2b$10$w0fA4tbVaov4l2Osw6lzyOiwvEUmv9dPVCwFzN4DdVVPHXE2Tdb0u','고서진','student8@edu-hub.com','S','N',NULL,'2026-03-30 09:00:00'),
+(23,'s9','$2b$10$w0fA4tbVaov4l2Osw6lzyOiwvEUmv9dPVCwFzN4DdVVPHXE2Tdb0u','차유나','student9@edu-hub.com','S','N',NULL,'2026-03-30 09:00:00'),
+(24,'t7','$2b$10$w0fA4tbVaov4l2Osw6lzyOiwvEUmv9dPVCwFzN4DdVVPHXE2Tdb0u','송태영','teacher7@edu-hub.com','T','N',NULL,'2026-03-30 09:00:00'),
+(25,'p7','$2b$10$w0fA4tbVaov4l2Osw6lzyOiwvEUmv9dPVCwFzN4DdVVPHXE2Tdb0u','신가은','parent7@edu-hub.com','P','N',NULL,'2026-03-30 09:00:00');
 /*!40000 ALTER TABLE `users` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -2454,19 +2585,21 @@ DROP TABLE IF EXISTS `users_logs`;
 CREATE TABLE `users_logs` (
   `log_id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '학습 로그 고유 ID',
   `user_no` bigint(20) NOT NULL COMMENT '학습자(사용자) 식별번호',
-  `logtype` char(1) NOT NULL COMMENT '로그 타입 (Q문제/B문재집/E고사)',
+  `logtype_id` char(1) NOT NULL COMMENT '로그 타입 (Q문제/B문재집/E고사)',
   `obj_id` bigint(20) NOT NULL COMMENT 'Q문제/B문재집/E고사 ID',
   `user_content` text DEFAULT NULL COMMENT '사용자가 해당 obj에 남긴 log내용',
   `score` int(11) DEFAULT 0 COMMENT '득점수(문제를 풀고 정답을 못맞추면 0)',
   `total_score` int(11) DEFAULT 0 COMMENT '총 배점수(문제당, 문제집당 배점, 문재집은 문제들의 배점합)',
   `score100` int(11) DEFAULT 0 COMMENT '100점 만점 점수총 배점수(문재집,고사 만 해당)',
-  `last_played_at` datetime DEFAULT NULL COMMENT '최종 풀이 시간',
+  `time_taken` int(11) DEFAULT 0 COMMENT '문제 풀이 소요 시간(초)',
   `created_at` datetime DEFAULT current_timestamp() COMMENT '로그 등록 일시',
   PRIMARY KEY (`log_id`),
   KEY `idx_log_user` (`user_no`),
   KEY `idx_log_obj` (`obj_id`),
-  CONSTRAINT `fk_logs_user` FOREIGN KEY (`user_no`) REFERENCES `users` (`user_no`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=53 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci COMMENT='개인별 문제/문제집/고사 풀이 기록';
+  KEY `fk_users_logs_enm_logtype` (`logtype_id`),
+  CONSTRAINT `fk_logs_user` FOREIGN KEY (`user_no`) REFERENCES `users` (`user_no`) ON DELETE CASCADE,
+  CONSTRAINT `fk_users_logs_enm_logtype` FOREIGN KEY (`logtype_id`) REFERENCES `enm_logtype` (`logtype_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=216 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci COMMENT='개인별 문제/문제집/고사 풀이 기록';
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -2476,58 +2609,221 @@ CREATE TABLE `users_logs` (
 LOCK TABLES `users_logs` WRITE;
 /*!40000 ALTER TABLE `users_logs` DISABLE KEYS */;
 INSERT INTO `users_logs` VALUES
-(1,2,'B',9,'문제집 풀이 완료',5,10,50,'2026-03-27 08:15:09','2026-04-03 12:15:09'),
-(2,0,'B',9,'복습 중',3,10,30,'2026-03-30 22:15:09','2026-04-03 12:15:09'),
-(3,0,'Q',3,'문제보기',0,1,0,'2026-03-27 09:15:09','2026-04-03 12:15:09'),
-(4,4,'E',53,'최종 답안 제출',58,100,58,'2026-03-29 09:15:09','2026-04-03 12:15:09'),
-(5,4,'E',44,'고사 응시 완료',55,100,55,'2026-03-29 06:15:09','2026-04-03 12:15:09'),
-(6,2,'E',27,'최종 답안 제출',95,100,95,'2026-03-29 19:15:09','2026-04-03 12:15:09'),
-(7,4,'B',1,'문제집 풀이 완료',7,10,70,'2026-04-02 19:15:09','2026-04-03 12:15:09'),
-(8,4,'B',1,'복습 중',3,10,30,'2026-04-01 09:15:09','2026-04-03 12:15:09'),
-(9,2,'B',0,'문제집 풀이 완료',1,10,10,'2026-03-31 06:15:09','2026-04-03 12:15:09'),
-(10,0,'E',35,'고사 응시 완료',84,100,84,'2026-03-29 09:15:09','2026-04-03 12:15:09'),
-(11,0,'Q',1,'정답확인:정답',1,1,100,'2026-03-30 01:15:09','2026-04-03 12:15:09'),
-(12,2,'E',53,'고사 응시 완료',55,100,55,'2026-03-29 18:15:09','2026-04-03 12:15:09'),
-(13,0,'B',9,'문제집 풀이 완료',6,10,60,'2026-03-30 01:15:09','2026-04-03 12:15:09'),
-(14,2,'Q',3,'정답확인:정답',1,1,100,'2026-04-01 05:15:09','2026-04-03 12:15:09'),
-(15,4,'E',35,'최종 답안 제출',72,100,72,'2026-03-28 11:15:09','2026-04-03 12:15:09'),
-(16,4,'B',9,'복습 중',4,10,40,'2026-03-29 21:15:09','2026-04-03 12:15:09'),
-(17,4,'E',35,'최종 답안 제출',61,100,61,'2026-03-29 07:15:09','2026-04-03 12:15:09'),
-(18,4,'B',0,'복습 중',8,10,80,'2026-03-30 01:15:09','2026-04-03 12:15:09'),
-(19,4,'E',35,'고사 응시 완료',77,100,77,'2026-03-29 18:15:09','2026-04-03 12:15:09'),
-(20,2,'Q',5,'정답확인:오답',1,1,100,'2026-03-28 14:15:09','2026-04-03 12:15:09'),
-(21,2,'E',44,'고사 응시 완료',61,100,61,'2026-04-01 12:15:09','2026-04-03 12:15:09'),
-(22,0,'E',53,'고사 응시 완료',95,100,95,'2026-03-28 10:15:09','2026-04-03 12:15:09'),
-(23,0,'Q',6,'문제보기',0,1,0,'2026-03-29 23:15:09','2026-04-03 12:15:09'),
-(24,4,'E',44,'최종 답안 제출',67,100,67,'2026-03-29 11:15:09','2026-04-03 12:15:09'),
-(25,0,'B',25,'문제집 풀이 완료',3,10,30,'2026-03-31 02:15:09','2026-04-03 12:15:09'),
-(26,4,'E',27,'고사 응시 완료',67,100,67,'2026-03-30 21:15:09','2026-04-03 12:15:09'),
-(27,0,'E',27,'고사 응시 완료',94,100,94,'2026-04-02 10:15:09','2026-04-03 12:15:09'),
-(28,2,'E',35,'고사 응시 완료',63,100,63,'2026-03-31 12:15:09','2026-04-03 12:15:09'),
-(29,2,'B',9,'문제집 풀이 완료',6,10,60,'2026-03-30 19:15:09','2026-04-03 12:15:09'),
-(30,0,'E',27,'최종 답안 제출',93,100,93,'2026-03-31 22:15:09','2026-04-03 12:15:09'),
-(31,2,'E',35,'최종 답안 제출',76,100,76,'2026-03-30 19:15:09','2026-04-03 12:15:09'),
-(32,0,'B',1,'문제집 풀이 완료',9,10,90,'2026-03-30 13:15:09','2026-04-03 12:15:09'),
-(33,0,'B',1,'문제집 풀이 완료',7,10,70,'2026-03-29 23:15:09','2026-04-03 12:15:09'),
-(34,0,'Q',5,'힌트 보기',0,1,0,'2026-03-28 01:15:09','2026-04-03 12:15:09'),
-(35,0,'B',17,'복습 중',4,10,40,'2026-03-29 15:15:09','2026-04-03 12:15:09'),
-(36,2,'Q',2,'풀기 시작',0,1,0,'2026-03-30 19:15:09','2026-04-03 12:15:09'),
-(37,2,'B',17,'복습 중',5,10,50,'2026-03-29 18:15:09','2026-04-03 12:15:09'),
-(38,4,'B',17,'문제집 풀이 완료',8,10,80,'2026-03-29 11:15:09','2026-04-03 12:15:09'),
-(39,0,'E',35,'최종 답안 제출',94,100,94,'2026-03-29 11:15:09','2026-04-03 12:15:09'),
-(40,0,'B',0,'문제집 풀이 완료',10,10,100,'2026-03-30 08:15:09','2026-04-03 12:15:09'),
-(41,2,'Q',128,'문제보기',0,0,0,'2026-04-03 12:35:06','2026-04-03 21:35:06'),
-(42,2,'B',0,'선택 문제 5문항',1,5,20,'2026-04-03 14:58:28','2026-04-03 23:58:28'),
-(43,2,'B',0,'임의로 6문항을 선택하여 임시문제집 풀이',0,6,0,'2026-04-03 15:02:47','2026-04-04 00:02:47'),
-(44,2,'Q',128,'문제보기',0,0,0,'2026-04-03 15:07:24','2026-04-04 00:07:24'),
-(45,2,'B',0,'임의로 5문항을 선택하여 임시문제집 풀이',0,5,0,'2026-04-03 15:11:44','2026-04-04 00:11:44'),
-(46,2,'B',0,'임의로 7문항을 선택하여 임시문제집 풀이',0,7,0,'2026-04-03 16:27:30','2026-04-04 01:27:30'),
-(47,2,'Q',106,'문제보기',0,0,0,'2026-04-04 09:59:10','2026-04-04 18:59:10'),
-(48,2,'Q',106,'문제풀기',0,0,0,'2026-04-04 09:59:12','2026-04-04 18:59:12'),
-(49,2,'Q',106,'정답확인:정답',1,1,100,'2026-04-04 09:59:14','2026-04-04 18:59:14'),
-(50,2,'Q',105,'문제보기',0,0,0,'2026-04-04 09:59:26','2026-04-04 18:59:26'),
-(51,2,'Q',105,'문제풀기',0,0,0,'2026-04-04 09:59:27','2026-04-04 18:59:27'),
-(52,2,'Q',105,'정답확인:오답',0,1,0,'2026-04-04 09:59:27','2026-04-04 18:59:27');
+(1,2,'B',9,'문제집 풀이 완료',5,10,50,0,'2026-04-03 12:15:09'),
+(2,0,'B',9,'복습 중',3,10,30,0,'2026-04-03 12:15:09'),
+(3,0,'Q',3,'문제보기',0,1,0,0,'2026-04-03 12:15:09'),
+(4,4,'E',53,'최종 답안 제출',58,100,58,0,'2026-04-03 12:15:09'),
+(5,4,'E',44,'고사 응시 완료',55,100,55,0,'2026-04-03 12:15:09'),
+(6,2,'E',27,'최종 답안 제출',95,100,95,0,'2026-04-03 12:15:09'),
+(7,4,'B',1,'문제집 풀이 완료',7,10,70,0,'2026-04-03 12:15:09'),
+(8,4,'B',1,'복습 중',3,10,30,0,'2026-04-03 12:15:09'),
+(9,2,'B',0,'문제집 풀이 완료',1,10,10,0,'2026-04-03 12:15:09'),
+(10,0,'E',35,'고사 응시 완료',84,100,84,0,'2026-04-03 12:15:09'),
+(11,0,'Q',1,'정답확인:정답',1,1,100,0,'2026-04-03 12:15:09'),
+(12,2,'E',53,'고사 응시 완료',55,100,55,0,'2026-04-03 12:15:09'),
+(13,0,'B',9,'문제집 풀이 완료',6,10,60,0,'2026-04-03 12:15:09'),
+(14,2,'Q',3,'정답확인:정답',1,1,100,0,'2026-04-03 12:15:09'),
+(15,4,'E',35,'최종 답안 제출',72,100,72,0,'2026-04-03 12:15:09'),
+(16,4,'B',9,'복습 중',4,10,40,0,'2026-04-03 12:15:09'),
+(17,4,'E',35,'최종 답안 제출',61,100,61,0,'2026-04-03 12:15:09'),
+(18,4,'B',0,'복습 중',8,10,80,0,'2026-04-03 12:15:09'),
+(19,4,'E',35,'고사 응시 완료',77,100,77,0,'2026-04-03 12:15:09'),
+(20,2,'Q',5,'정답확인:오답',1,1,100,0,'2026-04-03 12:15:09'),
+(21,2,'E',44,'고사 응시 완료',61,100,61,0,'2026-04-03 12:15:09'),
+(22,0,'E',53,'고사 응시 완료',95,100,95,0,'2026-04-03 12:15:09'),
+(23,0,'Q',6,'문제보기',0,1,0,0,'2026-04-03 12:15:09'),
+(24,4,'E',44,'최종 답안 제출',67,100,67,0,'2026-04-03 12:15:09'),
+(25,0,'B',25,'문제집 풀이 완료',3,10,30,0,'2026-04-03 12:15:09'),
+(26,4,'E',27,'고사 응시 완료',67,100,67,0,'2026-04-03 12:15:09'),
+(27,0,'E',27,'고사 응시 완료',94,100,94,0,'2026-04-03 12:15:09'),
+(28,2,'E',35,'고사 응시 완료',63,100,63,0,'2026-04-03 12:15:09'),
+(29,2,'B',9,'문제집 풀이 완료',6,10,60,0,'2026-04-03 12:15:09'),
+(30,0,'E',27,'최종 답안 제출',93,100,93,0,'2026-04-03 12:15:09'),
+(31,2,'E',35,'최종 답안 제출',76,100,76,0,'2026-04-03 12:15:09'),
+(32,0,'B',1,'문제집 풀이 완료',9,10,90,0,'2026-04-03 12:15:09'),
+(33,0,'B',1,'문제집 풀이 완료',7,10,70,0,'2026-04-03 12:15:09'),
+(34,0,'Q',5,'힌트 보기',0,1,0,0,'2026-04-03 12:15:09'),
+(35,0,'B',17,'복습 중',4,10,40,0,'2026-04-03 12:15:09'),
+(36,2,'Q',2,'풀기 시작',0,1,0,0,'2026-04-03 12:15:09'),
+(37,2,'B',17,'복습 중',5,10,50,0,'2026-04-03 12:15:09'),
+(38,4,'B',17,'문제집 풀이 완료',8,10,80,0,'2026-04-03 12:15:09'),
+(39,0,'E',35,'최종 답안 제출',94,100,94,0,'2026-04-03 12:15:09'),
+(40,0,'B',0,'문제집 풀이 완료',10,10,100,0,'2026-04-03 12:15:09'),
+(41,2,'Q',128,'문제보기',0,0,0,0,'2026-04-03 12:35:06'),
+(42,2,'B',0,'선택 문제 5문항',1,5,20,0,'2026-04-03 14:58:28'),
+(43,2,'B',0,'임의로 6문항을 선택하여 임시문제집 풀이',0,6,0,0,'2026-04-03 15:02:47'),
+(44,2,'Q',128,'문제보기',0,0,0,0,'2026-04-03 15:07:24'),
+(45,2,'B',0,'임의로 5문항을 선택하여 임시문제집 풀이',0,5,0,0,'2026-04-03 15:11:44'),
+(46,2,'B',0,'임의로 7문항을 선택하여 임시문제집 풀이',0,7,0,0,'2026-04-03 16:27:30'),
+(47,2,'Q',106,'문제보기',0,0,0,0,'2026-04-04 09:59:10'),
+(48,2,'Q',106,'문제풀기',0,0,0,0,'2026-04-04 09:59:12'),
+(49,2,'Q',106,'정답확인:정답',1,1,100,0,'2026-04-04 09:59:14'),
+(50,2,'Q',105,'문제보기',0,0,0,0,'2026-04-04 09:59:26'),
+(51,2,'Q',105,'문제풀기',0,0,0,0,'2026-04-04 09:59:27'),
+(52,2,'Q',105,'정답확인:오답',0,1,0,0,'2026-04-04 09:59:27'),
+(53,2,'L',0,'로그인 세션 시작: 헤더 레이아웃 진입',1,1,100,0,'2026-04-06 06:08:11'),
+(54,2,'L',0,'대시보드 메인 화면 진입',1,1,100,0,'2026-04-06 06:09:56'),
+(55,2,'L',0,'로그인 세션 시작: 대시보드 진입',1,1,100,0,'2026-04-06 15:17:09'),
+(56,2,'Q',1,'문제보기',0,0,0,0,'2026-04-06 15:17:09'),
+(57,2,'Q',1,'문제풀기',0,0,0,0,'2026-04-06 15:17:09'),
+(58,2,'Q',1,'정답확인:정답',1,1,100,0,'2026-04-06 15:17:09'),
+(59,2,'B',1,'문제집 문제등록 화면 이동',0,0,0,0,'2026-04-06 15:17:09'),
+(60,2,'B',2,'문제집 선택 추가: 김철수 자료구조 집중',0,0,0,0,'2026-04-06 15:17:09'),
+(61,2,'E',1,'고사 문제등록 화면 이동',0,0,0,0,'2026-04-06 15:17:09'),
+(62,2,'E',2,'고사 검색 실행: \"정기 테스트\"',0,0,0,0,'2026-04-06 15:17:09'),
+(63,2,'C',1,'클래스 구성원 수정: 파이썬 및 네트워크 기초반 (3명 배정)',3,3,100,0,'2026-04-06 15:17:09'),
+(64,2,'C',1,'클래스 고사 연결 수정: 파이썬 및 네트워크 기초반 (2개 연결)',2,2,100,0,'2026-04-06 15:17:09'),
+(65,2,'R',1,'관계 요청 발신: 제이미 (PUPIL_TEACHER)',0,0,0,0,'2026-04-06 15:17:09'),
+(66,2,'R',1,'메시지 발송: 제이미 (24자)',24,24,100,0,'2026-04-06 15:17:09'),
+(67,2,'L',0,'로그인 세션 시작: 대시보드 진입',1,1,100,0,'2026-04-06 15:17:33'),
+(68,2,'Q',1,'문제보기',0,0,0,0,'2026-04-06 15:17:33'),
+(69,2,'Q',1,'문제풀기',0,0,0,0,'2026-04-06 15:17:33'),
+(70,2,'Q',1,'정답확인:정답',1,1,100,0,'2026-04-06 15:17:33'),
+(71,2,'B',1,'문제집 문제등록 화면 이동',0,0,0,0,'2026-04-06 15:17:33'),
+(72,2,'B',2,'문제집 선택 추가: 김철수 자료구조 집중',0,0,0,0,'2026-04-06 15:17:33'),
+(73,2,'E',1,'고사 문제등록 화면 이동',0,0,0,0,'2026-04-06 15:17:33'),
+(74,2,'E',2,'고사 검색 실행: \"정기 테스트\"',0,0,0,0,'2026-04-06 15:17:33'),
+(75,2,'C',1,'클래스 구성원 수정: 파이썬 및 네트워크 기초반 (3명 배정)',3,3,100,0,'2026-04-06 15:17:33'),
+(76,2,'C',1,'클래스 고사 연결 수정: 파이썬 및 네트워크 기초반 (2개 연결)',2,2,100,0,'2026-04-06 15:17:33'),
+(77,2,'R',1,'관계 요청 발신: 제이미 (PUPIL_TEACHER)',0,0,0,0,'2026-04-06 15:17:33'),
+(78,2,'R',1,'메시지 발송: 제이미 (24자)',24,24,100,0,'2026-04-06 15:17:33'),
+(79,2,'L',0,'로그인 직후 메시지 팝오버 자동 열기',2,5,40,0,'2026-04-06 06:25:00'),
+(80,2,'L',0,'대시보드 탭 전환: 활동 로그',0,0,0,0,'2026-04-06 06:25:04'),
+(81,2,'L',0,'로그인 직후 메시지 팝오버 자동 열기',2,5,40,0,'2026-04-06 06:26:35'),
+(82,2,'L',0,'대시보드 탭 전환: 활동 로그',0,0,0,0,'2026-04-06 06:26:36'),
+(83,2,'L',0,'대시보드 탭 전환: 활동 로그',0,0,0,0,'2026-04-06 06:29:17'),
+(84,2,'L',0,'사용자 로그아웃: 사용자 #2 [김철수]',0,1,0,0,'2026-04-06 06:30:26'),
+(85,2,'L',0,'로그인 성공: 사용자 #2 [김철수]',1,1,100,0,'2026-04-06 06:30:33'),
+(86,2,'L',0,'로그인 직후 메시지 팝오버 자동 열기',2,5,40,0,'2026-04-06 06:30:33'),
+(87,2,'L',0,'대시보드 탭 전환: 활동 로그',0,0,0,0,'2026-04-06 06:30:35'),
+(88,2,'L',0,'사용자 로그아웃: 사용자 #2 [김철수]',0,1,0,0,'2026-04-06 06:30:44'),
+(89,2,'L',0,'로그인 성공: 사용자 #2 [김철수]',1,1,100,0,'2026-04-06 06:30:55'),
+(90,2,'L',0,'로그인 직후 메시지 팝오버 자동 열기',2,5,40,0,'2026-04-06 06:30:55'),
+(91,2,'L',0,'대시보드 탭 전환: 활동 로그',0,0,0,0,'2026-04-06 06:30:57'),
+(92,2,'L',0,'대시보드 탭 전환: 활동 로그',0,0,0,0,'2026-04-06 06:33:49'),
+(93,2,'L',0,'사용자 로그아웃: 사용자 #2 [김철수]',0,1,0,0,'2026-04-06 06:34:14'),
+(94,2,'L',0,'로그인 성공: 사용자 #2 [김철수]',1,1,100,0,'2026-04-06 06:34:52'),
+(95,2,'L',0,'로그인 직후 메시지 팝오버 자동 열기',2,5,40,0,'2026-04-06 06:34:53'),
+(96,2,'L',0,'대시보드 탭 전환: 활동 로그',0,0,0,0,'2026-04-06 06:34:55'),
+(97,2,'L',0,'로그아웃: 사용자 #2 [김철수]',0,1,0,0,'2026-04-06 15:44:45'),
+(98,2,'L',0,'로그인 성공: 사용자 #2 [김철수]',1,1,100,0,'2026-04-06 15:44:52'),
+(99,2,'L',0,'로그인 직후 메시지 팝오버 자동 열기',2,5,40,0,'2026-04-06 15:44:52'),
+(100,2,'L',0,'대시보드 탭 전환: 활동 로그',0,0,0,0,'2026-04-06 15:44:54'),
+(101,2,'Q',128,'문제 #128 [Reading Passage 4 ㄹㄴㄹ;너ㅏㄹ;ㅣㄴ머ㅏㄹ;ㅓ리ㅏ ㅓㅣㅏㅇ너리ㅏㅓ ㅇ리ㅏ 머ㅏㅇ너라ㅣ어라ㅣㄴㅁ ㅓㅣ라마 랑너라] 문제보기',0,0,0,0,'2026-04-06 15:46:01'),
+(102,2,'Q',98,'문제 #98 [김철수 확장 문제 41 - 학습 전략] 문제보기',0,0,0,0,'2026-04-06 15:46:07'),
+(103,2,'Q',98,'문제 #98 [김철수 확장 문제 41 - 학습 전략] 문제풀기',0,0,0,0,'2026-04-06 15:46:08'),
+(104,2,'Q',98,'문제 #98 [김철수 확장 문제 41 - 학습 전략] 정답확인:오답',0,1,0,0,'2026-04-06 15:46:08'),
+(105,2,'L',0,'대시보드 탭 전환: 활동 로그',0,0,0,0,'2026-04-06 15:46:16'),
+(106,2,'L',0,'대시보드 탭 전환: 활동 로그',0,0,0,0,'2026-04-06 15:48:21'),
+(107,2,'L',0,'대시보드 탭 전환: 활동 로그',0,0,0,0,'2026-04-06 15:48:51'),
+(108,2,'L',0,'로그인 성공: 사용자 #2 [김철수]',1,1,100,0,'2026-04-06 15:51:15'),
+(109,2,'L',0,'로그인 직후 메시지 팝오버 자동 열기',2,5,40,0,'2026-04-06 15:51:16'),
+(110,2,'L',0,'대시보드 탭 전환: 활동 로그',0,0,0,0,'2026-04-06 15:51:18'),
+(111,2,'L',0,'로그아웃: 사용자 #2 [김철수]',0,1,0,0,'2026-04-06 15:53:00'),
+(112,2,'L',0,'로그인 성공: 사용자 #2 [김철수]',1,1,100,0,'2026-04-06 15:53:07'),
+(113,2,'L',0,'로그인 직후 메시지 팝오버 자동 열기',2,5,40,0,'2026-04-06 15:53:07'),
+(114,2,'L',0,'대시보드 탭 전환: 활동 로그',0,0,0,0,'2026-04-06 15:53:09'),
+(115,2,'L',0,'대시보드 탭 전환: 활동 로그',0,0,0,0,'2026-04-06 15:53:13'),
+(116,2,'L',0,'대시보드 탭 전환: 활동 로그',0,0,0,0,'2026-04-06 15:53:15'),
+(117,2,'L',0,'대시보드 탭 전환: 활동 로그',0,0,0,0,'2026-04-06 15:53:16'),
+(118,2,'L',0,'대시보드 탭 전환: 활동 로그',0,0,0,0,'2026-04-06 15:54:29'),
+(119,2,'L',0,'로그아웃: 사용자 #2 [김철수]',0,1,0,0,'2026-04-06 15:54:53'),
+(120,2,'L',0,'로그인 성공: 사용자 #2 [김철수]',1,1,100,0,'2026-04-06 15:55:05'),
+(121,2,'L',0,'로그인 직후 메시지 팝오버 자동 열기',2,5,40,0,'2026-04-06 15:55:06'),
+(122,2,'L',0,'대시보드 탭 전환: 활동 로그',0,0,0,0,'2026-04-06 15:55:07'),
+(123,2,'L',0,'대시보드 탭 전환: 활동 로그',0,0,0,0,'2026-04-06 15:55:12'),
+(124,2,'L',0,'로그아웃: 사용자 #2 [김철수]',0,1,0,0,'2026-04-06 15:59:25'),
+(125,2,'L',0,'로그인 성공: 사용자 #2 [김철수]',1,1,100,0,'2026-04-06 15:59:35'),
+(126,2,'L',0,'로그인 직후 메시지 팝오버 자동 열기',2,5,40,0,'2026-04-06 15:59:35'),
+(127,2,'L',0,'대시보드 탭 전환: 활동 로그',0,0,0,0,'2026-04-06 15:59:53'),
+(128,2,'L',0,'대시보드 탭 전환: 활동 로그',0,0,0,0,'2026-04-06 16:02:38'),
+(129,2,'L',0,'대시보드 탭 전환: 활동 로그',0,0,0,0,'2026-04-06 16:03:13'),
+(130,2,'C',0,'대시보드 탭 전환: 소속 클래스',0,0,0,0,'2026-04-06 16:29:28'),
+(131,2,'L',0,'대시보드 탭 전환: 활동 로그',0,0,0,0,'2026-04-06 16:29:29'),
+(132,2,'L',0,'로그아웃: 사용자 #2 [김철수]',0,1,0,0,'2026-04-06 16:29:35'),
+(133,2,'L',0,'로그인 성공: 사용자 #2 [김철수]',1,1,100,0,'2026-04-06 07:37:07'),
+(134,2,'L',0,'로그인 직후 메시지 팝오버 자동 열기',2,5,40,0,'2026-04-06 07:37:08'),
+(135,2,'L',0,'로그아웃: 사용자 #2 [김철수]',0,1,0,0,'2026-04-06 07:37:34'),
+(136,2,'L',0,'로그인 성공: 사용자 #2 [김철수]',1,1,100,0,'2026-04-06 16:57:33'),
+(137,2,'L',0,'대시보드 메인 화면 진입',1,1,100,0,'2026-04-06 16:57:34'),
+(138,2,'L',0,'로그인 세션 시작: 헤더 레이아웃 진입',1,1,100,0,'2026-04-06 16:57:34'),
+(139,2,'L',0,'로그인 직후 메시지 팝오버 자동 열기',2,5,40,0,'2026-04-06 16:57:34'),
+(140,2,'L',0,'대시보드 탭 전환: 활동 로그',0,0,0,0,'2026-04-06 16:57:36'),
+(141,2,'L',0,'로그아웃: 사용자 #2 [김철수]',0,1,0,0,'2026-04-06 16:57:49'),
+(142,2,'L',0,'로그인 성공: 사용자 #2 [김철수]',1,1,100,0,'2026-04-06 16:58:41'),
+(143,2,'L',0,'로그인 직후 메시지 팝오버 자동 열기',2,5,40,0,'2026-04-06 16:58:41'),
+(144,2,'L',0,'대시보드 탭 전환: 활동 로그',0,0,0,0,'2026-04-06 16:59:12'),
+(145,2,'C',0,'대시보드 탭 전환: 소속 클래스',0,0,0,0,'2026-04-06 17:00:53'),
+(146,2,'L',0,'대시보드 탭 전환: 메시지 함',0,0,0,0,'2026-04-06 17:00:55'),
+(147,2,'R',0,'대시보드 탭 전환: 관계 관리',0,0,0,0,'2026-04-06 17:00:56'),
+(148,2,'L',0,'대시보드 탭 전환: 요약 통계',0,0,0,0,'2026-04-06 17:00:56'),
+(149,2,'L',0,'대시보드 탭 전환: 활동 로그',0,0,0,0,'2026-04-06 17:00:57'),
+(150,2,'Q',90,'문제 #90 [김철수 확장 문제 33 - 파이썬 문법] 문제보기',0,0,0,0,'2026-04-06 17:01:30'),
+(151,2,'Q',90,'문제 #90 [김철수 확장 문제 33 - 파이썬 문법] 문제풀기',0,0,0,0,'2026-04-06 17:01:32'),
+(152,2,'Q',90,'문제 #90 [김철수 확장 문제 33 - 파이썬 문법] 정답확인:오답',0,1,0,0,'2026-04-06 17:01:32'),
+(153,2,'L',0,'대시보드 탭 전환: 활동 로그',0,0,0,0,'2026-04-06 17:04:33'),
+(154,2,'L',0,'대시보드 탭 전환: 활동 로그',0,0,0,0,'2026-04-06 17:11:33'),
+(155,2,'V',0,'대시보드 탭 전환: 활동 로그',0,0,0,0,'2026-04-06 17:11:56'),
+(156,2,'V',0,'대시보드 탭 전환: 활동 로그',0,0,0,0,'2026-04-06 17:12:04'),
+(157,2,'V',0,'상단 이동 버튼 클릭: 문제 목록',0,0,0,0,'2026-04-06 17:12:06'),
+(158,2,'V',0,'화면 진입: 문제 목록',0,0,0,0,'2026-04-06 17:12:06'),
+(159,2,'V',0,'상단 이동 버튼 클릭: 문제집 목록',0,0,0,0,'2026-04-06 17:12:07'),
+(160,2,'B',0,'문제집 관리 화면 진입',1,1,100,0,'2026-04-06 17:12:08'),
+(161,2,'V',0,'상단 이동 버튼 클릭: 고사집 목록',0,0,0,0,'2026-04-06 17:12:08'),
+(162,2,'E',0,'고사집 관리 화면 진입',1,1,100,0,'2026-04-06 17:12:08'),
+(163,2,'V',0,'대시보드 탭 전환: 활동 로그',0,0,0,0,'2026-04-06 17:12:10'),
+(164,2,'V',0,'상단 이동 버튼 클릭: 문제집 목록',0,0,0,0,'2026-04-06 17:12:25'),
+(165,2,'B',2,'문제집 #2 [김철수 자료구조 집중] 선택 추가',0,0,0,0,'2026-04-06 17:12:28'),
+(166,2,'B',2,'문제집 #2 [김철수 자료구조 집중] 선택 해제',0,0,0,0,'2026-04-06 17:12:29'),
+(167,2,'B',2,'문제집 #2 [김철수 자료구조 집중] 수정 모달 열기',0,0,0,0,'2026-04-06 17:12:31'),
+(168,2,'B',2,'문제집 #2 [김철수 자료구조 집중] 수정',0,0,0,0,'2026-04-06 17:12:32'),
+(169,2,'B',2,'문제집 #2 [김철수 자료구조 집중] 수정 저장 완료',0,0,0,0,'2026-04-06 17:12:32'),
+(170,2,'B',10,'문제집 #10 [김철수 기말 대비 영어] 문제등록 화면 이동',0,0,0,0,'2026-04-06 17:12:34'),
+(171,2,'V',0,'화면 진입: 문제 목록',0,0,0,0,'2026-04-06 17:12:34'),
+(172,2,'V',0,'컨텍스트 범위 전환: 그외 문제',0,0,0,0,'2026-04-06 17:12:37'),
+(173,2,'V',122,'문제 선택 추가: 문제 #122 [Reading Passage 3]',0,0,0,0,'2026-04-06 17:12:38'),
+(174,2,'B',10,'문제집 #10 [김철수 기말 대비 영어]에 문제 #122 [Reading Passage 3] 등록',0,0,0,0,'2026-04-06 17:12:38'),
+(175,2,'V',0,'컨텍스트 범위 전환: 소속 문제',0,0,0,0,'2026-04-06 17:12:41'),
+(176,2,'V',0,'대시보드 탭 전환: 활동 로그',0,0,0,0,'2026-04-06 17:12:46'),
+(177,2,'V',0,'상단 이동 버튼 클릭: 문제집 목록',0,0,0,0,'2026-04-06 17:13:46'),
+(178,2,'B',0,'문제집 검색 실행(문제집명): \"ㄹㅎ\"',0,0,0,0,'2026-04-06 17:13:49'),
+(179,2,'V',0,'대시보드 탭 전환: 활동 로그',0,0,0,0,'2026-04-06 17:13:52'),
+(180,2,'V',0,'대시보드 탭 전환: 활동 로그',0,0,0,0,'2026-04-06 17:15:44'),
+(181,2,'L',0,'로그아웃: 사용자 #2 [김철수]',0,1,0,0,'2026-04-06 17:21:18'),
+(182,0,'L',0,'로그인 성공: 사용자 #0 [최종관리자]',1,1,100,0,'2026-04-06 17:27:24'),
+(183,0,'L',0,'로그인 세션 시작: 헤더 레이아웃 진입',1,1,100,0,'2026-04-06 17:27:24'),
+(184,0,'L',0,'로그인 직후 메시지 팝오버 자동 열기',0,5,0,0,'2026-04-06 17:27:24'),
+(185,0,'L',0,'로그아웃: 사용자 #0 [최종관리자]',0,1,0,0,'2026-04-06 17:34:57'),
+(186,2,'L',0,'로그인 성공: 사용자 #2 [김철수]',1,1,100,0,'2026-04-06 17:35:13'),
+(187,2,'L',0,'로그인 직후 메시지 팝오버 자동 열기',2,5,40,0,'2026-04-06 17:35:13'),
+(188,2,'L',0,'로그아웃: 사용자 #2 [김철수]',0,1,0,0,'2026-04-06 17:35:17'),
+(189,0,'L',0,'로그인 성공: 사용자 #0 [최종관리자]',1,1,100,0,'2026-04-06 17:35:56'),
+(190,0,'L',0,'로그인 직후 메시지 팝오버 자동 열기',0,5,0,0,'2026-04-06 17:35:56'),
+(191,0,'V',0,'대시보드 탭 전환: 메시지 함',0,0,0,0,'2026-04-06 17:36:02'),
+(192,0,'V',0,'대시보드 탭 전환: 관계 관리',0,0,0,0,'2026-04-06 17:36:04'),
+(193,0,'V',0,'대시보드 탭 전환: 메시지 함',0,0,0,0,'2026-04-06 17:36:05'),
+(194,0,'V',0,'대시보드 탭 전환: 관계 관리',0,0,0,0,'2026-04-06 17:36:08'),
+(195,0,'V',0,'대시보드 탭 전환: 메시지 함',0,0,0,0,'2026-04-06 17:36:08'),
+(196,0,'L',0,'로그아웃: 사용자 #0 [최종관리자]',0,1,0,0,'2026-04-06 17:36:12'),
+(197,2,'L',0,'로그인 성공: 사용자 #2 [김철수]',1,1,100,0,'2026-04-06 17:36:18'),
+(198,2,'L',0,'로그인 직후 메시지 팝오버 자동 열기',2,5,40,0,'2026-04-06 17:36:18'),
+(199,2,'L',0,'로그아웃: 사용자 #2 [김철수]',0,1,0,0,'2026-04-06 17:36:55'),
+(200,0,'L',0,'로그인 성공: 사용자 #0 [최종관리자]',1,1,100,0,'2026-04-06 17:37:05'),
+(201,0,'L',0,'로그인 직후 메시지 팝오버 자동 열기',0,5,0,0,'2026-04-06 17:37:05'),
+(202,0,'V',0,'대시보드 탭 전환: 활동 로그',0,0,0,0,'2026-04-06 17:37:07'),
+(203,0,'V',0,'상단 이동 버튼 클릭: 문제 목록',0,0,0,0,'2026-04-06 17:37:25'),
+(204,0,'V',0,'문제 그룹 선택: #0 / 문제 목록',0,0,0,0,'2026-04-06 17:37:28'),
+(205,0,'V',0,'문제 범위 전환: 그외 문제',0,0,0,0,'2026-04-06 17:37:33'),
+(206,0,'V',0,'상단 이동 버튼 클릭: 문제집 목록',0,0,0,0,'2026-04-06 17:37:41'),
+(207,0,'V',0,'상단 이동 버튼 클릭: 고사집 목록',0,0,0,0,'2026-04-06 17:37:43'),
+(208,0,'V',0,'상단 이동 버튼 클릭: 문제집 목록',0,0,0,0,'2026-04-06 17:37:56'),
+(209,0,'V',0,'상단 이동 버튼 클릭: 문제 목록',0,0,0,0,'2026-04-06 17:37:57'),
+(210,0,'V',0,'문제 범위 전환: 그외 문제',0,0,0,0,'2026-04-06 17:38:02'),
+(211,0,'V',0,'상단 이동 버튼 클릭: 고사집 목록',0,0,0,0,'2026-04-06 17:38:15'),
+(212,0,'V',0,'상단 이동 버튼 클릭: 문제집 목록',0,0,0,0,'2026-04-06 17:38:16'),
+(213,0,'V',0,'상단 이동 버튼 클릭: 문제 목록',0,0,0,0,'2026-04-06 17:38:17'),
+(214,0,'V',0,'문제 그룹 관리 열기: 문제 목록',0,0,0,0,'2026-04-06 17:38:20'),
+(215,0,'V',0,'대시보드 탭 전환: 활동 로그',0,0,0,0,'2026-04-06 17:38:28');
 /*!40000 ALTER TABLE `users_logs` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -2544,4 +2840,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*M!100616 SET NOTE_VERBOSITY=@OLD_NOTE_VERBOSITY */;
 
--- Dump completed on 2026-04-04 19:20:16
+-- Dump completed on 2026-04-06 17:47:13

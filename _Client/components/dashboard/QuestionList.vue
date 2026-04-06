@@ -13,9 +13,11 @@ import IconFileText from "~/assets/icons/IconFileText.svg?component";
 import IconCreateAction from "~/assets/icons/IconCreateAction.svg?component";
 import IconDeleteAction from "~/assets/icons/IconDeleteAction.svg?component";
 import { useApi } from "~/composables/useApi";
+import { useUserLog } from "~/composables/useUserLog";
 import type { Question, Group } from "~/types";
 
 const route = useRoute();
+const { writeUserLog, writeUserLogOncePerSession } = useUserLog();
 
 const props = defineProps<{
   listTitle?: string;
@@ -124,6 +126,22 @@ const emit = defineEmits<{
   (e: "copy-question", question: Question): void;
 }>();
 
+const getQuestionListContextLabel = () => {
+  if (props.selectionContext === "B") {
+    return props.listSubtitle || props.listTitle || "문제집 문제 목록";
+  }
+  if (props.selectionContext === "C") {
+    return props.listSubtitle || props.listTitle || "고사 문제 목록";
+  }
+  return props.listTitle || "문제 목록";
+};
+
+const logViewAction = async (message: string, objId: string | number | bigint = 0) => {
+  await writeUserLog("V", objId, {
+    user_content: message,
+  });
+};
+
 // --- [로컬 스토리지 키 관리] ---
 const currentKeys = computed(() => {
   const userNo = props.currentUserNo || "guest";
@@ -139,6 +157,11 @@ const currentKeys = computed(() => {
 // ----------------------------
 
 const handleSelectGroup = (groupId: string | number | null) => {
+  void logViewAction(
+    groupId == null
+      ? `문제 그룹 선택 해제: ${getQuestionListContextLabel()}`
+      : `문제 그룹 선택: #${String(groupId)} / ${getQuestionListContextLabel()}`,
+  );
   emit("change-group", groupId);
 };
 
@@ -153,11 +176,17 @@ const resetFilterInputs = (options?: { keepGroupSelection?: boolean }) => {
 };
 
 const handleScopeChange = (scope: "mine" | "all") => {
+  void logViewAction(
+    `문제 범위 전환: ${scope === "mine" ? "나의 문제" : "그외 문제"}`,
+  );
   emit("change-scope", scope);
   resetFilterInputs({ keepGroupSelection: true });
 };
 
 const handleContextScopeChange = (scope: "mine" | "all") => {
+  void logViewAction(
+    `컨텍스트 범위 전환: ${scope === "mine" ? "소속 문제" : "그외 문제"}`,
+  );
   emit("change-context-scope", scope);
   resetFilterInputs({ keepGroupSelection: true });
 };
@@ -178,9 +207,14 @@ const applySearch = () => {
   const keyword = searchInput.value.trim();
 
   if (!keyword) {
+    void logViewAction(`문제 검색어 비움으로 전체 초기화: ${getQuestionListContextLabel()}`);
     clearAllFilters();
     return;
   }
+
+  void logViewAction(
+    `문제 검색 실행: ${searchField.value} / "${keyword}" / ${getQuestionListContextLabel()}`,
+  );
 
   emit("search", {
     field: searchField.value,
@@ -189,10 +223,15 @@ const applySearch = () => {
 };
 
 const resetSearch = () => {
+  void logViewAction(`문제 검색 및 필터 초기화: ${getQuestionListContextLabel()}`);
   clearAllFilters();
 };
 
 const handleSolve = (question: Question) => {
+  void logViewAction(
+    `문제 풀기 열기: 문제 #${String(question.question_id)} [${question.title || "제목 없음"}]`,
+    question.question_id,
+  );
   selectedQuestionForSolve.value = question;
 };
 
@@ -256,6 +295,9 @@ const syncContextSelection = async (
 };
 
 const toggleSelectAllVisible = async (checked: boolean) => {
+  void logViewAction(
+    `현재 화면 전체 선택 ${checked ? "적용" : "해제"}: ${props.questions.length}개 항목 / ${getQuestionListContextLabel()}`,
+  );
   const isContextA = (props.selectionContext || "A") === "A";
   const syncPromises: Promise<any>[] = [];
 
@@ -317,6 +359,13 @@ const toggleQuestionSelected = async (
 ) => {
   const idKey = getQuestionIdKey(questionId);
   const question = props.questions.find((q) => q.question_id === questionId);
+
+  if (question) {
+    void logViewAction(
+      `문제 선택 ${checked ? "추가" : "해제"}: 문제 #${String(question.question_id)} [${question.title || "제목 없음"}]`,
+      question.question_id,
+    );
+  }
 
   if (checked) {
     if (!selectedQuestionIds.value.includes(idKey)) {
@@ -389,6 +438,9 @@ const pageEndItem = computed(() => {
 });
 
 const goToPage = (page: number) => {
+  void logViewAction(
+    `문제 목록 페이지 이동: ${Math.min(Math.max(page, 1), props.totalPages)}페이지 / ${getQuestionListContextLabel()}`,
+  );
   emit("change-page", Math.min(Math.max(page, 1), props.totalPages));
 };
 
@@ -415,20 +467,42 @@ const getNextQuestion = () => {
 
 const handlePrev = () => {
   const prev = getPrevQuestion();
-  if (prev) selectedQuestionForSolve.value = prev;
+  if (prev) {
+    void logViewAction(
+      `문제 풀이 이전 이동: 문제 #${String(prev.question_id)} [${prev.title || "제목 없음"}]`,
+      prev.question_id,
+    );
+    selectedQuestionForSolve.value = prev;
+  }
 };
 
 const handleNext = () => {
   const next = getNextQuestion();
-  if (next) selectedQuestionForSolve.value = next;
+  if (next) {
+    void logViewAction(
+      `문제 풀이 다음 이동: 문제 #${String(next.question_id)} [${next.title || "제목 없음"}]`,
+      next.question_id,
+    );
+    selectedQuestionForSolve.value = next;
+  }
 };
 
 const handleGoToQuestionIndex = (index: number) => {
   if (index < 0 || index >= props.questions.length) return;
+  void logViewAction(
+    `문제 풀이 인덱스 이동: ${index + 1}번째 / 문제 #${String(props.questions[index].question_id)} [${props.questions[index].title || "제목 없음"}]`,
+    props.questions[index].question_id,
+  );
   selectedQuestionForSolve.value = props.questions[index];
 };
 
 const openEditor = (q: Question | null) => {
+  void logViewAction(
+    q
+      ? `문제 수정 열기: 문제 #${String(q.question_id)} [${q.title || "제목 없음"}]`
+      : `새 문제 작성 열기: ${getQuestionListContextLabel()}`,
+    q?.question_id ?? 0,
+  );
   if (q) {
     selectedQuestionForEdit.value = q;
   } else {
@@ -655,6 +729,16 @@ const fetchGroups = async () => {
   }
 };
 
+const openGroupManager = () => {
+  void logViewAction(`문제 그룹 관리 열기: ${getQuestionListContextLabel()}`);
+  showGroupManager.value = true;
+};
+
+const clearGroupSearch = () => {
+  void logViewAction(`문제 그룹 검색 초기화: ${getQuestionListContextLabel()}`);
+  groupSearchInput.value = "";
+};
+
 const deleteSelectedQuestions = async () => {
   if (!canDeleteQuestions.value) return;
   if (props.currentUserNo === null || props.currentUserNo === undefined) {
@@ -666,6 +750,10 @@ const deleteSelectedQuestions = async () => {
     `선택한 문제 ${selectedQuestionCount.value}개를 삭제하시겠습니까?`,
   );
   if (!ok) return;
+
+  void logViewAction(
+    `선택 문제 삭제 실행: ${selectedQuestionCount.value}개 / ${getQuestionListContextLabel()}`,
+  );
 
   try {
     const result = (await $fetch(`${apiBase.value}/questions/soft-delete`, {
@@ -703,7 +791,32 @@ const openBulkSolveModal = () => {
     return;
   }
 
+  void logViewAction(
+    `모아 풀기 열기: ${selectedQuestionCount.value}개 선택 / ${getQuestionListContextLabel()}`,
+  );
   showBulkSolveModal.value = true;
+};
+
+const handleCreateQuestionBook = () => {
+  void logViewAction(
+    `선택 문제로 문제집 만들기 클릭: ${selectedQuestionCount.value}개 선택 / ${getQuestionListContextLabel()}`,
+  );
+  triggerToast("문제집 만들기 연결은 다음 단계에서 이어집니다.");
+};
+
+const handleCreateExamBook = () => {
+  void logViewAction(
+    `선택 문제로 고사집 만들기 클릭: ${selectedQuestionCount.value}개 선택 / ${getQuestionListContextLabel()}`,
+  );
+  triggerToast("고사집 만들기 연결은 다음 단계에서 이어집니다.");
+};
+
+const handleCopyQuestion = (question: Question) => {
+  void logViewAction(
+    `문제 복사 후 가져오기 클릭: 문제 #${String(question.question_id)} [${question.title || "제목 없음"}]`,
+    question.question_id,
+  );
+  emit("copy-question", question);
 };
 
 // --- [문제 선택 데이터 관리 (영구 저장용 키)] ---
@@ -808,6 +921,14 @@ const initContextSelection = async () => {
 };
 
 onMounted(async () => {
+  await writeUserLogOncePerSession(
+    `view_enter_${props.selectionContext || "A"}_${props.contextId || "default"}_${getQuestionListContextLabel()}`,
+    "V",
+    0,
+    {
+      user_content: `화면 진입: ${getQuestionListContextLabel()}`,
+    },
+  );
   restoreSelectionFromStorage();
   await initContextSelection(); // 컨텍스트별 자동 선택 실행
 
@@ -950,7 +1071,7 @@ watch(
             <button
               class="btn-manage-groups"
               title="그룹 관리"
-              @click="showGroupManager = true">
+              @click="openGroupManager">
               <IconSettings class="settings-icon" />
               <span class="btn-manage-label">그룹 관리</span>
             </button>
@@ -969,7 +1090,7 @@ watch(
             <button
               v-if="groupSearchInput"
               class="group-search-clear"
-              @click="groupSearchInput = ''">
+              @click="clearGroupSearch">
               초기화
             </button>
           </div>
@@ -1035,13 +1156,15 @@ watch(
                   </button>
                   <button
                     class="btn-bulk-action"
-                    :disabled="!canDeleteQuestions">
+                    :disabled="!canDeleteQuestions"
+                    @click="handleCreateQuestionBook">
                     문제집<br />만들기
                   </button>
                   <button
                     v-if="(props.selectionContext || 'A') === 'A'"
                     class="btn-bulk-action"
-                    :disabled="!canDeleteQuestions">
+                    :disabled="!canDeleteQuestions"
+                    @click="handleCreateExamBook">
                     고사집<br />만들기
                   </button>
                 </div>
@@ -1287,13 +1410,13 @@ watch(
                   <button
                     v-if="props.viewMode === 'all'"
                     class="btn-copy"
-                    @click="emit('copy-question', q)">
+                    @click="handleCopyQuestion(q)">
                     복사 후 가져오기
                   </button>
                   <button
                     v-else-if="canEditQuestion(q)"
                     class="btn-modify"
-                    @click="selectedQuestionForEdit = q">
+                    @click="openEditor(q)">
                     수정
                   </button>
                   <button class="btn-solve" @click="handleSolve(q)">

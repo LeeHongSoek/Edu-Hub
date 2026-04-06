@@ -7,6 +7,7 @@ import IconPencil from "~/assets/icons/IconPencil.svg?component";
 import IconUsers from "~/assets/icons/IconUsers.svg?component";
 import IconClassRoom from "~/assets/icons/IconClassRoom.svg?component";
 import IconHome from "~/assets/icons/IconHome.svg?component";
+import IconCursor from "~/assets/icons/IconCreateAction.svg?component";
 import PageSlider from "~/components/PageSlider.vue";
 
 const logs = ref<any[]>([]);
@@ -21,6 +22,7 @@ const filterTypes = [
   { id: "E", label: "고사", icon: IconPencil, color: "#f59e0b" },
   { id: "C", label: "클래스", icon: IconClassRoom, color: "#06b6d4" },
   { id: "R", label: "관계", icon: IconUsers, color: "#a855f7" },
+  { id: "V", label: "활동", icon: IconCursor, color: "#38bdf8" },
 ];
 
 const selectedType = ref("all");
@@ -96,6 +98,8 @@ const getLogTypeInfo = (type: string) => {
       return { icon: IconUsers, label: "관계", color: "#a855f7" };
     case "L":
       return { icon: IconHome, label: "로그인", color: "#64748b" };
+    case "V":
+      return { icon: IconCursor, label: "활동", color: "#38bdf8" };
     default:
       return { icon: IconFileText, label: "기타", color: "#94a3b8" };
   }
@@ -159,7 +163,7 @@ const isRecentTime = (dateStr: string) => {
   <div class="log-viewer">
     <div class="header-row">
       <div class="title-group">
-        <h3><IconCalendar class="section-icon" /> 최근 사용자 활동 로그</h3>
+        <h3><IconCalendar class="section-icon" />로그</h3>
       </div>
 
       <div class="header-controls">
