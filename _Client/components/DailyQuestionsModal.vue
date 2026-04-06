@@ -11,7 +11,7 @@ const props = defineProps<{
   questions: Question[];
   title?: string;
   logType?: string;
-  logObjectId?: string | number | null;
+  logObjectId?: string | number | bigint | null;
   logContent?: string;
 }>();
 
@@ -462,19 +462,20 @@ onUnmounted(() => {
             @click="goPrev">
             &larr; 이전 문제
           </button>
-          <button
-            v-if="hasCurrentHint && !showHint"
-            class="btn-hint-toggle"
-            @click="showHint = !showHint">
-            힌트보기
-          </button>
         </div>
 
         <div class="footer-hint-wrapper">
           <Transition name="fade" mode="out-in">
+            <button
+              v-if="hasCurrentHint && !showHint"
+              class="btn-hint-toggle"
+              :key="`hint-toggle-${currentQuestion.question_id}`"
+              @click="showHint = true">
+              힌트보기
+            </button>
             <div
+              v-else-if="showHint && currentQuestion.hint"
               class="footer-hint"
-              v-if="showHint && currentQuestion.hint"
               :key="currentQuestion.question_id">
               <div class="hint-body">
                 <IconHintBulb class="hint-icon" />
@@ -896,7 +897,9 @@ onUnmounted(() => {
   justify-content: center;
   align-items: center;
   gap: 0.8rem;
-  min-height: 52px;
+  min-height: 64px;
+  width: min(100%, 540px);
+  margin: 0 auto;
 }
 
 .btn-hint-toggle {
@@ -909,6 +912,7 @@ onUnmounted(() => {
   font-weight: 700;
   cursor: pointer;
   transition: all 0.2s ease;
+  min-width: 92px;
 }
 
 .btn-hint-toggle:hover {
@@ -927,6 +931,7 @@ onUnmounted(() => {
   gap: 0.6rem;
   max-width: 500px;
   width: 100%;
+  min-height: 52px;
 }
 
 .hint-body {

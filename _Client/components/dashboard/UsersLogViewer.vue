@@ -106,8 +106,6 @@ const getLogTypeInfo = (type: string) => {
 };
 
 const formatResult = (log: any) => {
-  if (log.logtype !== "Q") return null;
-
   const parts: string[] = [];
 
   if (
@@ -123,6 +121,10 @@ const formatResult = (log: any) => {
 
   if (log.time_taken != null && Number(log.time_taken) > 0) {
     parts.push(`${log.time_taken}초`);
+  }
+
+  if (parts.length === 0 && log.user_content) {
+    parts.push("학습 완료");
   }
 
   return parts.length ? parts.join(" · ") : null;
@@ -331,11 +333,12 @@ const isRecentTime = (dateStr: string) => {
 .filter-group {
   display: inline-flex;
   align-items: center;
-  gap: 0.45rem;
-  padding: 0.25rem;
-  background: rgba(15, 23, 42, 0.4);
-  border: 1px solid rgba(148, 163, 184, 0.15);
-  border-radius: 10px;
+  gap: 0;
+  padding: 0;
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  border-radius: 12px;
+  overflow: hidden;
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
 }
 
@@ -344,14 +347,14 @@ const isRecentTime = (dateStr: string) => {
   align-items: center;
   justify-content: center;
   gap: 0.35rem;
-  min-height: 34px;
-  border: 1px solid rgba(148, 163, 184, 0.14);
+  min-height: 38px;
+  border: 1px solid rgba(148, 163, 184, 0.12);
+  border-radius: 0;
   background: rgba(15, 23, 42, 0.4);
   color: #94a3b8;
-  padding: 0.4rem 0.9rem;
+  padding: 0.45rem 0.95rem;
   font-size: 0.84rem;
   font-weight: 800;
-  border-radius: 8px;
   cursor: pointer;
   transition:
     background 0.2s ease,
@@ -365,6 +368,7 @@ const isRecentTime = (dateStr: string) => {
   color: #e2e8f0;
   border-color: rgba(165, 180, 252, 0.28);
   transform: translateY(-1px);
+  background: rgba(30, 41, 59, 0.55);
 }
 
 .filter-group button.active {
@@ -372,6 +376,22 @@ const isRecentTime = (dateStr: string) => {
   color: white;
   border-color: rgba(191, 219, 254, 0.28);
   box-shadow: 0 8px 18px rgba(0, 0, 0, 0.2);
+}
+
+.filter-group button + button {
+  margin-left: -1px;
+}
+
+.filter-group button:first-child {
+  border-top-left-radius: 11px;
+  border-bottom-left-radius: 11px;
+  font-weight: 900;
+  font-size: 0.9rem;
+}
+
+.filter-group button:last-child {
+  border-top-right-radius: 11px;
+  border-bottom-right-radius: 11px;
 }
 
 .filter-btn-icon {

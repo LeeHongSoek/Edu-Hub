@@ -5,6 +5,8 @@ import ManagerNav from "~/components/dashboard/ManagerNav.vue";
 import IconCreateAction from "~/assets/icons/IconCreateAction.svg?component";
 import IconDeleteAction from "~/assets/icons/IconDeleteAction.svg?component";
 import PageSlider from "~/components/PageSlider.vue";
+import DailyQuestionsModal from "~/components/DailyQuestionsModal.vue";
+import type { Question } from "~/types";
 import { useUserLog } from "~/composables/useUserLog";
 
 const props = withDefaults(
@@ -147,6 +149,59 @@ const logBookAction = async (
     total_score: totalScore,
     score100,
   });
+};
+
+const showDailyQuizModal = ref(false);
+const dailyQuizQuestions = ref<Question[]>([]);
+const dailyQuizTitle = ref("");
+const dailyQuizLogContent = ref("");
+const dailyQuizLogBookId = ref<string | number | bigint | null>(null);
+
+const closeDailyQuizModal = () => {
+  showDailyQuizModal.value = false;
+  dailyQuizQuestions.value = [];
+};
+
+interface QuestionBookPayload {
+  items?: Array<{ question?: Question }>;
+}
+
+const startQuiz = async (bookId: number | string | bigint) => {
+  const book = books.value.find((item) => String(item.book_id) === String(bookId));
+  void logBookAction(
+    bookId,
+    book
+      ? `${getBookLogLabel(book)} 문제풀이 시작`
+      : `문제집 #${String(bookId)} 문제풀이 시작`,
+  );
+
+  try {
+    const payload = await $fetch<QuestionBookPayload>(`${apiBase.value}/question-books/${bookId}`, {
+      headers: getAuthHeader(),
+    });
+    const items: any[] = payload?.items ?? [];
+    const fetchedQuestions = items
+      .map((item) => item.question)
+      .filter((question): question is Question => Boolean(question));
+
+    if (fetchedQuestions.length === 0) {
+      alert("문제집에 담긴 문제가 없습니다.");
+      return;
+    }
+
+    dailyQuizQuestions.value = fetchedQuestions;
+    dailyQuizTitle.value = book
+      ? `${book.book_name || "문제집"} 일괄 풀기`
+      : "문제집 일괄 풀기";
+    dailyQuizLogContent.value = book
+      ? `${getBookLogLabel(book)} 일괄 풀이`
+      : `문제집 #${String(bookId)} 일괄 풀이`;
+    dailyQuizLogBookId.value = bookId;
+    showDailyQuizModal.value = true;
+  } catch (error) {
+    console.error("문제집 문제 조회 실패:", error);
+    alert("문제집 문제를 불러오는 중 오류가 발생했습니다.");
+  }
 };
 
 const getBookLogLabel = (book: any) =>
@@ -494,6 +549,11 @@ onMounted(() => {
                 @click="viewBookDetails(book.book_id)">
                 문제등록
               </button>
+              <button
+                class="btn-start btn-card-action"
+                @click="startQuiz(book.book_id)">
+                문제풀기
+              </button>
             </div>
           </div>
         </div>
@@ -503,8 +563,7 @@ onMounted(() => {
     <!-- 생성 모달 -->
     <div
       v-if="showCreateModal"
-      class="modal-overlay"
-      @click.self="closeCreateModal">
+      class="modal-overlay">
       <div class="modal-content">
         <div class="modal-header">
           <h3>{{ modalTitle }}</h3>
@@ -538,6 +597,15 @@ onMounted(() => {
         </div>
       </div>
     </div>
+    <DailyQuestionsModal
+      v-if="showDailyQuizModal"
+      :questions="dailyQuizQuestions"
+      :title="dailyQuizTitle"
+      log-type="B"
+      :log-object-id="dailyQuizLogBookId"
+      :log-content="dailyQuizLogContent"
+      @close="closeDailyQuizModal"
+    />
   </div>
 </template>
 
@@ -786,12 +854,16 @@ onMounted(() => {
 }
 
 .book-card-actions {
+  margin-left: auto;
   display: inline-flex;
   align-items: center;
   justify-content: flex-end;
-  margin-left: auto;
-  flex-shrink: 0;
   gap: 0;
+  flex-shrink: 0;
+  border-radius: 9px;
+  overflow: hidden;
+  border: 1px solid rgba(129, 140, 248, 0.24);
+  background: rgba(15, 23, 42, 0.55);
 }
 
 .book-card-actions .btn-card-action + .btn-card-action {
@@ -801,6 +873,10 @@ onMounted(() => {
 .book-card-actions .btn-card-action:first-child {
   border-top-right-radius: 0;
   border-bottom-right-radius: 0;
+}
+
+.book-card-actions .btn-card-action:not(:first-child):not(:last-child) {
+  border-radius: 0;
 }
 
 .book-card-actions .btn-card-action:last-child {
@@ -815,7 +891,7 @@ onMounted(() => {
   min-width: 72px;
   height: 34px;
   padding: 0 0.95rem;
-  border-radius: 9px;
+  border-radius: 0;
   border: 1px solid rgba(129, 140, 248, 0.24);
   background: rgba(99, 102, 241, 0.1);
   color: #c7d2fe;
@@ -826,16 +902,15 @@ onMounted(() => {
   transition:
     background 0.2s ease,
     border-color 0.2s ease,
-    color 0.2s ease,
     transform 0.2s ease;
 }
 
 .btn-card-action:hover {
-  background: rgba(99, 102, 241, 0.18);
+  background: rgba(129, 140, 248, 0.18);
   border-color: rgba(129, 140, 248, 0.42);
-  color: #ffffff;
   transform: translateY(-1px);
 }
+
 
 .copy-checkbox {
   width: 1.4rem;

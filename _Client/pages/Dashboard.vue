@@ -241,12 +241,15 @@ const setActiveTab = (tab: string) => {
   const labelMap: Record<string, string> = {
     stats: "요약 통계",
     relations: "관계 관리",
-    messages: "메시지 함",
+    messages: "메시지 함",  
     classes: classTabLabel.value,
     logs: "활동 로그",
     "sys-logs": "시스템 로그",
   };
-  void logDashboardAction("V", 0, `대시보드 탭 전환: ${labelMap[tab] || tab}`);
+
+  if (labelMap[tab] !== "활동 로그") {
+    void logDashboardAction("V", 0, `대시보드 탭 전환: ${labelMap[tab] || tab}`);
+  }
 };
 
 const fetchClassList = async () => {

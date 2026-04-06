@@ -6,6 +6,8 @@ import ManagerNav from "~/components/dashboard/ManagerNav.vue";
 import IconCreateAction from "~/assets/icons/IconCreateAction.svg?component";
 import IconDeleteAction from "~/assets/icons/IconDeleteAction.svg?component";
 import PageSlider from "~/components/PageSlider.vue";
+import DailyQuestionsModal from "~/components/DailyQuestionsModal.vue";
+import type { Question } from "~/types";
 import { useUserLog } from "~/composables/useUserLog";
 
 const props = withDefaults(
@@ -133,8 +135,61 @@ const logExamAction = async (
   });
 };
 
+const showDailyQuizModal = ref(false);
+const dailyQuizQuestions = ref<Question[]>([]);
+const dailyQuizTitle = ref("");
+const dailyQuizLogContent = ref("");
+const dailyQuizLogExamId = ref<number | string | bigint | null>(null);
+
 const getExamLogLabel = (exam: any) =>
   `고사 #${String(exam.exam_id)} [${exam.exam_name || "제목 없음"}]`;
+
+const closeDailyQuizModal = () => {
+  showDailyQuizModal.value = false;
+  dailyQuizQuestions.value = [];
+  dailyQuizLogExamId.value = null;
+};
+
+const startQuiz = async (examId: number | string | bigint) => {
+  const exam = exams.value.find((item) => String(item.exam_id) === String(examId));
+  void logExamAction(
+    examId,
+    exam
+      ? `${getExamLogLabel(exam)} 문제풀이 시작`
+      : `고사 #${String(examId)} 문제풀이 시작`,
+  );
+
+  try {
+    const payload = await $fetch<any>(`${apiBase.value}/exams/${examId}`, {
+      headers: getAuthHeader(),
+    });
+    const fetchedQuestions = Array.isArray(payload?.questions)
+      ? payload.questions
+          .map((item: any) => item?.question)
+          .filter((question: Question | undefined): question is Question =>
+            Boolean(question),
+          )
+      : [];
+
+    if (fetchedQuestions.length === 0) {
+      alert("고사에 담긴 문제가 없습니다.");
+      return;
+    }
+
+    dailyQuizQuestions.value = fetchedQuestions;
+    dailyQuizTitle.value = exam
+      ? `${exam.exam_name || "고사"} 일괄 풀기`
+      : "고사 일괄 풀기";
+    dailyQuizLogContent.value = exam
+      ? `${getExamLogLabel(exam)} 일괄 풀이`
+      : `고사 #${String(examId)} 일괄 풀이`;
+    dailyQuizLogExamId.value = examId;
+    showDailyQuizModal.value = true;
+  } catch (error) {
+    console.error("고사 문제 조회 실패:", error);
+    alert("고사 문제를 불러오는 중 오류가 발생했습니다.");
+  }
+};
 
 const viewExamDetails = async (examId: number | string | bigint) => {
   const exam = exams.value.find((item) => String(item.exam_id) === String(examId));
@@ -648,6 +703,11 @@ onMounted(() => {
                   @click="viewExamDetails(exam.exam_id)">
                   문제등록
                 </button>
+                <button
+                  class="btn-start btn-card-action"
+                  @click="startQuiz(exam.exam_id)">
+                  문제풀기
+                </button>
               </div>
             </h4>
           </div>
@@ -796,6 +856,16 @@ onMounted(() => {
       </div>
     </Transition>
   </Teleport>
+
+  <DailyQuestionsModal
+    v-if="showDailyQuizModal"
+    :questions="dailyQuizQuestions"
+    :title="dailyQuizTitle"
+    log-type="E"
+    :log-object-id="dailyQuizLogExamId"
+    :log-content="dailyQuizLogContent"
+    @close="closeDailyQuizModal"
+  />
 </template>
 
 <style scoped>
@@ -1082,6 +1152,10 @@ onMounted(() => {
   justify-content: flex-end;
   gap: 0;
   flex-shrink: 0;
+  border-radius: 9px;
+  overflow: hidden;
+  border: 1px solid rgba(129, 140, 248, 0.24);
+  background: rgba(15, 23, 42, 0.55);
 }
 
 .exam-card-actions .btn-card-action + .btn-card-action {
@@ -1091,6 +1165,10 @@ onMounted(() => {
 .exam-card-actions .btn-card-action:first-child {
   border-top-right-radius: 0;
   border-bottom-right-radius: 0;
+}
+
+.exam-card-actions .btn-card-action:not(:first-child):not(:last-child) {
+  border-radius: 0;
 }
 
 .exam-card-actions .btn-card-action:last-child {
@@ -1516,7 +1594,7 @@ onMounted(() => {
   min-width: 72px;
   height: 34px;
   padding: 0 0.95rem;
-  border-radius: 9px;
+  border-radius: 0;
   border: 1px solid rgba(129, 140, 248, 0.24);
   background: rgba(99, 102, 241, 0.1);
   color: #c7d2fe;
