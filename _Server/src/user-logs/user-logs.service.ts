@@ -118,7 +118,17 @@ export class UserLogsService {
 
     const [logs, totalResult] = await Promise.all([
       this.prisma.$queryRaw<any[]>(Prisma.sql`
-        SELECT *
+        SELECT
+          log_id,
+          user_no,
+          logtype_id AS logtype,
+          obj_id,
+          user_content,
+          score,
+          total_score,
+          score100,
+          DATE_FORMAT(CONVERT_TZ(last_played_at, '+00:00', '+09:00'), '%Y-%m-%dT%H:%i:%s+09:00') AS last_played_at,
+          DATE_FORMAT(CONVERT_TZ(created_at, '+00:00', '+09:00'), '%Y-%m-%dT%H:%i:%s+09:00') AS created_at
         FROM users_logs
         ${whereSql}
         ORDER BY created_at DESC, log_id DESC
@@ -153,7 +163,17 @@ export class UserLogsService {
 
   async findByObject(userNo: bigint, logtype: string, objId: bigint) {
     return this.prisma.$queryRaw(Prisma.sql`
-      SELECT *
+      SELECT
+        log_id,
+        user_no,
+        logtype_id AS logtype,
+        obj_id,
+        user_content,
+        score,
+        total_score,
+        score100,
+        DATE_FORMAT(CONVERT_TZ(last_played_at, '+00:00', '+09:00'), '%Y-%m-%dT%H:%i:%s+09:00') AS last_played_at,
+        DATE_FORMAT(CONVERT_TZ(created_at, '+00:00', '+09:00'), '%Y-%m-%dT%H:%i:%s+09:00') AS created_at
       FROM users_logs
       WHERE user_no = ${userNo}
         AND logtype_id = ${logtype}
