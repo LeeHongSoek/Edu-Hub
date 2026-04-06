@@ -371,7 +371,10 @@ async function bootstrap() {
           const logContent = logHeader + logReqData + logResData;
 
           appendFileSync(logPath, logContent);
-          if (!logHeader.includes('/api/sys-logs')) {
+          if (
+            !logHeader.includes('/api/sys-logs') &&
+            !logHeader.includes('/api/user-logs')
+          ) {
             const now = new Date();
             const local = new Date(now.getTime() - now.getTimezoneOffset() * 60000);
             const createdAt = local
@@ -382,7 +385,7 @@ async function bootstrap() {
               .$executeRaw(
                 Prisma.sql`INSERT INTO sys_logs (content, created_at) VALUES (${logContent}, ${createdAt})`,
               )
-              .catch(() => {});
+              .catch(() => { });
           }
         } catch { }
 

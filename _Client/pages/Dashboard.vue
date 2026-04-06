@@ -163,9 +163,43 @@ const currentSysLogCreatedAt = computed(() => {
   });
 });
 const latestSysLogRawTimestamp = computed(() => latestSysLog.value?.created_at || "");
+const latestSysLogTimeParts = computed(() => {
+  const raw = latestSysLog.value?.created_at;
+  if (!raw) return null;
+  const normalized = raw.includes("T") ? raw : raw.replace(" ", "T");
+  // console.log("normalized -- ", normalized);
+
+  const match = raw.match(/(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})/);
+  if (!match) return null;
+  // console.log("match -- ", match);
+
+  return {
+    year:  match[1],   // 2026
+    month: match[2],   // 04   ← 여기서 06이 나오길 원하셨던 부분
+    day:   match[3],   // 06
+    hour:  match[4],   // 21
+    minute:match[5],   // 03
+    second:match[6],   // 13
+  };
+});
 
 const refreshSysLogs = () => {
   fetchSysLogs();
+};
+
+const handleRefreshClick = () => {
+  sysLogPage.value = 1;
+  sysLogSlider.value = 1;
+  fetchSysLogs();
+};
+
+const handleSysLogHotkey = (event: KeyboardEvent) => {
+  const isRefreshShortcut =
+    (event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "r";
+  if (isRefreshShortcut && activeTab.value === "sys-logs") {
+    event.preventDefault();
+    handleRefreshClick();
+  }
 };
 
 const applySysLogSearch = () => {
@@ -487,11 +521,13 @@ onMounted(() => {
     showCursor.value = !showCursor.value;
   }, 500);
   typePhrase();
+  window.addEventListener("keydown", handleSysLogHotkey);
 });
 
 onUnmounted(() => {
   isTypingActive.value = false;
   if (cursorInterval) clearInterval(cursorInterval);
+  window.removeEventListener("keydown", handleSysLogHotkey);
 });
 </script>
 
@@ -663,35 +699,36 @@ onUnmounted(() => {
           <section class="sys-log-panel">
             <div class="sys-log-controls">
               <div class="sys-log-search">
+                <span class="meta-item time-chips" v-if="latestSysLogTimeParts">
+                  {{ latestSysLogTimeParts.hour }}
+                  <strong>:</strong>
+                  {{ latestSysLogTimeParts.minute }}
+                  <strong>:</strong>
+                  {{ latestSysLogTimeParts.second }}
+                </span>
+                <button class="btn-refresh" @click="handleRefreshClick">
+                  새로고침(cmd/ctrl+r)
+                </button>
                 <input
                   v-model="sysLogSearchInput"
                   type="text"
                   placeholder="검색어 입력 (content 기준)"
                   @keyup.enter="applySysLogSearch"
-                />
-                <button class="btn-search-highlight" @click="applySysLogSearch">
-                  검색
-                </button>
-                <button class="btn-refresh" @click="refreshSysLogs">
-                  새로고침
-                </button>
+                />                
                 <button
                   v-if="sysLogSearchQuery"
                   class="btn-reset-search"
                   @click="clearSysLogSearch">
                   초기화
                 </button>
+                <button class="btn-search-highlight" @click="applySysLogSearch">
+                  검색
+                </button>
               </div>
               <div class="sys-log-meta">
                 <span class="meta-item">
                   {{ sysLogPage }} / {{ sysLogTotalPages }} 페이지
-                </span>
-                <span class="meta-item" v-if="currentSysLogCreatedAt">
-                  생성: {{ currentSysLogCreatedAt }}
-                </span>
-                <span class="meta-item raw" v-if="latestSysLogRawTimestamp">
-                  raw: {{ latestSysLogRawTimestamp }}
-                </span>
+                </span>                
               </div>
             </div>
             <div class="sys-log-textarea">
@@ -960,7 +997,7 @@ onUnmounted(() => {
 .sys-log-panel {
   background: rgba(15, 23, 42, 0.6);
   border: 1px solid rgba(148, 163, 184, 0.3);
-  border-radius: 16px;
+  border-radius: 10px;
   padding: 1.25rem;
   display: flex;
   flex-direction: column;
@@ -1015,6 +1052,19 @@ onUnmounted(() => {
   color: #c7d2fe;
   font-size: 0.9rem;
 }
+.sys-log-meta .time-chips {
+  font-size: 0.85rem;
+  letter-spacing: 0;
+  color: #a5b4fc;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.15rem;
+}
+.sys-log-meta .time-chips strong {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #f8fafc;
+}
 .sys-log-meta .raw {
   color: #94a3b8;
   font-size: 0.75rem;
@@ -1025,7 +1075,7 @@ onUnmounted(() => {
   flex: 1;
   min-height: 360px;
   background: rgba(15, 23, 42, 0.92);
-  border-radius: 14px;
+  border-radius: 10px;
   border: 1px solid rgba(148, 163, 184, 0.35);
   box-sizing: border-box;
   padding: 1rem;
@@ -1048,14 +1098,24 @@ onUnmounted(() => {
   overflow: auto;
 }
 
-.btn-refresh {
-  background: rgba(99, 102, 241, 0.15);
-  border: 1px solid rgba(99, 102, 241, 0.6);
+.btn-refresh,
+.btn-reset-search,
+.btn-search-highlight {
+  background: transparent;
+  border: 1px solid rgba(148, 163, 184, 0.35);
   color: #c7d2fe;
   border-radius: 8px;
   padding: 0.45rem 0.9rem;
   cursor: pointer;
   font-weight: 600;
+  transition: background 0.2s ease, border-color 0.2s ease;
+}
+
+.btn-refresh:hover,
+.btn-reset-search:hover,
+.btn-search-highlight:hover {
+  background: rgba(148, 163, 184, 0.15);
+  border-color: rgba(148, 163, 184, 0.6);
 }
 
 .sys-log-pagination {
@@ -1063,6 +1123,18 @@ onUnmounted(() => {
   justify-content: flex-end;
   align-items: center;
   gap: 1rem;
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  border-radius: 10px;
+  padding: 0.45rem 0.65rem;
+  transition: border-color 0.2s ease;
+}
+
+.sys-log-pagination:hover {
+  border-color: rgba(148, 163, 184, 0.6);
+}
+
+.sys-log-pagination .page-info {
+  font-weight: 600;
 }
 
 .dashboard-tabs button:focus-visible {
@@ -1084,7 +1156,7 @@ onUnmounted(() => {
 .class-list-panel {
   margin-top: 1.75rem;
   padding: 1.2rem;
-  border-radius: 14px;
+  border-radius: 10px;
   border: 1px solid rgba(129, 140, 248, 0.18);
   background: rgba(15, 23, 42, 0.35);
 }
@@ -1124,7 +1196,7 @@ onUnmounted(() => {
 
 .class-card {
   padding: 1rem 1.05rem;
-  border-radius: 12px;
+  border-radius: 10px;
   border: 1px solid rgba(148, 163, 184, 0.14);
   background: rgba(30, 41, 59, 0.72);
 }

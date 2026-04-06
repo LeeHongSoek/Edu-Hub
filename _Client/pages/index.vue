@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, computed } from "vue";
+import { ref, onMounted, onUnmounted, computed, nextTick, watch } from "vue";
 import type { QuestionListResponse } from "~/types";
 import LatexRenderer from "~/components/LatexRenderer.vue";
 import DailyQuestionsModal from "~/components/DailyQuestionsModal.vue";
@@ -41,18 +41,43 @@ const showManual = ref(false);
 const manualPdfSrc = manualPdfUrl;
 const manualActiveTab = ref<"pdf" | "erd" | "github">("pdf");
 
+watch(manualActiveTab, (value) => {
+  if (value === "erd") {
+    nextTick(() => fitErdToWidth());
+  }
+});
+
 const erdScale = ref(1);
 const erdPanX = ref(0);
 const erdPanY = ref(0);
+const erdContainerRef = ref<HTMLElement | null>(null);
+const erdImageRef = ref<HTMLImageElement | null>(null);
 let isDraggingErd = false;
 let startX = 0;
 let startY = 0;
 
+const fitErdToWidth = () => {
+  const container = erdContainerRef.value;
+  const image = erdImageRef.value;
+  if (!container || !image) return;
+  const containerWidth = container.clientWidth || container.getBoundingClientRect().width;
+  const imageWidth = image.naturalWidth || image.width;
+  if (!imageWidth || !containerWidth) return;
+  const targetScale = containerWidth / imageWidth;
+  if (Number.isFinite(targetScale)) {
+    erdScale.value = targetScale;
+    erdPanX.value = 0;
+    erdPanY.value = 0;
+  }
+};
+
 function resetErdZoom() {
-  erdScale.value = 1;
-  erdPanX.value = 0;
-  erdPanY.value = 0;
+  fitErdToWidth();
 }
+
+const handleErdResize = () => {
+  fitErdToWidth();
+};
 
 function handleErdWheel(e: WheelEvent) {
   if (manualActiveTab.value !== "erd") return;
@@ -129,9 +154,13 @@ function onKeydown(e: KeyboardEvent) {
 onMounted(() => {
   currentRootUrl.value = window.location.origin;
   window.addEventListener("keydown", onKeydown);
+  window.addEventListener("resize", handleErdResize);
 });
 
-onUnmounted(() => window.removeEventListener("keydown", onKeydown));
+onUnmounted(() => {
+  window.removeEventListener("keydown", onKeydown);
+  window.removeEventListener("resize", handleErdResize);
+});
 
 // 타이핑 애니메이션
 const typedText = ref("");
@@ -944,18 +973,21 @@ onMounted(() => {
             <div
               v-show="manualActiveTab === 'erd'"
               class="erd-container"
+              ref="erdContainerRef"
               @wheel="handleErdWheel"
               @mousedown="handleErdMousedown"
               @mousemove="handleErdMousemove"
               @mouseup="handleErdMouseup"
               @mouseleave="handleErdMouseleave">
               <img
+                ref="erdImageRef"
                 :src="erdImgUrl"
                 class="erd-img"
                 :style="{
                   transform: `translate(${erdPanX}px, ${erdPanY}px) scale(${erdScale})`,
                 }"
                 draggable="false"
+                @load="fitErdToWidth"
               />
               <button
                 class="erd-reset-btn"
