@@ -28,7 +28,9 @@ const listScope = ref<"mine" | "all">(
 const selectedExamIds = ref<string[]>([]);
 const examSearchInput = ref("");
 const examSearchQuery = ref("");
-const assignableClasses = ref<Array<{ classId: string; className: string }>>([]);
+const assignableClasses = ref<Array<{ classId: string; className: string }>>(
+  [],
+);
 const userCookie = useCookie("user_info");
 const userInfo = computed(() => {
   if (!userCookie.value) return null;
@@ -247,9 +249,10 @@ const openCreateModal = async () => {
 
 const openEditModal = async (exam: any) => {
   await fetchAssignableClasses();
-  const linkedClassId = Array.isArray(exam?.class_exam_links) && exam.class_exam_links.length > 0
-    ? String(exam.class_exam_links[0]?.class_id ?? "")
-    : "";
+  const linkedClassId =
+    Array.isArray(exam?.class_exam_links) && exam.class_exam_links.length > 0
+      ? String(exam.class_exam_links[0]?.class_id ?? "")
+      : "";
   editingExamId.value = String(exam.exam_id);
   createForm.value = {
     classId: linkedClassId,
@@ -270,7 +273,11 @@ const closeCreateModal = () => {
 };
 
 const fetchAssignableClasses = async () => {
-  if (String(userInfo.value?.role_id || userInfo.value?.role || "").toUpperCase() !== "T") {
+  if (
+    String(
+      userInfo.value?.role_id || userInfo.value?.role || "",
+    ).toUpperCase() !== "T"
+  ) {
     assignableClasses.value = [];
     return;
   }
@@ -303,7 +310,9 @@ const submitExamForm = async () => {
     createError.value = "시작일시와 종료일시를 모두 입력해주세요.";
     return;
   }
-  if (new Date(createForm.value.start_time) >= new Date(createForm.value.end_time)) {
+  if (
+    new Date(createForm.value.start_time) >= new Date(createForm.value.end_time)
+  ) {
     createError.value = "종료일시는 시작일시보다 이후여야 합니다.";
     return;
   }
@@ -349,7 +358,9 @@ const submitExamForm = async () => {
 const getExamIdKey = (examId: number | string | bigint) => String(examId);
 
 const getExamClassNames = (exam: any) => {
-  const links = Array.isArray(exam?.class_exam_links) ? exam.class_exam_links : [];
+  const links = Array.isArray(exam?.class_exam_links)
+    ? exam.class_exam_links
+    : [];
   const names = links
     .map((link: any) => link?.class?.class_name)
     .filter((name: string | undefined | null): name is string => Boolean(name));
@@ -405,7 +416,6 @@ const deleteSelectedExams = async () => {
     alert("고사집 삭제 중 오류가 발생했습니다.");
   }
 };
-
 </script>
 
 <template>
@@ -416,11 +426,19 @@ const deleteSelectedExams = async () => {
           <h3><IconCalendar class="section-icon" /> {{ listTitle }}</h3>
 
           <div class="action-button-group">
-            <button class="btn-create" @click="openCreateModal" id="btn-open-create-exam">
+            <button
+              class="btn-create"
+              @click="openCreateModal"
+              id="btn-open-create-exam"
+            >
               <IconCreateAction class="btn-action-icon" />
               새 고사집
             </button>
-            <button class="btn-delete" :disabled="!canDeleteExams" @click="deleteSelectedExams">
+            <button
+              class="btn-delete"
+              :disabled="!canDeleteExams"
+              @click="deleteSelectedExams"
+            >
               <IconDeleteAction class="btn-action-icon" />
               삭제
             </button>
@@ -450,13 +468,15 @@ const deleteSelectedExams = async () => {
               v-if="showScopeToggle"
               class="scope-toggle"
               role="tablist"
-              aria-label="고사집 범위 선택">
+              aria-label="고사집 범위 선택"
+            >
               <button
                 type="button"
                 class="scope-btn"
                 :class="{ active: listScope === 'mine' }"
                 :aria-pressed="listScope === 'mine'"
-                @click="setScope('mine')">
+                @click="setScope('mine')"
+              >
                 나의 고사집
               </button>
               <button
@@ -464,7 +484,8 @@ const deleteSelectedExams = async () => {
                 class="scope-btn"
                 :class="{ active: listScope === 'all' }"
                 :aria-pressed="listScope === 'all'"
-                @click="setScope('all')">
+                @click="setScope('all')"
+              >
                 전체 고사집
               </button>
             </div>
@@ -479,13 +500,15 @@ const deleteSelectedExams = async () => {
             <button
               v-if="examSearchQuery"
               class="btn-reset-search"
-              @click="clearExamSearch">
+              @click="clearExamSearch"
+            >
               초기화
             </button>
           </div>
           <div class="slider-row">
             <span class="summary-text"
-              >총 {{ filteredExams.length }}개의 고사집</span>
+              >총 {{ filteredExams.length }}개의 고사집</span
+            >
             <div class="page-slider-section">
               <PageSlider
                 v-model="sliderValue"
@@ -496,7 +519,8 @@ const deleteSelectedExams = async () => {
               />
             </div>
             <span class="range-text"
-              >{{ pageStartItem }}-{{ pageEndItem }}번째 항목 표시 중</span>
+              >{{ pageStartItem }}-{{ pageEndItem }}번째 항목 표시 중</span
+            >
           </div>
         </div>
       </div>
@@ -505,13 +529,22 @@ const deleteSelectedExams = async () => {
           <div class="exam-info">
             <div class="exam-headline">
               <div class="headline-left">
-                <span class="exam-id">{{ exam.exam_id }}</span> 
-               
-                <span class="exam-class-badge">지정 클래스 {{ getExamClassNames(exam).length ?? 0 }}개</span>                
+                <span class="exam-id">{{ exam.exam_id }}</span>
+
+                <span class="exam-class-badge"
+                  >지정 클래스 {{ getExamClassNames(exam).length ?? 0 }}개</span
+                >
               </div>
               <div class="headline-right">
-                <span class="exam-period-inline">{{ new Date(exam.start_time).toLocaleDateString("ko-KR") }} ~ {{ new Date(exam.end_time).toLocaleDateString("ko-KR") }}</span>
-                <span class="exam-count">{{ exam._count?.questions ?? 0 }} 문제</span>
+                <span class="exam-period-inline"
+                  >{{ new Date(exam.start_time).toLocaleDateString("ko-KR") }} ~
+                  {{
+                    new Date(exam.end_time).toLocaleDateString("ko-KR")
+                  }}</span
+                >
+                <span class="exam-count"
+                  >{{ exam._count?.questions ?? 0 }} 문제</span
+                >
               </div>
             </div>
             <h4>
@@ -531,9 +564,12 @@ const deleteSelectedExams = async () => {
               <span class="exam-name-wrap">
                 <span
                   class="exam-name-link"
-                  :class="{ selectable: isCurrentUserOwner(exam.creator?.user_no) }"
+                  :class="{
+                    selectable: isCurrentUserOwner(exam.creator?.user_no),
+                  }"
                   @click="toggleExamSelectedByName(exam)"
-                >{{ exam.exam_name }}</span>
+                  >{{ exam.exam_name }}</span
+                >
                 <span class="exam-hover-card">
                   <strong>위치</strong>
                   <span>{{ exam.location || "장소 미지정" }}</span>
@@ -541,9 +577,22 @@ const deleteSelectedExams = async () => {
                   <span>{{ exam.description || "설명 없음" }}</span>
                 </span>
               </span>
-              <div v-if="isCurrentUserOwner(exam.creator?.user_no)" class="exam-card-actions">
-                <button class="btn-start btn-card-action" @click="openEditModal(exam)">수정</button>
-                <button class="btn-start btn-card-action" @click="viewExamDetails(exam.exam_id)">문제등록</button>
+              <div
+                v-if="isCurrentUserOwner(exam.creator?.user_no)"
+                class="exam-card-actions"
+              >
+                <button
+                  class="btn-start btn-card-action"
+                  @click="openEditModal(exam)"
+                >
+                  수정
+                </button>
+                <button
+                  class="btn-start btn-card-action"
+                  @click="viewExamDetails(exam.exam_id)"
+                >
+                  문제등록
+                </button>
               </div>
             </h4>
           </div>
@@ -555,31 +604,49 @@ const deleteSelectedExams = async () => {
   <!-- 새 고사 생성 모달 -->
   <Teleport to="body">
     <Transition name="modal-fade">
-      <div v-if="showCreateModal" class="modal-backdrop" @click.self="closeCreateModal">
-        <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+      <div
+        v-if="showCreateModal"
+        class="modal-backdrop"
+        @click.self="closeCreateModal"
+      >
+        <div
+          class="modal-box"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="modal-title"
+        >
           <div class="modal-header">
             <h2 id="modal-title" class="modal-title">{{ modalTitle }}</h2>
-            <button class="modal-close-btn" @click="closeCreateModal" aria-label="닫기">✕</button>
+            <button
+              class="modal-close-btn"
+              @click="closeCreateModal"
+              aria-label="닫기"
+            >
+              ✕
+            </button>
           </div>
 
           <form class="modal-form" @submit.prevent="submitExamForm">
             <div class="form-group">
-              
               <select
                 id="exam-class"
                 v-model="createForm.classId"
-                class="form-input">
+                class="form-input"
+              >
                 <option value="">지정클래스 없음</option>
                 <option
                   v-for="classItem in assignableClasses"
                   :key="classItem.classId"
-                  :value="classItem.classId">
+                  :value="classItem.classId"
+                >
                   {{ classItem.className }}
                 </option>
               </select>
             </div>
             <div class="form-group">
-              <label for="exam-name" class="form-label">고사 이름 <span class="required">*</span></label>
+              <label for="exam-name" class="form-label"
+                >고사 이름 <span class="required">*</span></label
+              >
               <input
                 id="exam-name"
                 v-model="createForm.exam_name"
@@ -593,7 +660,9 @@ const deleteSelectedExams = async () => {
 
             <div class="form-row form-row-datetime">
               <div class="form-group">
-                <label for="exam-start" class="form-label">시작 일시 <span class="required">*</span></label>
+                <label for="exam-start" class="form-label"
+                  >시작 일시 <span class="required">*</span></label
+                >
                 <DateTimePicker
                   id="exam-start"
                   v-model="createForm.start_time"
@@ -601,7 +670,9 @@ const deleteSelectedExams = async () => {
                 />
               </div>
               <div class="form-group">
-                <label for="exam-end" class="form-label">종료 일시 <span class="required">*</span></label>
+                <label for="exam-end" class="form-label"
+                  >종료 일시 <span class="required">*</span></label
+                >
                 <DateTimePicker
                   id="exam-end"
                   v-model="createForm.end_time"
@@ -611,11 +682,14 @@ const deleteSelectedExams = async () => {
               </div>
             </div>
             <p class="form-help">
-              날짜를 더블클릭하면 바로 확정되고, 하단 완료 버튼으로도 저장할 수 있습니다.
+              날짜를 더블클릭하면 바로 확정되고, 하단 완료 버튼으로도 저장할 수
+              있습니다.
             </p>
 
             <div class="form-group">
-              <label for="exam-location" class="form-label">장소 <span class="optional">(선택)</span></label>
+              <label for="exam-location" class="form-label"
+                >장소 <span class="optional">(선택)</span></label
+              >
               <input
                 id="exam-location"
                 v-model="createForm.location"
@@ -639,7 +713,6 @@ const deleteSelectedExams = async () => {
               </label>
             </div>
 
-
             <div class="form-group">
               <label for="exam-description" class="form-label">
                 설명 <span class="optional">(선택)</span>
@@ -656,10 +729,20 @@ const deleteSelectedExams = async () => {
             <div v-if="createError" class="form-error">{{ createError }}</div>
 
             <div class="modal-actions">
-              <button type="button" class="btn-cancel" @click="closeCreateModal" :disabled="createLoading">
+              <button
+                type="button"
+                class="btn-cancel"
+                @click="closeCreateModal"
+                :disabled="createLoading"
+              >
                 취소
               </button>
-              <button type="submit" class="btn-submit" :disabled="createLoading" id="btn-submit-create-exam">
+              <button
+                type="submit"
+                class="btn-submit"
+                :disabled="createLoading"
+                id="btn-submit-create-exam"
+              >
                 <span v-if="createLoading" class="loading-spinner"></span>
                 {{ submitButtonLabel }}
               </button>
@@ -801,7 +884,6 @@ const deleteSelectedExams = async () => {
   box-shadow: 0 4px 12px rgba(99, 102, 241, 0.35);
 }
 
-
 .exam-card {
   background: rgba(30, 41, 59, 0.4);
   backdrop-filter: blur(12px);
@@ -929,7 +1011,9 @@ const deleteSelectedExams = async () => {
   opacity: 0;
   transform: translateY(6px);
   pointer-events: none;
-  transition: opacity 0.18s ease, transform 0.18s ease;
+  transition:
+    opacity 0.18s ease,
+    transform 0.18s ease;
 }
 
 .exam-hover-card strong {
@@ -1084,8 +1168,6 @@ const deleteSelectedExams = async () => {
   color: #64748b;
   font-weight: 700;
 }
-
-
 
 .search-select,
 .search-input {
@@ -1426,7 +1508,11 @@ const deleteSelectedExams = async () => {
 }
 
 .modal-box {
-  background: linear-gradient(145deg, rgba(15, 23, 42, 0.98), rgba(30, 41, 59, 0.98));
+  background: linear-gradient(
+    145deg,
+    rgba(15, 23, 42, 0.98),
+    rgba(30, 41, 59, 0.98)
+  );
   border: 1px solid rgba(99, 102, 241, 0.3);
   border-radius: 18px;
   padding: 2rem;
@@ -1534,7 +1620,9 @@ const deleteSelectedExams = async () => {
   color: #f1f5f9;
   padding: 0.6rem 0.85rem;
   font-size: 0.92rem;
-  transition: border-color 0.2s, box-shadow 0.2s;
+  transition:
+    border-color 0.2s,
+    box-shadow 0.2s;
   outline: none;
   width: 100%;
   box-sizing: border-box;
@@ -1663,7 +1751,9 @@ const deleteSelectedExams = async () => {
 }
 
 @keyframes spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 /* 모달 트랜지션 */
@@ -1689,6 +1779,5 @@ const deleteSelectedExams = async () => {
   .modal-box {
     padding: 1.5rem 1.25rem;
   }
-
 }
 </style>

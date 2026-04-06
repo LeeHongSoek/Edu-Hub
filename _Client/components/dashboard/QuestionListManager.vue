@@ -30,7 +30,10 @@ const emit = defineEmits<{
   (e: "change-scope", scope: "mine" | "all"): void;
   (e: "change-context-scope", scope: "mine" | "all"): void;
   (e: "change-group", groupId: string | number | null): void;
-  (e: "search", payload: { field: "title" | "content" | "id"; keyword: string }): void;
+  (
+    e: "search",
+    payload: { field: "title" | "content" | "id"; keyword: string },
+  ): void;
   (e: "reset-search"): void;
   (e: "change-page", page: number): void;
   (e: "copy-question", question: Question): void;

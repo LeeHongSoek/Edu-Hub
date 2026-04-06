@@ -33,7 +33,10 @@ const errorMessage = ref("");
 const assignedExams = ref<ExamItem[]>([]);
 const availableExams = ref<ExamItem[]>([]);
 const initialAssignedKeys = ref<string[]>([]);
-const draggedExam = ref<{ exam: ExamItem; source: "assigned" | "available" } | null>(null);
+const draggedExam = ref<{
+  exam: ExamItem;
+  source: "assigned" | "available";
+} | null>(null);
 
 const classTitle = computed(() => props.classItem?.className || "클래스");
 const hasChanges = computed(() => {
@@ -83,16 +86,21 @@ watch(
 
 const removeFromSource = (examId: string, source: "assigned" | "available") => {
   if (source === "assigned") {
-    assignedExams.value = assignedExams.value.filter((exam) => exam.examId !== examId);
+    assignedExams.value = assignedExams.value.filter(
+      (exam) => exam.examId !== examId,
+    );
     return;
   }
-  availableExams.value = availableExams.value.filter((exam) => exam.examId !== examId);
+  availableExams.value = availableExams.value.filter(
+    (exam) => exam.examId !== examId,
+  );
 };
 
 const addToTarget = (exam: ExamItem, target: "assigned" | "available") => {
   const nextExam = {
     ...exam,
-    linkedClassName: target === "assigned" ? classTitle.value : exam.linkedClassName,
+    linkedClassName:
+      target === "assigned" ? classTitle.value : exam.linkedClassName,
   };
 
   if (target === "assigned") {
@@ -102,7 +110,11 @@ const addToTarget = (exam: ExamItem, target: "assigned" | "available") => {
   availableExams.value = sortExams([...availableExams.value, nextExam]);
 };
 
-const moveExam = (exam: ExamItem, source: "assigned" | "available", target: "assigned" | "available") => {
+const moveExam = (
+  exam: ExamItem,
+  source: "assigned" | "available",
+  target: "assigned" | "available",
+) => {
   if (source === target) return;
   removeFromSource(exam.examId, source);
   addToTarget(exam, target);
@@ -128,13 +140,16 @@ const saveExams = async () => {
   errorMessage.value = "";
 
   try {
-    await $fetch(`${apiBase.value}/dashboard/classes/${props.classItem.classId}/exams`, {
-      method: "PUT",
-      headers: getAuthHeader(),
-      body: {
-        examIds: assignedExams.value.map((exam) => exam.examId),
+    await $fetch(
+      `${apiBase.value}/dashboard/classes/${props.classItem.classId}/exams`,
+      {
+        method: "PUT",
+        headers: getAuthHeader(),
+        body: {
+          examIds: assignedExams.value.map((exam) => exam.examId),
+        },
       },
-    });
+    );
     emit("saved");
     emit("close");
   } catch (error) {
@@ -154,22 +169,29 @@ const saveExams = async () => {
           <div class="exam-modal-header">
             <div>
               <h2>{{ classTitle }} 고사 연결 관리</h2>
-              <p>고사를 드래그해서 이 클래스에 연결하거나 해제할 수 있습니다.</p>
+              <p>
+                고사를 드래그해서 이 클래스에 연결하거나 해제할 수 있습니다.
+              </p>
             </div>
             <button class="btn-close" @click="emit('close')">
               <IconClose class="close-icon" />
             </button>
           </div>
 
-          <div v-if="loading" class="exam-modal-state">고사 목록을 불러오는 중...</div>
+          <div v-if="loading" class="exam-modal-state">
+            고사 목록을 불러오는 중...
+          </div>
           <div v-else class="exam-modal-body">
-            <div v-if="errorMessage" class="exam-modal-error">{{ errorMessage }}</div>
+            <div v-if="errorMessage" class="exam-modal-error">
+              {{ errorMessage }}
+            </div>
 
             <div class="exam-lists">
               <section
                 class="exam-list-panel"
                 @dragover.prevent
-                @drop.prevent="handleDrop('assigned')">
+                @drop.prevent="handleDrop('assigned')"
+              >
                 <div class="exam-list-header">
                   <strong>이 클래스에 연결된 고사</strong>
                   <span>{{ assignedExams.length }}개</span>
@@ -181,9 +203,12 @@ const saveExams = async () => {
                     class="exam-chip"
                     draggable="true"
                     @dragstart="handleDragStart(exam, 'assigned')"
-                    @dragend="handleDragEnd">
+                    @dragend="handleDragEnd"
+                  >
                     <span class="exam-name">{{ exam.examName }}</span>
-                    <span class="exam-meta">문항 {{ exam.questionCount }}개</span>
+                    <span class="exam-meta"
+                      >문항 {{ exam.questionCount }}개</span
+                    >
                   </button>
                   <div v-if="assignedExams.length === 0" class="exam-empty">
                     아직 연결된 고사가 없습니다.
@@ -196,7 +221,8 @@ const saveExams = async () => {
               <section
                 class="exam-list-panel"
                 @dragover.prevent
-                @drop.prevent="handleDrop('available')">
+                @drop.prevent="handleDrop('available')"
+              >
                 <div class="exam-list-header">
                   <strong>내 다른 고사</strong>
                   <span>{{ availableExams.length }}개</span>
@@ -208,16 +234,15 @@ const saveExams = async () => {
                     class="exam-chip"
                     draggable="true"
                     @dragstart="handleDragStart(exam, 'available')"
-                    @dragend="handleDragEnd">
+                    @dragend="handleDragEnd"
+                  >
                     <span class="exam-name">{{ exam.examName }}</span>
                     <span class="exam-meta">
                       문항 {{ exam.questionCount }}개
                       <template v-if="exam.linkedClassName">
                         · 현재 {{ exam.linkedClassName }}
                       </template>
-                      <template v-else>
-                        · 미연결
-                      </template>
+                      <template v-else> · 미연결 </template>
                     </span>
                   </button>
                   <div v-if="availableExams.length === 0" class="exam-empty">
@@ -229,7 +254,11 @@ const saveExams = async () => {
 
             <div class="exam-modal-actions">
               <button class="btn-secondary" @click="emit('close')">닫기</button>
-              <button class="btn-primary" :disabled="saving || !hasChanges" @click="saveExams">
+              <button
+                class="btn-primary"
+                :disabled="saving || !hasChanges"
+                @click="saveExams"
+              >
                 {{ saving ? "저장 중..." : "저장" }}
               </button>
             </div>
@@ -257,8 +286,11 @@ const saveExams = async () => {
   width: min(960px, 100%);
   border-radius: 20px;
   border: 1px solid rgba(148, 163, 184, 0.18);
-  background:
-    linear-gradient(180deg, rgba(30, 41, 59, 0.96), rgba(15, 23, 42, 0.96));
+  background: linear-gradient(
+    180deg,
+    rgba(30, 41, 59, 0.96),
+    rgba(15, 23, 42, 0.96)
+  );
   box-shadow: 0 28px 70px rgba(2, 6, 23, 0.45);
   overflow: hidden;
 }

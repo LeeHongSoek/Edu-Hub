@@ -32,11 +32,16 @@ const errorMessage = ref("");
 const assignedStudents = ref<StudentItem[]>([]);
 const availableStudents = ref<StudentItem[]>([]);
 const initialAssignedKeys = ref<string[]>([]);
-const draggedStudent = ref<{ student: StudentItem; source: "assigned" | "available" } | null>(null);
+const draggedStudent = ref<{
+  student: StudentItem;
+  source: "assigned" | "available";
+} | null>(null);
 
 const classTitle = computed(() => props.classItem?.className || "클래스");
 const hasChanges = computed(() => {
-  const current = assignedStudents.value.map((student) => student.userNo).sort();
+  const current = assignedStudents.value
+    .map((student) => student.userNo)
+    .sort();
   const initial = [...initialAssignedKeys.value].sort();
   if (current.length !== initial.length) return true;
   return current.some((key, index) => key !== initial[index]);
@@ -60,13 +65,18 @@ const loadClassMembers = async () => {
       className: string;
       assignedStudents: StudentItem[];
       availableStudents: StudentItem[];
-    }>(`${apiBase.value}/dashboard/classes/${props.classItem.classId}/members`, {
-      headers: getAuthHeader(),
-    });
+    }>(
+      `${apiBase.value}/dashboard/classes/${props.classItem.classId}/members`,
+      {
+        headers: getAuthHeader(),
+      },
+    );
 
     assignedStudents.value = sortStudents(data.assignedStudents || []);
     availableStudents.value = sortStudents(data.availableStudents || []);
-    initialAssignedKeys.value = assignedStudents.value.map((student) => student.userNo);
+    initialAssignedKeys.value = assignedStudents.value.map(
+      (student) => student.userNo,
+    );
   } catch (error) {
     console.error("클래스 구성원 조회 실패:", error);
     errorMessage.value = "클래스 구성원 정보를 불러오지 못했습니다.";
@@ -84,15 +94,25 @@ watch(
   { immediate: true },
 );
 
-const removeFromSource = (studentNo: string, source: "assigned" | "available") => {
+const removeFromSource = (
+  studentNo: string,
+  source: "assigned" | "available",
+) => {
   if (source === "assigned") {
-    assignedStudents.value = assignedStudents.value.filter((student) => student.userNo !== studentNo);
+    assignedStudents.value = assignedStudents.value.filter(
+      (student) => student.userNo !== studentNo,
+    );
     return;
   }
-  availableStudents.value = availableStudents.value.filter((student) => student.userNo !== studentNo);
+  availableStudents.value = availableStudents.value.filter(
+    (student) => student.userNo !== studentNo,
+  );
 };
 
-const addToTarget = (student: StudentItem, target: "assigned" | "available") => {
+const addToTarget = (
+  student: StudentItem,
+  target: "assigned" | "available",
+) => {
   if (target === "assigned") {
     assignedStudents.value = sortStudents([...assignedStudents.value, student]);
     return;
@@ -100,19 +120,30 @@ const addToTarget = (student: StudentItem, target: "assigned" | "available") => 
   availableStudents.value = sortStudents([...availableStudents.value, student]);
 };
 
-const moveStudent = (student: StudentItem, source: "assigned" | "available", target: "assigned" | "available") => {
+const moveStudent = (
+  student: StudentItem,
+  source: "assigned" | "available",
+  target: "assigned" | "available",
+) => {
   if (source === target) return;
   removeFromSource(student.userNo, source);
   addToTarget(student, target);
 };
 
-const handleDragStart = (student: StudentItem, source: "assigned" | "available") => {
+const handleDragStart = (
+  student: StudentItem,
+  source: "assigned" | "available",
+) => {
   draggedStudent.value = { student, source };
 };
 
 const handleDrop = (target: "assigned" | "available") => {
   if (!draggedStudent.value) return;
-  moveStudent(draggedStudent.value.student, draggedStudent.value.source, target);
+  moveStudent(
+    draggedStudent.value.student,
+    draggedStudent.value.source,
+    target,
+  );
   draggedStudent.value = null;
 };
 
@@ -126,13 +157,16 @@ const saveMembers = async () => {
   errorMessage.value = "";
 
   try {
-    await $fetch(`${apiBase.value}/dashboard/classes/${props.classItem.classId}/members`, {
-      method: "PUT",
-      headers: getAuthHeader(),
-      body: {
-        studentNos: assignedStudents.value.map((student) => student.userNo),
+    await $fetch(
+      `${apiBase.value}/dashboard/classes/${props.classItem.classId}/members`,
+      {
+        method: "PUT",
+        headers: getAuthHeader(),
+        body: {
+          studentNos: assignedStudents.value.map((student) => student.userNo),
+        },
       },
-    });
+    );
     emit("saved");
     emit("close");
   } catch (error) {
@@ -159,15 +193,20 @@ const saveMembers = async () => {
             </button>
           </div>
 
-          <div v-if="loading" class="member-modal-state">학생 목록을 불러오는 중...</div>
+          <div v-if="loading" class="member-modal-state">
+            학생 목록을 불러오는 중...
+          </div>
           <div v-else class="member-modal-body">
-            <div v-if="errorMessage" class="member-modal-error">{{ errorMessage }}</div>
+            <div v-if="errorMessage" class="member-modal-error">
+              {{ errorMessage }}
+            </div>
 
             <div class="member-lists">
               <section
                 class="member-list-panel"
                 @dragover.prevent
-                @drop.prevent="handleDrop('assigned')">
+                @drop.prevent="handleDrop('assigned')"
+              >
                 <div class="member-list-header">
                   <strong>클래스 소속 학생</strong>
                   <span>{{ assignedStudents.length }}명</span>
@@ -179,11 +218,15 @@ const saveMembers = async () => {
                     class="member-chip"
                     draggable="true"
                     @dragstart="handleDragStart(student, 'assigned')"
-                    @dragend="handleDragEnd">
+                    @dragend="handleDragEnd"
+                  >
                     <span class="member-name">{{ student.username }}</span>
                     <span class="member-id">{{ student.userId }}</span>
                   </button>
-                  <div v-if="assignedStudents.length === 0" class="member-empty">
+                  <div
+                    v-if="assignedStudents.length === 0"
+                    class="member-empty"
+                  >
                     아직 배정된 학생이 없습니다.
                   </div>
                 </div>
@@ -194,7 +237,8 @@ const saveMembers = async () => {
               <section
                 class="member-list-panel"
                 @dragover.prevent
-                @drop.prevent="handleDrop('available')">
+                @drop.prevent="handleDrop('available')"
+              >
                 <div class="member-list-header">
                   <strong>담당 학생 중 미배정</strong>
                   <span>{{ availableStudents.length }}명</span>
@@ -206,11 +250,15 @@ const saveMembers = async () => {
                     class="member-chip"
                     draggable="true"
                     @dragstart="handleDragStart(student, 'available')"
-                    @dragend="handleDragEnd">
+                    @dragend="handleDragEnd"
+                  >
                     <span class="member-name">{{ student.username }}</span>
                     <span class="member-id">{{ student.userId }}</span>
                   </button>
-                  <div v-if="availableStudents.length === 0" class="member-empty">
+                  <div
+                    v-if="availableStudents.length === 0"
+                    class="member-empty"
+                  >
                     이동 가능한 담당 학생이 없습니다.
                   </div>
                 </div>
@@ -219,7 +267,11 @@ const saveMembers = async () => {
 
             <div class="member-modal-actions">
               <button class="btn-secondary" @click="emit('close')">닫기</button>
-              <button class="btn-primary" :disabled="saving || !hasChanges" @click="saveMembers">
+              <button
+                class="btn-primary"
+                :disabled="saving || !hasChanges"
+                @click="saveMembers"
+              >
                 {{ saving ? "저장 중..." : "저장" }}
               </button>
             </div>
@@ -247,8 +299,11 @@ const saveMembers = async () => {
   width: min(960px, 100%);
   border-radius: 20px;
   border: 1px solid rgba(148, 163, 184, 0.18);
-  background:
-    linear-gradient(180deg, rgba(30, 41, 59, 0.96), rgba(15, 23, 42, 0.96));
+  background: linear-gradient(
+    180deg,
+    rgba(30, 41, 59, 0.96),
+    rgba(15, 23, 42, 0.96)
+  );
   box-shadow: 0 28px 70px rgba(2, 6, 23, 0.45);
   overflow: hidden;
 }

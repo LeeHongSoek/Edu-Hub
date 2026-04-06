@@ -75,7 +75,9 @@ const showClassMemberManager = ref(false);
 const selectedClassForMembers = ref<DashboardClassItem | null>(null);
 const showClassExamManager = ref(false);
 const selectedClassForExams = ref<DashboardClassItem | null>(null);
-const currentRoleId = computed(() => userInfo.value?.role_id || userInfo.value?.role || "");
+const currentRoleId = computed(
+  () => userInfo.value?.role_id || userInfo.value?.role || "",
+);
 
 const shouldShowClassList = computed(
   () => currentRoleId.value === "S" || currentRoleId.value === "T",
@@ -186,7 +188,7 @@ const phrases = [
   "당신의 끊임없는 성장이 훗날 커다란 결실을 맺을 것임을 굳게 믿고 응원합니다.",
   "새로운 배움이 기다리는 즐거운 오늘, 후회 없이 당신만의 특별한 하루를 만들어보세요.",
   "비록 지금은 작은 노력일지라도, 그 노력이 차곡차곡 쌓여 가장 밝게 빛나는 내일이 될 것입니다.",
-  "오늘 하루도 알차고 보람차게 채워가며, 어제보다 더 나은 당신이 되기를 바랍니다."
+  "오늘 하루도 알차고 보람차게 채워가며, 어제보다 더 나은 당신이 되기를 바랍니다.",
 ];
 
 const typedText = ref("");
@@ -196,7 +198,9 @@ const isTypingActive = ref(false);
 
 const fetchAdvice = async () => {
   try {
-    const data = await $fetch<any>("https://korean-advice-open-api.vercel.app/api/advice");
+    const data = await $fetch<any>(
+      "https://korean-advice-open-api.vercel.app/api/advice",
+    );
     if (data && data.message) {
       return `${data.message} - ${data.author}`;
     }
@@ -209,28 +213,28 @@ const fetchAdvice = async () => {
 
 const typePhrase = async () => {
   if (!isTypingActive.value) return;
-  
+
   const currentPhrase = await fetchAdvice();
   typedText.value = "";
-  
+
   for (let i = 0; i < currentPhrase.length; i++) {
     if (!isTypingActive.value) return;
     typedText.value += currentPhrase[i];
-    await new Promise(resolve => setTimeout(resolve, 60)); 
+    await new Promise((resolve) => setTimeout(resolve, 60));
   }
-  
+
   if (!isTypingActive.value) return;
-  await new Promise(resolve => setTimeout(resolve, 3000));
-  
+  await new Promise((resolve) => setTimeout(resolve, 3000));
+
   for (let i = currentPhrase.length; i > 0; i--) {
     if (!isTypingActive.value) return;
     typedText.value = typedText.value.slice(0, -1);
-    await new Promise(resolve => setTimeout(resolve, 30));
+    await new Promise((resolve) => setTimeout(resolve, 30));
   }
-  
+
   if (!isTypingActive.value) return;
-  await new Promise(resolve => setTimeout(resolve, 500));
-  
+  await new Promise((resolve) => setTimeout(resolve, 500));
+
   typePhrase();
 };
 
@@ -250,22 +254,28 @@ const isPendingActionLoading = ref(false);
 
 const fetchPendingRelations = async () => {
   try {
-    const data = await $fetch<PendingRelation[]>(`${apiBase.value}/dashboard/relations/pending`, { headers: getAuthHeader() });
+    const data = await $fetch<PendingRelation[]>(
+      `${apiBase.value}/dashboard/relations/pending`,
+      { headers: getAuthHeader() },
+    );
     pendingRelations.value = Array.isArray(data) ? data : [];
   } catch (err) {
     console.error("수락 대기 요청 조회 실패:", err);
   }
 };
 
-const handlePendingAction = async (action: 'accept' | 'reject') => {
+const handlePendingAction = async (action: "accept" | "reject") => {
   if (!currentPendingRequest.value) return;
   isPendingActionLoading.value = true;
   try {
-    await $fetch(`${apiBase.value}/dashboard/relations/${currentPendingRequest.value.user_no}/approval`, {
-      method: "PUT",
-      headers: getAuthHeader(),
-      body: { action }
-    });
+    await $fetch(
+      `${apiBase.value}/dashboard/relations/${currentPendingRequest.value.user_no}/approval`,
+      {
+        method: "PUT",
+        headers: getAuthHeader(),
+        body: { action },
+      },
+    );
     // 성공 후 리스트에서 제거
     pendingRelations.value.shift();
   } catch (err) {
@@ -308,8 +318,14 @@ onUnmounted(() => {
             <span class="welcome-text">
               안녕하세요,
               <span class="role-badge-inline" :class="'role-' + userInfo.role">
-                <IconGraduationCap v-if="userInfo.role === 'S'" class="role-icon" />
-                <IconBoard v-else-if="userInfo.role === 'T'" class="role-icon" />
+                <IconGraduationCap
+                  v-if="userInfo.role === 'S'"
+                  class="role-icon"
+                />
+                <IconBoard
+                  v-else-if="userInfo.role === 'T'"
+                  class="role-icon"
+                />
                 <IconHome v-else class="role-icon" />
                 {{
                   userInfo.role === "T"
@@ -319,7 +335,8 @@ onUnmounted(() => {
                       : "학생"
                 }}
               </span>
-              <span class="username">{{ userInfo.username }}</span>님!
+              <span class="username">{{ userInfo.username }}</span
+              >님!
             </span>
           </h1>
           <ManagerNav v-if="userInfo.role_id !== 'P'" :is-dashboard="true" />
@@ -337,26 +354,30 @@ onUnmounted(() => {
         <button
           :class="{ active: activeTab === 'stats' }"
           :aria-pressed="activeTab === 'stats'"
-          @click="activeTab = 'stats'">
+          @click="activeTab = 'stats'"
+        >
           <IconChart class="tab-icon" /> 요약 통계
         </button>
         <button
           :class="{ active: activeTab === 'relations' }"
           :aria-pressed="activeTab === 'relations'"
-          @click="activeTab = 'relations'">
+          @click="activeTab = 'relations'"
+        >
           <IconUsers class="tab-icon" /> 관계 관리
         </button>
         <button
           :class="{ active: activeTab === 'messages' }"
           :aria-pressed="activeTab === 'messages'"
-          @click="activeTab = 'messages'">
+          @click="activeTab = 'messages'"
+        >
           <IconMessage class="tab-icon" /> 메시지 함
         </button>
         <button
           v-if="shouldShowClassList"
           :class="{ active: activeTab === 'classes' }"
           :aria-pressed="activeTab === 'classes'"
-          @click="activeTab = 'classes'">
+          @click="activeTab = 'classes'"
+        >
           <IconClassRoom class="tab-icon" /> {{ classTabLabel }}
         </button>
 
@@ -364,7 +385,8 @@ onUnmounted(() => {
           v-if="userInfo.role_id === 'S'"
           :class="{ active: activeTab === 'logs' }"
           :aria-pressed="activeTab === 'logs'"
-          @click="activeTab = 'logs'">
+          @click="activeTab = 'logs'"
+        >
           <IconCalendar class="tab-icon" /> 활동 로그
         </button>
       </div>
@@ -406,29 +428,38 @@ onUnmounted(() => {
             <div v-else-if="classListError" class="class-list-state error">
               {{ classListError }}
             </div>
-            <div v-else-if="classList.length === 0" class="class-list-state empty">
+            <div
+              v-else-if="classList.length === 0"
+              class="class-list-state empty"
+            >
               표시할 클래스가 없습니다.
             </div>
             <div v-else class="class-list-grid">
               <article
                 v-for="item in classList"
                 :key="item.classId"
-                class="class-card">
+                class="class-card"
+              >
                 <div class="class-card-top">
-                  <button class="class-link" >
+                  <button class="class-link">
                     {{ item.className }}
                   </button>
-                  
                 </div>
                 <p v-if="userInfo.role_id === 'S'" class="class-card-meta">
                   담당 선생님:
                   {{ item.teacherName || `#${item.teacherNo ?? "-"}` }}
                 </p>
                 <div v-else class="class-card-meta-row">
-                  <button class="class-manage-btn" @click="openClassExamManager(item)">
+                  <button
+                    class="class-manage-btn"
+                    @click="openClassExamManager(item)"
+                  >
                     연결 고사 ({{ item.examCount }})관리
                   </button>
-                  <button class="class-manage-btn" @click="openClassMemberManager(item)">
+                  <button
+                    class="class-manage-btn"
+                    @click="openClassMemberManager(item)"
+                  >
                     클래스 구성원 ({{ item.studentCount }})관리
                   </button>
                 </div>
@@ -477,7 +508,8 @@ onUnmounted(() => {
             <div class="alert-modal-body">
               <p>
                 <strong>{{ currentPendingRequest.username }}</strong>
-                ({{ currentPendingRequest.description || '인맥' }}) 님이 연결을 요청했습니다.
+                ({{ currentPendingRequest.description || "인맥" }}) 님이 연결을
+                요청했습니다.
               </p>
               <p class="alert-subtext">수락하시겠습니까?</p>
             </div>
@@ -485,14 +517,16 @@ onUnmounted(() => {
               <button
                 class="btn-reject"
                 :disabled="isPendingActionLoading"
-                @click="handlePendingAction('reject')">
+                @click="handlePendingAction('reject')"
+              >
                 거절
               </button>
               <button
                 class="btn-accept"
                 :disabled="isPendingActionLoading"
-                @click="handlePendingAction('accept')">
-                {{ isPendingActionLoading ? '처리중...' : '수락' }}
+                @click="handlePendingAction('accept')"
+              >
+                {{ isPendingActionLoading ? "처리중..." : "수락" }}
               </button>
             </div>
           </div>

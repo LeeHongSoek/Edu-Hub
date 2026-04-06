@@ -51,14 +51,11 @@ const buildDateTimeLocal = (
   day: number,
   hour: number,
   minute: number,
-) =>
-  `${year}-${pad2(month)}-${pad2(day)}T${pad2(hour)}:${pad2(minute)}`;
+) => `${year}-${pad2(month)}-${pad2(day)}T${pad2(hour)}:${pad2(minute)}`;
 
 const parseDateTimeLocal = (value?: string) => {
   if (!value) return null;
-  const match = value.match(
-    /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})$/,
-  );
+  const match = value.match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})$/);
   if (!match) return null;
   return {
     year: Number(match[1]),
@@ -209,14 +206,12 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div
-    ref="rootRef"
-    class="datetime-picker"
-    :class="`size-${normalizedSize}`">
+  <div ref="rootRef" class="datetime-picker" :class="`size-${normalizedSize}`">
     <button
       type="button"
       class="form-input form-input-datetime form-input-datetime-trigger"
-      @click.stop="openPicker">
+      @click.stop="openPicker"
+    >
       <span class="datetime-trigger-value">{{ displayValue }}</span>
       <IconCalendar class="datetime-trigger-icon" />
     </button>
@@ -225,11 +220,24 @@ onBeforeUnmount(() => {
       v-if="isOpen"
       class="datetime-popover"
       :class="{ 'align-right': align === 'right' }"
-      @click.stop>
+      @click.stop
+    >
       <div class="datetime-popover-header">
-        <button type="button" class="picker-nav-btn" @click="shiftPickerMonth(-1)">‹</button>
+        <button
+          type="button"
+          class="picker-nav-btn"
+          @click="shiftPickerMonth(-1)"
+        >
+          ‹
+        </button>
         <strong>{{ pickerMonthLabel }}</strong>
-        <button type="button" class="picker-nav-btn" @click="shiftPickerMonth(1)">›</button>
+        <button
+          type="button"
+          class="picker-nav-btn"
+          @click="shiftPickerMonth(1)"
+        >
+          ›
+        </button>
       </div>
 
       <div class="calendar-grid calendar-weekdays">
@@ -248,7 +256,8 @@ onBeforeUnmount(() => {
             'is-today': cell.isToday,
           }"
           @click="selectPickerDay(cell.value)"
-          @dblclick="selectPickerDay(cell.value, true)">
+          @dblclick="selectPickerDay(cell.value, true)"
+        >
           {{ cell.label }}
         </button>
       </div>
@@ -266,7 +275,11 @@ onBeforeUnmount(() => {
         <label class="picker-select-wrap">
           <span>분</span>
           <select v-model="pickerDraft.minute" class="picker-select">
-            <option v-for="minute in minuteOptions" :key="minute" :value="minute">
+            <option
+              v-for="minute in minuteOptions"
+              :key="minute"
+              :value="minute"
+            >
               {{ pad2(minute) }}
             </option>
           </select>
@@ -274,10 +287,18 @@ onBeforeUnmount(() => {
       </div>
 
       <div class="datetime-popover-actions">
-        <button type="button" class="picker-action-btn picker-action-subtle" @click="closePicker">
+        <button
+          type="button"
+          class="picker-action-btn picker-action-subtle"
+          @click="closePicker"
+        >
           취소
         </button>
-        <button type="button" class="picker-action-btn picker-action-confirm" @click="applyPicker">
+        <button
+          type="button"
+          class="picker-action-btn picker-action-confirm"
+          @click="applyPicker"
+        >
           완료
         </button>
       </div>

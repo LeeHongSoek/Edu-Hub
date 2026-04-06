@@ -1,5 +1,12 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from "vue";
+import {
+  computed,
+  onBeforeUnmount,
+  onMounted,
+  reactive,
+  ref,
+  watch,
+} from "vue";
 import IconUsers from "~/assets/icons/IconUsers.svg?component";
 import IconGraphForce from "~/assets/icons/IconGraphForce.svg?component";
 import IconSearch from "~/assets/icons/IconSearch.svg?component";
@@ -35,11 +42,11 @@ interface GraphNode {
   y: number;
   vx: number;
   vy: number;
-  r: number;          // 반지름
-  level: 0 | 1 | 2;  // 0=나, 1=그룹, 2=개인
-  group?: string;     // 그룹 노드 id (2레벨 노드에서 사용)
+  r: number; // 반지름
+  level: 0 | 1 | 2; // 0=나, 1=그룹, 2=개인
+  group?: string; // 그룹 노드 id (2레벨 노드에서 사용)
   fixed?: boolean;
-  pinned?: boolean;   // 드래그로 고정된 노드
+  pinned?: boolean; // 드래그로 고정된 노드
 }
 
 interface GraphEdge {
@@ -111,7 +118,8 @@ const relationTargets = computed<RelationTarget[]>(() => {
         key: "friends",
         label: "친구",
         roleId: "S",
-        description: "이름으로 다른 학생을 검색하고 친구 연결을 만들 수 있습니다.",
+        description:
+          "이름으로 다른 학생을 검색하고 친구 연결을 만들 수 있습니다.",
       },
       {
         key: "parents",
@@ -250,7 +258,10 @@ const mainDisplayPageEndItem = computed(() => {
   if (mainDisplayTotal.value === 0) return 0;
   if (hasConnectedRelations.value) return relationPageEndItem.value;
   if (!activePanel.value) return 0;
-  return Math.min(activePanel.value.currentPage * pageSize, activePanel.value.total);
+  return Math.min(
+    activePanel.value.currentPage * pageSize,
+    activePanel.value.total,
+  );
 });
 
 const relationSummary = computed(() => {
@@ -371,11 +382,15 @@ const graphData = computed(() => {
     // 개인 노드를 그룹 노드 주변에 배치
     const users = groupData.users;
     users.forEach((user, ui) => {
-      const pAngle = gAngle + ((ui - (users.length - 1) / 2) * Math.PI) / Math.max(users.length, 2) * 0.9;
+      const pAngle =
+        gAngle +
+        (((ui - (users.length - 1) / 2) * Math.PI) /
+          Math.max(users.length, 2)) *
+          0.9;
       const pRadius = 120;
       const pid = `user-${user.user_no}`;
       // 이미 추가된 노드면 skip (동일인이 여러 그룹에 있는 경우는 없지만 방어)
-      if (!nodes.find(n => n.id === pid)) {
+      if (!nodes.find((n) => n.id === pid)) {
         nodes.push({
           id: pid,
           label: user.username || "이름 없음",
@@ -521,11 +536,17 @@ const startGraphSimulation = () => {
         const dist = Math.sqrt(dx * dx + dy * dy) || 1;
         const minDist = (a.r + b.r) * 4.5;
         if (dist > minDist * 3) continue; // 너무 멀면 무시
-        const force = (minDist * minDist) / (dist * dist + 1) * 0.6;
+        const force = ((minDist * minDist) / (dist * dist + 1)) * 0.6;
         dx /= dist;
         dy /= dist;
-        if (!a.fixed) { a.vx -= dx * force; a.vy -= dy * force; }
-        if (!b.fixed) { b.vx += dx * force; b.vy += dy * force; }
+        if (!a.fixed) {
+          a.vx -= dx * force;
+          a.vy -= dy * force;
+        }
+        if (!b.fixed) {
+          b.vx += dx * force;
+          b.vy += dy * force;
+        }
       }
     }
 
@@ -543,11 +564,19 @@ const startGraphSimulation = () => {
       dx /= dist;
       dy /= dist;
 
-      if (!source.fixed && !source.pinned && source.id !== draggingNodeId.value) {
+      if (
+        !source.fixed &&
+        !source.pinned &&
+        source.id !== draggingNodeId.value
+      ) {
         source.vx += dx * spring;
         source.vy += dy * spring;
       }
-      if (!target.fixed && !target.pinned && target.id !== draggingNodeId.value) {
+      if (
+        !target.fixed &&
+        !target.pinned &&
+        target.id !== draggingNodeId.value
+      ) {
         target.vx -= dx * spring;
         target.vy -= dy * spring;
       }
@@ -890,9 +919,10 @@ const commitSliderValue = async (page?: number) => {
 
 const toggleCandidateRelation = async (user: any, event: Event | boolean) => {
   if (!activeTarget.value) return;
-  const checked = typeof event === 'boolean' 
-    ? event 
-    : (event?.target as HTMLInputElement)?.checked;
+  const checked =
+    typeof event === "boolean"
+      ? event
+      : (event?.target as HTMLInputElement)?.checked;
   submittingUserId.value = String(user.user_no);
 
   try {
@@ -960,7 +990,6 @@ watch(
   },
   { immediate: true },
 );
-
 </script>
 
 <template>
@@ -980,7 +1009,8 @@ watch(
         <button
           class="btn-add"
           :disabled="relationTargets.length === 0"
-          @click="openConnectModal">
+          @click="openConnectModal"
+        >
           + 연결 관리
         </button>
       </div>
@@ -995,7 +1025,8 @@ watch(
               :key="target.key"
               class="target-tab"
               :class="{ active: activeTargetKey === target.key }"
-              @click="selectTarget(target.key)">
+              @click="selectTarget(target.key)"
+            >
               {{ target.label }}
             </button>
           </div>
@@ -1012,7 +1043,8 @@ watch(
           <button
             v-if="relationSearchQuery"
             class="btn-reset-search"
-            @click="clearRelationSearch">
+            @click="clearRelationSearch"
+          >
             초기화
           </button>
         </div>
@@ -1030,8 +1062,9 @@ watch(
             />
           </div>
           <span class="range-text"
-            >{{ mainDisplayPageStartItem }}-{{ mainDisplayPageEndItem }}번째 항목 표시
-            중</span>
+            >{{ mainDisplayPageStartItem }}-{{ mainDisplayPageEndItem }}번째
+            항목 표시 중</span
+          >
         </div>
       </div>
     </div>
@@ -1039,7 +1072,8 @@ watch(
     <div v-if="relationLoading" class="loading">불러오는 중...</div>
     <div
       v-else-if="!hasConnectedRelations && !hasCandidateResults"
-      class="empty">
+      class="empty"
+    >
       {{
         relationSearchQuery
           ? "검색 결과가 없습니다."
@@ -1050,27 +1084,35 @@ watch(
       v-else-if="hasConnectedRelations"
       name="relation-slide"
       tag="div"
-      class="relation-list">
+      class="relation-list"
+    >
       <div
         v-for="rel in relations"
         :key="rel.relation_id"
         class="relation-item"
-        v-show="rel.approval === 'Y'">
+        v-show="rel.approval === 'Y'"
+      >
         <div class="relation-row">
           <div class="relation-user">
             <button
               type="button"
               class="user-name-button"
-              @click="emit('open-message-thread', getRelationTargetUser(rel))">
-              <span class="user-name">{{ getRelationTargetUser(rel)?.username }}</span>
+              @click="emit('open-message-thread', getRelationTargetUser(rel))"
+            >
+              <span class="user-name">{{
+                getRelationTargetUser(rel)?.username
+              }}</span>
             </button>
-            <span class="user-id">{{ getRelationTargetUser(rel)?.user_id }}</span>
+            <span class="user-id">{{
+              getRelationTargetUser(rel)?.user_id
+            }}</span>
           </div>
           <div class="relation-actions">
             <span class="relation-badge">{{ relationBadgeLabel(rel) }}</span>
             <button
               class="relation-message-btn"
-              @click="emit('compose-message', getRelationTargetUser(rel))">
+              @click="emit('compose-message', getRelationTargetUser(rel))"
+            >
               메시지
             </button>
           </div>
@@ -1081,11 +1123,13 @@ watch(
       v-else
       name="candidate-slide"
       tag="div"
-      class="candidate-list candidate-list-main">
+      class="candidate-list candidate-list-main"
+    >
       <div
         v-for="user in activePanel?.items || []"
         :key="user.user_no"
-        class="candidate-item">
+        class="candidate-item"
+      >
         <div class="candidate-row">
           <div class="candidate-info">
             <input
@@ -1099,9 +1143,22 @@ watch(
           </div>
           <button
             class="btn-relation-request"
-            :disabled="submittingUserId === user.user_no || user.approval === null || user.approval === 'N'"
-            @click="toggleCandidateRelation(user, !user.isConnected)">
-            {{ user.approval === null ? '요청중..' : user.approval === 'N' ? '거절!' : user.isConnected ? '해제' : '관계 요청' }}
+            :disabled="
+              submittingUserId === user.user_no ||
+              user.approval === null ||
+              user.approval === 'N'
+            "
+            @click="toggleCandidateRelation(user, !user.isConnected)"
+          >
+            {{
+              user.approval === null
+                ? "요청중.."
+                : user.approval === "N"
+                  ? "거절!"
+                  : user.isConnected
+                    ? "해제"
+                    : "관계 요청"
+            }}
           </button>
         </div>
       </div>
@@ -1110,7 +1167,8 @@ watch(
     <div
       v-if="showConnectModal"
       class="modal-overlay"
-      @click.self="closeConnectModal">
+      @click.self="closeConnectModal"
+    >
       <div class="modal-card">
         <div class="modal-header">
           <div>
@@ -1124,7 +1182,8 @@ watch(
                 :key="target.key"
                 class="target-tab"
                 :class="{ active: activeTargetKey === target.key }"
-                @click="selectTarget(target.key)">
+                @click="selectTarget(target.key)"
+              >
                 {{ target.label }}
               </button>
             </div>
@@ -1139,7 +1198,8 @@ watch(
             <div
               v-if="activeTarget && activePanel"
               :key="activeTarget.key"
-              class="target-panel">
+              class="target-panel"
+            >
               <div class="pagination-panel-border">
                 <div class="slider-panel">
                   <div class="search-row">
@@ -1158,14 +1218,16 @@ watch(
                     <button
                       v-if="activePanel.searchQuery"
                       class="btn-reset-search"
-                      @click="clearSearch">
+                      @click="clearSearch"
+                    >
                       초기화
                     </button>
                   </div>
 
                   <div class="slider-row">
                     <span class="summary-text"
-                      >총 {{ activePanel.total }}명</span>
+                      >총 {{ activePanel.total }}명</span
+                    >
                     <div class="page-slider-section">
                       <PageSlider
                         :model-value="activePanel.sliderValue"
@@ -1182,7 +1244,8 @@ watch(
                     </div>
                     <span class="range-text"
                       >{{ pageStartItem }}-{{ pageEndItem }}번째 항목 표시
-                      중</span>
+                      중</span
+                    >
                   </div>
                 </div>
               </div>
@@ -1197,11 +1260,13 @@ watch(
                 v-else
                 name="candidate-slide"
                 tag="div"
-                class="candidate-list">
+                class="candidate-list"
+              >
                 <div
                   v-for="user in activePanel.items"
                   :key="user.user_no"
-                  class="candidate-item">
+                  class="candidate-item"
+                >
                   <div class="candidate-row">
                     <div class="candidate-info">
                       <input
@@ -1215,9 +1280,22 @@ watch(
                     </div>
                     <button
                       class="btn-relation-request"
-                      :disabled="submittingUserId === user.user_no || user.approval === null || user.approval === 'N'"
-                      @click="toggleCandidateRelation(user, !user.isConnected)">
-                      {{ user.approval === null ? '요청중..' : user.approval === 'N' ? '거절!' : user.isConnected ? '해제' : '관계 요청' }}
+                      :disabled="
+                        submittingUserId === user.user_no ||
+                        user.approval === null ||
+                        user.approval === 'N'
+                      "
+                      @click="toggleCandidateRelation(user, !user.isConnected)"
+                    >
+                      {{
+                        user.approval === null
+                          ? "요청중.."
+                          : user.approval === "N"
+                            ? "거절!"
+                            : user.isConnected
+                              ? "해제"
+                              : "관계 요청"
+                      }}
                     </button>
                   </div>
                 </div>
@@ -1235,7 +1313,8 @@ watch(
     <div
       v-if="showGraphModal"
       class="graph-modal-overlay"
-      @click.self="closeGraphModal">
+      @click.self="closeGraphModal"
+    >
       <div class="graph-modal-card">
         <div class="graph-modal-header">
           <div>
@@ -1261,16 +1340,23 @@ watch(
             class="graph-svg"
             :viewBox="`0 0 ${graphWidth} ${graphHeight}`"
             role="img"
-            aria-label="인맥 네트워크 그래프">
+            aria-label="인맥 네트워크 그래프"
+          >
             <defs>
               <!-- 글로우 필터: 호버 시 빛나게 -->
               <filter id="glow-sm" x="-50%" y="-50%" width="200%" height="200%">
                 <feGaussianBlur stdDeviation="4" result="blur" />
-                <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+                <feMerge>
+                  <feMergeNode in="blur" />
+                  <feMergeNode in="SourceGraphic" />
+                </feMerge>
               </filter>
               <filter id="glow-md" x="-80%" y="-80%" width="260%" height="260%">
                 <feGaussianBlur stdDeviation="8" result="blur" />
-                <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+                <feMerge>
+                  <feMergeNode in="blur" />
+                  <feMergeNode in="SourceGraphic" />
+                </feMerge>
               </filter>
             </defs>
 
@@ -1279,8 +1365,10 @@ watch(
               <line
                 v-for="edge in graphEdgePositions"
                 :key="`${edge.source}-${edge.target}`"
-                :x1="edge.x1" :y1="edge.y1"
-                :x2="edge.x2" :y2="edge.y2"
+                :x1="edge.x1"
+                :y1="edge.y1"
+                :x2="edge.x2"
+                :y2="edge.y2"
                 :class="edge.isGroupEdge ? 'graph-edge-main' : 'graph-edge-sub'"
               />
             </g>
@@ -1294,7 +1382,8 @@ watch(
                 :transform="`translate(${node.x}, ${node.y})`"
                 @mouseenter="hoveredGraphNodeId = node.id"
                 @mouseleave="hoveredGraphNodeId = ''"
-                style="cursor:default">
+                style="cursor: default"
+              >
                 <!-- 호버 글로우 링 -->
                 <circle
                   v-if="hoveredGraphNodeId === node.id"
@@ -1307,17 +1396,28 @@ watch(
                   :r="hoveredGraphNodeId === node.id ? node.r * 1.22 : node.r"
                   class="graph-node-circle"
                   :class="[
-                    node.level === 0 ? 'node-me' :
-                    node.level === 1 ? 'node-group' : 'node-person'
-                  ,hoveredGraphNodeId === node.id ? 'node-hovered' : '',
-                  draggingNodeId === node.id ? 'node-dragging' : '']"
+                    node.level === 0
+                      ? 'node-me'
+                      : node.level === 1
+                        ? 'node-group'
+                        : 'node-person',
+                    hoveredGraphNodeId === node.id ? 'node-hovered' : '',
+                    draggingNodeId === node.id ? 'node-dragging' : '',
+                  ]"
                   @mousedown.prevent="startDragging(node.id)"
                 />
                 <!-- 라벨 -->
                 <text
                   class="graph-node-label"
-                  :class="node.level === 0 ? 'label-me' : node.level === 1 ? 'label-group' : 'label-person'"
-                  y="0.35em">
+                  :class="
+                    node.level === 0
+                      ? 'label-me'
+                      : node.level === 1
+                        ? 'label-group'
+                        : 'label-person'
+                  "
+                  y="0.35em"
+                >
                   {{ node.label }}
                 </text>
               </g>
@@ -1326,16 +1426,19 @@ watch(
 
           <!-- 호버 툴팁 (선택된 노드 정보) -->
           <Transition name="tooltip-fade">
-            <div
-              v-if="hoveredGraphNodeId"
-              class="graph-tooltip">
+            <div v-if="hoveredGraphNodeId" class="graph-tooltip">
               <span class="graph-tooltip-label">
-                {{ graphNodes.find(n => n.id === hoveredGraphNodeId)?.label }}
+                {{ graphNodes.find((n) => n.id === hoveredGraphNodeId)?.label }}
               </span>
               <span class="graph-tooltip-level">
                 {{
-                  graphNodes.find(n => n.id === hoveredGraphNodeId)?.level === 0 ? '나' :
-                  graphNodes.find(n => n.id === hoveredGraphNodeId)?.level === 1 ? '그룹' : '구성원'
+                  graphNodes.find((n) => n.id === hoveredGraphNodeId)?.level ===
+                  0
+                    ? "나"
+                    : graphNodes.find((n) => n.id === hoveredGraphNodeId)
+                          ?.level === 1
+                      ? "그룹"
+                      : "구성원"
                 }}
               </span>
             </div>
@@ -1416,8 +1519,11 @@ watch(
   border: 1px solid rgba(255, 255, 255, 0.14);
   cursor: pointer;
   font-weight: 800;
-  transition: transform 0.18s ease, border-color 0.18s ease,
-    background 0.18s ease, color 0.18s ease;
+  transition:
+    transform 0.18s ease,
+    border-color 0.18s ease,
+    background 0.18s ease,
+    color 0.18s ease;
 }
 
 .btn-graph:hover {
@@ -1636,7 +1742,11 @@ watch(
   display: block;
   border-radius: 16px;
   background:
-    radial-gradient(ellipse at 50% 40%, rgba(99, 102, 241, 0.13) 0%, transparent 60%),
+    radial-gradient(
+      ellipse at 50% 40%,
+      rgba(99, 102, 241, 0.13) 0%,
+      transparent 60%
+    ),
     linear-gradient(180deg, rgba(15, 23, 42, 0.9), rgba(10, 15, 35, 0.99));
 }
 
@@ -1660,8 +1770,9 @@ watch(
 }
 
 .graph-node-circle {
-  transition: r 0.18s cubic-bezier(0.34, 1.56, 0.64, 1),
-              opacity 0.18s ease;
+  transition:
+    r 0.18s cubic-bezier(0.34, 1.56, 0.64, 1),
+    opacity 0.18s ease;
 }
 
 /* 레벨별 원 색상 */
@@ -1749,7 +1860,9 @@ watch(
 
 .tooltip-fade-enter-active,
 .tooltip-fade-leave-active {
-  transition: opacity 0.18s ease, transform 0.18s ease;
+  transition:
+    opacity 0.18s ease,
+    transform 0.18s ease;
 }
 .tooltip-fade-enter-from,
 .tooltip-fade-leave-to {

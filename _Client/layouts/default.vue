@@ -61,7 +61,8 @@ const loadRecentMessages = async () => {
     const response = data as { items: any[] };
     messageList.value = response.items ?? [];
   } catch (err: any) {
-    messageError.value = err?.data?.message || err?.message || "메시지를 불러올 수 없습니다.";
+    messageError.value =
+      err?.data?.message || err?.message || "메시지를 불러올 수 없습니다.";
     messageList.value = [];
   } finally {
     messageLoading.value = false;
@@ -74,12 +75,8 @@ const openMessagePopover = async (
 ) => {
   if (
     reason === "click" ||
-    (
-      reason === "mount" &&
-      userInfo.value?.msgAlert === "none"
-    )
+    (reason === "mount" && userInfo.value?.msgAlert === "none")
   ) {
-
     showMessagePopover.value = true;
     if (messageHideTimer) {
       clearTimeout(messageHideTimer);
@@ -93,11 +90,10 @@ const openMessagePopover = async (
         setMsgAlertConfirm(); // 한번이라도 실행되면 Confirm
       }, 5000);
     }
-    
-    setMsgAlertConfirm(); // 한번이라도 실행되면 Confirm
-  }  
-};
 
+    setMsgAlertConfirm(); // 한번이라도 실행되면 Confirm
+  }
+};
 
 const setMsgAlertConfirm = () => {
   if (!userInfo.value) return;
@@ -106,7 +102,7 @@ const setMsgAlertConfirm = () => {
   userCookie.value = next;
 };
 
-const handleMessageBadgeClick = async (reason: "mount" | "click" = "click") => {  
+const handleMessageBadgeClick = async (reason: "mount" | "click" = "click") => {
   if (showMessagePopover.value) {
     closeMessagePopover();
     return;
@@ -144,7 +140,8 @@ onMounted(() => {
           v-if="userInfo"
           href="#"
           class="ombudsman-link"
-          @click.prevent="showOmbudsmanModal = true">
+          @click.prevent="showOmbudsmanModal = true"
+        >
           <IconFeedback class="icon-feedback" />
           옴브즈먼
         </a>
@@ -158,7 +155,8 @@ onMounted(() => {
           <a
             href="#"
             class="user-greeting"
-            @click.prevent="showUserModal = true">
+            @click.prevent="showUserModal = true"
+          >
             <IconUser class="icon-user" />
             {{ userInfo.username }} <{{ userInfo.user_no }}>님
           </a>
@@ -166,10 +164,11 @@ onMounted(() => {
             to="/dashboard?tab=messages&view=received"
             class="message-badge"
             title="받은 메시지 확인"
-            @click.prevent="handleMessageBadgeClick('click')">
+            @click.prevent="handleMessageBadgeClick('click')"
+          >
             <IconMessage class="icon-message" aria-hidden="true" />
             <!-- [{{ userInfo.msgAlert }}] -->
-          </NuxtLink>         
+          </NuxtLink>
           <a href="#" class="logout-link" @click.prevent="handleLogout">
             <IconLogout class="icon-logout" />
             로그아웃
@@ -194,11 +193,24 @@ onMounted(() => {
           받은 메시지가 없습니다.
         </div>
         <ul v-else class="popover-list">
-          <li v-for="msg in messageList" :key="msg.message_id" class="popover-item">
+          <li
+            v-for="msg in messageList"
+            :key="msg.message_id"
+            class="popover-item"
+          >
             <div class="popover-item-top">
-              <span class="from">{{ msg.sender?.username || "발신자 없음" }}</span>
+              <span class="from">{{
+                msg.sender?.username || "발신자 없음"
+              }}</span>
               <span class="time">
-                {{ new Date(msg.created_at).toLocaleString("ko-KR", { month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" }) }}
+                {{
+                  new Date(msg.created_at).toLocaleString("ko-KR", {
+                    month: "2-digit",
+                    day: "2-digit",
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })
+                }}
               </span>
             </div>
             <div class="popover-content">{{ msg.content }}</div>
@@ -417,7 +429,9 @@ onMounted(() => {
 
 .fade-enter-active,
 .fade-leave-active {
-  transition: opacity 0.18s ease, transform 0.18s ease;
+  transition:
+    opacity 0.18s ease,
+    transform 0.18s ease;
 }
 .fade-enter-from,
 .fade-leave-to {

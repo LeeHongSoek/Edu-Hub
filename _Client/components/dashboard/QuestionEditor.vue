@@ -70,10 +70,10 @@ const handleSave = async () => {
   isSaving.value = true;
   try {
     const isCreate = !props.question?.question_id;
-    const url = isCreate 
+    const url = isCreate
       ? `${apiBase.value}/questions/create`
       : `${apiBase.value}/questions/${props.question.question_id}`;
-    
+
     await $fetch(url, {
       method: isCreate ? "POST" : "PATCH",
       body: {
@@ -81,7 +81,7 @@ const handleSave = async () => {
         // 생성 시 필요한 추가 정보가 있다면 여기에 포함
       },
     });
-    
+
     alert(isCreate ? "생성되었습니다!" : "수정되었습니다!");
     emit("updated");
     emit("close");
@@ -118,7 +118,7 @@ const handleDelete = async () => {
   <div class="editor-overlay">
     <div class="editor-card">
       <div class="editor-body">
-        <div class="form-section"> 
+        <div class="form-section">
           <div class="form-group">
             <label>문제 제목</label>
             <input
@@ -140,12 +140,12 @@ const handleDelete = async () => {
               <label>난이도 (1-5)</label>
               <div class="slider-field">
                 <PageSlider
-                      v-model="editData.difficulty"
-                      :min="1"
-                      :max="5"
-                        postfix=""
-                        :show-limits="false"
-                    />
+                  v-model="editData.difficulty"
+                  :min="1"
+                  :max="5"
+                  postfix=""
+                  :show-limits="false"
+                />
               </div>
             </div>
             <div class="form-group flex-small">
@@ -161,11 +161,11 @@ const handleDelete = async () => {
               <label>평점 (1-5)</label>
               <div class="slider-field">
                 <PageSlider
-                      v-model="editData.rating"
-                      :max="5"
-                        postfix="점"
-                        :show-limits="false"
-                    />
+                  v-model="editData.rating"
+                  :max="5"
+                  postfix="점"
+                  :show-limits="false"
+                />
               </div>
             </div>
           </div>
@@ -176,7 +176,8 @@ const handleDelete = async () => {
               <optgroup
                 v-for="g1 in groups"
                 :key="g1.group_id"
-                :label="g1.name">
+                :label="g1.name"
+              >
                 <option :value="g1.group_id">{{ g1.name }} (L1)</option>
                 <template v-for="g2 in g1.child_groups" :key="g2.group_id">
                   <option :value="g2.group_id">
@@ -185,7 +186,8 @@ const handleDelete = async () => {
                   <option
                     v-for="g3 in g2.child_groups"
                     :key="g3.group_id"
-                    :value="g3.group_id">
+                    :value="g3.group_id"
+                  >
                     &nbsp;&nbsp;&nbsp;&nbsp;↳ {{ g3.name }} (L3)
                   </option>
                 </template>
@@ -233,7 +235,8 @@ const handleDelete = async () => {
             <div
               v-for="(opt, index) in editData.options"
               :key="index"
-              class="option-edit-item">
+              class="option-edit-item"
+            >
               <div class="opt-num">{{ (index as number) + 1 }}</div>
               <input
                 v-model="opt.content"
@@ -247,7 +250,8 @@ const handleDelete = async () => {
               </label>
               <button
                 class="btn-remove-opt"
-                @click="removeOption(index as number)">
+                @click="removeOption(index as number)"
+              >
                 &times;
               </button>
             </div>

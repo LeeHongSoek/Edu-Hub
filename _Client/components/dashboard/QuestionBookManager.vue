@@ -233,13 +233,16 @@ const deleteSelectedBooks = async () => {
   if (!ok) return;
 
   try {
-    const result = (await $fetch(`${apiBase.value}/question-books/soft-delete`, {
-      method: "PATCH",
-      headers: getAuthHeader(),
-      body: {
-        bookIds: selectedBookIds.value,
+    const result = (await $fetch(
+      `${apiBase.value}/question-books/soft-delete`,
+      {
+        method: "PATCH",
+        headers: getAuthHeader(),
+        body: {
+          bookIds: selectedBookIds.value,
+        },
       },
-    })) as { updatedCount?: number };
+    )) as { updatedCount?: number };
 
     const deletedCount = Number(result?.updatedCount ?? 0);
     if (deletedCount === 0) {
@@ -281,7 +284,11 @@ const setScope = (scope: "mine" | "all") => {
               <IconCreateAction class="btn-action-icon" />
               새 문제집
             </button>
-            <button class="btn-delete" :disabled="!canDeleteBooks" @click="deleteSelectedBooks">
+            <button
+              class="btn-delete"
+              :disabled="!canDeleteBooks"
+              @click="deleteSelectedBooks"
+            >
               <IconDeleteAction class="btn-action-icon" />
               삭제
             </button>
@@ -304,13 +311,15 @@ const setScope = (scope: "mine" | "all") => {
               v-if="showScopeToggle"
               class="scope-toggle"
               role="tablist"
-              aria-label="문제집 범위 선택">
+              aria-label="문제집 범위 선택"
+            >
               <button
                 type="button"
                 class="scope-btn"
                 :class="{ active: listScope === 'mine' }"
                 :aria-pressed="listScope === 'mine'"
-                @click="setScope('mine')">
+                @click="setScope('mine')"
+              >
                 나의 문제집
               </button>
               <button
@@ -318,7 +327,8 @@ const setScope = (scope: "mine" | "all") => {
                 class="scope-btn"
                 :class="{ active: listScope === 'all' }"
                 :aria-pressed="listScope === 'all'"
-                @click="setScope('all')">
+                @click="setScope('all')"
+              >
                 전체 문제집
               </button>
             </div>
@@ -337,13 +347,15 @@ const setScope = (scope: "mine" | "all") => {
             <button
               v-if="searchQuery"
               class="btn-reset-search"
-              @click="clearSearch">
+              @click="clearSearch"
+            >
               초기화
             </button>
           </div>
           <div class="slider-row">
             <span class="summary-text"
-              >총 {{ filteredBooks.length }}개 문제집</span>
+              >총 {{ filteredBooks.length }}개 문제집</span
+            >
             <div class="page-slider-section">
               <PageSlider
                 v-model="sliderValue"
@@ -354,7 +366,8 @@ const setScope = (scope: "mine" | "all") => {
               />
             </div>
             <span class="range-text"
-              >{{ pageStartItem }}-{{ pageEndItem }}번째 항목 표시 중</span>
+              >{{ pageStartItem }}-{{ pageEndItem }}번째 항목 표시 중</span
+            >
           </div>
         </div>
       </div>
@@ -363,7 +376,7 @@ const setScope = (scope: "mine" | "all") => {
           <div class="book-card-head">
             <div class="book-headline-left">
               <span class="book-id">{{ book.book_id }}</span>
-               <p class="book-description">
+              <p class="book-description">
                 {{ book.description || "설명 없음" }}
               </p>
               <span
@@ -372,10 +385,11 @@ const setScope = (scope: "mine" | "all") => {
                   !isCurrentUserOwner(book.creator.user_no)
                 "
                 class="book-owner-badge"
-                >{{ book.creator.username }}</span>
+                >{{ book.creator.username }}</span
+              >
             </div>
             <div class="book-headline-right">
-              <span class="book-count-badge" >
+              <span class="book-count-badge">
                 {{ book.items?.length || 0 }} 문제
               </span>
             </div>
@@ -398,18 +412,31 @@ const setScope = (scope: "mine" | "all") => {
                 />
                 <span
                   class="book-title"
-                  :class="{ selectable: isCurrentUserOwner(book.creator?.user_no) }"
-                  @click="toggleBookSelectedByTitle(book)">
+                  :class="{
+                    selectable: isCurrentUserOwner(book.creator?.user_no),
+                  }"
+                  @click="toggleBookSelectedByTitle(book)"
+                >
                   {{ book.book_name }}
                 </span>
               </h4>
-             
             </div>
             <div
               v-if="isCurrentUserOwner(book.creator?.user_no)"
-              class="book-card-actions">
-              <button class="btn-view btn-card-action" @click="openEditModal(book)">수정</button>
-              <button class="btn-start btn-card-action" @click="viewBookDetails(book.book_id)">문제등록</button>
+              class="book-card-actions"
+            >
+              <button
+                class="btn-view btn-card-action"
+                @click="openEditModal(book)"
+              >
+                수정
+              </button>
+              <button
+                class="btn-start btn-card-action"
+                @click="viewBookDetails(book.book_id)"
+              >
+                문제등록
+              </button>
             </div>
           </div>
         </div>
@@ -420,11 +447,18 @@ const setScope = (scope: "mine" | "all") => {
     <div
       v-if="showCreateModal"
       class="modal-overlay"
-      @click.self="closeCreateModal">
+      @click.self="closeCreateModal"
+    >
       <div class="modal-content">
         <div class="modal-header">
           <h3>{{ modalTitle }}</h3>
-          <button class="modal-close" @click="closeCreateModal" aria-label="닫기">✕</button>
+          <button
+            class="modal-close"
+            @click="closeCreateModal"
+            aria-label="닫기"
+          >
+            ✕
+          </button>
         </div>
         <div class="form-group">
           <label>문제집 이름</label>
@@ -442,10 +476,10 @@ const setScope = (scope: "mine" | "all") => {
           ></textarea>
         </div>
         <div class="modal-actions">
-          <button class="btn-secondary" @click="closeCreateModal">
-            취소
+          <button class="btn-secondary" @click="closeCreateModal">취소</button>
+          <button class="btn-primary" @click="submitBookForm">
+            {{ submitButtonLabel }}
           </button>
-          <button class="btn-primary" @click="submitBookForm">{{ submitButtonLabel }}</button>
         </div>
       </div>
     </div>
@@ -625,8 +659,7 @@ const setScope = (scope: "mine" | "all") => {
   display: flex;
   flex-direction: column;
   gap: 0.3rem;
-  transition:
-    all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .book-card:hover {
@@ -696,7 +729,6 @@ const setScope = (scope: "mine" | "all") => {
   min-width: 0;
   flex: 1;
 }
-
 
 .book-card-actions {
   display: inline-flex;
@@ -837,8 +869,6 @@ const setScope = (scope: "mine" | "all") => {
   background: rgba(129, 140, 248, 0.22);
   color: #ffffff;
 }
-
-
 
 /* Modal */
 .modal-overlay {

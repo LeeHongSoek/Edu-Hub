@@ -17,8 +17,6 @@ const emit = defineEmits<{
 
 <template>
   <div class="group-hierarchy">
-
-
     <GroupTreeNode
       v-for="group in groups"
       :key="group.group_id"
@@ -30,9 +28,7 @@ const emit = defineEmits<{
       :depth="0"
       @select-group="emit('select-group', $event)"
     />
-    <div v-if="groups.length === 0" class="no-groups">
-      그룹 정보 없음
-    </div>
+    <div v-if="groups.length === 0" class="no-groups">그룹 정보 없음</div>
   </div>
 </template>
 
@@ -98,8 +94,6 @@ const emit = defineEmits<{
   font-weight: 700;
   font-size: 0.75rem;
 }
-
-
 
 .no-groups {
   font-size: 0.75rem;

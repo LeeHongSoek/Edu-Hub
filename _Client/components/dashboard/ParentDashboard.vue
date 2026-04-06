@@ -34,7 +34,8 @@ onMounted(fetchStats);
       <div
         v-for="child in childrenStats"
         :key="child.studentNo"
-        class="child-card">
+        class="child-card"
+      >
         <div class="child-header">
           <span class="child-name">{{ child.studentName }}</span>
           <span class="child-status">활동 중</span>

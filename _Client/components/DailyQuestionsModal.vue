@@ -29,10 +29,14 @@ const scoreGradeStyle = ref<Record<string, string>>({
 });
 const logSaved = ref(false);
 
-const selectedOptions = ref<(string | number | null)[]>(Array(props.questions.length).fill(null));
+const selectedOptions = ref<(string | number | null)[]>(
+  Array(props.questions.length).fill(null),
+);
 
 const currentQuestion = computed(() => props.questions[currentIndex.value]);
-const currentSelectedOpt = computed(() => selectedOptions.value[currentIndex.value]);
+const currentSelectedOpt = computed(
+  () => selectedOptions.value[currentIndex.value],
+);
 const hasCurrentHint = computed(() => Boolean(currentQuestion.value?.hint));
 
 const selectOption = (optId: string | number) => {
@@ -48,21 +52,27 @@ const goNext = () => {
   if (currentIndex.value < props.questions.length - 1) currentIndex.value++;
 };
 
-const unsolvedCount = computed(() => selectedOptions.value.filter(v => v === null).length);
+const unsolvedCount = computed(
+  () => selectedOptions.value.filter((v) => v === null).length,
+);
 
 const correctCount = computed(() => {
   let count = 0;
   props.questions.forEach((q, i) => {
     const selected = selectedOptions.value[i];
-    const correctOpt = q.options?.find(o => o.is_answer);
+    const correctOpt = q.options?.find((o) => o.is_answer);
     if (selected && correctOpt && selected === correctOpt.option_id) count++;
   });
   return count;
 });
 
-const wrongCount = computed(() => props.questions.length - correctCount.value - unsolvedCount.value);
+const wrongCount = computed(
+  () => props.questions.length - correctCount.value - unsolvedCount.value,
+);
 
-const totalScore = computed(() => Math.round((correctCount.value / props.questions.length) * 100));
+const totalScore = computed(() =>
+  Math.round((correctCount.value / props.questions.length) * 100),
+);
 
 const gradeResult = computed(() => {
   const score = totalScore.value;
@@ -88,39 +98,39 @@ const submitAnswers = () => {
 
 const getResultStatus = (idx: number) => {
   const selected = selectedOptions.value[idx];
-  if (selected === null) return 'unsolved';
-  const correctOpt = props.questions[idx].options?.find(o => o.is_answer);
-  return correctOpt && selected === correctOpt.option_id ? 'correct' : 'wrong';
+  if (selected === null) return "unsolved";
+  const correctOpt = props.questions[idx].options?.find((o) => o.is_answer);
+  return correctOpt && selected === correctOpt.option_id ? "correct" : "wrong";
 };
 
 const getResultClass = (idx: number) => {
   const status = getResultStatus(idx);
-  if (status === 'correct') return 'res-correct';
-  if (status === 'wrong') return 'res-wrong';
-  return 'res-unsolved';
+  if (status === "correct") return "res-correct";
+  if (status === "wrong") return "res-wrong";
+  return "res-unsolved";
 };
 
 const getResultText = (idx: number) => {
   const status = getResultStatus(idx);
-  if (status === 'correct') return '정답 (O)';
-  if (status === 'wrong') return '오답 (X)';
-  return '안 풂 (-)';
+  if (status === "correct") return "정답 (O)";
+  if (status === "wrong") return "오답 (X)";
+  return "안 풂 (-)";
 };
 
 const maskName = (name: string | undefined) => {
-  if (!name) return '관리자';
+  if (!name) return "관리자";
   // 한국어 이름 3글자인 경우 "이**" 처럼 나오고 싶어함
   if (name.length >= 3) {
-    return name.charAt(0) + '**';
+    return name.charAt(0) + "**";
   }
-  return name.charAt(0) + '*';
+  return name.charAt(0) + "*";
 };
 
 const getDifficultyLabel = (diff: number | null | undefined) => {
-  if (!diff) return '중';
-  if (diff <= 1) return '하';
-  if (diff === 2) return '중';
-  return '상';
+  if (!diff) return "중";
+  if (diff <= 1) return "하";
+  if (diff === 2) return "중";
+  return "상";
 };
 
 const getQuestionTypeLabel = (question: Question | undefined) => {
@@ -130,18 +140,13 @@ const getQuestionTypeLabel = (question: Question | undefined) => {
   const typeName = question.type?.type_name || "";
 
   // 객관식(M) 계열은 정답 보기 수로 선단/선다를 구분합니다.
-  const isMultipleChoice =
-    typeId === "M" || typeName.includes("객관식");
+  const isMultipleChoice = typeId === "M" || typeName.includes("객관식");
 
   if (isMultipleChoice) {
     const answerCount = (question.options || []).filter((opt) => {
       const raw = (opt as any).is_answer;
       return (
-        raw === true ||
-        raw === 1 ||
-        raw === "1" ||
-        raw === "Y" ||
-        raw === "y"
+        raw === true || raw === 1 || raw === "1" || raw === "Y" || raw === "y"
       );
     }).length;
 
@@ -181,18 +186,21 @@ const saveSessionLog = async () => {
   }
 
   try {
-    await $fetch(`${apiBase.value}/user-logs/${props.logType}/${props.logObjectId}`, {
-      method: "POST",
-      headers: getAuthHeader(),
-      body: {
-        user_content:
-          props.logContent ||
-          `${props.title || "학습 세트"} ${props.questions.length}문항`,
-        score: correctCount.value,
-        total_score: props.questions.length,
-        score100: totalScore.value,
+    await $fetch(
+      `${apiBase.value}/user-logs/${props.logType}/${props.logObjectId}`,
+      {
+        method: "POST",
+        headers: getAuthHeader(),
+        body: {
+          user_content:
+            props.logContent ||
+            `${props.title || "학습 세트"} ${props.questions.length}문항`,
+          score: correctCount.value,
+          total_score: props.questions.length,
+          score100: totalScore.value,
+        },
       },
-    });
+    );
     logSaved.value = true;
   } catch (err) {
     console.warn("서버 통신 오류(save) user-logs:", err);
@@ -373,7 +381,8 @@ onUnmounted(() => {
     <div class="daily-modal-content">
       <div class="daily-header">
         <div class="daily-title">
-          <IconDailySpark class="daily-icon" /> {{ props.title || "오늘의 공개문제" }}
+          <IconDailySpark class="daily-icon" />
+          {{ props.title || "오늘의 공개문제" }}
         </div>
         <div class="daily-progress">
           <div class="progress-info">
@@ -381,17 +390,19 @@ onUnmounted(() => {
             <span class="slider-hint">(원하는 번호로 이동)</span>
           </div>
           <div class="slider-wrapper">
-            <input 
-              type="range" 
+            <input
+              type="range"
               class="question-slider"
-              min="0" 
-              :max="questions.length - 1" 
+              min="0"
+              :max="questions.length - 1"
               v-model.number="currentIndex"
             />
           </div>
         </div>
         <div class="header-actions">
-          <button class="btn-submit-top" @click="submitAnswers">답안 제출</button>
+          <button class="btn-submit-top" @click="submitAnswers">
+            답안 제출
+          </button>
           <button class="btn-close" @click="emit('close')">&times;</button>
         </div>
       </div>
@@ -400,21 +411,26 @@ onUnmounted(() => {
         <div v-if="currentQuestion" class="custom-solver">
           <div class="q-header">
             <div class="q-header-left">
-              <span class="q-type">{{ getQuestionTypeLabel(currentQuestion) }}</span>
+              <span class="q-type">{{
+                getQuestionTypeLabel(currentQuestion)
+              }}</span>
               <h2 class="q-title">{{ currentQuestion.title }}</h2>
             </div>
             <div class="q-header-right">
-              <span class="q-badge"> {{ formatGroupPath((currentQuestion as any).group) }} : {{ maskName((currentQuestion as any).creator?.username) }}</span>
+              <span class="q-badge">
+                {{ formatGroupPath((currentQuestion as any).group) }} :
+                {{ maskName((currentQuestion as any).creator?.username) }}</span
+              >
             </div>
           </div>
-          
-         
-            <LatexRenderer :text="currentQuestion.question" />
-         
-          
+
+          <LatexRenderer :text="currentQuestion.question" />
+
           <div v-if="currentQuestion.passage" class="q-passage">
             <client-only>
-              <v-md-preview :text="currentQuestion.passage.content_md"></v-md-preview>
+              <v-md-preview
+                :text="currentQuestion.passage.content_md"
+              ></v-md-preview>
             </client-only>
           </div>
 
@@ -424,11 +440,14 @@ onUnmounted(() => {
               :key="opt.option_id"
               class="opt-item"
               :class="{
-                'is-selected': currentSelectedOpt === opt.option_id
+                'is-selected': currentSelectedOpt === opt.option_id,
               }"
-              @click="selectOption(opt.option_id)">
+              @click="selectOption(opt.option_id)"
+            >
               <span class="opt-num">{{ opt.option_number }}</span>
-              <span class="opt-text"><LatexRenderer :text="opt.content" /></span>
+              <span class="opt-text"
+                ><LatexRenderer :text="opt.content"
+              /></span>
             </div>
           </div>
         </div>
@@ -436,39 +455,45 @@ onUnmounted(() => {
 
       <div class="daily-footer">
         <div class="footer-left-actions">
-          <button 
-            class="btn-action prev-btn" 
+          <button
+            class="btn-action prev-btn"
             :disabled="currentIndex === 0"
-            @click="goPrev">
+            @click="goPrev"
+          >
             &larr; 이전 문제
           </button>
           <button
             v-if="hasCurrentHint && !showHint"
             class="btn-hint-toggle"
-            @click="showHint = !showHint">
+            @click="showHint = !showHint"
+          >
             힌트보기
           </button>
         </div>
-        
+
         <div class="footer-hint-wrapper">
           <Transition name="fade" mode="out-in">
             <div
               class="footer-hint"
               v-if="showHint && currentQuestion.hint"
-              :key="currentQuestion.question_id">
+              :key="currentQuestion.question_id"
+            >
               <div class="hint-body">
                 <IconHintBulb class="hint-icon" />
                 <span class="hint-text">{{ currentQuestion.hint }}</span>
               </div>
-              <button class="hint-close-btn" @click="showHint = false">✕</button>
+              <button class="hint-close-btn" @click="showHint = false">
+                ✕
+              </button>
             </div>
           </Transition>
         </div>
 
-        <button 
-          class="btn-action next-btn" 
+        <button
+          class="btn-action next-btn"
           :disabled="currentIndex === questions.length - 1"
-          @click="goNext">
+          @click="goNext"
+        >
           다음 문제 &rarr;
         </button>
       </div>
@@ -506,14 +531,19 @@ onUnmounted(() => {
               ref="scoreGradeRef"
               class="score-grade"
               :class="gradeResult.charAt(0)"
-              :style="scoreGradeStyle">
+              :style="scoreGradeStyle"
+            >
               {{ gradeResult }}
             </div>
           </div>
         </div>
 
         <div class="result-details custom-scrollbar">
-          <div v-for="(q, i) in questions" :key="q.question_id" class="detail-item">
+          <div
+            v-for="(q, i) in questions"
+            :key="q.question_id"
+            class="detail-item"
+          >
             <div class="detail-title">
               <span class="detail-num">{{ i + 1 }}번</span>
               <span class="detail-name">{{ q.title }}</span>
@@ -564,7 +594,7 @@ onUnmounted(() => {
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  box-shadow: 0 50px 100px -20px rgba(0,0,0,0.8);
+  box-shadow: 0 50px 100px -20px rgba(0, 0, 0, 0.8);
   position: relative;
 }
 
@@ -739,9 +769,21 @@ onUnmounted(() => {
   white-space: nowrap;
 }
 
-.q-badge.diff-상 { color: #f87171; background: rgba(248, 113, 113, 0.1); border-color: rgba(248, 113, 113, 0.2); }
-.q-badge.diff-중 { color: #fbbf24; background: rgba(251, 191, 36, 0.1); border-color: rgba(251, 191, 36, 0.2); }
-.q-badge.diff-하 { color: #60a5fa; background: rgba(96, 165, 250, 0.1); border-color: rgba(96, 165, 250, 0.2); }
+.q-badge.diff-상 {
+  color: #f87171;
+  background: rgba(248, 113, 113, 0.1);
+  border-color: rgba(248, 113, 113, 0.2);
+}
+.q-badge.diff-중 {
+  color: #fbbf24;
+  background: rgba(251, 191, 36, 0.1);
+  border-color: rgba(251, 191, 36, 0.2);
+}
+.q-badge.diff-하 {
+  color: #60a5fa;
+  background: rgba(96, 165, 250, 0.1);
+  border-color: rgba(96, 165, 250, 0.2);
+}
 
 .q-type {
   font-size: 0.8rem;
@@ -980,7 +1022,7 @@ onUnmounted(() => {
   padding: 1.5rem 1.5rem;
   border-radius: 20px;
   border: 1px solid rgba(255, 255, 255, 0.15);
-  box-shadow: 0 30px 60px rgba(0,0,0,0.6);
+  box-shadow: 0 30px 60px rgba(0, 0, 0, 0.6);
   text-align: center;
   width: 100%;
   max-width: 440px;
@@ -988,8 +1030,14 @@ onUnmounted(() => {
 }
 
 @keyframes scaleIn {
-  from { opacity: 0; transform: scale(0.9); }
-  to { opacity: 1; transform: scale(1); }
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 
 .result-header {
@@ -1008,8 +1056,19 @@ onUnmounted(() => {
   color: #a5b4fc;
   flex-shrink: 0;
 }
-.result-header-text h2 { font-size: 1.4rem; font-weight: 900; color: #fff; margin: 0; line-height: 1.2; }
-.result-header-text p { color: #94a3b8; font-size: 0.85rem; margin: 0; margin-top: 0.2rem; }
+.result-header-text h2 {
+  font-size: 1.4rem;
+  font-weight: 900;
+  color: #fff;
+  margin: 0;
+  line-height: 1.2;
+}
+.result-header-text p {
+  color: #94a3b8;
+  font-size: 0.85rem;
+  margin: 0;
+  margin-top: 0.2rem;
+}
 
 .result-stats {
   display: flex;
@@ -1032,11 +1091,24 @@ onUnmounted(() => {
   border-radius: 12px;
 }
 
-.stat-label { color: #94a3b8; font-weight: 600; font-size: 0.95rem; }
-.stat-val { font-weight: 800; font-size: 1.05rem; }
-.stat-val.text-green { color: #10b981; }
-.stat-val.text-red { color: #ef4444; }
-.stat-val.text-gray { color: #94a3b8; }
+.stat-label {
+  color: #94a3b8;
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+.stat-val {
+  font-weight: 800;
+  font-size: 1.05rem;
+}
+.stat-val.text-green {
+  color: #10b981;
+}
+.stat-val.text-red {
+  color: #ef4444;
+}
+.stat-val.text-gray {
+  color: #94a3b8;
+}
 
 .score-banner {
   margin-top: 0.8rem;
@@ -1077,17 +1149,37 @@ onUnmounted(() => {
   text-shadow: 0 0 20px rgba(129, 140, 248, 0.16);
 }
 
-.score-grade.수 { color: #10b981; }
-.score-grade.우 { color: #3b82f6; }
-.score-grade.미 { color: #f59e0b; }
-.score-grade.양 { color: #f97316; }
-.score-grade.가 { color: #ef4444; }
+.score-grade.수 {
+  color: #10b981;
+}
+.score-grade.우 {
+  color: #3b82f6;
+}
+.score-grade.미 {
+  color: #f59e0b;
+}
+.score-grade.양 {
+  color: #f97316;
+}
+.score-grade.가 {
+  color: #ef4444;
+}
 
-.score-grade-label.수 { color: #10b981; }
-.score-grade-label.우 { color: #3b82f6; }
-.score-grade-label.미 { color: #f59e0b; }
-.score-grade-label.양 { color: #f97316; }
-.score-grade-label.가 { color: #ef4444; }
+.score-grade-label.수 {
+  color: #10b981;
+}
+.score-grade-label.우 {
+  color: #3b82f6;
+}
+.score-grade-label.미 {
+  color: #f59e0b;
+}
+.score-grade-label.양 {
+  color: #f97316;
+}
+.score-grade-label.가 {
+  color: #ef4444;
+}
 
 /* Scrollable Details */
 .result-details {
@@ -1103,8 +1195,13 @@ onUnmounted(() => {
   border: 1px solid rgba(255, 255, 255, 0.05);
 }
 
-.result-details::-webkit-scrollbar { width: 6px; }
-.result-details::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.15); border-radius: 10px; }
+.result-details::-webkit-scrollbar {
+  width: 6px;
+}
+.result-details::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 10px;
+}
 
 .detail-item {
   display: flex;
@@ -1147,9 +1244,18 @@ onUnmounted(() => {
   border-radius: 6px;
 }
 
-.res-correct { color: #10b981; background: rgba(16, 185, 129, 0.1); }
-.res-wrong { color: #ef4444; background: rgba(239, 68, 68, 0.1); }
-.res-unsolved { color: #94a3b8; background: rgba(255, 255, 255, 0.1); }
+.res-correct {
+  color: #10b981;
+  background: rgba(16, 185, 129, 0.1);
+}
+.res-wrong {
+  color: #ef4444;
+  background: rgba(239, 68, 68, 0.1);
+}
+.res-unsolved {
+  color: #94a3b8;
+  background: rgba(255, 255, 255, 0.1);
+}
 
 .btn-finish {
   width: 100%;
@@ -1162,8 +1268,11 @@ onUnmounted(() => {
   font-size: 1.05rem;
   cursor: pointer;
   transition: all 0.2s;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
 }
 
-.btn-finish:hover { transform: scale(1.02); box-shadow: 0 6px 15px rgba(0,0,0,0.3); }
+.btn-finish:hover {
+  transform: scale(1.02);
+  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3);
+}
 </style>

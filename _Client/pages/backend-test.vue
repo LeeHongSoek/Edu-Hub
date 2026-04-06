@@ -13,7 +13,8 @@
         padding: 15px;
         border-radius: 5px;
         margin-bottom: 20px;
-      ">
+      "
+    >
       <button
         @click="testBackendApis"
         :disabled="testing"
@@ -25,7 +26,8 @@
           border: none;
           border-radius: 5px;
           cursor: pointer;
-        ">
+        "
+      >
         <span style="display: inline-flex; align-items: center; gap: 0.35rem">
           <IconRefresh v-if="testing" style="width: 1rem; height: 1rem" />
           <IconRocket v-else style="width: 1rem; height: 1rem" />
@@ -46,7 +48,8 @@
         margin-bottom: 20px;
         max-height: 400px;
         overflow-y: auto;
-      ">
+      "
+    >
       <h3>
         <IconChart
           style="width: 1rem; height: 1rem; vertical-align: -0.15rem"
@@ -66,11 +69,13 @@
             background: white;
             border-left: 4px solid #2196f3;
             border-radius: 3px;
-          ">
+          "
+        >
           <strong>{{ result.method }} {{ result.url }}</strong
           ><br />
           <small style="color: #666"
-            >상태: {{ result.status }} | 크기: {{ result.size }} bytes</small>
+            >상태: {{ result.status }} | 크기: {{ result.size }} bytes</small
+          >
           <details style="margin-top: 5px">
             <summary style="cursor: pointer; color: #2196f3">
               <IconFileText
@@ -90,7 +95,8 @@
                 overflow-x: auto;
                 font-size: 12px;
               "
-              >{{ JSON.stringify(result.data, null, 2) }}</pre>
+              >{{ JSON.stringify(result.data, null, 2) }}</pre
+            >
           </details>
         </li>
       </ul>
@@ -110,7 +116,8 @@
           padding: 10px;
           margin: 5px 0;
           border-left: 3px solid #ff9800;
-        ">
+        "
+      >
         // 프론트 요청 로그는 logs/api-front.log 에 저장됩니다.
       </code>
       <code
@@ -120,7 +127,8 @@
           padding: 10px;
           margin: 5px 0;
           border-left: 3px solid #ff9800;
-        ">
+        "
+      >
         // 백엔드 요청 로그는 logs/api-back.log 에 저장됩니다.
       </code>
     </div>

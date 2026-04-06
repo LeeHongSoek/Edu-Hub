@@ -143,7 +143,11 @@ const handleDelete = async (group: Group) => {
           <select v-model="selectedParentId" class="parent-select">
             <optgroup v-for="g1 in groups" :key="g1.group_id" :label="g1.name">
               <option :value="g1.group_id">
-                {{ String(g1.group_id) === ROOT_GROUP_ID ? `${g1.name} 하위 (ROOT)` : `${g1.name} (L1)` }}
+                {{
+                  String(g1.group_id) === ROOT_GROUP_ID
+                    ? `${g1.name} 하위 (ROOT)`
+                    : `${g1.name} (L1)`
+                }}
               </option>
               <template v-for="g2 in g1.child_groups" :key="g2.group_id">
                 <option :value="g2.group_id">
@@ -171,7 +175,8 @@ const handleDelete = async (group: Group) => {
           <button
             class="btn-add"
             :disabled="!newGroupName || isSaving"
-            @click="handleAddGroup">
+            @click="handleAddGroup"
+          >
             추가
           </button>
         </div>
@@ -194,7 +199,8 @@ const handleDelete = async (group: Group) => {
             <div
               v-for="g2 in g1.child_groups"
               :key="g2.group_id"
-              class="admin-item-l2">
+              class="admin-item-l2"
+            >
               <div class="item-row">
                 <span class="depth-badge l1">L1</span>
                 <span class="item-name">{{ g2.name }}</span>
@@ -211,7 +217,8 @@ const handleDelete = async (group: Group) => {
               <div
                 v-for="g3 in g2.child_groups"
                 :key="g3.group_id"
-                class="admin-item-l3">
+                class="admin-item-l3"
+              >
                 <div class="item-row">
                   <span class="depth-badge l2">L2</span>
                   <span class="item-name">{{ g3.name }}</span>
@@ -228,11 +235,15 @@ const handleDelete = async (group: Group) => {
                 <div
                   v-for="g4 in g3.child_groups"
                   :key="g4.group_id"
-                  class="admin-item-l4">
+                  class="admin-item-l4"
+                >
                   <div class="item-row">
                     <span class="depth-badge l3">L3</span>
                     <span class="item-name">{{ g4.name }}</span>
-                    <div v-if="!isProtectedSystemGroup(g4)" class="item-actions">
+                    <div
+                      v-if="!isProtectedSystemGroup(g4)"
+                      class="item-actions"
+                    >
                       <button @click="handleRename(g4)">
                         <IconPencil class="action-icon" />
                       </button>
@@ -245,11 +256,15 @@ const handleDelete = async (group: Group) => {
                   <div
                     v-for="g5 in g4.child_groups"
                     :key="g5.group_id"
-                    class="admin-item-l5">
+                    class="admin-item-l5"
+                  >
                     <div class="item-row">
                       <span class="depth-badge l4">L4</span>
                       <span class="item-name">{{ g5.name }}</span>
-                      <div v-if="!isProtectedSystemGroup(g5)" class="item-actions">
+                      <div
+                        v-if="!isProtectedSystemGroup(g5)"
+                        class="item-actions"
+                      >
                         <button @click="handleRename(g5)">
                           <IconPencil class="action-icon" />
                         </button>

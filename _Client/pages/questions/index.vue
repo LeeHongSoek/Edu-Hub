@@ -298,38 +298,36 @@ const contextId = computed(() => {
 
 <template>
   <div class="page-container">
-    
-      <QuestionListManager
-        :list-title="'문제 목록'"
-        :list-subtitle="activeSourceLabel"
-        :show-scope-toggle="true"
-        :scope-mode="questionScope"
-        :context-scope-mode="contextQuestionScope"
-        :show-error="!!(error && !questionResponse && !pending)"
-        :error-message="'문제를 불러오지 못했습니다. 백엔드 서버가 실행 중인지 확인해 주세요.'"
-        :questions="questionResponse?.items || []"
-        :current-user-no="userInfo?.user_no ?? null"
-        :selected-group-id="selectedGroupId"
-        :applied-search-field="appliedSearchField"
-        :applied-search-keyword="appliedSearchKeyword"
-        :current-page="questionResponse?.page || 1"
-        :total-pages="questionResponse?.totalPages || 1"
-        :total-items="questionResponse?.total || 0"
-        :page-size="questionResponse?.limit || pageSize"
-        :view-mode="questionScope"
-        :hide-group-overlay="isSourceDetail"
-        :selection-context="selectionContext"
-        :context-id="contextId"
-        @refresh="refresh"
-        @change-scope="setQuestionScope"
-        @change-context-scope="setContextQuestionScope"
-        @change-group="handleGroupChange"
-        @search="handleSearch"
-        @reset-search="handleResetSearch"
-        @change-page="handlePageChange"
-        @copy-question="handleCopyQuestion"
-      />
-    
+    <QuestionListManager
+      :list-title="'문제 목록'"
+      :list-subtitle="activeSourceLabel"
+      :show-scope-toggle="true"
+      :scope-mode="questionScope"
+      :context-scope-mode="contextQuestionScope"
+      :show-error="!!(error && !questionResponse && !pending)"
+      :error-message="'문제를 불러오지 못했습니다. 백엔드 서버가 실행 중인지 확인해 주세요.'"
+      :questions="questionResponse?.items || []"
+      :current-user-no="userInfo?.user_no ?? null"
+      :selected-group-id="selectedGroupId"
+      :applied-search-field="appliedSearchField"
+      :applied-search-keyword="appliedSearchKeyword"
+      :current-page="questionResponse?.page || 1"
+      :total-pages="questionResponse?.totalPages || 1"
+      :total-items="questionResponse?.total || 0"
+      :page-size="questionResponse?.limit || pageSize"
+      :view-mode="questionScope"
+      :hide-group-overlay="isSourceDetail"
+      :selection-context="selectionContext"
+      :context-id="contextId"
+      @refresh="refresh"
+      @change-scope="setQuestionScope"
+      @change-context-scope="setContextQuestionScope"
+      @change-group="handleGroupChange"
+      @search="handleSearch"
+      @reset-search="handleResetSearch"
+      @change-page="handlePageChange"
+      @copy-question="handleCopyQuestion"
+    />
   </div>
 </template>
 

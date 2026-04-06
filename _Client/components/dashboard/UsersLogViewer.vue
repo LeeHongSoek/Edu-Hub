@@ -59,7 +59,9 @@ watch([selectedType, searchQuery], () => {
 // 페이지 변경 시 재조회
 watch(currentPage, fetchLogs);
 
-const totalPages = computed(() => Math.max(1, Math.ceil(totalLogs.value / pageSize.value)));
+const totalPages = computed(() =>
+  Math.max(1, Math.ceil(totalLogs.value / pageSize.value)),
+);
 const isSliderDisabled = computed(() => totalPages.value <= 1);
 const commitSliderValue = (page?: number) => {
   currentPage.value = page ?? sliderValue.value;
@@ -76,15 +78,20 @@ const clearSearch = () => {
 
 const getLogTypeInfo = (type: string) => {
   switch (type) {
-    case "Q": return { icon: IconFileText, label: "문제", color: "#6366f1" };
-    case "B": return { icon: IconBook, label: "문제집", color: "#10b981" };
-    case "E": return { icon: IconPencil, label: "고사", color: "#f59e0b" };
-    default: return { icon: IconFileText, label: "기타", color: "#94a3b8" };
+    case "Q":
+      return { icon: IconFileText, label: "문제", color: "#6366f1" };
+    case "B":
+      return { icon: IconBook, label: "문제집", color: "#10b981" };
+    case "E":
+      return { icon: IconPencil, label: "고사", color: "#f59e0b" };
+    default:
+      return { icon: IconFileText, label: "기타", color: "#94a3b8" };
   }
 };
 
 const formatResult = (log: any) => {
-  if (log.logtype === "Q" || log.score == null || log.total_score == null) return null;
+  if (log.logtype === "Q" || log.score == null || log.total_score == null)
+    return null;
   const scoreText = `${log.score}/${log.total_score}`;
   const percentText = log.score100 !== undefined ? `(${log.score100}점)` : "";
   return `${scoreText} ${percentText}`;
@@ -115,19 +122,26 @@ const formatTime = (dateStr: string) => {
             :key="type.id"
             :class="{ active: selectedType === type.id }"
             :style="{ '--active-color': type.color }"
-            @click="selectedType = type.id">
-            <component :is="type.icon" v-if="type.icon" class="filter-btn-icon" />
+            @click="selectedType = type.id"
+          >
+            <component
+              :is="type.icon"
+              v-if="type.icon"
+              class="filter-btn-icon"
+            />
             {{ type.label }}
           </button>
         </div>
         <div class="search-bar">
-          <input 
-            v-model="searchInput" 
-            type="text" 
-            placeholder="기록 검색..." 
+          <input
+            v-model="searchInput"
+            type="text"
+            placeholder="기록 검색..."
             @keyup.enter="handleSearch"
           />
-          <button v-if="searchInput" class="clear-btn" @click="clearSearch">✕</button>
+          <button v-if="searchInput" class="clear-btn" @click="clearSearch">
+            ✕
+          </button>
           <button class="search-btn" @click="handleSearch">검색</button>
         </div>
       </div>
@@ -137,14 +151,14 @@ const formatTime = (dateStr: string) => {
       <div class="loader"></div>
       <span>로그를 불러오는 중...</span>
     </div>
-    
+
     <div v-else-if="logs.length === 0" class="empty-state">
       <IconCalendar class="empty-icon" />
       <p>기록된 활동 로그가 없습니다.</p>
     </div>
 
     <div v-else class="log-content-area">
-       <!-- Pagination Slider -->
+      <!-- Pagination Slider -->
       <div class="pagination-area">
         <PageSlider
           v-model="sliderValue"
@@ -153,39 +167,44 @@ const formatTime = (dateStr: string) => {
           postfix="페이지"
           @commit="commitSliderValue"
         />
-        <div class="page-info">
-          {{ currentPage }} / {{ totalPages }}
-        </div>
+        <div class="page-info">{{ currentPage }} / {{ totalPages }}</div>
       </div>
       <div class="log-list">
         <div v-for="log in logs" :key="log.log_id" class="log-card">
-          <div class="log-type-indicator" :style="{ backgroundColor: getLogTypeInfo(log.logtype).color }">
-            <component :is="getLogTypeInfo(log.logtype).icon" class="type-icon" />
+          <div
+            class="log-type-indicator"
+            :style="{ backgroundColor: getLogTypeInfo(log.logtype).color }"
+          >
+            <component
+              :is="getLogTypeInfo(log.logtype).icon"
+              class="type-icon"
+            />
           </div>
-          
+
           <div class="log-main-info">
             <div class="log-top">
-              <span class="log-type-label">{{ getLogTypeInfo(log.logtype).label }}</span>
+              <span class="log-type-label">{{
+                getLogTypeInfo(log.logtype).label
+              }}</span>
               <span
                 v-if="log.user_content"
                 class="log-action-memo"
                 :title="log.title"
-              >{{ log.title }}</span>
+                >{{ log.title }}</span
+              >
               <span class="log-time">{{ formatTime(log.last_played_at) }}</span>
             </div>
             <div class="log-title-row">
-              <div class="log-title" :title="log.user_content">{{ log.user_content }}</div>
+              <div class="log-title" :title="log.user_content">
+                {{ log.user_content }}
+              </div>
               <div v-if="formatResult(log)" class="log-result">
                 {{ formatResult(log) }}
               </div>
             </div>
           </div>
-
-          
         </div>
       </div>
-
-     
     </div>
   </div>
 </template>
@@ -476,10 +495,10 @@ const formatTime = (dateStr: string) => {
   letter-spacing: -0.01em;
   white-space: nowrap; /* 내용이 길어도 아래로 떨어지지 않게 함 */
   flex-shrink: 0; /* 부모 요소가 좁아져도 크기가 줄어들지 않음 */
-  
+
   /* --- 수정 및 추가된 부분 --- */
-  min-width: 100px;      /* 최소 폭 고정 (내용이 짧아도 이 크기 유지) */
-  width: fit-content;   /* 내용에 맞춰 폭이 늘어남 */
+  min-width: 100px; /* 최소 폭 고정 (내용이 짧아도 이 크기 유지) */
+  width: fit-content; /* 내용에 맞춰 폭이 늘어남 */
   display: inline-flex; /* 중앙 정렬을 위해 플렉스 적용 */
   align-items: center;
   justify-content: center;
@@ -507,7 +526,9 @@ const formatTime = (dateStr: string) => {
   flex: 1; /* 가용 공간 차지 */
 }
 
-.slider-container.disabled { opacity: 0.4; }
+.slider-container.disabled {
+  opacity: 0.4;
+}
 
 .slider-label {
   font-size: 0.8rem;
@@ -603,7 +624,11 @@ const formatTime = (dateStr: string) => {
   animation: spin 1s cubic-bezier(0.4, 0, 0.2, 1) infinite;
 }
 
-@keyframes spin { to { transform: rotate(360deg); } }
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
 
 .empty-state {
   display: flex;

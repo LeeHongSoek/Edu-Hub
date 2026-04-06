@@ -397,7 +397,8 @@ onMounted(() => {
       <button
         class="btn-compose"
         :disabled="userRoleId === ''"
-        @click="openComposeModal">
+        @click="openComposeModal"
+      >
         새 메시지 작성
       </button>
     </div>
@@ -409,13 +410,15 @@ onMounted(() => {
             <button
               class="message-tab"
               :class="{ active: messageView === 'received' }"
-              @click="switchMessageView('received')">
+              @click="switchMessageView('received')"
+            >
               받은 메시지
             </button>
             <button
               class="message-tab"
               :class="{ active: messageView === 'sent' }"
-              @click="switchMessageView('sent')">
+              @click="switchMessageView('sent')"
+            >
               보낸 메시지
             </button>
           </div>
@@ -432,7 +435,8 @@ onMounted(() => {
           <button
             v-if="messageSearchQuery"
             class="btn-reset-search"
-            @click="clearMessageSearch">
+            @click="clearMessageSearch"
+          >
             초기화
           </button>
         </div>
@@ -450,7 +454,8 @@ onMounted(() => {
           </div>
           <span class="range-text"
             >{{ messagePageStartItem }}-{{ messagePageEndItem }}번째 항목 표시
-            중</span>
+            중</span
+          >
         </div>
       </div>
     </div>
@@ -463,7 +468,8 @@ onMounted(() => {
       <div
         v-for="message in messages"
         :key="message.message_id"
-        class="message-item">
+        class="message-item"
+      >
         <div class="message-top">
           <span class="message-direction" :class="message.direction">
             {{ messageDirectionLabel(message) }}
@@ -497,7 +503,8 @@ onMounted(() => {
     <div
       v-if="showComposeModal"
       class="modal-overlay"
-      @click.self="closeComposeModal">
+      @click.self="closeComposeModal"
+    >
       <div class="modal-card">
         <div class="modal-header">
           <div>
@@ -529,7 +536,8 @@ onMounted(() => {
               <button
                 v-if="recipientSearchQuery"
                 class="btn-reset-search"
-                @click="clearRecipientSearch">
+                @click="clearRecipientSearch"
+              >
                 초기화
               </button>
             </div>
@@ -547,7 +555,8 @@ onMounted(() => {
               </div>
               <span class="range-text"
                 >{{ recipientPageStartItem }}-{{ recipientPageEndItem }}번째
-                항목 표시 중</span>
+                항목 표시 중</span
+              >
             </div>
 
             <div v-if="recipientLoading" class="loading compact">
@@ -560,7 +569,8 @@ onMounted(() => {
               v-else
               name="recipient-slide"
               tag="div"
-              class="recipient-list">
+              class="recipient-list"
+            >
               <button
                 v-for="user in recipientItems"
                 :key="user.user_no"
@@ -568,7 +578,8 @@ onMounted(() => {
                 :class="{
                   selected: selectedRecipient?.user_no === user.user_no,
                 }"
-                @click="selectRecipient(user)">
+                @click="selectRecipient(user)"
+              >
                 <div class="recipient-row">
                   <div class="recipient-user">
                     <span class="recipient-name">{{ user.username }}</span>
@@ -613,7 +624,8 @@ onMounted(() => {
               <button
                 class="btn-send"
                 :disabled="sendingMessage || !selectedRecipient"
-                @click="sendMessage">
+                @click="sendMessage"
+              >
                 {{ sendingMessage ? "전송 중..." : "전송" }}
               </button>
             </div>
