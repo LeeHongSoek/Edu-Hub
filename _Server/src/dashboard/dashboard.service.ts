@@ -19,6 +19,8 @@ export class DashboardService {
     score100 = 0,
   ) {
     try {
+      const timestamp = this.toDbLocalDate();
+
       await (this.prisma as any).userLog.create({
         data: {
           user_no: userNo,
@@ -28,7 +30,8 @@ export class DashboardService {
           score,
           total_score: totalScore,
           score100,
-          last_played_at: this.toDbLocalDate(),
+          time_taken: 0,
+          created_at: timestamp,
         },
       });
     } catch (error) {

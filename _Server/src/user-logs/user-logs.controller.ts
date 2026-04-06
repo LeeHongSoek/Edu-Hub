@@ -33,7 +33,7 @@ export class UserLogsController {
     @Req() req,
     @Param('logtype') logtype: string,
     @Param('obj_id') obj_id: string,
-    @Body() body: { user_content?: string, score?: number, total_score?: number, score100?: number }
+    @Body() body: { user_content?: string, score?: number, total_score?: number, score100?: number, time_taken?: number }
   ) {
     const userNo = BigInt(req.user.user_no);
     return this.userLogsService.create(userNo, logtype, BigInt(obj_id), body);

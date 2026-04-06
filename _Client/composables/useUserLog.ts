@@ -3,6 +3,7 @@ type UserLogPayload = {
   score?: number;
   total_score?: number;
   score100?: number;
+  time_taken?: number;
 };
 
 export const useUserLog = () => {

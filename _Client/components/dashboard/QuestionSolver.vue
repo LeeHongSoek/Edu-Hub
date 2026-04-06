@@ -43,10 +43,12 @@ type SolveState = {
   showResult: boolean;
   isCorrect: boolean;
   hasStartedSolving: boolean;
+  startedAtMs: number | null;
 };
 
 const userAnswer = ref("");
 const selectedOptionIds = ref<(string | number)[]>([]);
+const startedAtMs = ref<number | null>(null);
 const timeLeft = ref(getAggregateTimeLimit(props.question));
 const isFinished = ref(false);
 const showResult = ref(false);
@@ -77,6 +79,7 @@ const createSolveState = (): SolveState => ({
   showResult: false,
   isCorrect: false,
   hasStartedSolving: false,
+  startedAtMs: null,
 });
 
 const getQuestionType = (question: Question) =>
@@ -126,6 +129,7 @@ const logActionForQuestion = async (
   action: string,
   score: number = 0,
   totalScore: number = 0,
+  timeTaken: number = 0,
 ) => {
   try {
     const score100 =
@@ -139,6 +143,7 @@ const logActionForQuestion = async (
         score: score,
         total_score: totalScore,
         score100: score100,
+        time_taken: timeTaken,
       },
     });
   } catch (err) {
@@ -150,8 +155,14 @@ const logAction = async (
   action: string,
   score: number = 0,
   totalScore: number = 0,
+  timeTaken: number = 0,
 ) => {
-  await logActionForQuestion(props.question, action, score, totalScore);
+  await logActionForQuestion(props.question, action, score, totalScore, timeTaken);
+};
+
+const getElapsedSeconds = (startedAtMs: number | null) => {
+  if (!startedAtMs) return 0;
+  return Math.max(0, Math.round((Date.now() - startedAtMs) / 1000));
 };
 
 // 풀이 결과 저장 : POST /solve-results
@@ -263,6 +274,7 @@ const toggleOption = (id: string | number) => {
   if (isFinished.value) return;
   if (!hasStartedSolving.value) {
     hasStartedSolving.value = true;
+    startedAtMs.value = Date.now();
     logAction("문제풀기");
   }
   const index = selectedOptionIds.value.indexOf(id);
@@ -278,6 +290,7 @@ const toggleChildOption = (child: Question, id: string | number) => {
   if (state.isFinished) return;
   if (!state.hasStartedSolving) {
     state.hasStartedSolving = true;
+    state.startedAtMs = Date.now();
     logActionForQuestion(child, "문제풀기");
   }
   const index = state.selectedOptionIds.indexOf(id);
@@ -291,6 +304,7 @@ const toggleChildOption = (child: Question, id: string | number) => {
 const handleInput = () => {
   if (!hasStartedSolving.value && userAnswer.value.trim().length > 0) {
     hasStartedSolving.value = true;
+    startedAtMs.value = Date.now();
     logAction("문제풀기");
   }
 };
@@ -299,11 +313,14 @@ const handleChildInput = (child: Question) => {
   const state = getChildState(child);
   if (!state.hasStartedSolving && state.userAnswer.trim().length > 0) {
     state.hasStartedSolving = true;
+    state.startedAtMs = Date.now();
     logActionForQuestion(child, "문제풀기");
   }
 };
 
 const handleFinish = async (isTimeOver = false) => {
+  const logTimeTaken = getElapsedSeconds(startedAtMs.value);
+
   if (isFinished.value) return;
 
   isFinished.value = true;
@@ -317,7 +334,7 @@ const handleFinish = async (isTimeOver = false) => {
       modalMessage.value =
         "세부연계문제의 입력 답안 중 정답인 문항만 정답 처리되었습니다.";
       showModal.value = true;
-      await logAction("정답확인:시간초과");
+      await logAction("정답확인:시간초과", 0, 1, logTimeTaken);
     }
     return;
   }
@@ -351,12 +368,12 @@ const handleFinish = async (isTimeOver = false) => {
       modalType.value = "success";
       modalTitle.value = "정답입니다!";
       modalMessage.value = "정말 잘하셨어요! 다음 문제도 도전해 보세요.";
-      logAction("정답확인:정답", 1, 1);
+      logAction("정답확인:정답", 1, 1, logTimeTaken);
     } else {
       modalType.value = "error";
       modalTitle.value = "아쉽게도 틀렸습니다.";
       modalMessage.value = `정답은 "${props.question.answer || "해설 참조"}" 입니다. 해설을 확인해 보세요.`;
-      logAction("정답확인:오답", 0, 1);
+      logAction("정답확인:오답", 0, 1, logTimeTaken);
     }
 
     // solve_results에 결과 저장
@@ -371,13 +388,14 @@ const handleFinish = async (isTimeOver = false) => {
     modalTitle.value = "시간 초과!";
     modalMessage.value =
       "제한 시간이 다 되어 오답 처리되었습니다. 해설을 확인해 보세요.";
-    logAction("정답확인:시간초과", 0, 1);
+    logAction("정답확인:시간초과", 0, 1, logTimeTaken);
   }
   showModal.value = true;
 };
 
 const handleChildFinish = async (child: Question, isTimeOver = false) => {
   const state = getChildState(child);
+  const logTimeTaken = getElapsedSeconds(state.startedAtMs);
   if (state.isFinished) return;
 
   state.isFinished = true;
@@ -390,6 +408,7 @@ const handleChildFinish = async (child: Question, isTimeOver = false) => {
       state.isCorrect ? "정답확인:정답" : "정답확인:시간초과",
       state.isCorrect ? 1 : 0,
       1,
+      logTimeTaken,
     );
   } else {
     await logActionForQuestion(
@@ -397,6 +416,7 @@ const handleChildFinish = async (child: Question, isTimeOver = false) => {
       state.isCorrect ? "정답확인:정답" : "정답확인:오답",
       state.isCorrect ? 1 : 0,
       1,
+      logTimeTaken,
     );
   }
 

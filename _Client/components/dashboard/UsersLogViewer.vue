@@ -102,16 +102,26 @@ const getLogTypeInfo = (type: string) => {
 };
 
 const formatResult = (log: any) => {
+  if (log.logtype !== "Q") return null;
+
+  const parts: string[] = [];
+
   if (
-    log.logtype !== "Q" ||
-    log.score == null ||
-    log.total_score == null ||
-    Number(log.total_score) <= 0
-  )
-    return null;
-  const scoreText = `${log.score}/${log.total_score}`;
-  const percentText = log.score100 !== undefined ? `(${log.score100}점)` : "";
-  return `${scoreText} ${percentText}`;
+    log.score != null &&
+    log.total_score != null &&
+    Number(log.total_score) > 0
+  ) {
+    const scoreText = `${log.score}/${log.total_score}`;
+    const percentText =
+      log.score100 !== undefined ? `(${log.score100}점)` : "";
+    parts.push(`${scoreText} ${percentText}`.trim());
+  }
+
+  if (log.time_taken != null && Number(log.time_taken) > 0) {
+    parts.push(`${log.time_taken}초`);
+  }
+
+  return parts.length ? parts.join(" · ") : null;
 };
 
 const formatTime = (dateStr: string) => {
@@ -228,9 +238,9 @@ const isRecentTime = (dateStr: string) => {
                 >{{ log.title }}</span>
               <span
                 class="log-time"
-                :class="{ 'log-time-recent': isRecentTime(log.created_at || log.last_played_at) }"
+                :class="{ 'log-time-recent': isRecentTime(log.created_at) }"
                 >{{
-                  formatRecentTime(log.created_at || log.last_played_at)
+                  formatRecentTime(log.created_at)
                 }}</span>
             </div>
             <div class="log-title-row">

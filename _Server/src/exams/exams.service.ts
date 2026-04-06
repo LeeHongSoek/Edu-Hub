@@ -17,6 +17,8 @@ export class ExamsService {
     totalScore = 0,
     score100 = 0,
   ) {
+    const timestamp = this.toDbLocalDate();
+
     await this.prisma.userLog.create({
       data: {
         user_no: userNo,
@@ -26,7 +28,8 @@ export class ExamsService {
         score,
         total_score: totalScore,
         score100,
-        last_played_at: this.toDbLocalDate(),
+        time_taken: 0,
+        created_at: timestamp,
       },
     });
   }

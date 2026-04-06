@@ -69,7 +69,9 @@ export class UserLogsService {
     return 'Unknown Item';
   }
 
-  async create(userNo: bigint, logtype: string, objId: bigint, data: { user_content?: string, score?: number, total_score?: number, score100?: number }) {
+  async create(userNo: bigint, logtype: string, objId: bigint, data: { user_content?: string, score?: number, total_score?: number, score100?: number, time_taken?: number }) {
+    const timestamp = this.toDbLocalDate();
+
     return this.prisma.userLog.create({
       data: {
         user_no: userNo,
@@ -79,7 +81,8 @@ export class UserLogsService {
         score: data.score || 0,
         total_score: data.total_score || 0,
         score100: data.score100 || 0,
-        last_played_at: this.toDbLocalDate(),
+        time_taken: data.time_taken || 0,
+        created_at: timestamp,
       },
     });
   }
@@ -127,8 +130,8 @@ export class UserLogsService {
           score,
           total_score,
           score100,
-          DATE_FORMAT(CONVERT_TZ(last_played_at, '+00:00', '+09:00'), '%Y-%m-%dT%H:%i:%s+09:00') AS last_played_at,
-          DATE_FORMAT(CONVERT_TZ(created_at, '+00:00', '+09:00'), '%Y-%m-%dT%H:%i:%s+09:00') AS created_at
+          time_taken,
+          DATE_FORMAT(created_at, '%Y-%m-%dT%H:%i:%s+09:00') AS created_at
         FROM users_logs
         ${whereSql}
         ORDER BY created_at DESC, log_id DESC
@@ -172,8 +175,8 @@ export class UserLogsService {
         score,
         total_score,
         score100,
-        DATE_FORMAT(CONVERT_TZ(last_played_at, '+00:00', '+09:00'), '%Y-%m-%dT%H:%i:%s+09:00') AS last_played_at,
-        DATE_FORMAT(CONVERT_TZ(created_at, '+00:00', '+09:00'), '%Y-%m-%dT%H:%i:%s+09:00') AS created_at
+        time_taken,
+        DATE_FORMAT(created_at, '%Y-%m-%dT%H:%i:%s+09:00') AS created_at
       FROM users_logs
       WHERE user_no = ${userNo}
         AND logtype_id = ${logtype}

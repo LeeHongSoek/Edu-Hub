@@ -27,6 +27,8 @@ export class AuthService {
   }
 
   async login(user: any) {
+    const timestamp = this.toDbLocalDate();
+
     await this.prisma.$executeRaw`
       UPDATE users
       SET last_loged_at = CURRENT_TIMESTAMP()
@@ -42,7 +44,8 @@ export class AuthService {
         score: 1,
         total_score: 1,
         score100: 100,
-        last_played_at: this.toDbLocalDate(),
+        time_taken: 0,
+        created_at: timestamp,
       },
     });
 
@@ -70,6 +73,8 @@ export class AuthService {
     username?: string,
     reason: 'manual' | 'expired' | 'invalid' = 'manual',
   ) {
+    const timestamp = this.toDbLocalDate();
+
     const reasonText =
       reason === 'manual'
         ? '로그아웃'
@@ -86,7 +91,8 @@ export class AuthService {
         score: 0,
         total_score: 1,
         score100: 0,
-        last_played_at: this.toDbLocalDate(),
+        time_taken: 0,
+        created_at: timestamp,
       },
     });
 

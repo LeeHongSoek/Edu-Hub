@@ -21,5 +21,6 @@ export class PrismaService extends PrismaClient implements OnModuleInit {
   // 모듈 초기화 시 DB 연결
   async onModuleInit() {
     await this.$connect();
+    await this.$executeRawUnsafe(`SET time_zone = '+09:00'`);
   }
 }
