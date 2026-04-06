@@ -19,6 +19,7 @@ import IconUsers from "~/assets/icons/IconUsers.svg?component";
 import IconMessage from "~/assets/icons/IconMessage.svg?component";
 import IconCalendar from "~/assets/icons/IconCalendar.svg?component";
 import IconClassRoom from "~/assets/icons/IconClassRoom.svg?component";
+import { useUserLog } from "~/composables/useUserLog";
 
 type UserCookiePayload = {
   user_no: string;
@@ -42,6 +43,7 @@ type DashboardClassItem = {
 
 const userCookie = useCookie<UserCookiePayload | string | null>("user_info");
 const { apiBase, getAuthHeader } = useApi();
+const { writeUserLog, writeUserLogOncePerSession } = useUserLog();
 const userInfo = computed<UserCookiePayload | null>(() => {
   if (!userCookie.value) return null;
   try {
@@ -89,6 +91,38 @@ const classListTitle = computed(() =>
   currentRoleId.value === "T" ? "내 클래스 목록" : "소속 클래스 목록",
 );
 
+const logDashboardAction = async (
+  logtype: "L" | "C" | "R",
+  objId: string | number | bigint,
+  userContent: string,
+  score = 0,
+  totalScore = 0,
+  score100 = 0,
+) => {
+  await writeUserLog(logtype, objId, {
+    user_content: userContent,
+    score,
+    total_score: totalScore,
+    score100,
+  });
+};
+
+const setActiveTab = (tab: string) => {
+  if (activeTab.value === tab) return;
+  activeTab.value = tab;
+
+  const logtype: "L" | "C" | "R" =
+    tab === "classes" ? "C" : tab === "relations" ? "R" : "L";
+  const labelMap: Record<string, string> = {
+    stats: "요약 통계",
+    relations: "관계 관리",
+    messages: "메시지 함",
+    classes: classTabLabel.value,
+    logs: "활동 로그",
+  };
+  void logDashboardAction(logtype, 0, `대시보드 탭 전환: ${labelMap[tab] || tab}`);
+};
+
 const fetchClassList = async () => {
   if (!shouldShowClassList.value) {
     classList.value = [];
@@ -116,6 +150,14 @@ const fetchClassList = async () => {
 };
 
 const openClassExams = async (item: DashboardClassItem) => {
+  await logDashboardAction(
+    "C",
+    item.classId,
+    `클래스 연결 고사 보기 이동: ${item.className}`,
+    item.examCount,
+    item.examCount,
+    100,
+  );
   await navigateTo({
     path: "/exams",
     query: {
@@ -129,6 +171,14 @@ const openClassExams = async (item: DashboardClassItem) => {
 const openClassMemberManager = (item: DashboardClassItem) => {
   selectedClassForMembers.value = item;
   showClassMemberManager.value = true;
+  void logDashboardAction(
+    "C",
+    item.classId,
+    `클래스 구성원 관리 모달 열기: ${item.className}`,
+    item.studentCount,
+    item.studentCount,
+    100,
+  );
 };
 
 const closeClassMemberManager = () => {
@@ -137,12 +187,27 @@ const closeClassMemberManager = () => {
 };
 
 const handleClassMembersSaved = async () => {
+  if (selectedClassForMembers.value) {
+    await logDashboardAction(
+      "C",
+      selectedClassForMembers.value.classId,
+      `클래스 구성원 관리 저장 후 목록 새로고침: ${selectedClassForMembers.value.className}`,
+    );
+  }
   await fetchClassList();
 };
 
 const openClassExamManager = (item: DashboardClassItem) => {
   selectedClassForExams.value = item;
   showClassExamManager.value = true;
+  void logDashboardAction(
+    "C",
+    item.classId,
+    `클래스 고사 연결 모달 열기: ${item.className}`,
+    item.examCount,
+    item.examCount,
+    100,
+  );
 };
 
 const closeClassExamManager = () => {
@@ -151,6 +216,13 @@ const closeClassExamManager = () => {
 };
 
 const handleClassExamsSaved = async () => {
+  if (selectedClassForExams.value) {
+    await logDashboardAction(
+      "C",
+      selectedClassForExams.value.classId,
+      `클래스 고사 연결 저장 후 목록 새로고침: ${selectedClassForExams.value.className}`,
+    );
+  }
   await fetchClassList();
 };
 
@@ -158,6 +230,11 @@ const openMessageCompose = async (user: any) => {
   composeMessageTarget.value = user;
   composeReturnTab.value = "relations";
   activeTab.value = "messages";
+  await logDashboardAction(
+    "R",
+    user?.user_no ?? 0,
+    `관계 관리에서 메시지 작성 진입: ${user?.username || "대상 없음"}`,
+  );
   await nextTick();
 };
 
@@ -176,6 +253,11 @@ const handleMessageComposeDismissed = () => {
 const openMessageThread = async (user: any) => {
   messageThreadTarget.value = user;
   activeTab.value = "messages";
+  await logDashboardAction(
+    "R",
+    user?.user_no ?? 0,
+    `관계 관리에서 대화 스레드 열기: ${user?.username || "대상 없음"}`,
+  );
   await nextTick();
 };
 
@@ -266,15 +348,21 @@ const fetchPendingRelations = async () => {
 
 const handlePendingAction = async (action: "accept" | "reject") => {
   if (!currentPendingRequest.value) return;
+  const pendingUser = currentPendingRequest.value;
   isPendingActionLoading.value = true;
   try {
     await $fetch(
-      `${apiBase.value}/dashboard/relations/${currentPendingRequest.value.user_no}/approval`,
+      `${apiBase.value}/dashboard/relations/${pendingUser.user_no}/approval`,
       {
         method: "PUT",
         headers: getAuthHeader(),
         body: { action },
       },
+    );
+    await logDashboardAction(
+      "R",
+      pendingUser.user_no,
+      `대시보드 관계 요청 ${action === "accept" ? "수락" : "거절"}: ${pendingUser.username}`,
     );
     // 성공 후 리스트에서 제거
     pendingRelations.value.shift();
@@ -294,6 +382,12 @@ onMounted(() => {
 
   fetchClassList();
   fetchPendingRelations();
+  void writeUserLogOncePerSession("dashboard-visit", "L", 0, {
+    user_content: "대시보드 메인 화면 진입",
+    score: 1,
+    total_score: 1,
+    score100: 100,
+  });
 
   isPendingActionLoading.value = false;
   isTypingActive.value = true;
@@ -354,26 +448,26 @@ onUnmounted(() => {
         <button
           :class="{ active: activeTab === 'stats' }"
           :aria-pressed="activeTab === 'stats'"
-          @click="activeTab = 'stats'">
+          @click="setActiveTab('stats')">
           <IconChart class="tab-icon" /> 요약 통계
         </button>
         <button
           :class="{ active: activeTab === 'relations' }"
           :aria-pressed="activeTab === 'relations'"
-          @click="activeTab = 'relations'">
+          @click="setActiveTab('relations')">
           <IconUsers class="tab-icon" /> 관계 관리
         </button>
         <button
           :class="{ active: activeTab === 'messages' }"
           :aria-pressed="activeTab === 'messages'"
-          @click="activeTab = 'messages'">
+          @click="setActiveTab('messages')">
           <IconMessage class="tab-icon" /> 메시지 함
         </button>
         <button
           v-if="shouldShowClassList"
           :class="{ active: activeTab === 'classes' }"
           :aria-pressed="activeTab === 'classes'"
-          @click="activeTab = 'classes'">
+          @click="setActiveTab('classes')">
           <IconClassRoom class="tab-icon" /> {{ classTabLabel }}
         </button>
 
@@ -381,7 +475,7 @@ onUnmounted(() => {
           v-if="userInfo.role_id === 'S'"
           :class="{ active: activeTab === 'logs' }"
           :aria-pressed="activeTab === 'logs'"
-          @click="activeTab = 'logs'">
+          @click="setActiveTab('logs')">
           <IconCalendar class="tab-icon" /> 활동 로그
         </button>
       </div>

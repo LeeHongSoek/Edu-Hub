@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from "vue";
+import { ref, computed, onMounted, onUnmounted, watch } from "vue";
 import UserProfileModal from "~/components/UserProfileModal.vue";
 import IconHome from "~/assets/icons/IconHome.svg?component";
 import IconUser from "~/assets/icons/IconUser.svg?component";
@@ -8,6 +8,8 @@ import IconLogout from "~/assets/icons/IconLogout.svg?component";
 import IconFeedback from "~/assets/icons/IconFeedback.svg?component";
 import OmbudsmanModal from "~/components/OmbudsmanModal.vue";
 import { useApi } from "~/composables/useApi";
+import { useUserLog } from "~/composables/useUserLog";
+import { useAuthSession } from "~/composables/useAuthSession";
 
 type UserCookiePayload = {
   user_no: string;
@@ -29,6 +31,10 @@ const currentRootUrl = ref("");
 let messageHideTimer: ReturnType<typeof setTimeout> | null = null;
 const userCookie = useCookie<UserCookiePayload | string | null>("user_info");
 const { apiBase, getAuthHeader } = useApi();
+const { writeUserLog, writeUserLogOncePerSession } = useUserLog();
+const authToken = useCookie<string | null>("auth_token");
+const { clearSession, startSessionWatcher, stopSessionWatcher } =
+  useAuthSession();
 
 const userInfo = computed(() => {
   if (!userCookie.value) return null;
@@ -42,11 +48,7 @@ const userInfo = computed(() => {
 });
 
 function handleLogout() {
-  const token = useCookie("auth_token");
-  token.value = null;
-  userCookie.value = null;
-
-  navigateTo("/");
+  void clearSession("manual");
 }
 
 const loadRecentMessages = async () => {
@@ -83,6 +85,15 @@ const openMessagePopover = async (
       messageHideTimer = null;
     }
     await loadRecentMessages();
+    await writeUserLog("L", 0, {
+      user_content:
+        reason === "click"
+          ? "헤더 메시지 배지 클릭: 받은 메시지 팝오버 열기"
+          : "로그인 직후 메시지 팝오버 자동 열기",
+      score: messageList.value.length,
+      total_score: 5,
+      score100: Math.min(messageList.value.length * 20, 100),
+    });
     if (autoClose) {
       messageHideTimer = setTimeout(() => {
         showMessagePopover.value = false;
@@ -120,11 +131,34 @@ const closeMessagePopover = () => {
 
 onMounted(() => {
   currentRootUrl.value = window.location.origin;
+  startSessionWatcher();
 
   if (userInfo.value) {
+    void writeUserLogOncePerSession(
+      `login-session:${userInfo.value.user_no}`,
+      "L",
+      0,
+      {
+        user_content: "로그인 세션 시작: 헤더 레이아웃 진입",
+        score: 1,
+        total_score: 1,
+        score100: 100,
+      },
+    );
     handleMessageBadgeClick("mount");
     return;
   }
+});
+
+watch(
+  () => authToken.value,
+  () => {
+    startSessionWatcher();
+  },
+);
+
+onUnmounted(() => {
+  stopSessionWatcher();
 });
 </script>
 

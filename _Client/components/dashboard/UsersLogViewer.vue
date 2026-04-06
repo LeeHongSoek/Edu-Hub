@@ -4,6 +4,9 @@ import IconCalendar from "~/assets/icons/IconCalendar.svg?component";
 import IconFileText from "~/assets/icons/IconFileText.svg?component";
 import IconBook from "~/assets/icons/IconBook.svg?component";
 import IconPencil from "~/assets/icons/IconPencil.svg?component";
+import IconUsers from "~/assets/icons/IconUsers.svg?component";
+import IconClassRoom from "~/assets/icons/IconClassRoom.svg?component";
+import IconHome from "~/assets/icons/IconHome.svg?component";
 import PageSlider from "~/components/PageSlider.vue";
 
 const logs = ref<any[]>([]);
@@ -15,6 +18,9 @@ const filterTypes = [
   { id: "Q", label: "문제", icon: IconFileText, color: "#6366f1" },
   { id: "B", label: "문제집", icon: IconBook, color: "#10b981" },
   { id: "E", label: "고사", icon: IconPencil, color: "#f59e0b" },
+  { id: "C", label: "클래스", icon: IconClassRoom, color: "#06b6d4" },
+  { id: "R", label: "관계", icon: IconUsers, color: "#a855f7" },
+  { id: "L", label: "로그인", icon: IconHome, color: "#64748b" },
 ];
 
 const selectedType = ref("all");
@@ -84,6 +90,12 @@ const getLogTypeInfo = (type: string) => {
       return { icon: IconBook, label: "문제집", color: "#10b981" };
     case "E":
       return { icon: IconPencil, label: "고사", color: "#f59e0b" };
+    case "C":
+      return { icon: IconClassRoom, label: "클래스", color: "#06b6d4" };
+    case "R":
+      return { icon: IconUsers, label: "관계", color: "#a855f7" };
+    case "L":
+      return { icon: IconHome, label: "로그인", color: "#64748b" };
     default:
       return { icon: IconFileText, label: "기타", color: "#94a3b8" };
   }

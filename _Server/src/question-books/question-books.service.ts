@@ -5,14 +5,44 @@ import { PrismaService } from '../common/prisma/prisma.service';
 export class QuestionBooksService {
   constructor(private prisma: PrismaService) { }
 
+  private async writeBookLog(
+    userNo: bigint,
+    bookId: bigint,
+    userContent: string,
+    score = 0,
+    totalScore = 0,
+    score100 = 0,
+  ) {
+    await this.prisma.userLog.create({
+      data: {
+        user_no: userNo,
+        logtype: 'B',
+        obj_id: bookId,
+        user_content: userContent,
+        score,
+        total_score: totalScore,
+        score100,
+        last_played_at: new Date(),
+      },
+    });
+  }
+
   async create(userNo: bigint, data: any) {
-    return this.prisma.questionBook.create({
+    const created = await this.prisma.questionBook.create({
       data: {
         user_no: userNo,
         book_name: data.book_name,
         description: data.description,
       },
     });
+
+    await this.writeBookLog(
+      userNo,
+      created.book_id,
+      `문제집 #${created.book_id.toString()} [${created.book_name}] 생성`,
+    );
+
+    return created;
   }
 
   async findAll() {
@@ -118,13 +148,21 @@ export class QuestionBooksService {
     if (!book) throw new NotFoundException('Question book not found');
     if (book.user_no !== userNo) throw new ForbiddenException('Not authorized');
 
-    return this.prisma.questionBook.update({
+    const updated = await this.prisma.questionBook.update({
       where: { book_id: bookId },
       data: {
         book_name: data.book_name,
         description: data.description,
       },
     });
+
+    await this.writeBookLog(
+      userNo,
+      updated.book_id,
+      `문제집 #${updated.book_id.toString()} [${updated.book_name}] 수정`,
+    );
+
+    return updated;
   }
 
   async remove(bookId: bigint, userNo: bigint) {
@@ -143,6 +181,18 @@ export class QuestionBooksService {
       return { updatedCount: 0 };
     }
 
+    const ownedBooks = await this.prisma.questionBook.findMany({
+      where: {
+        book_id: { in: bookIds },
+        user_no: userNo,
+        is_deleted: 'N',
+      },
+      select: {
+        book_id: true,
+        book_name: true,
+      },
+    });
+
     const result = await this.prisma.questionBook.updateMany({
       where: {
         book_id: { in: bookIds },
@@ -152,17 +202,33 @@ export class QuestionBooksService {
       data: { is_deleted: 'Y' },
     });
 
+    await Promise.all(
+      ownedBooks.map((book) =>
+        this.writeBookLog(
+          userNo,
+          book.book_id,
+          `문제집 #${book.book_id.toString()} [${book.book_name}] 삭제`,
+        ),
+      ),
+    );
+
     return { updatedCount: result.count };
   }
 
   async addItem(bookId: bigint, userNo: bigint, questionId: bigint) {
-    const book = await this.prisma.questionBook.findFirst({
-      where: { book_id: bookId, is_deleted: 'N' },
-    });
+    const [book, question] = await Promise.all([
+      this.prisma.questionBook.findFirst({
+        where: { book_id: bookId, is_deleted: 'N' },
+      }),
+      this.prisma.question.findUnique({
+        where: { question_id: questionId },
+        select: { title: true },
+      }),
+    ]);
     if (!book) throw new NotFoundException('Question book not found');
     if (book.user_no !== userNo) throw new ForbiddenException('Not authorized');
 
-    return this.prisma.questionBookItem.upsert({
+    const result = await this.prisma.questionBookItem.upsert({
       where: {
         book_id_question_id: {
           book_id: bookId,
@@ -175,21 +241,43 @@ export class QuestionBooksService {
         question_id: questionId,
       },
     });
+
+    await this.writeBookLog(
+      userNo,
+      bookId,
+      `문제집 #${bookId.toString()} [${book.book_name}]에 문제 #${questionId.toString()} [${question?.title || '제목 없음'}] 등록`,
+    );
+
+    return result;
   }
 
   async removeItem(bookId: bigint, userNo: bigint, questionId: bigint) {
-    const book = await this.prisma.questionBook.findFirst({
-      where: { book_id: bookId, is_deleted: 'N' },
-    });
+    const [book, question] = await Promise.all([
+      this.prisma.questionBook.findFirst({
+        where: { book_id: bookId, is_deleted: 'N' },
+      }),
+      this.prisma.question.findUnique({
+        where: { question_id: questionId },
+        select: { title: true },
+      }),
+    ]);
     if (!book) throw new NotFoundException('Question book not found');
     if (book.user_no !== userNo) throw new ForbiddenException('Not authorized');
 
-    return this.prisma.questionBookItem.deleteMany({
+    const result = await this.prisma.questionBookItem.deleteMany({
       where: {
         book_id: bookId,
         question_id: questionId,
       },
     });
+
+    await this.writeBookLog(
+      userNo,
+      bookId,
+      `문제집 #${bookId.toString()} [${book.book_name}]에서 문제 #${questionId.toString()} [${question?.title || '제목 없음'}] 제거`,
+    );
+
+    return result;
   }
 
   // 1 & 2. 매일 첫 접속 시 오늘의 공개문제(book_id: 0) 갱신

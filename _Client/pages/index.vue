@@ -187,6 +187,9 @@ function handleLogout() {
   const token = useCookie("auth_token");
   token.value = null;
   userCookie.value = null;
+  if (typeof window !== "undefined") {
+    sessionStorage.setItem("auth_logout_reason", "manual");
+  }
 }
 
 // 비밀번호 표시 토글
@@ -454,6 +457,16 @@ function closeRegister() {
 }
 
 onMounted(() => {
+  if (typeof window !== "undefined") {
+    const logoutReason = sessionStorage.getItem("auth_logout_reason");
+    if (logoutReason === "expired") {
+      authError.value = "세션이 만료되어 자동 로그아웃되었습니다.";
+    }
+    if (logoutReason) {
+      sessionStorage.removeItem("auth_logout_reason");
+    }
+  }
+
   // 이미 로그인 상태면 문제 목록으로 리디렉트
   const authToken = useCookie("auth_token");
   if (authToken.value) {

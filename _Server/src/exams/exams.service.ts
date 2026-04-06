@@ -5,6 +5,28 @@ import { PrismaService } from '../common/prisma/prisma.service';
 export class ExamsService {
   constructor(private prisma: PrismaService) {}
 
+  private async writeExamLog(
+    userNo: bigint,
+    examId: bigint,
+    userContent: string,
+    score = 0,
+    totalScore = 0,
+    score100 = 0,
+  ) {
+    await this.prisma.userLog.create({
+      data: {
+        user_no: userNo,
+        logtype: 'E',
+        obj_id: examId,
+        user_content: userContent,
+        score,
+        total_score: totalScore,
+        score100,
+        last_played_at: new Date(),
+      },
+    });
+  }
+
   async create(
     creatorNo: bigint,
     data: {
@@ -16,7 +38,7 @@ export class ExamsService {
       is_auto_score?: boolean;
     },
   ) {
-    return this.prisma.exam.create({
+    const created = await this.prisma.exam.create({
       data: {
         creator_no: creatorNo,
         exam_name: data.exam_name,
@@ -36,6 +58,14 @@ export class ExamsService {
         _count: { select: { questions: true } },
       },
     });
+
+    await this.writeExamLog(
+      creatorNo,
+      created.exam_id,
+      `고사 #${created.exam_id.toString()} [${created.exam_name}] 생성`,
+    );
+
+    return created;
   }
 
   async update(
@@ -63,7 +93,7 @@ export class ExamsService {
       throw new NotFoundException('Exam not found');
     }
 
-    return this.prisma.exam.update({
+    const updated = await this.prisma.exam.update({
       where: { exam_id: examId },
       data: {
         exam_name: data.exam_name,
@@ -83,6 +113,14 @@ export class ExamsService {
         _count: { select: { questions: true } },
       },
     });
+
+    await this.writeExamLog(
+      creatorNo,
+      updated.exam_id,
+      `고사 #${updated.exam_id.toString()} [${updated.exam_name}] 수정`,
+    );
+
+    return updated;
   }
 
   async findAll(userNo?: bigint, classId?: bigint) {
@@ -148,6 +186,18 @@ export class ExamsService {
       return { updatedCount: 0 };
     }
 
+    const ownedExams = await this.prisma.exam.findMany({
+      where: {
+        exam_id: { in: examIds },
+        creator_no: creatorNo,
+        is_deleted: 'N',
+      },
+      select: {
+        exam_id: true,
+        exam_name: true,
+      },
+    });
+
     const result = await this.prisma.exam.updateMany({
       where: {
         exam_id: { in: examIds },
@@ -157,13 +207,29 @@ export class ExamsService {
       data: { is_deleted: 'Y' },
     });
 
+    await Promise.all(
+      ownedExams.map((exam) =>
+        this.writeExamLog(
+          creatorNo,
+          exam.exam_id,
+          `고사 #${exam.exam_id.toString()} [${exam.exam_name}] 삭제`,
+        ),
+      ),
+    );
+
     return { updatedCount: result.count };
   }
 
   async addItem(examId: bigint, userNo: bigint, questionId: bigint) {
-    const exam = await this.prisma.exam.findFirst({
-      where: { exam_id: examId, is_deleted: 'N' },
-    });
+    const [exam, question] = await Promise.all([
+      this.prisma.exam.findFirst({
+        where: { exam_id: examId, is_deleted: 'N' },
+      }),
+      this.prisma.question.findUnique({
+        where: { question_id: questionId },
+        select: { title: true },
+      }),
+    ]);
     if (!exam) throw new NotFoundException('Exam not found');
     if (exam.creator_no !== userNo) throw new NotFoundException('Not authorized or not found');
 
@@ -174,7 +240,7 @@ export class ExamsService {
     });
     const nextOrder = (lastItem?.question_order ?? 0) + 1;
 
-    return this.prisma.examQuestion.upsert({
+    const result = await this.prisma.examQuestion.upsert({
       where: {
         exam_id_question_id: {
           exam_id: examId,
@@ -188,20 +254,42 @@ export class ExamsService {
         question_order: nextOrder,
       },
     });
+
+    await this.writeExamLog(
+      userNo,
+      examId,
+      `고사 #${examId.toString()} [${exam.exam_name}]에 문제 #${questionId.toString()} [${question?.title || '제목 없음'}] 등록`,
+    );
+
+    return result;
   }
 
   async removeItem(examId: bigint, userNo: bigint, questionId: bigint) {
-    const exam = await this.prisma.exam.findFirst({
-      where: { exam_id: examId, is_deleted: 'N' },
-    });
+    const [exam, question] = await Promise.all([
+      this.prisma.exam.findFirst({
+        where: { exam_id: examId, is_deleted: 'N' },
+      }),
+      this.prisma.question.findUnique({
+        where: { question_id: questionId },
+        select: { title: true },
+      }),
+    ]);
     if (!exam) throw new NotFoundException('Exam not found');
     if (exam.creator_no !== userNo) throw new NotFoundException('Not authorized or not found');
 
-    return this.prisma.examQuestion.deleteMany({
+    const result = await this.prisma.examQuestion.deleteMany({
       where: {
         exam_id: examId,
         question_id: questionId,
       },
     });
+
+    await this.writeExamLog(
+      userNo,
+      examId,
+      `고사 #${examId.toString()} [${exam.exam_name}]에서 문제 #${questionId.toString()} [${question?.title || '제목 없음'}] 제거`,
+    );
+
+    return result;
   }
 }

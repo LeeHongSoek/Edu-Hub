@@ -52,6 +52,7 @@ model User {
   role_id           String             @db.Char(1)
   is_withdrawn      IsWithdrawn?       @default(N)
   created_at        DateTime?          @default(now()) @db.DateTime(0)
+  last_loged_at     DateTime?          @default(now()) @db.DateTime(0)
   student_classes   ClassStudent[]
   taught_classes    Class[]            @relation("TeacherClasses")
   exam_results      ExamResult[]

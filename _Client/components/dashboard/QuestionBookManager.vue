@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import { ref, computed, watch } from "vue";
+import { ref, computed, watch, onMounted } from "vue";
 import IconBook from "~/assets/icons/IconBook.svg?component";
 import ManagerNav from "~/components/dashboard/ManagerNav.vue";
 import IconCreateAction from "~/assets/icons/IconCreateAction.svg?component";
 import IconDeleteAction from "~/assets/icons/IconDeleteAction.svg?component";
 import PageSlider from "~/components/PageSlider.vue";
+import { useUserLog } from "~/composables/useUserLog";
 
 const props = withDefaults(
   defineProps<{
@@ -98,12 +99,19 @@ watch(currentPage, (page) => {
 const applySearch = () => {
   searchQuery.value = searchInput.value.trim();
   currentPage.value = 1;
+  if (searchQuery.value) {
+    void logBookAction(
+      0,
+      `문제집 검색 실행(${searchField.value === "description" ? "설명" : "문제집명"}): "${searchQuery.value}"`,
+    );
+  }
 };
 
 const clearSearch = () => {
   searchInput.value = "";
   searchQuery.value = "";
   currentPage.value = 1;
+  void logBookAction(0, "문제집 검색어 초기화");
 };
 const goToPage = (page: number) => {
   const normalized = Math.min(Math.max(page, 1), totalPages.value);
@@ -123,7 +131,26 @@ const newBook = ref({ book_name: "", description: "" });
 const editingBookId = ref<string>("");
 
 const { apiBase, getAuthHeader } = useApi();
+const { writeUserLog, writeUserLogOncePerSession } = useUserLog();
 const router = useRouter();
+
+const logBookAction = async (
+  bookId: number | string | bigint,
+  userContent: string,
+  score = 0,
+  totalScore = 0,
+  score100 = 0,
+) => {
+  await writeUserLog("B", bookId, {
+    user_content: userContent,
+    score,
+    total_score: totalScore,
+    score100,
+  });
+};
+
+const getBookLogLabel = (book: any) =>
+  `문제집 #${String(book.book_id)} [${book.book_name || "제목 없음"}]`;
 
 const isEditingBook = computed(() => editingBookId.value !== "");
 const modalTitle = computed(() =>
@@ -137,6 +164,7 @@ const openCreateModal = () => {
   editingBookId.value = "";
   newBook.value = { book_name: "", description: "" };
   showCreateModal.value = true;
+  void logBookAction(0, "문제집 생성 모달 열기");
 };
 
 const openEditModal = (book: any) => {
@@ -146,6 +174,7 @@ const openEditModal = (book: any) => {
     description: book.description || "",
   };
   showCreateModal.value = true;
+  void logBookAction(book.book_id, `${getBookLogLabel(book)} 수정 모달 열기`);
 };
 
 const closeCreateModal = () => {
@@ -153,7 +182,12 @@ const closeCreateModal = () => {
   showCreateModal.value = false;
 };
 
-const viewBookDetails = (bookId: number | string | bigint) => {
+const viewBookDetails = async (bookId: number | string | bigint) => {
+  const book = books.value.find((item) => String(item.book_id) === String(bookId));
+  await logBookAction(
+    bookId,
+    book ? `${getBookLogLabel(book)} 문제등록 화면 이동` : `문제집 #${String(bookId)} 문제등록 화면 이동`,
+  );
   router.push({
     path: "/questions",
     query: { book: String(bookId) },
@@ -186,12 +220,20 @@ const submitBookForm = async () => {
         headers: getAuthHeader(),
         body: newBook.value,
       });
+      await logBookAction(
+        editingBookId.value,
+        `문제집 #${String(editingBookId.value)} [${newBook.value.book_name.trim()}] 수정 저장 완료`,
+      );
     } else {
-      await $fetch(`${apiBase.value}/question-books`, {
+      const createdBook = (await $fetch(`${apiBase.value}/question-books`, {
         method: "POST",
         headers: getAuthHeader(),
         body: newBook.value,
-      });
+      })) as { book_id?: string | number };
+      await logBookAction(
+        createdBook?.book_id ?? 0,
+        `문제집 #${String(createdBook?.book_id ?? 0)} [${newBook.value.book_name.trim()}] 생성 저장 완료`,
+      );
     }
     closeCreateModal();
     newBook.value = { book_name: "", description: "" };
@@ -222,7 +264,12 @@ const toggleBookSelected = (
 
 const toggleBookSelectedByTitle = (book: any) => {
   if (!isCurrentUserOwner(book.creator?.user_no)) return;
-  toggleBookSelected(book.book_id, !isBookSelected(book.book_id));
+  const nextChecked = !isBookSelected(book.book_id);
+  toggleBookSelected(book.book_id, nextChecked);
+  void logBookAction(
+    book.book_id,
+    `${getBookLogLabel(book)} 선택 ${nextChecked ? "추가" : "해제"}`,
+  );
 };
 
 const deleteSelectedBooks = async () => {
@@ -248,6 +295,15 @@ const deleteSelectedBooks = async () => {
     if (deletedCount === 0) {
       alert("삭제할 수 있는 문제집이 없습니다.");
     }
+    await logBookAction(
+      0,
+      `문제집 일괄 삭제 요청 완료: ${selectedBookCount.value}개 선택`,
+      deletedCount,
+      selectedBookCount.value,
+      selectedBookCount.value > 0
+        ? Math.round((deletedCount / selectedBookCount.value) * 100)
+        : 0,
+    );
     selectedBookIds.value = [];
     await fetchBooks();
   } catch (err) {
@@ -268,8 +324,21 @@ watch(
 
 const setScope = (scope: "mine" | "all") => {
   if (listScope.value === scope) return;
+  void logBookAction(
+    0,
+    `문제집 목록 범위 전환: ${scope === "all" ? "전체 문제집" : "나의 문제집"}`,
+  );
   listScope.value = scope;
 };
+
+onMounted(() => {
+  void writeUserLogOncePerSession("dashboard-books-visit", "B", 0, {
+    user_content: "문제집 관리 화면 진입",
+    score: 1,
+    total_score: 1,
+    score100: 100,
+  });
+});
 </script>
 
 <template>

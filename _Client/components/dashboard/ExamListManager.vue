@@ -1,11 +1,12 @@
 <script setup lang="ts">
-import { ref, computed, watch } from "vue";
+import { ref, computed, watch, onMounted } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import IconCalendar from "~/assets/icons/IconCalendar.svg?component";
 import ManagerNav from "~/components/dashboard/ManagerNav.vue";
 import IconCreateAction from "~/assets/icons/IconCreateAction.svg?component";
 import IconDeleteAction from "~/assets/icons/IconDeleteAction.svg?component";
 import PageSlider from "~/components/PageSlider.vue";
+import { useUserLog } from "~/composables/useUserLog";
 
 const props = withDefaults(
   defineProps<{
@@ -114,9 +115,33 @@ watch(currentPage, (page) => {
 });
 
 const { apiBase, getAuthHeader } = useApi();
+const { writeUserLog, writeUserLogOncePerSession } = useUserLog();
 const router = useRouter();
 
-const viewExamDetails = (examId: number | string | bigint) => {
+const logExamAction = async (
+  examId: number | string | bigint,
+  userContent: string,
+  score = 0,
+  totalScore = 0,
+  score100 = 0,
+) => {
+  await writeUserLog("E", examId, {
+    user_content: userContent,
+    score,
+    total_score: totalScore,
+    score100,
+  });
+};
+
+const getExamLogLabel = (exam: any) =>
+  `고사 #${String(exam.exam_id)} [${exam.exam_name || "제목 없음"}]`;
+
+const viewExamDetails = async (examId: number | string | bigint) => {
+  const exam = exams.value.find((item) => String(item.exam_id) === String(examId));
+  await logExamAction(
+    examId,
+    exam ? `${getExamLogLabel(exam)} 문제등록 화면 이동` : `고사 #${String(examId)} 문제등록 화면 이동`,
+  );
   router.push({
     path: "/questions",
     query: { exam: String(examId) },
@@ -162,6 +187,10 @@ watch(
 
 const setScope = (scope: "mine" | "all") => {
   if (listScope.value === scope) return;
+  void logExamAction(
+    0,
+    `고사집 목록 범위 전환: ${scope === "all" ? "전체 고사집" : "나의 고사집"}`,
+  );
   router.replace({
     query: {
       ...route.query,
@@ -184,15 +213,23 @@ const commitSliderValue = (page?: number) => {
 const applyExamSearch = () => {
   examSearchQuery.value = examSearchInput.value.trim();
   currentPage.value = 1;
+  if (examSearchQuery.value) {
+    void logExamAction(0, `고사집 검색 실행: "${examSearchQuery.value}"`);
+  }
 };
 
 const clearExamSearch = () => {
   examSearchInput.value = "";
   examSearchQuery.value = "";
   currentPage.value = 1;
+  void logExamAction(0, "고사집 검색어 초기화");
 };
 
 const clearClassFilter = () => {
+  void logExamAction(
+    selectedClassId.value || 0,
+    `클래스 필터 해제: ${selectedClassName.value || "선택된 클래스 없음"}`,
+  );
   const nextQuery = { ...route.query };
   delete nextQuery.classId;
   delete nextQuery.className;
@@ -245,6 +282,7 @@ const openCreateModal = async () => {
   };
   createError.value = "";
   showCreateModal.value = true;
+  await logExamAction(0, "고사 생성 모달 열기");
 };
 
 const openEditModal = async (exam: any) => {
@@ -265,6 +303,7 @@ const openEditModal = async (exam: any) => {
   };
   createError.value = "";
   showCreateModal.value = true;
+  await logExamAction(exam.exam_id, `${getExamLogLabel(exam)} 수정 모달 열기`);
 };
 
 const closeCreateModal = () => {
@@ -335,12 +374,20 @@ const submitExamForm = async () => {
         headers: getAuthHeader(),
         body: payload,
       });
+      await logExamAction(
+        editingExamId.value,
+        `고사 #${String(editingExamId.value)} [${payload.exam_name}] 수정 저장 완료`,
+      );
     } else {
-      await $fetch(`${apiBase.value}/exams`, {
+      const createdExam = (await $fetch(`${apiBase.value}/exams`, {
         method: "POST",
         headers: getAuthHeader(),
         body: payload,
-      });
+      })) as { exam_id?: string | number };
+      await logExamAction(
+        createdExam?.exam_id ?? 0,
+        `고사 #${String(createdExam?.exam_id ?? 0)} [${payload.exam_name}] 생성 저장 완료`,
+      );
     }
     closeCreateModal();
     await fetchExams();
@@ -386,7 +433,12 @@ const toggleExamSelected = (
 
 const toggleExamSelectedByName = (exam: any) => {
   if (!isCurrentUserOwner(exam.creator?.user_no)) return;
-  toggleExamSelected(exam.exam_id, !isExamSelected(exam.exam_id));
+  const nextChecked = !isExamSelected(exam.exam_id);
+  toggleExamSelected(exam.exam_id, nextChecked);
+  void logExamAction(
+    exam.exam_id,
+    `${getExamLogLabel(exam)} 선택 ${nextChecked ? "추가" : "해제"}`,
+  );
 };
 
 const deleteSelectedExams = async () => {
@@ -409,6 +461,15 @@ const deleteSelectedExams = async () => {
     if (deletedCount === 0) {
       alert("삭제할 수 있는 고사집이 없습니다.");
     }
+    await logExamAction(
+      0,
+      `고사집 일괄 삭제 요청 완료: ${selectedExamCount.value}개 선택`,
+      deletedCount,
+      selectedExamCount.value,
+      selectedExamCount.value > 0
+        ? Math.round((deletedCount / selectedExamCount.value) * 100)
+        : 0,
+    );
     selectedExamIds.value = [];
     await fetchExams();
   } catch (err) {
@@ -416,6 +477,15 @@ const deleteSelectedExams = async () => {
     alert("고사집 삭제 중 오류가 발생했습니다.");
   }
 };
+
+onMounted(() => {
+  void writeUserLogOncePerSession("dashboard-exams-visit", "E", 0, {
+    user_content: "고사집 관리 화면 진입",
+    score: 1,
+    total_score: 1,
+    score100: 100,
+  });
+});
 </script>
 
 <template>

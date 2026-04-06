@@ -5,6 +5,33 @@ import { PrismaService } from '../common/prisma/prisma.service';
 export class DashboardService {
   constructor(private prisma: PrismaService) { }
 
+  private async writeUserLog(
+    userNo: bigint,
+    logtype: string,
+    objId: bigint,
+    userContent: string,
+    score = 0,
+    totalScore = 0,
+    score100 = 0,
+  ) {
+    try {
+      await (this.prisma as any).userLog.create({
+        data: {
+          user_no: userNo,
+          logtype,
+          obj_id: objId,
+          user_content: userContent,
+          score,
+          total_score: totalScore,
+          score100,
+          last_played_at: new Date(),
+        },
+      });
+    } catch (error) {
+      console.warn('[dashboard] user log write failed:', error);
+    }
+  }
+
   async getStats(userNo: bigint, roleId: string) {
     let stats = {}; // 리턴할 값을 담을 변수
 
@@ -237,6 +264,7 @@ export class DashboardService {
       },
       select: {
         class_id: true,
+        class_name: true,
       },
     });
 
@@ -284,6 +312,16 @@ export class DashboardService {
           ]
         : []),
     ]);
+
+    await this.writeUserLog(
+      userNo,
+      'C',
+      classIdBigInt,
+      `클래스 #${classIdBigInt.toString()} [${classroom.class_name}] 구성원 수정 (${normalizedIds.length}명 배정)`,
+      normalizedIds.length,
+      normalizedIds.length,
+      100,
+    );
 
     return this.getClassMemberManagerData(userNo, classIdBigInt);
   }
@@ -385,7 +423,10 @@ export class DashboardService {
         class_id: classIdBigInt,
         teacher_no: userNo,
       },
-      select: { class_id: true },
+      select: {
+        class_id: true,
+        class_name: true,
+      },
     });
 
     if (!classroom) {
@@ -432,6 +473,16 @@ export class DashboardService {
           ]
         : []),
     ]);
+
+    await this.writeUserLog(
+      userNo,
+      'C',
+      classIdBigInt,
+      `클래스 #${classIdBigInt.toString()} [${classroom.class_name}] 고사 연결 수정 (${normalizedExamIds.length}개 연결)`,
+      normalizedExamIds.length,
+      normalizedExamIds.length,
+      100,
+    );
 
     return this.getClassExamManagerData(userNo, classIdBigInt);
   }
@@ -834,6 +885,13 @@ export class DashboardService {
       },
     });
 
+    await this.writeUserLog(
+      userNo,
+      'R',
+      targetUserNoBigInt,
+      `관계 요청 발신: 사용자 #${targetUserNoBigInt.toString()} [${target.username}] 대상으로 ${relationPair.forward}`,
+    );
+
     return {
       ok: true,
       message: `${target.username} 님에게 연결을 요청했습니다.`,
@@ -884,6 +942,13 @@ export class DashboardService {
         },
       })] : []),
     ]);
+
+    await this.writeUserLog(
+      userNo,
+      'R',
+      targetUserNoBigInt,
+      `관계 해제: 대상 사용자 #${targetUserNoBigInt.toString()}`,
+    );
 
     return {
       ok: true,
@@ -965,6 +1030,12 @@ export class DashboardService {
         },
         data: { approval: 'N' },
       });
+      await this.writeUserLog(
+        userNo,
+        'R',
+        targetUserNoBigInt,
+        `관계 요청 거절: 요청자 사용자 #${targetUserNoBigInt.toString()}`,
+      );
       return { ok: true, message: '요청을 거절했습니다.' };
     }
 
@@ -1004,6 +1075,13 @@ export class DashboardService {
         },
       }),
     ]);
+
+    await this.writeUserLog(
+      userNo,
+      'R',
+      targetUserNoBigInt,
+      `관계 요청 수락: 사용자 #${targetUserNoBigInt.toString()} [${target.username}]`,
+    );
 
     return { ok: true, message: `${target.username} 님의 요청을 수락했습니다.` };
   }
@@ -1270,6 +1348,16 @@ export class DashboardService {
         },
       },
     });
+
+    await this.writeUserLog(
+      userNo,
+      'R',
+      receiverNoBigInt,
+      `메시지 발송: 사용자 #${receiverNoBigInt.toString()} [${receiver.username}]에게 ${text.length}자 전송`,
+      text.length,
+      text.length,
+      100,
+    );
 
     return {
       ok: true,

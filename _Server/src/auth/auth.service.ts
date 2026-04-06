@@ -23,6 +23,12 @@ export class AuthService {
   }
 
   async login(user: any) {
+    await this.prisma.$executeRaw`
+      UPDATE users
+      SET last_loged_at = CURRENT_TIMESTAMP()
+      WHERE user_no = ${user.user_no}
+    `;
+
     const payload = {
       username: user.username,
       sub: user.user_no.toString(),

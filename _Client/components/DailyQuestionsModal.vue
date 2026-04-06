@@ -174,6 +174,9 @@ const formatGroupPath = (group: any) => {
   return parts.length > 0 ? parts.join(" / ") : "일반";
 };
 
+const getQuestionIdSummary = () =>
+  props.questions.map((question) => question.question_id).join(", ");
+
 const saveSessionLog = async () => {
   if (
     logSaved.value ||
@@ -194,7 +197,7 @@ const saveSessionLog = async () => {
         body: {
           user_content:
             props.logContent ||
-            `${props.title || "학습 세트"} ${props.questions.length}문항`,
+            `${props.title || "학습 세트"} 풀이 완료 (총 ${props.questions.length}문항, 문제번호: ${getQuestionIdSummary()})`,
           score: correctCount.value,
           total_score: props.questions.length,
           score100: totalScore.value,

@@ -114,6 +114,12 @@ const getChildState = (child: Question) => {
   return childSolveStates[key];
 };
 
+const buildQuestionLogMessage = (question: Question, action: string) => {
+  const questionId = String(question.question_id);
+  const questionTitle = question.title || "제목 없음";
+  return `문제 #${questionId} [${questionTitle}] ${action}`;
+};
+
 // 학습 로그 기록 : POST /user-logs/:logtype/:obj_id
 const logActionForQuestion = async (
   question: Question,
@@ -129,7 +135,7 @@ const logActionForQuestion = async (
       method: "POST",
       headers: getAuthHeader(),
       body: {
-        user_content: action,
+        user_content: buildQuestionLogMessage(question, action),
         score: score,
         total_score: totalScore,
         score100: score100,
