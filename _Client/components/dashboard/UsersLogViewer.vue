@@ -148,7 +148,7 @@ const formatTime = (dateStr: string) => {
 };
 
 const formatExactTime = (dateStr: string) => {
-  const date = parseToUtcDate(dateStr);
+  const date = parseToLocalDate(dateStr);
   if (Number.isNaN(date.getTime())) return "--";
   const pad = (value: number) => String(value).padStart(2, "0");
   return `${pad(date.getDate())}.${pad(date.getMonth() + 1)} ${pad(

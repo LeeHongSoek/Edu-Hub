@@ -4,7 +4,7 @@ import { PrismaService } from '../common/prisma/prisma.service';
 
 @Injectable()
 export class UserLogsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private prisma: PrismaService) { }
 
   private toDbLocalDate(date = new Date()) {
     return new Date(date.getTime() - date.getTimezoneOffset() * 60000);
@@ -92,18 +92,18 @@ export class UserLogsService {
   }
 
   async findByUser(
-    userNo: bigint, 
-    logtype?: string, 
-    search?: string, 
-    page: number = 1, 
+    userNo: bigint,
+    logtype?: string,
+    search?: string,
+    page: number = 1,
     limit: number = 10
   ) {
     const where: any = { user_no: userNo };
-    
+
     if (logtype && logtype !== 'all') {
       where.logtype = logtype;
     }
-    
+
     if (search) {
       where.user_content = { contains: search };
     }
@@ -135,7 +135,7 @@ export class UserLogsService {
           total_score,
           score100,
           time_taken,
-          DATE_FORMAT(CONVERT_TZ(created_at, @@session.time_zone, '+09:00'), '%Y-%m-%dT%H:%i:%s') AS created_at
+          DATE_FORMAT(created_at, '%Y-%m-%dT%H:%i:%s') AS created_at
         FROM users_logs
         ${whereSql}
         ORDER BY created_at DESC, log_id DESC
@@ -180,7 +180,7 @@ export class UserLogsService {
         total_score,
         score100,
         time_taken,
-        DATE_FORMAT(CONVERT_TZ(created_at, @@session.time_zone, '+09:00'), '%Y-%m-%dT%H:%i:%s') AS created_at
+        DATE_FORMAT(created_at, '%Y-%m-%dT%H:%i:%s') AS created_at
       FROM users_logs
       WHERE user_no = ${userNo}
         AND logtype_id = ${logtype}

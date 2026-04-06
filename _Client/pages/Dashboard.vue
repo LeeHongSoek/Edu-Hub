@@ -162,6 +162,7 @@ const currentSysLogCreatedAt = computed(() => {
     hour12: false,
   });
 });
+const latestSysLogRawTimestamp = computed(() => latestSysLog.value?.created_at || "");
 
 const refreshSysLogs = () => {
   fetchSysLogs();
@@ -688,6 +689,9 @@ onUnmounted(() => {
                 <span class="meta-item" v-if="currentSysLogCreatedAt">
                   생성: {{ currentSysLogCreatedAt }}
                 </span>
+                <span class="meta-item raw" v-if="latestSysLogRawTimestamp">
+                  raw: {{ latestSysLogRawTimestamp }}
+                </span>
               </div>
             </div>
             <div class="sys-log-textarea">
@@ -1010,6 +1014,10 @@ onUnmounted(() => {
   flex-wrap: wrap;
   color: #c7d2fe;
   font-size: 0.9rem;
+}
+.sys-log-meta .raw {
+  color: #94a3b8;
+  font-size: 0.75rem;
 }
 
 .sys-log-textarea {
