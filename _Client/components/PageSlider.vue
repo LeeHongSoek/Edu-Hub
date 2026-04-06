@@ -65,6 +65,26 @@ const handlePointerUp = () => {
     isDragging.value = false;
   }
 };
+
+const handleKeyDown = (event: KeyboardEvent) => {
+  if (props.disabled) return;
+
+  if (event.key === "ArrowLeft" || event.key === "ArrowDown") {
+    event.preventDefault();
+    const nextValue = Math.max(props.min, Math.round(localValue.value) - 1);
+    localValue.value = nextValue;
+    emit("update:modelValue", nextValue);
+    emit("commit", nextValue);
+  }
+
+  if (event.key === "ArrowRight" || event.key === "ArrowUp") {
+    event.preventDefault();
+    const nextValue = Math.min(safeMax.value, Math.round(localValue.value) + 1);
+    localValue.value = nextValue;
+    emit("update:modelValue", nextValue);
+    emit("commit", nextValue);
+  }
+};
 </script>
 
 <template>
@@ -83,6 +103,7 @@ const handlePointerUp = () => {
         @change="handleChange"
         @pointerup="handlePointerUp"
         @touchend="handlePointerUp"
+        @keydown="handleKeyDown"
       />
       <div class="slider-fill" :style="{ width: percentage + '%' }"></div>
       <div

@@ -653,9 +653,19 @@ onMounted(() => {
               </div>
               <div class="headline-right">
                 <span class="exam-period-inline"
-                  >{{ new Date(exam.start_time).toLocaleDateString("ko-KR") }} ~
+                  >{{
+                    new Date(exam.start_time).toLocaleDateString("ko-KR", {
+                      year: "2-digit",
+                      month: "numeric",
+                      day: "numeric",
+                    })
+                  }} ~
                   {{
-                    new Date(exam.end_time).toLocaleDateString("ko-KR")
+                    new Date(exam.end_time).toLocaleDateString("ko-KR", {
+                      year: "2-digit",
+                      month: "numeric",
+                      day: "numeric",
+                    })
                   }}</span>
                 <span class="exam-count"
                   >{{ exam._count?.questions ?? 0 }} 문제</span>

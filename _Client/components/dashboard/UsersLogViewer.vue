@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted, computed, watch } from "vue";
 import IconCalendar from "~/assets/icons/IconCalendar.svg?component";
+import IconAll from "~/assets/icons/IconAll.svg?component";
 import IconFileText from "~/assets/icons/IconFileText.svg?component";
 import IconBook from "~/assets/icons/IconBook.svg?component";
 import IconPencil from "~/assets/icons/IconPencil.svg?component";
@@ -15,7 +16,7 @@ const totalLogs = ref(0);
 const loading = ref(true);
 
 const filterTypes = [
-  { id: "all", label: "전체", color: "#636663" },
+  { id: "all", label: "전체", icon: IconAll, color: "#636663" },
   { id: "L", label: "로그인", icon: IconHome, color: "#64748b" },
   { id: "Q", label: "문제", icon: IconFileText, color: "#6366f1" },
   { id: "B", label: "문제집", icon: IconBook, color: "#10b981" },
@@ -182,7 +183,7 @@ const isRecentTime = (dateStr: string) => {
   <div class="log-viewer">
     <div class="header-row">
       <div class="title-group">
-        <h3><IconCalendar class="section-icon" />로그</h3>
+        <h3><IconCalendar class="section-icon" />나의 활동 로그</h3>
       </div>
 
       <div class="header-controls">

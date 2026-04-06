@@ -734,21 +734,22 @@ onUnmounted(() => {
                 </span>                
               </div>
             </div>
+            <div class="sys-log-pagination">
+              <PageSlider
+                v-model="sysLogSlider"
+                :max="sysLogTotalPages"
+                :disabled="sysLogTotalPages <= 1"
+                postfix=""
+                @commit="updateSysLogPage"
+              />
+            </div>
             <div class="sys-log-textarea">
               <textarea
                 readonly
                 :value="formattedSysLogContent"
               ></textarea>
             </div>
-            <div class="sys-log-pagination">
-              <PageSlider
-                v-model="sysLogSlider"
-                :max="sysLogTotalPages"
-                :disabled="sysLogTotalPages <= 1"
-                postfix="페이지"
-                @commit="updateSysLogPage"
-              />
-            </div>
+            
           </section>
         </div>
 
