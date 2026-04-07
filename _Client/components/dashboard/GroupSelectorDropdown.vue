@@ -13,6 +13,9 @@ const props = withDefaults(
     currentUserNo?: string | number | null;
     selectionContext?: "A" | "B" | "C";
     showManageButton?: boolean;
+    showCount?: boolean;
+    initialDepth?: number;
+    hideTopLevel?: boolean;
   }>(),
   {
     modelValue: null,
@@ -22,6 +25,9 @@ const props = withDefaults(
     currentUserNo: null,
     selectionContext: "A",
     showManageButton: false,
+    showCount: true,
+    initialDepth: 0,
+    hideTopLevel: false,
   },
 );
 
@@ -32,6 +38,62 @@ const emit = defineEmits<{
 
 const detailsRef = ref<HTMLDetailsElement | null>(null);
 const groupSearchInput = ref("");
+const userCookie = useCookie("user_info");
+
+const cookieUserNo = computed(() => {
+  if (!userCookie.value) return null;
+  try {
+    const rawValue =
+      typeof userCookie.value === "string"
+        ? decodeURIComponent(userCookie.value)
+        : userCookie.value;
+    const parsed =
+      typeof rawValue === "string" ? JSON.parse(rawValue) : rawValue;
+    return parsed?.user_no ?? parsed?.userNo ?? null;
+  } catch {
+    return null;
+  }
+});
+
+const effectiveUserNo = computed(
+  () => props.currentUserNo ?? cookieUserNo.value ?? null,
+);
+
+const filterGroupsByOwner = (
+  list: Group[],
+  ownerNo: string | number | null,
+): Group[] => {
+  if (ownerNo === null || ownerNo === undefined) return list;
+
+  const matchesOwner = (group: Group) => {
+    const creatorNo = (group as any).creator_no ?? (group as any).creator_id;
+    return String(creatorNo) === String(ownerNo) || String(creatorNo) === "0";
+  };
+
+  const owned: Group[] = [];
+
+  for (const group of list) {
+    const childGroups = filterGroupsByOwner(group.child_groups ?? [], ownerNo);
+    if (matchesOwner(group)) {
+      owned.push({
+        ...group,
+        child_groups: childGroups,
+      });
+      continue;
+    }
+
+    // 비소유 부모는 보여주지 않고, 소유 자식만 상위로 승격
+    if (childGroups.length > 0) {
+      owned.push(...childGroups);
+    }
+  }
+
+  return owned;
+};
+
+const filteredGroups = computed(() =>
+  filterGroupsByOwner(props.groups, effectiveUserNo.value),
+);
 
 const findGroupPath = (
   list: Group[],
@@ -55,7 +117,7 @@ const selectedGroupBreadcrumb = computed(() => {
   if (props.modelValue === null || props.modelValue === undefined) {
     return "";
   }
-  const path = findGroupPath(props.groups, props.modelValue);
+  const path = findGroupPath(filteredGroups.value, props.modelValue);
   if (!path || path.length === 0) return "";
   return path.join(" / ");
 });
@@ -106,11 +168,14 @@ const searchedGroups = computed(() => {
   const query = groupSearchInput.value.trim().toLowerCase();
   if (!query) {
     return {
-      groups: props.groups,
-      expandedIds: collectDefaultExpandedIds(props.groups),
+      groups: filteredGroups.value,
+      expandedIds: collectDefaultExpandedIds(filteredGroups.value),
     };
   }
-  const { filtered, expandIds } = filterGroupsBySearch(props.groups, query);
+  const { filtered, expandIds } = filterGroupsBySearch(
+    filteredGroups.value,
+    query,
+  );
   return { groups: filtered, expandedIds: expandIds };
 });
 
@@ -154,6 +219,9 @@ const clearGroup = () => {
         :current-user-no="currentUserNo"
         :selection-context="selectionContext"
         :show-actions="true"
+        :show-count="showCount"
+        :initial-depth="initialDepth"
+        :hide-top-level="hideTopLevel"
         @update:group-search-input="groupSearchInput = $event"
         @select-group="selectGroup"
         @open-manage="emit('open-manage')"

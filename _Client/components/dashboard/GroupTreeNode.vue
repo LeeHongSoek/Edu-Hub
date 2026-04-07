@@ -7,15 +7,21 @@ defineOptions({
   name: "GroupTreeNode",
 });
 
-const props = defineProps<{
-  group: Group;
-  selectedGroupId?: string | number | null;
-  depth: number;
-  expandedIds?: Set<string | number> | null;
-  currentUserNo?: string | number | null;
-  inheritedOwned?: boolean;
-  selectionContext?: "A" | "B" | "C";
-}>();
+const props = withDefaults(
+  defineProps<{
+    group: Group;
+    selectedGroupId?: string | number | null;
+    depth: number;
+    expandedIds?: Set<string | number> | null;
+    currentUserNo?: string | number | null;
+    inheritedOwned?: boolean;
+    selectionContext?: "A" | "B" | "C";
+    showCount?: boolean;
+  }>(),
+  {
+    showCount: true,
+  },
+);
 
 const emit = defineEmits<{
   (e: "select-group", groupId: string | number | null): void;
@@ -30,11 +36,13 @@ const displayedGroupName = computed(() => {
   return "전체_문제";
 });
 const isOwned = computed(() => {
+  const creatorNo =
+    (props.group as any).creator_no ?? (props.group as any).creator_id;
   const selfOwned =
     props.currentUserNo !== null && props.currentUserNo !== undefined
-      ? String(props.group.creator_no) === String(props.currentUserNo)
+      ? String(creatorNo) === String(props.currentUserNo)
       : false;
-  const isSystemOwned = String(props.group.creator_no) === "0";
+  const isSystemOwned = String(creatorNo) === "0";
   return Boolean(props.inheritedOwned) || selfOwned || isSystemOwned;
 });
 
@@ -103,7 +111,9 @@ const toggleExpand = (event: Event) => {
       <span v-else class="bullet">•</span>
       <span class="name-text">
         <span class="name-label">{{ displayedGroupName }}</span>
-        <span class="count-pill">({{ totalQuestionCount(group) }}개)</span>
+        <span v-if="showCount" class="count-pill"
+          >({{ totalQuestionCount(group) }}개)</span
+        >
       </span>
     </div>
 
@@ -120,6 +130,7 @@ const toggleExpand = (event: Event) => {
         :expanded-ids="expandedIds"
         :inherited-owned="isOwned"
         :selection-context="selectionContext"
+        :show-count="showCount"
         @select-group="emit('select-group', $event)"
       />
     </div>

@@ -14,6 +14,9 @@ const props = withDefaults(
     currentUserNo?: string | number | null;
     selectionContext?: "A" | "B" | "C";
     showActions?: boolean;
+    showCount?: boolean;
+    initialDepth?: number;
+    hideTopLevel?: boolean;
   }>(),
   {
     showManageButton: false,
@@ -23,6 +26,9 @@ const props = withDefaults(
     currentUserNo: null,
     selectionContext: "A",
     showActions: true,
+    showCount: true,
+    initialDepth: 0,
+    hideTopLevel: false,
   },
 );
 
@@ -38,15 +44,17 @@ const emit = defineEmits<{
 <template>
   <div class="group-panel" role="dialog" aria-modal="false">
     <div class="group-overlay-header">
-      <span>{{ title }}</span>
-      <div v-if="showManageButton" class="header-actions">
-        <button
-          class="btn-manage-groups"
-          title="그룹 관리"
-          @click="emit('open-manage')">
-          <IconSettings class="settings-icon" />
-          <span class="btn-manage-label">그룹 관리</span>
-        </button>
+      <div class="group-title-row">
+        <span class="group-title">{{ title }}</span>
+        <div v-if="showManageButton" class="header-actions">
+          <button
+            class="btn-manage-groups"
+            title="그룹 관리"
+            @click="emit('open-manage')">
+            <IconSettings class="settings-icon" />
+            <span class="btn-manage-label">그룹 관리</span>
+          </button>
+        </div>
       </div>
       <div
         class="group-breadcrumb"
@@ -80,6 +88,9 @@ const emit = defineEmits<{
       :expanded-ids="searchedGroups.expandedIds"
       :current-user-no="currentUserNo"
       :selection-context="selectionContext"
+      :show-count="showCount"
+      :initial-depth="initialDepth"
+      :hide-top-level="hideTopLevel"
       @select-group="emit('select-group', $event)"
     />
     <div
@@ -105,7 +116,7 @@ const emit = defineEmits<{
   flex-direction: column;
   gap: 0.65rem;
   overflow: auto;
-  background: linear-gradient(180deg, #0f1b37 0%, #0a1530 100%);
+  background: #0f172a;
   border: 1px solid rgba(79, 70, 229, 0.35);
   border-radius: 10px;
   padding: 1rem;
@@ -118,6 +129,18 @@ const emit = defineEmits<{
   font-size: 0.95rem;
   color: #f8fafc;
   font-weight: 700;
+}
+
+.group-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.group-title {
+  display: inline-flex;
+  align-items: center;
 }
 
 .header-actions {
@@ -160,12 +183,12 @@ const emit = defineEmits<{
 
 .group-search-input {
   flex: 1;
-  min-height: 34px;
+  min-height: 17px;
   border-radius: 10px;
   border: 1px solid rgba(148, 163, 184, 0.25);
   background: rgba(15, 23, 42, 0.72);
   color: #f8fafc;
-  padding: 0.5rem 0.7rem;
+  padding: 0.25rem 0.7rem;
   font-size: 0.86rem;
   outline: none;
 }

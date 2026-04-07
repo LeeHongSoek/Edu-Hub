@@ -15,6 +15,19 @@ const emit = defineEmits<{
 
 // API 설정 통합
 const { apiBase } = useApi();
+const userCookie = useCookie("user_info");
+const currentUserNo = computed(() => {
+  if (!userCookie.value) return null;
+  try {
+    const parsed =
+      typeof userCookie.value === "string"
+        ? JSON.parse(userCookie.value)
+        : userCookie.value;
+    return parsed?.user_no ?? parsed?.userNo ?? null;
+  } catch {
+    return null;
+  }
+});
 
 const editData = ref({
   title: props.question.title,
@@ -171,8 +184,10 @@ const handleDelete = async () => {
               <GroupSelectorDropdown
                 v-model="editData.group_id"
                 :groups="groups"
+                :current-user-no="currentUserNo"
                 title="문제분류 그룹"
                 placeholder="소속 그룹을 선택하세요"
+                :show-count="false"
               />
             </div>
             <div class="form-group flex-small">

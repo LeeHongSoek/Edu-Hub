@@ -2,7 +2,7 @@
 import { ref, onMounted, computed, watch } from "vue";
 import { useRoute } from "vue-router";
 import ManagerNav from "~/components/dashboard/ManagerNav.vue";
-import GroupHierarchy from "~/components/dashboard/GroupHierarchy.vue";
+import GroupSelectorPanel from "~/components/dashboard/GroupSelectorPanel.vue";
 import GroupManager from "~/components/dashboard/GroupManager.vue";
 import QuestionEditor from "~/components/dashboard/QuestionEditor.vue";
 import QuestionSolver from "~/components/dashboard/QuestionSolver.vue";
@@ -10,7 +10,6 @@ import DailyQuestionsModal from "~/components/DailyQuestionsModal.vue";
 import QuestionBookUpsertModal from "~/components/dashboard/QuestionBookUpsertModal.vue";
 import QuestionExamCreateModal from "~/components/dashboard/QuestionExamCreateModal.vue";
 import PageSlider from "~/components/PageSlider.vue";
-import IconSettings from "~/assets/icons/IconSettings.svg?component";
 import IconFileText from "~/assets/icons/IconFileText.svg?component";
 import IconCreateAction from "~/assets/icons/IconCreateAction.svg?component";
 import IconDeleteAction from "~/assets/icons/IconDeleteAction.svg?component";
@@ -1268,54 +1267,24 @@ watch(
 <template>
   <div class="question-list-container">
     <div class="question-list-row">
-      <div class="group-overlay">
-        <div class="group-overlay-header">
-          <span>문제분류 그룹</span>
-          <div
-            v-if="(props.selectionContext || 'A') === 'A'"
-            class="header-actions">
-            <button
-              class="btn-manage-groups"
-              title="그룹 관리"
-              @click="openGroupManager">
-              <IconSettings class="settings-icon" />
-              <span class="btn-manage-label">그룹 관리</span>
-            </button>
-          </div>
-          <div
-            class="group-breadcrumb"
-            v-html="selectedGroupBreadcrumb || '&nbsp;'"
-          ></div>
-          <div class="group-search">
-            <input
-              v-model="groupSearchInput"
-              type="text"
-              class="group-search-input"
-              placeholder="그룹명 검색"
-            />
-            <button
-              v-if="groupSearchInput"
-              class="group-search-clear"
-              @click="clearGroupSearch">
-              초기화
-            </button>
-          </div>
-        </div>
-
-        <GroupHierarchy
-          :groups="searchedGroups.groups"
-          :selected-group-id="props.selectedGroupId"
-          :expanded-ids="searchedGroups.expandedIds"
+      <GroupSelectorPanel
+          class="group-overlay group-overlay--wide"
+          title="문제분류 그룹"
+          :show-manage-button="(props.selectionContext || 'A') === 'A'"
+          :selected-group-breadcrumb="selectedGroupBreadcrumb"
+          :group-search-input="groupSearchInput"
+          :searched-groups="searchedGroups"
+          :model-value="props.selectedGroupId"
           :current-user-no="props.currentUserNo"
           :selection-context="props.selectionContext"
+          :show-actions="false"
+          :show-count="true"
+          :initial-depth="0"
+          :hide-top-level="false"
+          @update:group-search-input="groupSearchInput = $event"
           @select-group="handleSelectGroup"
+          @open-manage="openGroupManager"
         />
-        <div
-          v-if="groupSearchInput && searchedGroups.groups.length === 0"
-          class="group-search-empty">
-          검색 결과가 없습니다.
-        </div>
-      </div>
 
       <div class="question-list-main">
         <div v-if="props.showError" class="error-panel">
@@ -1863,6 +1832,11 @@ watch(
   padding: 1rem;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
   z-index: 1;
+}
+
+.group-overlay--wide {
+  width: 288px;
+  flex-basis: 288px;
 }
 
 .error-panel {

@@ -1,34 +1,60 @@
 <script setup lang="ts">
+import { computed } from "vue";
 import GroupTreeNode from "~/components/dashboard/GroupTreeNode.vue";
 import type { Group } from "~/types";
 
-const props = defineProps<{
-  groups: Group[];
-  selectedGroupId?: string | number | null;
-  expandedIds?: Set<string | number> | null;
-  currentUserNo?: string | number | null;
-  selectionContext?: "A" | "B" | "C";
-}>();
+const props = withDefaults(
+  defineProps<{
+    groups: Group[];
+    selectedGroupId?: string | number | null;
+    expandedIds?: Set<string | number> | null;
+    currentUserNo?: string | number | null;
+    selectionContext?: "A" | "B" | "C";
+    showCount?: boolean;
+    initialDepth?: number;
+    hideTopLevel?: boolean;
+  }>(),
+  {
+    showCount: true,
+    initialDepth: 0,
+    hideTopLevel: false,
+  },
+);
 
 const emit = defineEmits<{
   (e: "select-group", groupId: string | number | null): void;
 }>();
+
+const displayGroups = computed(() => {
+  if (!props.hideTopLevel) return props.groups;
+
+  const flattened: Group[] = [];
+  for (const group of props.groups) {
+    if (group.child_groups && group.child_groups.length > 0) {
+      flattened.push(...group.child_groups);
+    } else {
+      flattened.push(group);
+    }
+  }
+  return flattened;
+});
 </script>
 
 <template>
   <div class="group-hierarchy">
     <GroupTreeNode
-      v-for="group in groups"
+      v-for="group in displayGroups"
       :key="group.group_id"
       :group="group"
       :selected-group-id="selectedGroupId"
       :expanded-ids="expandedIds"
       :current-user-no="currentUserNo"
       :selection-context="selectionContext"
-      :depth="0"
+      :depth="initialDepth"
+      :show-count="showCount"
       @select-group="emit('select-group', $event)"
     />
-    <div v-if="groups.length === 0" class="no-groups">그룹 정보 없음</div>
+    <div v-if="displayGroups.length === 0" class="no-groups">그룹 정보 없음</div>
   </div>
 </template>
 
