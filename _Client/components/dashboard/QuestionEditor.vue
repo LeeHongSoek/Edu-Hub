@@ -560,7 +560,7 @@ textarea:focus {
   padding: 1.5rem 2rem;
   border-top: 1px solid rgba(255, 255, 255, 0.1);
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-end;  
   align-items: center;
 }
 
