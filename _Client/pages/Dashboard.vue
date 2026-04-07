@@ -729,9 +729,7 @@ onUnmounted(() => {
                 </button>
               </div>
               <div class="sys-log-meta">
-                <span class="meta-item">
-                  {{ sysLogPage }} / {{ sysLogTotalPages }} 페이지
-                </span>                
+                <span class="meta-item">{{ sysLogPage }} / {{ sysLogTotalPages }}</span>                
               </div>
             </div>
             <div class="sys-log-pagination">
