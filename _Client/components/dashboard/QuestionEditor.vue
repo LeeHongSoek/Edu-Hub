@@ -109,25 +109,6 @@ const handleSave = async () => {
   }
 };
 
-const handleDelete = async () => {
-  if (!props.question?.question_id) return;
-  if (!confirm("정말 이 문제를 삭제하시겠습니까?")) return;
-
-  isSaving.value = true;
-  try {
-    await $fetch(`${apiBase.value}/questions/${props.question.question_id}`, {
-      method: "DELETE",
-    });
-    alert("삭제되었습니다.");
-    emit("updated");
-    emit("close");
-  } catch (error) {
-    console.error("서버 통신 오류(delete) question:", error);
-    alert("삭제 중 오류가 발생했습니다.");
-  } finally {
-    isSaving.value = false;
-  }
-};
 </script>
 
 <template>
@@ -287,9 +268,6 @@ const handleDelete = async () => {
       </div>
 
       <div class="editor-footer">
-        <button class="btn-delete" :disabled="isSaving" @click="handleDelete">
-          삭제
-        </button>
         <div class="footer-right">
           <button class="btn-secondary" @click="emit('close')">취소</button>
           <button class="btn-primary" :disabled="isSaving" @click="handleSave">
@@ -610,18 +588,6 @@ textarea:focus {
   cursor: pointer;
 }
 
-.btn-delete {
-  padding: 0.75rem 2rem;
-  background: rgba(239, 68, 68, 0.1);
-  color: #ef4444;
-  border: 1px solid rgba(239, 68, 68, 0.2);
-  border-radius: 10px;
-  cursor: pointer;
-}
-
-.btn-delete:hover:not(:disabled) {
-  background: rgba(239, 68, 68, 0.2);
-}
 
 .badge {
   display: inline-block;
