@@ -39,8 +39,10 @@ const isSaving = ref(false);
 
 const fetchGroups = async () => {
   try {
-    const data = await $fetch<Group[]>(`${apiBase.value}/groups`);
-    groups.value = data;
+    const data = await $fetch<
+      Group[] | { groups?: Group[]; unassigned_count?: number }
+    >(`${apiBase.value}/groups`);
+    groups.value = Array.isArray(data) ? data : (data.groups ?? []);
   } catch (error) {
     console.error("서버 통신 오류(fetch) groups:", error);
   }
@@ -149,15 +151,7 @@ const handleDelete = async () => {
                 />
               </div>
             </div>
-            <div class="form-group flex-small">
-              <label>제한 시간 (초)</label>
-              <input
-                v-model.number="editData.time_limit"
-                type="number"
-                min="0"
-                class="input-small"
-              />
-            </div>
+            
             <div class="form-group flex-small">
               <label>평점 (1-5)</label>
               <div class="slider-field">
@@ -171,14 +165,25 @@ const handleDelete = async () => {
             </div>
           </div>
 
-          <div class="form-group">
-            <label>소속 그룹</label>
-            <GroupSelectorDropdown
-              v-model="editData.group_id"
-              :groups="groups"
-              title="문제분류 그룹"
-              placeholder="소속 그룹을 선택하세요"
-            />
+          <div class="form-row">
+            <div class="form-group flex-2">
+              <label>소속 그룹</label>
+              <GroupSelectorDropdown
+                v-model="editData.group_id"
+                :groups="groups"
+                title="문제분류 그룹"
+                placeholder="소속 그룹을 선택하세요"
+              />
+            </div>
+            <div class="form-group flex-small">
+              <label>제한 시간 (초)</label>
+              <input
+                v-model.number="editData.time_limit"
+                type="number"
+                min="0"
+                class="input-small"
+              />
+            </div>
           </div>
         </div>
 
