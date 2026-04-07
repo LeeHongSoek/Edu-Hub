@@ -295,7 +295,8 @@ const clearGroup = () => {
 
 .group-select-chevron {
   color: #a5b4fc;
-  font-size: 0.9rem;
+  font-size: 1.9rem;
+  line-height: 1;
 }
 
 .group-panel-anchor {
@@ -307,6 +308,9 @@ const clearGroup = () => {
   z-index: 100;
   max-height: min(68vh, 560px);
   max-width: 400px;
+  background: #1e293b;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
 }
 
 .group-select-dropdown[open] .group-panel-anchor {

@@ -94,7 +94,7 @@ const handleSave = async () => {
       method: isCreate ? "POST" : "PATCH",
       body: {
         ...editData.value,
-        // 생성 시 필요한 추가 정보가 있다면 여기에 포함
+        creator_no: currentUserNo.value,
       },
     });
 

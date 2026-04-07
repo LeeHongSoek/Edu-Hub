@@ -264,15 +264,31 @@ export class QuestionsService {
 
   // 문제 생성
   async create(data: any) {
-    const { options, ...questionData } = data;
+    const { options, passage, ...questionData } = data;
+
+    if (!questionData.creator_no) {
+      throw new Error('creator_no is required to create a question');
+    }
+
     return this.prisma.$transaction(async (tx) => {
       const question = await tx.question.create({
         data: {
-          ...questionData,
-          passage: questionData.passage ? {
-            create: {
-              content_md: questionData.passage
-            }
+          creator_no: BigInt(questionData.creator_no),
+          group_id: questionData.group_id != null ? BigInt(questionData.group_id) : BigInt(0),
+          question_type_id: questionData.question_type_id ?? 'M',
+          title: questionData.title ?? '',
+          question: questionData.question ?? '',
+          content: questionData.content ?? '',
+          answer: questionData.answer ?? '',
+          explanation: questionData.explanation ?? '',
+          hint: questionData.hint ?? '',
+          difficulty: questionData.difficulty ?? 3,
+          time_limit: questionData.time_limit ?? 0,
+          rating: questionData.rating ?? 3,
+          is_public: questionData.is_public ?? false,
+          is_deleted: 'N',
+          passage: passage ? {
+            create: { content_md: passage }
           } : undefined,
           options: options ? {
             create: options.map((opt: any) => ({
@@ -443,7 +459,18 @@ export class QuestionsService {
       return tx.question.update({
         where: { question_id: questionId },
         data: {
-          ...questionData,
+          group_id: questionData.group_id != null ? BigInt(questionData.group_id) : undefined,
+          question_type_id: questionData.question_type_id,
+          title: questionData.title,
+          question: questionData.question,
+          content: questionData.content,
+          answer: questionData.answer,
+          explanation: questionData.explanation,
+          hint: questionData.hint,
+          difficulty: questionData.difficulty,
+          time_limit: questionData.time_limit,
+          rating: questionData.rating,
+          is_public: questionData.is_public,
           options: options ? {
             create: options.map((opt: any) => ({
               option_number: opt.option_number,
