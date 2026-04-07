@@ -680,7 +680,10 @@ const togglePanelFullscreen = () => {
 
         <div v-if="question.passage" class="question-passage">
           <client-only>
-            <v-md-preview :text="question.passage.content_md"></v-md-preview>
+            <v-md-preview
+              class="passage-preview"
+              :text="question.passage.content_md"
+            ></v-md-preview>
           </client-only>
         </div>
 
@@ -701,7 +704,10 @@ const togglePanelFullscreen = () => {
             </div>
             <div v-if="child.passage" class="child-question-passage">
               <client-only>
-                <v-md-preview :text="child.passage.content_md"></v-md-preview>
+                <v-md-preview
+                  class="passage-preview"
+                  :text="child.passage.content_md"
+                ></v-md-preview>
               </client-only>
             </div>
             <div
@@ -1439,6 +1445,14 @@ const togglePanelFullscreen = () => {
   font-family: "Noto Sans KR", sans-serif;
   font-size: 1.05rem;
   line-height: 1.6;
+}
+
+.passage-preview :deep(.v-md-editor-preview),
+.passage-preview :deep(.v-md-plugin-markdown-it),
+.passage-preview :deep(.github-markdown-body),
+.passage-preview :deep(.markdown-body) {
+  background: transparent !important;
+  color: #e2e8f0 !important;
 }
 
 .no-options {
