@@ -22,10 +22,6 @@ import IconClassRoom from "~/assets/icons/IconClassRoom.svg?component";
 import PageSlider from "~/components/PageSlider.vue";
 import { useUserLog } from "~/composables/useUserLog";
 
-definePageMeta({
-  middleware: "auth",
-});
-
 type UserCookiePayload = {
   user_no: string;
   userId?: string;

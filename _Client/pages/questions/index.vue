@@ -3,10 +3,6 @@ import { computed, ref, watch } from "vue";
 import QuestionListManager from "~/components/dashboard/QuestionListManager.vue";
 import type { Question, QuestionListResponse } from "~/types";
 
-definePageMeta({
-  middleware: "auth",
-});
-
 const { apiBase, token, getAuthHeader } = useApi();
 
 const route = useRoute();
