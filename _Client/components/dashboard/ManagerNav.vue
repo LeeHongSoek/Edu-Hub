@@ -67,7 +67,7 @@ const logManagerNav = async (label: string) => {
   align-items: center !important;
   background: rgba(15, 23, 42, 0.4);
   padding: 4px;
-  border-radius: 12px;
+  border-radius: 10px;
   border: 1px solid rgba(129, 140, 248, 0.2);
   backdrop-filter: blur(8px);
 }

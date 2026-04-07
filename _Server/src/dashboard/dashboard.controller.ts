@@ -78,6 +78,31 @@ export class DashboardController {
     );
   }
 
+  @Get('exams/:examId/classes')
+  async getExamClasses(@Request() req, @Param('examId') examId: string) {
+    const userNoVal = req.user?.user_no || req.user?.userNo;
+    if (!userNoVal) throw new UnauthorizedException();
+    return this.dashboardService.getExamClassManagerData(
+      BigInt(userNoVal),
+      examId,
+    );
+  }
+
+  @Put('exams/:examId/classes')
+  async updateExamClasses(
+    @Request() req,
+    @Param('examId') examId: string,
+    @Body() body: { classIds?: Array<string | number> },
+  ) {
+    const userNoVal = req.user?.user_no || req.user?.userNo;
+    if (!userNoVal) throw new UnauthorizedException();
+    return this.dashboardService.updateExamClasses(
+      BigInt(userNoVal),
+      examId,
+      body?.classIds ?? [],
+    );
+  }
+
   @Get('relations')
   async getRelations(
     @Request() req,

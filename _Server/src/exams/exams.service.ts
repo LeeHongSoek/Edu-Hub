@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../common/prisma/prisma.service';
 
 @Injectable()
@@ -43,27 +43,74 @@ export class ExamsService {
       end_time: string;
       location?: string;
       is_auto_score?: boolean;
+      classIds?: Array<string | number>;
     },
   ) {
-    const created = await this.prisma.exam.create({
-      data: {
-        creator_no: creatorNo,
-        exam_name: data.exam_name,
-        description: data.description || null,
-        start_time: new Date(data.start_time),
-        end_time: new Date(data.end_time),
-        location: data.location || null,
-        is_auto_score: data.is_auto_score ?? true,
-      },
-      include: {
-        creator: { select: { user_no: true, username: true } },
-        class_exam_links: {
-          include: {
-            class: true,
+    const normalizedClassIds = Array.from(
+      new Set(
+        (Array.isArray(data.classIds) ? data.classIds : [])
+          .map((classId) => String(classId))
+          .filter(Boolean),
+      ),
+    );
+
+    const created = await this.prisma.$transaction(async (tx) => {
+      if (normalizedClassIds.length > 0) {
+        const ownedClassCount = await tx.class.count({
+          where: {
+            class_id: { in: normalizedClassIds.map((classId) => BigInt(classId)) },
+            teacher_no: creatorNo,
           },
+        });
+
+        if (ownedClassCount !== normalizedClassIds.length) {
+          throw new BadRequestException('본인이 운영하는 클래스만 연결할 수 있습니다.');
+        }
+      }
+
+      const exam = await tx.exam.create({
+        data: {
+          creator_no: creatorNo,
+          exam_name: data.exam_name,
+          description: data.description || null,
+          start_time: new Date(data.start_time),
+          end_time: new Date(data.end_time),
+          location: data.location || null,
+          is_auto_score: data.is_auto_score ?? true,
         },
-        _count: { select: { questions: true } },
-      },
+        include: {
+          creator: { select: { user_no: true, username: true } },
+          class_exam_links: {
+            include: {
+              class: true,
+            },
+          },
+          _count: { select: { questions: true } },
+        },
+      });
+
+      if (normalizedClassIds.length > 0) {
+        await tx.classExam.createMany({
+          data: normalizedClassIds.map((classId) => ({
+            class_id: BigInt(classId),
+            exam_id: exam.exam_id,
+          })),
+          skipDuplicates: true,
+        });
+      }
+
+      return tx.exam.findUniqueOrThrow({
+        where: { exam_id: exam.exam_id },
+        include: {
+          creator: { select: { user_no: true, username: true } },
+          class_exam_links: {
+            include: {
+              class: true,
+            },
+          },
+          _count: { select: { questions: true } },
+        },
+      });
     });
 
     await this.writeExamLog(
@@ -85,6 +132,7 @@ export class ExamsService {
       end_time: string;
       location?: string;
       is_auto_score?: boolean;
+      classIds?: Array<string | number>;
     },
   ) {
     const existing = await this.prisma.exam.findFirst({
@@ -100,25 +148,77 @@ export class ExamsService {
       throw new NotFoundException('Exam not found');
     }
 
-    const updated = await this.prisma.exam.update({
-      where: { exam_id: examId },
-      data: {
-        exam_name: data.exam_name,
-        description: data.description || null,
-        start_time: new Date(data.start_time),
-        end_time: new Date(data.end_time),
-        location: data.location || null,
-        is_auto_score: data.is_auto_score ?? true,
-      },
-      include: {
-        creator: { select: { user_no: true, username: true } },
-        class_exam_links: {
-          include: {
-            class: true,
-          },
+    const normalizedClassIds = Array.from(
+      new Set(
+        (Array.isArray(data.classIds) ? data.classIds : [])
+          .map((classId) => String(classId))
+          .filter(Boolean),
+      ),
+    );
+
+    if (normalizedClassIds.length > 0) {
+      const ownedClassCount = await this.prisma.class.count({
+        where: {
+          class_id: { in: normalizedClassIds.map((classId) => BigInt(classId)) },
+          teacher_no: creatorNo,
         },
-        _count: { select: { questions: true } },
-      },
+      });
+
+      if (ownedClassCount !== normalizedClassIds.length) {
+        throw new BadRequestException('본인이 운영하는 클래스만 연결할 수 있습니다.');
+      }
+    }
+
+    const updated = await this.prisma.$transaction(async (tx) => {
+      const exam = await tx.exam.update({
+        where: { exam_id: examId },
+        data: {
+          exam_name: data.exam_name,
+          description: data.description || null,
+          start_time: new Date(data.start_time),
+          end_time: new Date(data.end_time),
+          location: data.location || null,
+          is_auto_score: data.is_auto_score ?? true,
+        },
+        include: {
+          creator: { select: { user_no: true, username: true } },
+          class_exam_links: {
+            include: {
+              class: true,
+            },
+          },
+          _count: { select: { questions: true } },
+        },
+      });
+
+      await tx.classExam.deleteMany({
+        where: {
+          exam_id: examId,
+        },
+      });
+
+      if (normalizedClassIds.length > 0) {
+        await tx.classExam.createMany({
+          data: normalizedClassIds.map((classId) => ({
+            class_id: BigInt(classId),
+            exam_id: examId,
+          })),
+          skipDuplicates: true,
+        });
+      }
+
+      return tx.exam.findUniqueOrThrow({
+        where: { exam_id: exam.exam_id },
+        include: {
+          creator: { select: { user_no: true, username: true } },
+          class_exam_links: {
+            include: {
+              class: true,
+            },
+          },
+          _count: { select: { questions: true } },
+        },
+      });
     });
 
     await this.writeExamLog(

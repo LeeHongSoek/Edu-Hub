@@ -7,6 +7,8 @@ import GroupManager from "~/components/dashboard/GroupManager.vue";
 import QuestionEditor from "~/components/dashboard/QuestionEditor.vue";
 import QuestionSolver from "~/components/dashboard/QuestionSolver.vue";
 import DailyQuestionsModal from "~/components/DailyQuestionsModal.vue";
+import QuestionBookUpsertModal from "~/components/dashboard/QuestionBookUpsertModal.vue";
+import QuestionExamCreateModal from "~/components/dashboard/QuestionExamCreateModal.vue";
 import PageSlider from "~/components/PageSlider.vue";
 import IconSettings from "~/assets/icons/IconSettings.svg?component";
 import IconFileText from "~/assets/icons/IconFileText.svg?component";
@@ -43,11 +45,23 @@ const props = defineProps<{
 
 // API 설정 통합
 const { apiBase, getAuthHeader } = useApi();
+const userCookie = useCookie("user_info");
+const userInfo = computed(() => {
+  if (!userCookie.value) return null;
+  try {
+    return typeof userCookie.value === "string"
+      ? JSON.parse(userCookie.value)
+      : userCookie.value;
+  } catch {
+    return null;
+  }
+});
 
 const groups = ref<Group[]>([]);
 const selectedQuestionForSolve = ref<Question | null>(null);
 const selectedQuestionForEdit = ref<Question | null>(null);
 const showGroupManager = ref(false);
+const assignableClasses = ref<Array<{ classId: string; className: string }>>([]);
 
 // --- [토스트 메시지 관리] ---
 const showToast = ref(false);
@@ -566,6 +580,8 @@ const selectedGroupBreadcrumb = computed(() => {
 
 const groupSearchInput = ref("");
 const showBulkSolveModal = ref(false);
+const showCreateBookModal = ref(false);
+const showCreateExamModal = ref(false);
 const bulkSolveQuestions = computed(() =>
   selectedQuestionIds.value
     .map((id) => selectedQuestionCache.value[id])
@@ -801,14 +817,204 @@ const handleCreateQuestionBook = () => {
   void logViewAction(
     `선택 문제로 문제집 만들기 클릭: ${selectedQuestionCount.value}개 선택 / ${getQuestionListContextLabel()}`,
   );
-  triggerToast("문제집 만들기 연결은 다음 단계에서 이어집니다.");
+  showCreateBookModal.value = true;
 };
 
-const handleCreateExamBook = () => {
+const fetchAssignableClasses = async () => {
+  if (String(userInfo.value?.role_id || userInfo.value?.role || "").toUpperCase() !== "T") {
+    assignableClasses.value = [];
+    return;
+  }
+
+  try {
+    const data = await $fetch<Array<{ classId: string; className: string }>>(
+      `${apiBase.value}/dashboard/classes`,
+      {
+        headers: getAuthHeader(),
+      },
+    );
+    assignableClasses.value = Array.isArray(data)
+      ? data.map((item) => ({
+          classId: String(item.classId),
+          className: item.className,
+        }))
+      : [];
+  } catch (error) {
+    console.error("지정 가능 클래스 조회 실패:", error);
+    assignableClasses.value = [];
+  }
+};
+
+const handleCreateExamBook = async () => {
   void logViewAction(
     `선택 문제로 고사집 만들기 클릭: ${selectedQuestionCount.value}개 선택 / ${getQuestionListContextLabel()}`,
   );
-  triggerToast("고사집 만들기 연결은 다음 단계에서 이어집니다.");
+  await fetchAssignableClasses();
+  showCreateExamModal.value = true;
+};
+
+const closeCreateBookModal = () => {
+  showCreateBookModal.value = false;
+};
+
+const closeCreateExamModal = () => {
+  showCreateExamModal.value = false;
+};
+
+const getSelectedQuestions = () =>
+  selectedQuestionIds.value
+    .map((id) => selectedQuestionCache.value[id])
+    .filter((question): question is Question => Boolean(question));
+
+type QuestionBookCreateForm = {
+  name: string;
+  description: string;
+};
+
+type QuestionExamCreateForm = {
+  classId: string;
+  classIds: string[];
+  name: string;
+  description: string;
+  start_time: string;
+  end_time: string;
+  location: string;
+  is_auto_score: boolean;
+};
+
+const submitCreateBookForm = async (bundleForm: QuestionBookCreateForm) => {
+  const selectedQuestions = getSelectedQuestions();
+  if (selectedQuestions.length === 0) {
+    triggerToast("선택된 문제가 없습니다.");
+    return;
+  }
+
+  if (!bundleForm.name.trim()) {
+    triggerToast("문제집 이름을 입력해 주세요.");
+    return;
+  }
+
+  try {
+    const createdBook = (await $fetch<{ book_id?: string | number }>(
+      `${apiBase.value}/question-books`,
+      {
+        method: "POST",
+        headers: getAuthHeader(),
+        body: {
+          book_name: bundleForm.name.trim(),
+          description: bundleForm.description.trim(),
+        },
+      },
+    )) as { book_id?: string | number };
+
+    const bookId = createdBook?.book_id;
+    if (!bookId) {
+      throw new Error("문제집 생성 응답에 book_id가 없습니다.");
+    }
+
+    for (const question of selectedQuestions) {
+      await $fetch(`${apiBase.value}/question-books/${bookId}/items`, {
+        method: "POST",
+        headers: getAuthHeader(),
+        body: { question_id: String(question.question_id) },
+      });
+    }
+
+    void logViewAction(
+      `문제집 생성 완료: ${bundleForm.name.trim()} / ${selectedQuestions.length}문항`,
+    );
+    triggerToast("선택한 문제로 문제집을 만들었습니다.");
+
+    closeCreateBookModal();
+    clearSelection();
+    emit("refresh");
+  } catch (error) {
+    console.error("문제 묶음 생성 오류:", error);
+    triggerToast("문제집 생성에 실패했습니다.");
+  }
+};
+
+const submitCreateBookFromUpsert = (payload: {
+  form: { book_name: string; description: string };
+}) => {
+  void submitCreateBookForm({
+    name: payload.form.book_name,
+    description: payload.form.description,
+  });
+};
+
+const submitCreateExamForm = async (bundleForm: QuestionExamCreateForm) => {
+  const selectedQuestions = getSelectedQuestions();
+  if (selectedQuestions.length === 0) {
+    triggerToast("선택된 문제가 없습니다.");
+    return;
+  }
+
+  if (!bundleForm.name.trim()) {
+    triggerToast("고사집 이름을 입력해 주세요.");
+    return;
+  }
+
+  if (!bundleForm.start_time || !bundleForm.end_time) {
+    triggerToast("시작 일시와 종료 일시를 모두 입력해 주세요.");
+    return;
+  }
+
+  const startTime = bundleForm.start_time;
+  const endTime = bundleForm.end_time;
+  if (new Date(startTime) >= new Date(endTime)) {
+    triggerToast("종료일시는 시작일시보다 이후여야 합니다.");
+    return;
+  }
+
+  try {
+    const createdExam = (await $fetch<{ exam_id?: string | number }>(
+      `${apiBase.value}/exams`,
+      {
+        method: "POST",
+        headers: getAuthHeader(),
+        body: {
+          classIds:
+            Array.isArray(bundleForm.classIds) && bundleForm.classIds.length > 0
+              ? bundleForm.classIds
+              : bundleForm.classId
+                ? [bundleForm.classId]
+                : undefined,
+          exam_name: bundleForm.name.trim(),
+          description: bundleForm.description.trim(),
+          start_time: startTime,
+          end_time: endTime,
+          location: bundleForm.location.trim() || undefined,
+          is_auto_score: bundleForm.is_auto_score,
+        },
+      },
+    )) as { exam_id?: string | number };
+
+    const examId = createdExam?.exam_id;
+    if (!examId) {
+      throw new Error("고사 생성 응답에 exam_id가 없습니다.");
+    }
+
+    for (const question of selectedQuestions) {
+      await $fetch(`${apiBase.value}/exams/${examId}/items`, {
+        method: "POST",
+        headers: getAuthHeader(),
+        body: { question_id: String(question.question_id) },
+      });
+    }
+
+    void logViewAction(
+      `고사집 생성 완료: ${bundleForm.name.trim()} / ${selectedQuestions.length}문항`,
+    );
+    triggerToast("선택한 문제로 고사집을 만들었습니다.");
+
+    closeCreateExamModal();
+    clearSelection();
+    emit("refresh");
+  } catch (error) {
+    console.error("문제 묶음 생성 오류:", error);
+    triggerToast("고사집 생성에 실패했습니다.");
+  }
 };
 
 const handleCopyQuestion = (question: Question) => {
@@ -1468,6 +1674,26 @@ watch(
       :log-object-id="0"
       :log-content="bulkSolveLogContent"
       @close="showBulkSolveModal = false"
+    />
+
+    <QuestionBookUpsertModal
+      v-if="showCreateBookModal"
+      :show="showCreateBookModal"
+      title="문제집 만들기"
+      submit-label="문제집 생성"
+      :initial-form="{ book_name: '', description: '' }"
+      :selected-count="selectedQuestionCount"
+      @close="closeCreateBookModal"
+      @submit="submitCreateBookFromUpsert"
+    />
+
+    <QuestionExamCreateModal
+      v-if="showCreateExamModal"
+      :show="showCreateExamModal"
+      :assignable-classes="assignableClasses"
+      :selected-count="selectedQuestionCount"
+      @close="closeCreateExamModal"
+      @submit="submitCreateExamForm"
     />
 
     <!-- 토스트 알림 오버레이 (원복) -->
@@ -2133,7 +2359,7 @@ watch(
   backdrop-filter: blur(16px);
   color: #818cf8; /* 강조 색상 적용 */
   padding: 1.5rem 3rem; /* 크기 2배 확대 */
-  border-radius: 20px; /* 둥근 사각형 느낌으로 변경 */
+  border-radius: 10px; /* 둥근 사각형 느낌으로 변경 */
   font-weight: 800;
   font-size: 1.8rem; /* 폰트 2배 확대 */
   box-shadow:
@@ -2310,7 +2536,7 @@ watch(
   gap: 0.35rem;
   background: rgba(15, 23, 42, 0.4);
   padding: 4px;
-  border-radius: 12px;
+  border-radius: 10px;
   border: 1px solid rgba(129, 140, 248, 0.2);
   backdrop-filter: blur(8px);
 }

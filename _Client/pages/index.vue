@@ -781,8 +781,7 @@ onMounted(() => {
                 <a href="#" class="link-sm">비밀번호 찾기</a>
               </div>
               <button class="btn-login" :disabled="isLoggingIn">
-                {{ isLoggingIn ? "로그인 중..." : "로그인" }}
-                <IconArrowRight v-if="!isLoggingIn" width="16" height="16" />
+                {{ isLoggingIn ? "로그인 중..." : "로그인" }}                
               </button>
             </form>
 
@@ -2411,7 +2410,7 @@ input[type="password"] {
 
 .manual-pdf-wrap::-webkit-scrollbar-track {
   background: rgba(255, 255, 255, 0.08);
-  border-radius: 18px;
+  border-radius: 10px;
 }
 
 .manual-pdf-wrap::-webkit-scrollbar-thumb {
@@ -2420,7 +2419,7 @@ input[type="password"] {
     rgba(224, 231, 255, 0.96),
     rgba(129, 140, 248, 0.92)
   );
-  border-radius: 18px;
+  border-radius: 10px;
   border: 8px solid rgba(15, 23, 42, 0.18);
   min-height: 96px;
 }
@@ -2752,7 +2751,7 @@ input[type="password"] {
   text-align: center;
   padding: 40px;
   background: rgba(255, 255, 255, 0.05);
-  border-radius: 12px;
+  border-radius: 10px;
   border: 1px solid rgba(255, 255, 255, 0.1);
   display: flex;
   flex-direction: column;

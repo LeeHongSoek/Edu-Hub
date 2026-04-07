@@ -2,6 +2,7 @@
 import { ref, onMounted, computed } from "vue";
 import type { Question, QuestionOption, Group } from "~/types";
 import IconClose from "~/assets/icons/IconClose.svg?component";
+import GroupSelectorDropdown from "~/components/dashboard/GroupSelectorDropdown.vue";
 
 const props = defineProps<{
   question: Question;
@@ -172,25 +173,12 @@ const handleDelete = async () => {
 
           <div class="form-group">
             <label>소속 그룹</label>
-            <select v-model="editData.group_id">
-              <optgroup
-                v-for="g1 in groups"
-                :key="g1.group_id"
-                :label="g1.name">
-                <option :value="g1.group_id">{{ g1.name }} (L1)</option>
-                <template v-for="g2 in g1.child_groups" :key="g2.group_id">
-                  <option :value="g2.group_id">
-                    &nbsp;&nbsp;↳ {{ g2.name }} (L2)
-                  </option>
-                  <option
-                    v-for="g3 in g2.child_groups"
-                    :key="g3.group_id"
-                    :value="g3.group_id">
-                    &nbsp;&nbsp;&nbsp;&nbsp;↳ {{ g3.name }} (L3)
-                  </option>
-                </template>
-              </optgroup>
-            </select>
+            <GroupSelectorDropdown
+              v-model="editData.group_id"
+              :groups="groups"
+              title="문제분류 그룹"
+              placeholder="소속 그룹을 선택하세요"
+            />
           </div>
         </div>
 
@@ -445,7 +433,7 @@ const handleDelete = async () => {
 
 .range-input::-webkit-slider-runnable-track {
   height: 6px;
-  border-radius: 999px;
+  border-radius: 10px;
   background: linear-gradient(
     90deg,
     rgba(99, 102, 241, 0.9),
@@ -466,7 +454,7 @@ const handleDelete = async () => {
 
 .range-input::-moz-range-track {
   height: 6px;
-  border-radius: 999px;
+  border-radius: 10px;
   background: linear-gradient(
     90deg,
     rgba(99, 102, 241, 0.9),

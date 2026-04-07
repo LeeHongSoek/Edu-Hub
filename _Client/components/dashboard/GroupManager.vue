@@ -132,7 +132,7 @@ const handleDelete = async (group: Group) => {
   <div class="manager-overlay">
     <div class="manager-card">
       <div class="manager-header">
-        <h3>전체 그룹 관리</h3>
+        <h3>문제분류 그룹관리</h3>
         <button class="btn-close" @click="emit('close')">
           <IconClose class="close-icon" />
         </button>

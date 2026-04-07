@@ -739,7 +739,7 @@ onMounted(() => {
 
 .pagination-panel-border {
   border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 12px;
+  border-radius: 10px;
   padding: 1rem 1.05rem;
   background: rgba(15, 23, 42, 0.72);
   box-shadow: 0 20px 60px -22px rgba(15, 23, 42, 1);
@@ -958,7 +958,7 @@ onMounted(() => {
 .message-item {
   background: rgba(255, 255, 255, 0.03);
   border: 1px solid rgba(255, 255, 255, 0.06);
-  border-radius: 12px;
+  border-radius: 10px;
   padding: 1rem 1.05rem;
   display: flex;
   flex-direction: column;
@@ -1004,7 +1004,7 @@ onMounted(() => {
   display: inline-flex;
   align-items: center;
   padding: 0.14rem 0.48rem;
-  border-radius: 999px;
+  border-radius: 10px;
   background: rgba(129, 140, 248, 0.12);
   color: #a5b4fc;
   font-size: 0.7rem;
@@ -1036,7 +1036,7 @@ onMounted(() => {
   width: fit-content;
   align-items: center;
   padding: 0.16rem 0.5rem;
-  border-radius: 999px;
+  border-radius: 10px;
   background: rgba(168, 85, 247, 0.12);
   color: #d8b4fe;
   font-size: 0.72rem;
@@ -1085,7 +1085,7 @@ onMounted(() => {
   max-height: 90vh;
   background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
   border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 16px;
+  border-radius: 10px;
   box-shadow: 0 28px 80px -30px rgba(0, 0, 0, 0.65);
   display: flex;
   flex-direction: column;
@@ -1147,7 +1147,7 @@ onMounted(() => {
 .recipient-item {
   background: rgba(255, 255, 255, 0.03);
   border: 1px solid rgba(255, 255, 255, 0.06);
-  border-radius: 12px;
+  border-radius: 10px;
   padding: 0.7rem 0.8rem;
   text-align: left;
   cursor: pointer;
@@ -1203,7 +1203,7 @@ onMounted(() => {
   display: inline-flex;
   align-items: center;
   padding: 0.14rem 0.48rem;
-  border-radius: 999px;
+  border-radius: 10px;
   background: rgba(129, 140, 248, 0.12);
   color: #a5b4fc;
   font-size: 0.7rem;
@@ -1240,7 +1240,7 @@ onMounted(() => {
   display: inline-flex;
   align-items: center;
   padding: 0.22rem 0.58rem;
-  border-radius: 999px;
+  border-radius: 10px;
   background: rgba(168, 85, 247, 0.14);
   color: #c7d2fe;
   font-size: 0.78rem;
@@ -1251,7 +1251,7 @@ onMounted(() => {
 .compose-input {
   min-height: 160px;
   resize: vertical;
-  border-radius: 12px;
+  border-radius: 10px;
   border: 1px solid rgba(148, 163, 184, 0.2);
   background: rgba(15, 23, 42, 0.58);
   color: #e2e8f0;

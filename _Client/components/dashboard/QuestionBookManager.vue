@@ -6,6 +6,7 @@ import IconCreateAction from "~/assets/icons/IconCreateAction.svg?component";
 import IconDeleteAction from "~/assets/icons/IconDeleteAction.svg?component";
 import PageSlider from "~/components/PageSlider.vue";
 import DailyQuestionsModal from "~/components/DailyQuestionsModal.vue";
+import QuestionBookUpsertModal from "~/components/dashboard/QuestionBookUpsertModal.vue";
 import type { Question } from "~/types";
 import { useUserLog } from "~/composables/useUserLog";
 
@@ -267,27 +268,30 @@ const fetchBooks = async () => {
   }
 };
 
-const submitBookForm = async () => {
+const submitBookForm = async (payload?: {
+  form: { book_name: string; description: string };
+}) => {
+  const formData = payload?.form ?? newBook.value;
   try {
     if (isEditingBook.value) {
       await $fetch(`${apiBase.value}/question-books/${editingBookId.value}`, {
         method: "PATCH",
         headers: getAuthHeader(),
-        body: newBook.value,
+        body: formData,
       });
       await logBookAction(
         editingBookId.value,
-        `문제집 #${String(editingBookId.value)} [${newBook.value.book_name.trim()}] 수정 저장 완료`,
+        `문제집 #${String(editingBookId.value)} [${formData.book_name.trim()}] 수정 저장 완료`,
       );
     } else {
       const createdBook = (await $fetch(`${apiBase.value}/question-books`, {
         method: "POST",
         headers: getAuthHeader(),
-        body: newBook.value,
+        body: formData,
       })) as { book_id?: string | number };
       await logBookAction(
         createdBook?.book_id ?? 0,
-        `문제집 #${String(createdBook?.book_id ?? 0)} [${newBook.value.book_name.trim()}] 생성 저장 완료`,
+        `문제집 #${String(createdBook?.book_id ?? 0)} [${formData.book_name.trim()}] 생성 저장 완료`,
       );
     }
     closeCreateModal();
@@ -560,43 +564,14 @@ onMounted(() => {
       </div>
     </div>
 
-    <!-- 생성 모달 -->
-    <div
-      v-if="showCreateModal"
-      class="modal-overlay">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h3>{{ modalTitle }}</h3>
-          <button
-            class="modal-close"
-            @click="closeCreateModal"
-            aria-label="닫기">
-            ✕
-          </button>
-        </div>
-        <div class="form-group">
-          <label>문제집 이름</label>
-          <input
-            v-model="newBook.book_name"
-            type="text"
-            placeholder="예: 2024 정보처리기사 핵심문항"
-          />
-        </div>
-        <div class="form-group">
-          <label>설명</label>
-          <textarea
-            v-model="newBook.description"
-            placeholder="문제집에 대한 설명을 적어주세요."
-          ></textarea>
-        </div>
-        <div class="modal-actions">
-          <button class="btn-secondary" @click="closeCreateModal">취소</button>
-          <button class="btn-primary" @click="submitBookForm">
-            {{ submitButtonLabel }}
-          </button>
-        </div>
-      </div>
-    </div>
+    <QuestionBookUpsertModal
+      :show="showCreateModal"
+      :title="modalTitle"
+      :submit-label="submitButtonLabel"
+      :initial-form="newBook"
+      @close="closeCreateModal"
+      @submit="submitBookForm"
+    />
     <DailyQuestionsModal
       v-if="showDailyQuizModal"
       :questions="dailyQuizQuestions"
@@ -666,7 +641,7 @@ onMounted(() => {
   color: #94a3b8;
   font-size: 0.9rem;
   font-weight: 700;
-  border-radius: 999px;
+  border-radius: 10px;
   padding: 0 0.85rem;
   height: 32px;
   line-height: 32px;
@@ -710,7 +685,7 @@ onMounted(() => {
   align-items: center !important;
   background: rgba(15, 23, 42, 0.4);
   padding: 4px;
-  border-radius: 12px;
+  border-radius: 10px;
   border: 1px solid rgba(129, 140, 248, 0.2);
   backdrop-filter: blur(8px);
 }
@@ -777,7 +752,7 @@ onMounted(() => {
   background: rgba(30, 41, 59, 0.4);
   backdrop-filter: blur(12px);
   border: 1px solid rgba(255, 255, 255, 0.05);
-  border-radius: 16px;
+  border-radius: 10px;
   padding: 1.25rem 1.5rem;
   display: flex;
   flex-direction: column;
@@ -964,7 +939,7 @@ onMounted(() => {
   align-items: center;
   justify-content: center;
   padding: 0.16rem 0.55rem;
-  border-radius: 999px;
+  border-radius: 10px;
   background: rgba(56, 189, 248, 0.12);
   border: 1px solid rgba(56, 189, 248, 0.2);
   color: #7dd3fc;
@@ -1018,7 +993,7 @@ onMounted(() => {
 .modal-content {
   background: #1e293b;
   padding: 2rem;
-  border-radius: 12px;
+  border-radius: 10px;
   width: 100%;
   max-width: 450px;
   border: 1px solid rgba(255, 255, 255, 0.1);

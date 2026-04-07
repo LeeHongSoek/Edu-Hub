@@ -585,7 +585,7 @@ onUnmounted(() => {
   width: 100%;
   max-width: 1000px;
   height: 85vh;
-  border-radius: 20px;
+  border-radius: 10px;
   border: 1px solid rgba(255, 255, 255, 0.1);
   display: flex;
   flex-direction: column;
@@ -787,7 +787,7 @@ onUnmounted(() => {
   color: #fff;
   background: linear-gradient(135deg, #6366f1, #a5b4fc);
   padding: 0.3rem 0.8rem;
-  border-radius: 20px;
+  border-radius: 10px;
   flex-shrink: 0;
 }
 
@@ -806,13 +806,13 @@ onUnmounted(() => {
   padding: 1rem;
   background: rgba(255, 255, 255, 0.02);
   border: 1px solid rgba(255, 255, 255, 0.05);
-  border-radius: 12px;
+  border-radius: 10px;
 }
 
 .q-passage {
   background: rgba(255, 255, 255, 0.03);
   padding: 1rem;
-  border-radius: 12px;
+  border-radius: 10px;
   font-size: 0.95rem;
 }
 
@@ -830,7 +830,7 @@ onUnmounted(() => {
   padding: 0.8rem 1rem;
   background: rgba(255, 255, 255, 0.04);
   border: 2px solid transparent;
-  border-radius: 12px;
+  border-radius: 10px;
   cursor: pointer;
   transition: all 0.2s;
 }
@@ -924,7 +924,7 @@ onUnmounted(() => {
   background: rgba(245, 158, 11, 0.1);
   border: 1px solid rgba(245, 158, 11, 0.2);
   padding: 0.6rem 1rem;
-  border-radius: 12px;
+  border-radius: 10px;
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
@@ -1014,13 +1014,13 @@ onUnmounted(() => {
   align-items: center;
   justify-content: center;
   z-index: 50;
-  border-radius: 20px;
+  border-radius: 10px;
 }
 
 .result-card.mini-card {
   background: #111827;
   padding: 1.5rem 1.5rem;
-  border-radius: 20px;
+  border-radius: 10px;
   border: 1px solid rgba(255, 255, 255, 0.15);
   box-shadow: 0 30px 60px rgba(0, 0, 0, 0.6);
   text-align: center;
@@ -1088,7 +1088,7 @@ onUnmounted(() => {
   align-items: center;
   padding: 0.6rem;
   background: rgba(255, 255, 255, 0.05);
-  border-radius: 12px;
+  border-radius: 10px;
 }
 
 .stat-label {
@@ -1115,7 +1115,7 @@ onUnmounted(() => {
   padding: 1rem 1.2rem;
   background: rgba(99, 102, 241, 0.05);
   border: 1px solid rgba(99, 102, 241, 0.2);
-  border-radius: 16px;
+  border-radius: 10px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -1190,7 +1190,7 @@ onUnmounted(() => {
   flex-direction: column;
   gap: 0.4rem;
   background: rgba(0, 0, 0, 0.15);
-  border-radius: 12px;
+  border-radius: 10px;
   padding: 0.8rem;
   border: 1px solid rgba(255, 255, 255, 0.05);
 }
@@ -1263,7 +1263,7 @@ onUnmounted(() => {
   color: #0f172a;
   border: none;
   padding: 1rem;
-  border-radius: 12px;
+  border-radius: 10px;
   font-weight: 800;
   font-size: 1.05rem;
   cursor: pointer;

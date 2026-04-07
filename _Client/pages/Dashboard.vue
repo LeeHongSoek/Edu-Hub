@@ -1183,7 +1183,7 @@ onUnmounted(() => {
   justify-content: center;
   min-width: 2.4rem;
   padding: 0.3rem 0.65rem;
-  border-radius: 999px;
+  border-radius: 10px;
   background: rgba(99, 102, 241, 0.14);
   color: #c7d2fe;
   font-size: 0.82rem;
@@ -1258,7 +1258,7 @@ onUnmounted(() => {
   border: 1px solid rgba(99, 102, 241, 0.24);
   background: rgba(99, 102, 241, 0.12);
   color: #c7d2fe;
-  border-radius: 999px;
+  border-radius: 10px;
   padding: 0.42rem 0.78rem;
   font-size: 0.8rem;
   font-weight: 700;

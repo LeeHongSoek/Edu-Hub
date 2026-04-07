@@ -338,7 +338,7 @@ const isRecentTime = (dateStr: string) => {
   padding: 0;
   background: rgba(15, 23, 42, 0.6);
   border: 1px solid rgba(148, 163, 184, 0.18);
-  border-radius: 12px;
+  border-radius: 10px;
   overflow: hidden;
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
 }
@@ -475,7 +475,7 @@ const isRecentTime = (dateStr: string) => {
   background: rgba(30, 41, 59, 0.4);
   backdrop-filter: blur(12px);
   border: 1px solid rgba(255, 255, 255, 0.05);
-  border-radius: 16px;
+  border-radius: 10px;
   padding: 0.75rem 1.25rem;
   display: flex;
   align-items: center;
@@ -495,7 +495,7 @@ const isRecentTime = (dateStr: string) => {
 .log-type-indicator {
   width: 42px;
   height: 42px;
-  border-radius: 12px;
+  border-radius: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -655,7 +655,7 @@ const isRecentTime = (dateStr: string) => {
   width: 100%;
   height: 6px;
   background: rgba(255, 255, 255, 0.1);
-  border-radius: 999px;
+  border-radius: 10px;
   outline: none;
   cursor: pointer;
   z-index: 2;
@@ -679,7 +679,7 @@ const isRecentTime = (dateStr: string) => {
   left: 0;
   height: 6px;
   background: #6366f1;
-  border-radius: 999px;
+  border-radius: 10px;
   z-index: 1;
 }
 

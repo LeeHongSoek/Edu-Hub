@@ -494,6 +494,140 @@ export class DashboardService {
     return this.getClassExamManagerData(userNo, classIdBigInt);
   }
 
+  async getExamClassManagerData(userNo: bigint, examId: string | number | bigint) {
+    const examIdBigInt = BigInt(examId);
+    const exam = await this.prisma.exam.findFirst({
+      where: {
+        exam_id: examIdBigInt,
+        creator_no: userNo,
+        is_deleted: 'N',
+      },
+      select: {
+        exam_id: true,
+        exam_name: true,
+      },
+    });
+
+    if (!exam) {
+      throw new NotFoundException('관리할 수 있는 고사를 찾지 못했습니다.');
+    }
+
+    const classes = await this.prisma.class.findMany({
+      where: {
+        teacher_no: userNo,
+      },
+      select: {
+        class_id: true,
+        class_name: true,
+        class_exam_links: {
+          where: {
+            exam_id: examIdBigInt,
+          },
+          select: {
+            exam_id: true,
+          },
+        },
+      },
+      orderBy: { created_at: 'desc' },
+    });
+
+    const assignedClasses = classes
+      .filter((classroom) => classroom.class_exam_links.length > 0)
+      .map((classroom) => ({
+        classId: classroom.class_id.toString(),
+        className: classroom.class_name,
+      }));
+
+    const availableClasses = classes
+      .filter((classroom) => classroom.class_exam_links.length === 0)
+      .map((classroom) => ({
+        classId: classroom.class_id.toString(),
+        className: classroom.class_name,
+      }));
+
+    return {
+      examId: exam.exam_id.toString(),
+      examName: exam.exam_name,
+      assignedClasses,
+      availableClasses,
+    };
+  }
+
+  async updateExamClasses(
+    userNo: bigint,
+    examId: string | number | bigint,
+    classIds: Array<string | number>,
+  ) {
+    const examIdBigInt = BigInt(examId);
+    const exam = await this.prisma.exam.findFirst({
+      where: {
+        exam_id: examIdBigInt,
+        creator_no: userNo,
+        is_deleted: 'N',
+      },
+      select: {
+        exam_id: true,
+        exam_name: true,
+      },
+    });
+
+    if (!exam) {
+      throw new NotFoundException('관리할 수 있는 고사를 찾지 못했습니다.');
+    }
+
+    const normalizedClassIds = Array.from(
+      new Set(
+        (Array.isArray(classIds) ? classIds : [])
+          .map((classId) => String(classId))
+          .filter(Boolean),
+      ),
+    );
+
+    if (normalizedClassIds.length > 0) {
+      const ownedClassCount = await this.prisma.class.count({
+        where: {
+          class_id: { in: normalizedClassIds.map((classId) => BigInt(classId)) },
+          teacher_no: userNo,
+        },
+      });
+
+      if (ownedClassCount !== normalizedClassIds.length) {
+        throw new BadRequestException('본인이 운영하는 클래스만 연결할 수 있습니다.');
+      }
+    }
+
+    await this.prisma.$transaction([
+      this.prisma.classExam.deleteMany({
+        where: {
+          exam_id: examIdBigInt,
+        },
+      }),
+      ...(normalizedClassIds.length > 0
+        ? [
+            this.prisma.classExam.createMany({
+              data: normalizedClassIds.map((classId) => ({
+                class_id: BigInt(classId),
+                exam_id: examIdBigInt,
+              })),
+              skipDuplicates: true,
+            }),
+          ]
+        : []),
+    ]);
+
+    await this.writeUserLog(
+      userNo,
+      'E',
+      examIdBigInt,
+      `고사 #${examIdBigInt.toString()} [${exam.exam_name}] 클래스 연결 수정 (${normalizedClassIds.length}개 연결)`,
+      normalizedClassIds.length,
+      normalizedClassIds.length,
+      100,
+    );
+
+    return this.getExamClassManagerData(userNo, examIdBigInt);
+  }
+
   private async getStudentStats(userNo: bigint) {
     // 학생 통계: 최근 7일간 푼 문제 수, 정답률 등
     const now = new Date();

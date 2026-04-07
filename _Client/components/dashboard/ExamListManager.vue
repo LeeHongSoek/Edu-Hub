@@ -5,6 +5,7 @@ import IconCalendar from "~/assets/icons/IconCalendar.svg?component";
 import ManagerNav from "~/components/dashboard/ManagerNav.vue";
 import IconCreateAction from "~/assets/icons/IconCreateAction.svg?component";
 import IconDeleteAction from "~/assets/icons/IconDeleteAction.svg?component";
+import ExamUpsertModal from "~/components/dashboard/ExamUpsertModal.vue";
 import PageSlider from "~/components/PageSlider.vue";
 import DailyQuestionsModal from "~/components/DailyQuestionsModal.vue";
 import type { Question } from "~/types";
@@ -28,12 +29,10 @@ const route = useRoute();
 const listScope = ref<"mine" | "all">(
   route.query.scope === "all" ? "all" : "mine",
 );
+const effectiveListScope = ref<"mine" | "all">(listScope.value);
 const selectedExamIds = ref<string[]>([]);
 const examSearchInput = ref("");
 const examSearchQuery = ref("");
-const assignableClasses = ref<Array<{ classId: string; className: string }>>(
-  [],
-);
 const userCookie = useCookie("user_info");
 const userInfo = computed(() => {
   if (!userCookie.value) return null;
@@ -47,22 +46,28 @@ const userInfo = computed(() => {
 });
 
 const listTitle = computed(() =>
-  listScope.value === "all" ? "전체 고사집 목록" : "나의 고사집 목록",
+  effectiveListScope.value === "all" ? "전체 고사집 목록" : "나의 고사집 목록",
 );
+const fetchError = ref("");
 const selectedClassId = computed(() => {
   const raw = route.query.classId;
-  return typeof raw === "string" && raw.trim() ? raw : "";
+  if (typeof raw !== "string") return "";
+  const normalized = raw.trim();
+  if (!normalized) return "";
+  // 잘못된 classId 쿼리값으로 API 조회가 깨지는 것을 방지합니다.
+  return /^\d+$/.test(normalized) ? normalized : "";
 });
 const selectedClassName = computed(() => {
   const raw = route.query.className;
-  return typeof raw === "string" && raw.trim() ? raw : "";
+  if (typeof raw === "string" && raw.trim()) return raw.trim();
+  return selectedClassId.value ? `클래스 #${selectedClassId.value}` : "";
 });
 const emptyText = computed(() => {
   if (examSearchQuery.value) return "검색 조건에 맞는 고사집이 없습니다.";
-  if (selectedClassName.value) {
+  if (selectedClassId.value) {
     return `${selectedClassName.value}에 연결된 고사집이 없습니다.`;
   }
-  return listScope.value === "all"
+  return effectiveListScope.value === "all"
     ? "등록된 고사집이 없습니다."
     : "생성된 고사집이 없습니다.";
 });
@@ -206,18 +211,39 @@ const viewExamDetails = async (examId: number | string | bigint) => {
 const fetchExams = async () => {
   loading.value = true;
   try {
-    // scope와 classId를 함께 보내서 서버에서 즉시 필터된 목록을 가져옵니다.
-    const data = await $fetch(`${apiBase.value}/exams`, {
-      headers: getAuthHeader(),
-      query: {
-        scope: listScope.value,
-        classId: selectedClassId.value || undefined,
-      },
-    });
-    exams.value = data as any[];
+    fetchError.value = "";
+    const fetchByScope = async (scope: "mine" | "all") =>
+      (await $fetch(`${apiBase.value}/exams`, {
+        headers: getAuthHeader(),
+        query: {
+          scope,
+          classId: selectedClassId.value || undefined,
+        },
+      })) as any[];
+
+    // 기본은 현재 선택 scope를 사용합니다.
+    let nextScope: "mine" | "all" = listScope.value;
+    let data = await fetchByScope(nextScope);
+
+    // 대시보드(토글 없음)에서는 "내 고사집"이 비어 있을 때 자동으로 전체 목록을 보여줍니다.
+    if (
+      !props.showScopeToggle &&
+      !selectedClassId.value &&
+      nextScope === "mine" &&
+      data.length === 0
+    ) {
+      data = await fetchByScope("all");
+      nextScope = "all";
+    }
+
+    effectiveListScope.value = nextScope;
+    exams.value = data;
     selectedExamIds.value = [];
   } catch (err) {
     console.error("서버 통신 오류(fetch) exams:", err);
+    effectiveListScope.value = listScope.value;
+    exams.value = [];
+    fetchError.value = "고사집 목록을 불러오지 못했습니다. 필터를 초기화하거나 다시 시도해 주세요.";
   } finally {
     loading.value = false;
   }
@@ -294,8 +320,16 @@ const showCreateModal = ref(false);
 const createLoading = ref(false);
 const createError = ref("");
 const editingExamId = ref<string>("");
+type ExamClassItem = {
+  classId: string;
+  className: string;
+};
+
+const teacherClasses = ref<ExamClassItem[]>([]);
+const assignedClasses = ref<ExamClassItem[]>([]);
+const availableClasses = ref<ExamClassItem[]>([]);
+const classListLoading = ref(false);
 const createForm = ref({
-  classId: "",
   exam_name: "",
   description: "",
   start_time: "",
@@ -323,59 +357,42 @@ const toLocalDateTimeInputValue = (value?: string | Date | null) => {
   return `${date.getFullYear()}-${pad2(date.getMonth() + 1)}-${pad2(date.getDate())}T${pad2(date.getHours())}:${pad2(date.getMinutes())}`;
 };
 
-const openCreateModal = async () => {
-  await fetchAssignableClasses();
-  editingExamId.value = "";
-  createForm.value = {
-    classId: "",
-    exam_name: "",
-    description: "",
-    start_time: "",
-    end_time: "",
-    location: "",
-    is_auto_score: true,
-  };
-  createError.value = "";
-  showCreateModal.value = true;
-  await logExamAction(0, "고사 생성 모달 열기");
-};
+const formatExamPeriodLabel = (
+  startTime: string | Date,
+  endTime: string | Date,
+) => {
+  const start = new Date(startTime);
+  const end = new Date(endTime);
+  const startDateOnly = new Date(
+    start.getFullYear(),
+    start.getMonth(),
+    start.getDate(),
+  );
+  const endDateOnly = new Date(end.getFullYear(), end.getMonth(), end.getDate());
+  const diffDays =
+    Math.max(
+      0,
+      Math.floor(
+        (endDateOnly.getTime() - startDateOnly.getTime()) / (1000 * 60 * 60 * 24),
+      ),
+    ) + 1;
+  const startLabel = start.toLocaleDateString("ko-KR", {
+    year: "2-digit",
+    month: "numeric",
+    day: "numeric",
+  });
 
-const openEditModal = async (exam: any) => {
-  await fetchAssignableClasses();
-  const linkedClassId =
-    Array.isArray(exam?.class_exam_links) && exam.class_exam_links.length > 0
-      ? String(exam.class_exam_links[0]?.class_id ?? "")
-      : "";
-  editingExamId.value = String(exam.exam_id);
-  createForm.value = {
-    classId: linkedClassId,
-    exam_name: exam.exam_name || "",
-    description: exam.description || "",
-    start_time: toLocalDateTimeInputValue(exam.start_time),
-    end_time: toLocalDateTimeInputValue(exam.end_time),
-    location: exam.location || "",
-    is_auto_score: exam.is_auto_score ?? true,
-  };
-  createError.value = "";
-  showCreateModal.value = true;
-  await logExamAction(exam.exam_id, `${getExamLogLabel(exam)} 수정 모달 열기`);
-};
-
-const closeCreateModal = () => {
-  editingExamId.value = "";
-  showCreateModal.value = false;
-};
-
-const fetchAssignableClasses = async () => {
-  if (
-    String(
-      userInfo.value?.role_id || userInfo.value?.role || "",
-    ).toUpperCase() !== "T"
-  ) {
-    assignableClasses.value = [];
-    return;
+  if (diffDays <= 1) {
+    return `${startLabel}(당일간)`;
   }
+  return `${startLabel}(부터 ${diffDays}일간)`;
+};
 
+const sortClasses = (items: ExamClassItem[]) =>
+  [...items].sort((a, b) => a.className.localeCompare(b.className, "ko"));
+
+const loadTeacherClasses = async () => {
+  classListLoading.value = true;
   try {
     const data = await $fetch<Array<{ classId: string; className: string }>>(
       `${apiBase.value}/dashboard/classes`,
@@ -383,51 +400,163 @@ const fetchAssignableClasses = async () => {
         headers: getAuthHeader(),
       },
     );
-    assignableClasses.value = Array.isArray(data)
-      ? data.map((item) => ({
-          classId: String(item.classId),
-          className: item.className,
-        }))
+    teacherClasses.value = Array.isArray(data)
+      ? sortClasses(
+          data.map((item) => ({
+            classId: String(item.classId),
+            className: item.className,
+          })),
+        )
       : [];
   } catch (error) {
     console.error("지정 가능 클래스 조회 실패:", error);
-    assignableClasses.value = [];
+    teacherClasses.value = [];
+  } finally {
+    classListLoading.value = false;
   }
 };
 
-const submitExamForm = async () => {
-  if (!createForm.value.exam_name.trim()) {
+const resetClassDraft = () => {
+  assignedClasses.value = [];
+  availableClasses.value = [...teacherClasses.value];
+};
+
+const loadExamClassDraft = async (examId: string) => {
+  classListLoading.value = true;
+  try {
+    const data = await $fetch<{
+      examId: string;
+      examName: string;
+      assignedClasses: ExamClassItem[];
+      availableClasses: ExamClassItem[];
+    }>(`${apiBase.value}/dashboard/exams/${examId}/classes`, {
+      headers: getAuthHeader(),
+    });
+
+    assignedClasses.value = sortClasses(data.assignedClasses || []);
+    availableClasses.value = sortClasses(data.availableClasses || []);
+    return true;
+  } catch (error) {
+    console.error("고사 클래스 조회 실패:", error);
+    return false;
+  } finally {
+    classListLoading.value = false;
+  }
+};
+
+const buildExamLinkedClassesFromCard = (exam: any): ExamClassItem[] => {
+  const links = Array.isArray(exam?.class_exam_links) ? exam.class_exam_links : [];
+  const map = new Map<string, ExamClassItem>();
+  for (const link of links) {
+    const classId = link?.class?.class_id ?? link?.class_id;
+    const className = link?.class?.class_name ?? link?.className;
+    if (classId === null || classId === undefined || !className) continue;
+    const key = String(classId);
+    if (!map.has(key)) {
+      map.set(key, { classId: key, className: String(className) });
+    }
+  }
+  return sortClasses(Array.from(map.values()));
+};
+
+const openCreateModal = async () => {
+  await loadTeacherClasses();
+  editingExamId.value = "";
+  createForm.value = {
+    exam_name: "",
+    description: "",
+    start_time: "",
+    end_time: "",
+    location: "",
+    is_auto_score: true,
+  };
+  resetClassDraft();
+  createError.value = "";
+  showCreateModal.value = true;
+  await logExamAction(0, "고사 생성 모달 열기");
+};
+
+const openEditModal = async (exam: any) => {
+  await loadTeacherClasses();
+  editingExamId.value = String(exam.exam_id);
+  createForm.value = {
+    exam_name: exam.exam_name || "",
+    description: exam.description || "",
+    start_time: toLocalDateTimeInputValue(exam.start_time),
+    end_time: toLocalDateTimeInputValue(exam.end_time),
+    location: exam.location || "",
+    is_auto_score: exam.is_auto_score ?? true,
+  };
+  // 서버 조회 실패 시에도 카드에 이미 포함된 연결 정보를 우선 보여줍니다.
+  const linkedClasses = buildExamLinkedClassesFromCard(exam);
+  assignedClasses.value = linkedClasses;
+  const linkedSet = new Set(linkedClasses.map((item) => item.classId));
+  availableClasses.value = sortClasses(
+    teacherClasses.value.filter((item) => !linkedSet.has(item.classId)),
+  );
+
+  const draftLoaded = await loadExamClassDraft(String(exam.exam_id));
+  createError.value = draftLoaded
+    ? ""
+    : "클래스 연결 정보를 불러오지 못했습니다. 현재 화면은 카드 기준 연결 상태입니다.";
+  showCreateModal.value = true;
+  await logExamAction(exam.exam_id, `${getExamLogLabel(exam)} 수정 모달 열기`);
+};
+
+const closeCreateModal = () => {
+  editingExamId.value = "";
+  showCreateModal.value = false;
+  resetClassDraft();
+  createError.value = "";
+};
+
+const submitExamForm = async (payload?: {
+  form: {
+    exam_name: string;
+    description: string;
+    start_time: string;
+    end_time: string;
+    location: string;
+    is_auto_score: boolean;
+  };
+  classIds: string[];
+}) => {
+  const formData = payload?.form ?? createForm.value;
+  const selectedClassIds =
+    payload?.classIds ?? assignedClasses.value.map((item) => item.classId);
+
+  if (!formData.exam_name.trim()) {
     createError.value = "고사 이름을 입력해주세요.";
     return;
   }
-  if (!createForm.value.start_time || !createForm.value.end_time) {
+  if (!formData.start_time || !formData.end_time) {
     createError.value = "시작일시와 종료일시를 모두 입력해주세요.";
     return;
   }
-  if (
-    new Date(createForm.value.start_time) >= new Date(createForm.value.end_time)
-  ) {
+  if (new Date(formData.start_time) >= new Date(formData.end_time)) {
     createError.value = "종료일시는 시작일시보다 이후여야 합니다.";
     return;
   }
   createLoading.value = true;
-  createError.value = "";
+    createError.value = "";
   try {
     const payload = {
-      classId: createForm.value.classId || undefined,
-      exam_name: createForm.value.exam_name.trim(),
-      description: createForm.value.description.trim() || undefined,
-      start_time: createForm.value.start_time,
-      end_time: createForm.value.end_time,
-      location: createForm.value.location.trim() || undefined,
-      is_auto_score: createForm.value.is_auto_score,
+      exam_name: formData.exam_name.trim(),
+      description: formData.description.trim() || undefined,
+      start_time: formData.start_time,
+      end_time: formData.end_time,
+      location: formData.location.trim() || undefined,
+      is_auto_score: formData.is_auto_score,
     };
 
     if (isEditingExam.value) {
       await $fetch(`${apiBase.value}/exams/${editingExamId.value}`, {
         method: "PATCH",
         headers: getAuthHeader(),
-        body: payload,
+        body: {
+          ...payload,
+          classIds: selectedClassIds,
+        },
       });
       await logExamAction(
         editingExamId.value,
@@ -437,7 +566,10 @@ const submitExamForm = async () => {
       const createdExam = (await $fetch(`${apiBase.value}/exams`, {
         method: "POST",
         headers: getAuthHeader(),
-        body: payload,
+        body: {
+          ...payload,
+          classIds: selectedClassIds,
+        },
       })) as { exam_id?: string | number };
       await logExamAction(
         createdExam?.exam_id ?? 0,
@@ -573,13 +705,16 @@ onMounted(() => {
     </div>
 
     <div v-if="loading" class="loading">불러오는 중...</div>
+    <div v-else-if="fetchError" class="empty">
+      {{ fetchError }}
+    </div>
     <div v-else-if="filteredExams.length === 0" class="empty">
       {{ emptyText }}
     </div>
     <div v-else>
       <div class="pagination-panel-border">
         <div class="slider-panel">
-          <div v-if="selectedClassName" class="class-filter-banner">
+          <div v-if="selectedClassId" class="class-filter-banner">
             <span class="class-filter-label">클래스 필터</span>
             <strong>{{ selectedClassName }}</strong>
             <button class="class-filter-clear" @click="clearClassFilter">
@@ -641,7 +776,7 @@ onMounted(() => {
           </div>
         </div>
       </div>
-      <div class="exam-list">
+      <div class="exam-card-list">
         <div v-for="exam in pagedExams" :key="exam.exam_id" class="exam-card">
           <div class="exam-info">
             <div class="exam-headline">
@@ -652,54 +787,44 @@ onMounted(() => {
                   >지정 클래스 {{ getExamClassNames(exam).length ?? 0 }}개</span>
               </div>
               <div class="headline-right">
-                <span class="exam-period-inline"
-                  >{{
-                    new Date(exam.start_time).toLocaleDateString("ko-KR", {
-                      year: "2-digit",
-                      month: "numeric",
-                      day: "numeric",
-                    })
-                  }} ~
-                  {{
-                    new Date(exam.end_time).toLocaleDateString("ko-KR", {
-                      year: "2-digit",
-                      month: "numeric",
-                      day: "numeric",
-                    })
-                  }}</span>
+                <span class="exam-period-inline">{{
+                  formatExamPeriodLabel(exam.start_time, exam.end_time)
+                }}</span>
                 <span class="exam-count"
                   >{{ exam._count?.questions ?? 0 }} 문제</span>
               </div>
             </div>
             <h4>
-              <input
-                type="checkbox"
-                class="copy-checkbox"
-                aria-label="고사 선택"
-                :checked="isExamSelected(exam.exam_id)"
-                :disabled="!isCurrentUserOwner(exam.creator?.user_no)"
-                @change="
-                  toggleExamSelected(
-                    exam.exam_id,
-                    ($event.target as HTMLInputElement).checked,
-                  )
-                "
-              />
-              <span class="exam-name-wrap">
-                <span
-                  class="exam-name-link"
-                  :class="{
-                    selectable: isCurrentUserOwner(exam.creator?.user_no),
-                  }"
-                  @click="toggleExamSelectedByName(exam)"
-                  >{{ exam.exam_name }}</span>
-                <span class="exam-hover-card">
-                  <strong>위치</strong>
-                  <span>{{ exam.location || "장소 미지정" }}</span>
-                  <strong>설명</strong>
-                  <span>{{ exam.description || "설명 없음" }}</span>
+              <div class="exam-card-main">
+                <input
+                  type="checkbox"
+                  class="copy-checkbox"
+                  aria-label="고사 선택"
+                  :checked="isExamSelected(exam.exam_id)"
+                  :disabled="!isCurrentUserOwner(exam.creator?.user_no)"
+                  @change="
+                    toggleExamSelected(
+                      exam.exam_id,
+                      ($event.target as HTMLInputElement).checked,
+                    )
+                  "
+                />
+                <span class="exam-name-wrap">
+                  <span
+                    class="exam-name-link"
+                    :class="{
+                      selectable: isCurrentUserOwner(exam.creator?.user_no),
+                    }"
+                    @click="toggleExamSelectedByName(exam)"
+                    >{{ exam.exam_name }}</span>
+                  <span class="exam-hover-card">
+                    <strong>위치</strong>
+                    <span>{{ exam.location || "장소 미지정" }}</span>
+                    <strong>설명</strong>
+                    <span>{{ exam.description || "설명 없음" }}</span>
+                  </span>
                 </span>
-              </span>
+              </div>
               <div
                 v-if="isCurrentUserOwner(exam.creator?.user_no)"
                 class="exam-card-actions">
@@ -726,146 +851,18 @@ onMounted(() => {
     </div>
   </div>
 
-  <!-- 새 고사 생성 모달 -->
-  <Teleport to="body">
-    <Transition name="modal-fade">
-      <div
-        v-if="showCreateModal"
-        class="modal-backdrop"
-        @click.self="closeCreateModal">
-        <div
-          class="modal-box"
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="modal-title">
-          <div class="modal-header">
-            <h2 id="modal-title" class="modal-title">{{ modalTitle }}</h2>
-            <button
-              class="modal-close-btn"
-              @click="closeCreateModal"
-              aria-label="닫기">
-              ✕
-            </button>
-          </div>
-
-          <form class="modal-form" @submit.prevent="submitExamForm">
-            <div class="form-group">
-              <select
-                id="exam-class"
-                v-model="createForm.classId"
-                class="form-input">
-                <option value="">지정클래스 없음</option>
-                <option
-                  v-for="classItem in assignableClasses"
-                  :key="classItem.classId"
-                  :value="classItem.classId">
-                  {{ classItem.className }}
-                </option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label for="exam-name" class="form-label"
-                >고사 이름 <span class="required">*</span></label>
-              <input
-                id="exam-name"
-                v-model="createForm.exam_name"
-                type="text"
-                class="form-input"
-                placeholder="예) 2024년 1학기 중간고사"
-                maxlength="255"
-                autocomplete="off"
-              />
-            </div>
-
-            <div class="form-row form-row-datetime">
-              <div class="form-group">
-                <label for="exam-start" class="form-label"
-                  >시작 일시 <span class="required">*</span></label>
-                <DateTimePicker
-                  id="exam-start"
-                  v-model="createForm.start_time"
-                  :size="1"
-                />
-              </div>
-              <div class="form-group">
-                <label for="exam-end" class="form-label"
-                  >종료 일시 <span class="required">*</span></label>
-                <DateTimePicker
-                  id="exam-end"
-                  v-model="createForm.end_time"
-                  align="right"
-                  :size="1"
-                />
-              </div>
-            </div>
-            <p class="form-help">
-              날짜를 더블클릭하면 바로 확정되고, 하단 완료 버튼으로도 저장할 수
-              있습니다.
-            </p>
-
-            <div class="form-group">
-              <label for="exam-location" class="form-label"
-                >장소 <span class="optional">(선택)</span></label>
-              <input
-                id="exam-location"
-                v-model="createForm.location"
-                type="text"
-                class="form-input"
-                placeholder="예) 1학년 1반 교실"
-                maxlength="100"
-                autocomplete="off"
-              />
-            </div>
-
-            <div class="form-group form-group-check">
-              <label class="form-check-label" for="exam-auto-score">
-                <input
-                  id="exam-auto-score"
-                  v-model="createForm.is_auto_score"
-                  type="checkbox"
-                  class="form-checkbox"
-                />
-                <span class="check-text">자동 채점 활성화</span>
-              </label>
-            </div>
-
-            <div class="form-group">
-              <label for="exam-description" class="form-label">
-                설명 <span class="optional">(선택)</span>
-              </label>
-              <textarea
-                id="exam-description"
-                v-model="createForm.description"
-                class="form-input form-textarea"
-                placeholder="고사집에 대한 설명을 적어주세요."
-                maxlength="1000"
-              ></textarea>
-            </div>
-
-            <div v-if="createError" class="form-error">{{ createError }}</div>
-
-            <div class="modal-actions">
-              <button
-                type="button"
-                class="btn-cancel"
-                @click="closeCreateModal"
-                :disabled="createLoading">
-                취소
-              </button>
-              <button
-                type="submit"
-                class="btn-submit"
-                :disabled="createLoading"
-                id="btn-submit-create-exam">
-                <span v-if="createLoading" class="loading-spinner"></span>
-                {{ submitButtonLabel }}
-              </button>
-            </div>
-          </form>
-        </div>
-      </div>
-    </Transition>
-  </Teleport>
+  <ExamUpsertModal
+    :show="showCreateModal"
+    :title="modalTitle"
+    :submit-label="submitButtonLabel"
+    :loading="createLoading"
+    :error-message="createError"
+    :initial-form="createForm"
+    :initial-assigned-classes="assignedClasses"
+    :initial-available-classes="availableClasses"
+    @close="closeCreateModal"
+    @submit="submitExamForm"
+  />
 
   <DailyQuestionsModal
     v-if="showDailyQuizModal"
@@ -898,7 +895,7 @@ onMounted(() => {
   align-items: center;
   justify-content: center;
   padding: 0.2rem 0.5rem;
-  border-radius: 999px;
+  border-radius: 10px;
   background: rgba(129, 140, 248, 0.14);
   color: #c7d2fe;
   font-size: 0.74rem;
@@ -975,7 +972,7 @@ onMounted(() => {
   color: #94a3b8;
   font-size: 0.9rem;
   font-weight: 700;
-  border-radius: 999px;
+  border-radius: 10px;
   padding: 0 0.85rem;
   height: 32px;
   line-height: 32px;
@@ -1012,7 +1009,7 @@ onMounted(() => {
   background: rgba(30, 41, 59, 0.4);
   backdrop-filter: blur(12px);
   border: 1px solid rgba(255, 255, 255, 0.05);
-  border-radius: 16px;
+  border-radius: 10px;
   padding: 1.25rem 1.5rem;
   display: flex;
   flex-direction: column;
@@ -1083,14 +1080,22 @@ onMounted(() => {
 }
 
 .exam-info h4 {
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
-  gap: 0.15rem;
+  gap: 0.75rem;
   color: #f8fafc;
   margin: 0;
   font-size: 1.15rem;
   font-weight: 700;
   width: 100%;
+}
+
+.exam-card-main {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.15rem;
 }
 
 .exam-name-link {
@@ -1124,7 +1129,7 @@ onMounted(() => {
   min-width: 280px;
   max-width: 420px;
   padding: 0.9rem 1rem;
-  border-radius: 14px;
+  border-radius: 10px;
   border: 1px solid rgba(129, 140, 248, 0.28);
   background: rgba(15, 23, 42, 0.96);
   box-shadow: 0 18px 40px -18px rgba(0, 0, 0, 0.75);
@@ -1286,7 +1291,7 @@ onMounted(() => {
   align-items: center;
   justify-content: center;
   padding: 0.12rem 0.55rem;
-  border-radius: 999px;
+  border-radius: 10px;
   background: rgba(56, 189, 248, 0.12);
   border: 1px solid rgba(56, 189, 248, 0.2);
   color: #7dd3fc;
@@ -1493,14 +1498,14 @@ onMounted(() => {
   color: #64748b;
 }
 
-.exam-list {
+.exam-card-list {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 0.625rem;
 }
 
 @media (max-width: 1024px) {
-  .exam-list {
+  .exam-card-list {
     grid-template-columns: 1fr;
   }
 }
@@ -1520,7 +1525,7 @@ onMounted(() => {
   align-items: center !important;
   background: rgba(15, 23, 42, 0.4);
   padding: 4px;
-  border-radius: 12px;
+  border-radius: 10px;
   border: 1px solid rgba(129, 140, 248, 0.2);
   backdrop-filter: blur(8px);
 }
@@ -1646,10 +1651,10 @@ onMounted(() => {
     rgba(30, 41, 59, 0.98)
   );
   border: 1px solid rgba(99, 102, 241, 0.3);
-  border-radius: 18px;
+  border-radius: 10px;
   padding: 2rem;
   width: 100%;
-  max-width: 520px;
+  max-width: 676px;
   box-shadow:
     0 25px 60px rgba(0, 0, 0, 0.6),
     0 0 0 1px rgba(255, 255, 255, 0.04) inset;
@@ -1735,6 +1740,10 @@ onMounted(() => {
   color: #94a3b8;
 }
 
+.form-help-inline {
+  margin-top: -0.15rem;
+}
+
 .required {
   color: #f87171;
 }
@@ -1769,6 +1778,35 @@ onMounted(() => {
   color: #475569;
 }
 
+.class-manager-button {
+  width: 100%;
+  appearance: none;
+  border: 1px solid rgba(99, 102, 241, 0.28);
+  background: linear-gradient(135deg, rgba(79, 70, 229, 0.24), rgba(99, 102, 241, 0.14));
+  color: #eef2ff;
+  border-radius: 10px;
+  padding: 0.72rem 0.9rem;
+  font-size: 0.92rem;
+  font-weight: 700;
+  cursor: pointer;
+  text-align: left;
+  transition:
+    transform 0.18s ease,
+    border-color 0.18s ease,
+    background 0.18s ease;
+}
+
+.class-manager-button:hover:not(:disabled) {
+  transform: translateY(-1px);
+  border-color: rgba(129, 140, 248, 0.42);
+  background: linear-gradient(135deg, rgba(79, 70, 229, 0.3), rgba(99, 102, 241, 0.2));
+}
+
+.class-manager-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.65;
+}
+
 .form-textarea {
   min-height: 96px;
   resize: vertical;
@@ -1785,6 +1823,132 @@ onMounted(() => {
   font-size: 0.76rem;
   color: #94a3b8;
   line-height: 1.45;
+}
+
+.exam-lists {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 38px minmax(0, 1fr);
+  gap: 0.75rem;
+  align-items: stretch;
+}
+
+.exam-list-panel {
+  border-radius: 10px;
+  border: 1px solid rgba(99, 102, 241, 0.18);
+  background: rgba(15, 23, 42, 0.5);
+  min-height: 230px;
+  display: flex;
+  flex-direction: column;
+}
+
+.exam-list-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.85rem 0.95rem 0.75rem;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.1);
+  color: #cbd5f5;
+}
+
+.exam-list-header strong {
+  font-size: 0.92rem;
+  font-weight: 800;
+}
+
+.exam-list-header span {
+  color: #a5b4fc;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.exam-pick-list {
+  flex: 1;
+  padding: 0.85rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+
+.exam-chip {
+  appearance: none;
+  border: 1px solid rgba(148, 163, 184, 0.16);
+  background: rgba(30, 41, 59, 0.84);
+  color: #f8fafc;
+  border-radius: 10px;
+  padding: 0.75rem 0.9rem;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.12rem;
+  text-align: left;
+  cursor: grab;
+}
+
+.exam-chip:active {
+  cursor: grabbing;
+}
+
+.exam-chip--selected {
+  border-color: rgba(99, 102, 241, 0.4);
+  background: rgba(99, 102, 241, 0.16);
+}
+
+.exam-name {
+  font-size: 0.92rem;
+  font-weight: 700;
+}
+
+.exam-chip-meta {
+  font-size: 0.77rem;
+  color: #94a3b8;
+}
+
+.exam-empty {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  color: #64748b;
+  font-size: 0.86rem;
+  min-height: 120px;
+}
+
+.exam-transfer-hint {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  color: #a5b4fc;
+  font-size: 0.68rem;
+  font-weight: 800;
+  border-radius: 10px;
+  border: 1px dashed rgba(99, 102, 241, 0.28);
+  background: rgba(15, 23, 42, 0.36);
+  min-height: 230px;
+  padding: 0.2rem 0.1rem;
+}
+
+.transfer-arrows {
+  width: 24px;
+  height: 24px;
+}
+
+:deep(.transfer-arrows path) {
+  stroke: #a5b4fc;
+  stroke-width: 1.7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+:deep(.transfer-arrows .transfer-arrows-center) {
+  stroke: rgba(165, 180, 252, 0.6);
+  stroke-dasharray: 2 3;
+}
+
+.exam-lists .exam-empty {
+  padding: 0.35rem 0.5rem;
 }
 
 .form-check-label {

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, ref, watch } from "vue";
 import IconClose from "~/assets/icons/IconClose.svg?component";
+import IconTransferArrows from "~/assets/icons/IconTransferArrows.svg?component";
 
 type ClassCard = {
   classId: string;
@@ -204,8 +205,7 @@ const saveExams = async () => {
                     @dragstart="handleDragStart(exam, 'assigned')"
                     @dragend="handleDragEnd">
                     <span class="exam-name">{{ exam.examName }}</span>
-                    <span class="exam-meta"
-                      >문항 {{ exam.questionCount }}개</span>
+                    <span class="exam-meta">문항 {{ exam.questionCount }}개</span>
                   </button>
                   <div v-if="assignedExams.length === 0" class="exam-empty">
                     아직 연결된 고사가 없습니다.
@@ -213,7 +213,9 @@ const saveExams = async () => {
                 </div>
               </section>
 
-              <div class="exam-transfer-hint">드래그하여 이동</div>
+              <div class="exam-transfer-hint" aria-hidden="true">
+                <IconTransferArrows class="transfer-arrows" />
+              </div>
 
               <section
                 class="exam-list-panel"
@@ -267,7 +269,7 @@ const saveExams = async () => {
 .exam-modal-overlay {
   position: fixed;
   inset: 0;
-  z-index: 2000;
+  z-index: 10010;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -278,7 +280,7 @@ const saveExams = async () => {
 
 .exam-modal-card {
   width: min(960px, 100%);
-  border-radius: 20px;
+  border-radius: 10px;
   border: 1px solid rgba(148, 163, 184, 0.18);
   background: linear-gradient(
     180deg,
@@ -347,13 +349,13 @@ const saveExams = async () => {
 
 .exam-lists {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 90px minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1fr) 38px minmax(0, 1fr);
   gap: 1rem;
   align-items: stretch;
 }
 
 .exam-list-panel {
-  border-radius: 16px;
+  border-radius: 10px;
   border: 1px solid rgba(99, 102, 241, 0.2);
   background: rgba(15, 23, 42, 0.6);
   min-height: 420px;
@@ -395,7 +397,7 @@ const saveExams = async () => {
   border: 1px solid rgba(148, 163, 184, 0.16);
   background: rgba(30, 41, 59, 0.84);
   color: #f8fafc;
-  border-radius: 12px;
+  border-radius: 10px;
   padding: 0.8rem 0.9rem;
   display: flex;
   flex-direction: column;
@@ -438,10 +440,28 @@ const saveExams = async () => {
   color: #a5b4fc;
   font-size: 0.85rem;
   font-weight: 800;
-  border-radius: 16px;
+  border-radius: 10px;
   border: 1px dashed rgba(99, 102, 241, 0.3);
   background: rgba(15, 23, 42, 0.42);
   min-height: 420px;
+  padding: 0.2rem 0.1rem;
+}
+
+.transfer-arrows {
+  width: 24px;
+  height: 24px;
+}
+
+:deep(.transfer-arrows path) {
+  stroke: #a5b4fc;
+  stroke-width: 1.7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+:deep(.transfer-arrows .transfer-arrows-center) {
+  stroke: rgba(165, 180, 252, 0.6);
+  stroke-dasharray: 2 3;
 }
 
 .exam-modal-actions {
@@ -454,7 +474,7 @@ const saveExams = async () => {
 .btn-primary,
 .btn-secondary {
   appearance: none;
-  border-radius: 12px;
+  border-radius: 10px;
   padding: 0.72rem 1.1rem;
   font-size: 0.92rem;
   font-weight: 700;
@@ -494,11 +514,7 @@ const saveExams = async () => {
   }
 
   .exam-transfer-hint {
-    min-height: 64px;
-  }
-
-  .exam-list-panel {
-    min-height: 280px;
+    display: none;
   }
 }
 </style>

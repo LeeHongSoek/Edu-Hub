@@ -1129,7 +1129,7 @@ const submitReview = async () => {
   margin-top: 0.25rem;
   padding: 0.7rem 1.15rem;
   border: none;
-  border-radius: 999px;
+  border-radius: 10px;
   background: #6366f1;
   color: #fff;
   font-size: 0.88rem;
@@ -1318,7 +1318,7 @@ const submitReview = async () => {
   max-width: min(760px, 100%);
   min-width: 320px;
   padding: 0.85rem 1rem;
-  border-radius: 14px;
+  border-radius: 10px;
   background: rgba(15, 23, 42, 0.98);
   border: 1px solid rgba(99, 102, 241, 0.28);
   box-shadow: 0 20px 45px -18px rgba(0, 0, 0, 0.65);
@@ -1343,7 +1343,7 @@ const submitReview = async () => {
   align-items: center;
   margin-bottom: 0.4rem;
   padding: 0.16rem 0.55rem;
-  border-radius: 999px;
+  border-radius: 10px;
   background: rgba(99, 102, 241, 0.18);
   color: #c7d2fe;
   font-size: 0.72rem;
@@ -1672,7 +1672,7 @@ const submitReview = async () => {
   margin: 0;
   appearance: none;
   background: rgba(255, 255, 255, 0.08);
-  border-radius: 999px;
+  border-radius: 10px;
   outline: none;
   position: relative;
   z-index: 2;
@@ -1695,7 +1695,7 @@ const submitReview = async () => {
   top: 50%;
   height: 6px;
   transform: translateY(-50%);
-  border-radius: 999px;
+  border-radius: 10px;
   background: linear-gradient(90deg, #6366f1 0%, #818cf8 100%);
   pointer-events: none;
 }
@@ -1705,7 +1705,7 @@ const submitReview = async () => {
   top: calc(100% + 10px);
   transform: translateX(-50%);
   padding: 0.2rem 0.45rem;
-  border-radius: 999px;
+  border-radius: 10px;
   background: rgba(99, 102, 241, 0.22);
   color: #e0e7ff;
   font-size: 0.75rem;

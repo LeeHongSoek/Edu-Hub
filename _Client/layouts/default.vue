@@ -332,7 +332,7 @@ onUnmounted(() => {
   align-items: center;
   gap: 0.4rem;
   padding: 0.35rem 0.75rem;
-  border-radius: 999px;
+  border-radius: 10px;
   background: rgba(99, 102, 241, 0.18);
   border: 1px solid rgba(129, 140, 248, 0.32);
   color: #e0e7ff !important;
@@ -363,7 +363,7 @@ onUnmounted(() => {
   max-height: 60vh;
   background: rgba(15, 23, 42, 0.96);
   border: 1px solid rgba(129, 140, 248, 0.35);
-  border-radius: 12px;
+  border-radius: 10px;
   box-shadow: 0 24px 60px rgba(0, 0, 0, 0.35);
   backdrop-filter: blur(8px);
   z-index: 1300;

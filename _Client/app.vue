@@ -65,7 +65,7 @@ onBeforeUnmount(() => {
 .mobile-blocker-card {
   width: min(100%, 560px);
   padding: 32px 28px;
-  border-radius: 24px;
+  border-radius: 10px;
   border: 1px solid rgba(255, 255, 255, 0.1);
   background: rgba(15, 23, 42, 0.82);
   backdrop-filter: blur(18px);
@@ -79,7 +79,7 @@ onBeforeUnmount(() => {
   justify-content: center;
   margin-bottom: 18px;
   padding: 0.35rem 0.8rem;
-  border-radius: 999px;
+  border-radius: 10px;
   background: rgba(99, 102, 241, 0.18);
   border: 1px solid rgba(129, 140, 248, 0.35);
   color: #c7d2fe;

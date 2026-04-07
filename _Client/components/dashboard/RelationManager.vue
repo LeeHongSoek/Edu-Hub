@@ -1547,7 +1547,7 @@ watch(
 .relation-item {
   background: rgba(255, 255, 255, 0.03);
   border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 12px;
+  border-radius: 10px;
   padding: 0.5rem 0.65rem;
   display: flex;
   align-items: center;
@@ -1592,7 +1592,7 @@ watch(
   display: inline-flex;
   align-items: center;
   padding: 0.16rem 0.5rem;
-  border-radius: 999px;
+  border-radius: 10px;
   background: rgba(129, 140, 248, 0.12);
   color: #a5b4fc;
   font-size: 0.7rem;
@@ -1605,7 +1605,7 @@ watch(
   border: 1px solid rgba(255, 255, 255, 0.12);
   background: rgba(255, 255, 255, 0.05);
   color: #e2e8f0;
-  border-radius: 999px;
+  border-radius: 10px;
   padding: 0.18rem 0.55rem;
   font-size: 0.72rem;
   font-weight: 800;
@@ -1677,7 +1677,7 @@ watch(
     radial-gradient(circle at top, rgba(99, 102, 241, 0.2), transparent 30%),
     linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
   border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 18px;
+  border-radius: 10px;
   box-shadow: 0 28px 80px -30px rgba(0, 0, 0, 0.75);
   display: flex;
   flex-direction: column;
@@ -1715,7 +1715,7 @@ watch(
   width: 100%;
   height: min(68vh, 560px);
   display: block;
-  border-radius: 16px;
+  border-radius: 10px;
   background:
     radial-gradient(
       ellipse at 50% 40%,
@@ -1830,7 +1830,7 @@ watch(
   font-weight: 700;
   padding: 0.1rem 0.5rem;
   background: rgba(129, 140, 248, 0.15);
-  border-radius: 999px;
+  border-radius: 10px;
 }
 
 .tooltip-fade-enter-active,
@@ -1856,7 +1856,7 @@ watch(
   max-height: 88vh;
   background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
   border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 16px;
+  border-radius: 10px;
   box-shadow: 0 28px 80px -30px rgba(0, 0, 0, 0.65);
   display: flex;
   flex-direction: column;
@@ -1982,7 +1982,7 @@ watch(
 
 .pagination-panel-border {
   border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 12px;
+  border-radius: 10px;
   padding: 1rem 1.05rem;
   background: rgba(15, 23, 42, 0.72);
   box-shadow: 0 20px 60px -22px rgba(15, 23, 42, 1);
@@ -2188,7 +2188,7 @@ watch(
 .candidate-item {
   background: rgba(255, 255, 255, 0.03);
   border: 1px solid rgba(255, 255, 255, 0.06);
-  border-radius: 12px;
+  border-radius: 10px;
   padding: 0.5rem 0.65rem;
   min-height: 44px;
   display: flex;
@@ -2281,7 +2281,7 @@ watch(
   display: inline-flex;
   align-items: center;
   padding: 0.16rem 0.5rem;
-  border-radius: 999px;
+  border-radius: 10px;
   background: rgba(129, 140, 248, 0.12);
   color: #a5b4fc;
   font-size: 0.7rem;
