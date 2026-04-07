@@ -52,6 +52,18 @@ const goNext = () => {
   if (currentIndex.value < props.questions.length - 1) currentIndex.value++;
 };
 
+const handleSliderKeyDown = (event: KeyboardEvent) => {
+  if (event.key === "ArrowLeft") {
+    event.preventDefault();
+    goPrev();
+  }
+
+  if (event.key === "ArrowRight") {
+    event.preventDefault();
+    goNext();
+  }
+};
+
 const unsolvedCount = computed(
   () => selectedOptions.value.filter((v) => v === null).length,
 );
@@ -399,6 +411,7 @@ onUnmounted(() => {
               min="0"
               :max="questions.length - 1"
               v-model.number="currentIndex"
+              @keydown="handleSliderKeyDown"
             />
           </div>
         </div>

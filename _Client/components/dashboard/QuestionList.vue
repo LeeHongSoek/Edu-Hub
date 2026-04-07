@@ -1627,14 +1627,7 @@ watch(
       v-if="selectedQuestionForSolve && selectedQuestionForSolve.question_id"
       :key="selectedQuestionForSolve.question_id"
       :question="selectedQuestionForSolve"
-      :has-prev="getPrevQuestion() !== null"
-      :has-next="getNextQuestion() !== null"
-      :current-index="currentQuestionIndex"
-      :total-questions="props.questions.length"
       @close="selectedQuestionForSolve = null"
-      @prev="handlePrev"
-      @next="handleNext"
-      @go-to-index="handleGoToQuestionIndex"
     />
 
     <DailyQuestionsModal

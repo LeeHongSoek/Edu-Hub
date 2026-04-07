@@ -205,11 +205,20 @@ const clearGroup = () => {
   <details ref="detailsRef" class="group-select-dropdown">
     <summary
       class="group-select-trigger"
+      :title="selectedGroupBreadcrumb || placeholder"
+      :aria-label="title"
       :aria-disabled="disabled ? 'true' : 'false'">
-      <span class="group-select-value">
+      <span
+        class="group-select-value"
+        :class="{ 'is-placeholder': !selectedGroupBreadcrumb }">
         {{ selectedGroupBreadcrumb || placeholder }}
       </span>
-      <span class="group-select-chevron">▾</span>
+      <span class="group-select-right">
+        <span v-if="!selectedGroupBreadcrumb" class="group-select-hint">
+          클릭하여 선택
+        </span>
+        <span class="group-select-chevron" aria-hidden="true">▾</span>
+      </span>
     </summary>
 
     <div class="group-panel-anchor">
@@ -270,6 +279,26 @@ const clearGroup = () => {
   color: #fff;
   padding: 0 1rem;
   cursor: pointer;
+  transition:
+    border-color 0.2s ease,
+    background-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.group-select-trigger:hover {
+  border-color: rgba(129, 140, 248, 0.6);
+  background: rgba(129, 140, 248, 0.08);
+}
+
+.group-select-trigger:focus-visible {
+  outline: none;
+  border-color: rgba(99, 102, 241, 0.9);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.22);
+}
+
+.group-select-dropdown[open] .group-select-trigger {
+  border-color: rgba(99, 102, 241, 0.9);
+  background: rgba(99, 102, 241, 0.1);
 }
 
 .group-select-trigger::-webkit-details-marker {
@@ -287,16 +316,42 @@ const clearGroup = () => {
 }
 
 .group-select-value {
+  flex: 1;
   text-align: left;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
+.group-select-value.is-placeholder {
+  color: #94a3b8;
+}
+
+.group-select-right {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.group-select-hint {
+  font-size: 0.72rem;
+  color: #94a3b8;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
 .group-select-chevron {
-  color: #a5b4fc;
-  font-size: 1.9rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.3rem;
+  height: 1.3rem;
+  color: #c7d2fe;
+  font-size: 0.9rem;
   line-height: 1;
+  border-radius: 999px;
+  background: rgba(99, 102, 241, 0.25);
+  transition: transform 0.2s ease;
 }
 
 .group-panel-anchor {

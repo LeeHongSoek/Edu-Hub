@@ -599,4 +599,52 @@ textarea:focus {
   font-size: 0.7rem;
   font-weight: 600;
 }
+
+.form-group :deep(.v-md-editor) {
+  border-radius: 10px;
+  border: 1px solid rgba(148, 163, 184, 0.25);
+  background: rgba(15, 23, 42, 0.72);
+}
+
+.form-group :deep(.v-md-editor__toolbar) {
+  background: rgba(30, 41, 59, 0.92);
+  border-bottom: 1px solid rgba(148, 163, 184, 0.2);
+}
+
+.form-group :deep(.v-md-editor__left-area),
+.form-group :deep(.v-md-editor__right-area),
+.form-group :deep(.v-md-textarea-editor textarea),
+.form-group :deep(.github-markdown-body) {
+  background: rgba(15, 23, 42, 0.72) !important;
+  color: #e2e8f0 !important;
+}
+
+.form-group :deep(.v-md-editor__preview),
+.form-group :deep(.v-md-editor-preview),
+.form-group :deep(.v-md-editor-preview .github-markdown-body),
+.form-group :deep(.v-md-editor-preview .markdown-body),
+.form-group :deep(.v-md-editor-preview .vuepress-markdown-body) {
+  background: rgba(15, 23, 42, 0.72) !important;
+  color: #e2e8f0 !important;
+}
+
+.form-group :deep(.v-md-editor-preview h1),
+.form-group :deep(.v-md-editor-preview h2),
+.form-group :deep(.v-md-editor-preview h3),
+.form-group :deep(.v-md-editor-preview h4),
+.form-group :deep(.v-md-editor-preview h5),
+.form-group :deep(.v-md-editor-preview h6),
+.form-group :deep(.v-md-editor-preview strong),
+.form-group :deep(.v-md-editor-preview code) {
+  color: #f8fafc !important;
+}
+
+.form-group :deep(.v-md-editor-preview blockquote) {
+  color: #cbd5e1 !important;
+  border-left-color: rgba(148, 163, 184, 0.45) !important;
+}
+
+.form-group :deep(.v-md-textarea-editor textarea::placeholder) {
+  color: #94a3b8 !important;
+}
 </style>

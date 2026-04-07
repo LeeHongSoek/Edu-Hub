@@ -47,7 +47,7 @@ const emit = defineEmits<{
   <div class="group-panel" role="dialog" aria-modal="false">
     <div class="group-overlay-header">
       <div class="group-title-row">
-        <span class="group-title">{{ title }}</span>
+        <span v-if="groupSearchInput" class="group-title">{{ title }}</span>
         <div v-if="showManageButton" class="header-actions">
           <button
             class="btn-manage-groups"
@@ -58,7 +58,7 @@ const emit = defineEmits<{
           </button>
         </div>
       </div>
-      <div
+      <div v-if="groupSearchInput" 
         class="group-breadcrumb"
         v-html="selectedGroupBreadcrumb || '&nbsp;'"
       ></div>
@@ -102,7 +102,7 @@ const emit = defineEmits<{
       검색 결과가 없습니다.
     </div>
 
-    <div v-if="showActions" class="group-modal-actions">
+    <div v-if="showActions && groupSearchInput" class="group-modal-actions">
       <button type="button" class="btn-secondary" @click="emit('clear-selection')">
         선택 해제
       </button>
@@ -121,6 +121,7 @@ const emit = defineEmits<{
   overflow: auto;
   border-radius: 10px;
   padding: 1rem;
+  background: rgba(15, 23, 42, 0.01);
 }
 
 .group-overlay-header {

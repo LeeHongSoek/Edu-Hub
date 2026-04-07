@@ -7,6 +7,8 @@ import IconMessage from "~/assets/icons/IconMessage.svg?component";
 import IconCheck from "~/assets/icons/IconCheck.svg?component";
 import IconX from "~/assets/icons/IconX.svg?component";
 import IconClose from "~/assets/icons/IconClose.svg?component";
+import IconExpandPanel from "~/assets/icons/IconExpandPanel.svg?component";
+import IconCollapsePanel from "~/assets/icons/IconCollapsePanel.svg?component";
 
 const { apiBase, token, getAuthHeader } = useApi();
 
@@ -67,6 +69,7 @@ const reviewsLoading = ref(false);
 const newReviewContent = ref("");
 const newRating = ref(5);
 const isSubmittingReview = ref(false);
+const isPanelFullscreen = ref(false);
 
 let timerInterval: any = null;
 const hasStartedSolving = ref(false);
@@ -244,6 +247,7 @@ const saveSolveResult = async (isTimeOver: boolean) => {
       showResult: showResult.value,
       isCorrect: isCorrect.value,
       hasStartedSolving: hasStartedSolving.value,
+      startedAtMs: startedAtMs.value,
     },
     isCorrect.value,
     isTimeOver,
@@ -525,6 +529,24 @@ const handleQuestionSliderInput = (e: Event) => {
   const nextIndex = parseInt((e.target as HTMLInputElement).value, 10) - 1;
   emit("go-to-index", nextIndex);
 };
+const handleQuestionSliderKeyDown = (e: KeyboardEvent) => {
+  if (currentIndex.value === undefined || totalQuestions.value === undefined) {
+    return;
+  }
+
+  if (e.key === "ArrowLeft") {
+    e.preventDefault();
+    emit("go-to-index", Math.max(0, currentIndex.value - 1));
+  }
+
+  if (e.key === "ArrowRight") {
+    e.preventDefault();
+    emit(
+      "go-to-index",
+      Math.min(totalQuestions.value - 1, currentIndex.value + 1),
+    );
+  }
+};
 const formatGroupPath = (group: any) => {
   const parts: string[] = [];
   let current = group;
@@ -590,11 +612,15 @@ const submitReview = async () => {
     isSubmittingReview.value = false;
   }
 };
+
+const togglePanelFullscreen = () => {
+  isPanelFullscreen.value = !isPanelFullscreen.value;
+};
 </script>
 
 <template>
-  <div class="solver-overlay">
-    <div class="solver-card">
+  <div class="solver-overlay" :class="{ 'is-fullscreen': isPanelFullscreen }">
+    <div class="solver-card" :class="{ 'solver-card--fullscreen': isPanelFullscreen }">
       <div class="solver-header-compact">
         <div class="compact-top">
           <div class="compact-top-left">
@@ -619,6 +645,14 @@ const submitReview = async () => {
                 ></div>
               </div>
             </div>
+            <button
+              class="btn-panel-toggle"
+              type="button"
+              :title="isPanelFullscreen ? '기본 크기로 보기' : '전체 화면으로 보기'"
+              @click="togglePanelFullscreen">
+              <IconCollapsePanel v-if="isPanelFullscreen" class="panel-icon" />
+              <IconExpandPanel v-else class="panel-icon" />
+            </button>
             <button class="btn-close" @click="emit('close')">&times;</button>
           </div>
         </div>
@@ -747,11 +781,11 @@ const submitReview = async () => {
         <div
           v-if="question.question_type_id?.toUpperCase() === 'M'"
           class="options-list">
-          <div
+          <!-- <div
             v-if="!question.options || question.options.length === 0"
             class="no-options">
             등록된 보기가 없습니다.
-          </div>
+          </div> -->
           <div
             v-for="opt in question.options"
             :key="opt.option_id"
@@ -837,6 +871,7 @@ const submitReview = async () => {
                 step="1"
                 class="solver-page-slider"
                 @input="handleQuestionSliderInput"
+                @keydown="handleQuestionSliderKeyDown"
               />
               <div
                 class="solver-slider-fill"
@@ -969,6 +1004,10 @@ const submitReview = async () => {
   padding: 2rem;
 }
 
+.solver-overlay.is-fullscreen {
+  padding: 0;
+}
+
 .solver-card {
   background: #1e293b;
   width: 100%;
@@ -981,6 +1020,13 @@ const submitReview = async () => {
   position: relative;
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
   overflow: hidden;
+}
+
+.solver-card.solver-card--fullscreen {
+  max-width: none;
+  width: 100vw;
+  height: 100vh;
+  border-radius: 0;
 }
 
 .solver-header-compact {
@@ -1245,6 +1291,31 @@ const submitReview = async () => {
   padding: 0;
 }
 
+.btn-panel-toggle {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  border: 1px solid rgba(148, 163, 184, 0.32);
+  background: rgba(15, 23, 42, 0.55);
+  color: #cbd5e1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-panel-toggle:hover {
+  border-color: rgba(129, 140, 248, 0.7);
+  color: #e2e8f0;
+  background: rgba(67, 56, 202, 0.2);
+}
+
+.panel-icon {
+  width: 18px;
+  height: 18px;
+}
+
 .btn-close:hover {
   color: #fff;
 }
@@ -1358,7 +1429,7 @@ const submitReview = async () => {
 .question-passage {
   background: #fff;
   color: #333;
-  border-radius: 10px;
+  border-radius: 5px;
   padding: 1.5rem;
   margin-bottom: 1.5rem;
   box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
