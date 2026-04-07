@@ -51,7 +51,7 @@ export class GroupsService {
         this.prisma.question.count({
           where: {
             creator_no: ownerNo,
-            group_id: BigInt(0),
+            group_id: { in: [BigInt(0), BigInt(104)] },
             p_question_id: null,
             is_deleted: { not: 'Y' },
           },
@@ -70,7 +70,7 @@ export class GroupsService {
             question_total: ownedTotal,
           };
         }
-        if (groupId === 0) {
+        if (groupId === 0 || groupId === 104) {
           return {
             ...group,
             child_groups: nextChildren,
@@ -117,7 +117,7 @@ export class GroupsService {
     const keptGroups = groups
       .filter((group) => {
         if (BigInt(group.creator_no) !== BigInt(0)) return true;
-        return Number(group.group_id) === -1 || Number(group.group_id) === 0;
+        return Number(group.group_id) === -1 || Number(group.group_id) === 0 || Number(group.group_id) === 104;
       })
       .map((group) => ({
         ...group,
@@ -167,8 +167,8 @@ export class GroupsService {
     if (gidA === -1) return -1;
     if (gidB === -1) return 1;
 
-    if (gidA === 0) return -1;
-    if (gidB === 0) return 1;
+    if (gidA === 0 || gidA === 104) return -1;
+    if (gidB === 0 || gidB === 104) return 1;
 
     return gidA - gidB;
   }

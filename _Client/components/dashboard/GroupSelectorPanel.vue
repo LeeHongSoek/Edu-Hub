@@ -11,12 +11,13 @@ const props = withDefaults(
     groupSearchInput?: string;
     searchedGroups: { groups: Group[]; expandedIds: Set<string> };
     modelValue?: string | number | null;
-    currentUserNo?: string | number | null;
+    currentUserNo?: string | number | null | (string | number | null)[];
     selectionContext?: "A" | "B" | "C";
     showActions?: boolean;
     showCount?: boolean;
     initialDepth?: number;
     hideTopLevel?: boolean;
+    renderFromDepth?: number;
   }>(),
   {
     showManageButton: false,
@@ -29,6 +30,7 @@ const props = withDefaults(
     showCount: true,
     initialDepth: 0,
     hideTopLevel: false,
+    renderFromDepth: 1,
   },
 );
 
@@ -91,6 +93,7 @@ const emit = defineEmits<{
       :show-count="showCount"
       :initial-depth="initialDepth"
       :hide-top-level="hideTopLevel"
+      :render-from-depth="renderFromDepth"
       @select-group="emit('select-group', $event)"
     />
     <div

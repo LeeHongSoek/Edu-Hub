@@ -8,16 +8,18 @@ const props = withDefaults(
     groups: Group[];
     selectedGroupId?: string | number | null;
     expandedIds?: Set<string | number> | null;
-    currentUserNo?: string | number | null;
+    currentUserNo?: string | number | null | (string | number | null)[];
     selectionContext?: "A" | "B" | "C";
     showCount?: boolean;
     initialDepth?: number;
     hideTopLevel?: boolean;
+    renderFromDepth?: number;
   }>(),
   {
     showCount: true,
     initialDepth: 0,
     hideTopLevel: false,
+    renderFromDepth: 1,
   },
 );
 
@@ -26,17 +28,24 @@ const emit = defineEmits<{
 }>();
 
 const displayGroups = computed(() => {
-  if (!props.hideTopLevel) return props.groups;
+  const targetDepth = props.hideTopLevel ? 2 : props.renderFromDepth;
+  if (targetDepth <= 1) return props.groups;
 
-  const flattened: Group[] = [];
-  for (const group of props.groups) {
-    if (group.child_groups && group.child_groups.length > 0) {
-      flattened.push(...group.child_groups);
-    } else {
-      flattened.push(group);
+  const extractDepth = (nodes: Group[], currentDepth: number): Group[] => {
+    if (currentDepth >= targetDepth) return nodes;
+
+    const result: Group[] = [];
+    for (const node of nodes) {
+      if (node.child_groups && node.child_groups.length > 0) {
+        result.push(...extractDepth(node.child_groups, currentDepth + 1));
+      } else {
+        result.push(node);
+      }
     }
-  }
-  return flattened;
+    return result;
+  };
+
+  return extractDepth(props.groups, 1);
 });
 </script>
 

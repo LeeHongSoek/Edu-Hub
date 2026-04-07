@@ -13,7 +13,7 @@ const props = withDefaults(
     selectedGroupId?: string | number | null;
     depth: number;
     expandedIds?: Set<string | number> | null;
-    currentUserNo?: string | number | null;
+    currentUserNo?: string | number | null | (string | number | null)[];
     inheritedOwned?: boolean;
     selectionContext?: "A" | "B" | "C";
     showCount?: boolean;
@@ -38,10 +38,16 @@ const displayedGroupName = computed(() => {
 const isOwned = computed(() => {
   const creatorNo =
     (props.group as any).creator_no ?? (props.group as any).creator_id;
-  const selfOwned =
-    props.currentUserNo !== null && props.currentUserNo !== undefined
-      ? String(creatorNo) === String(props.currentUserNo)
-      : false;
+  const selfOwned = (() => {
+    if (Array.isArray(props.currentUserNo)) {
+      const valid = props.currentUserNo.filter(x => x !== null && x !== undefined).map(String);
+      return valid.includes(String(creatorNo));
+    } else {
+      return props.currentUserNo !== null && props.currentUserNo !== undefined
+        ? String(creatorNo) === String(props.currentUserNo)
+        : false;
+    }
+  })();
   const isSystemOwned = String(creatorNo) === "0";
   return Boolean(props.inheritedOwned) || selfOwned || isSystemOwned;
 });

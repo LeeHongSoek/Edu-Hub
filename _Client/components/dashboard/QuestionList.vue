@@ -593,16 +593,18 @@ const bulkSolveLogContent = computed(
 
 const filterGroupsByOwner = (
   list: Group[],
-  ownerNo: string | number,
+  ownerNo: string | number | null | (string | number | null)[],
 ): Group[] => {
+  const owners = Array.isArray(ownerNo) ? ownerNo : [ownerNo];
+  const validOwners = owners.filter(o => o !== null && o !== undefined).map(String);
+
   const matches = (group: Group) =>
-    String(group.creator_no) === String(ownerNo) ||
-    String(group.creator_no) === "0";
+    validOwners.includes(String(group.creator_no));
   const result: Group[] = [];
   for (const group of list) {
     if (!matches(group)) continue;
     const childGroups = group.child_groups
-      ? filterGroupsByOwner(group.child_groups, ownerNo)
+      ? filterGroupsByOwner(group.child_groups, validOwners)
       : [];
     result.push({ ...group, child_groups: childGroups });
   }
@@ -647,7 +649,7 @@ const visibleGroups = computed(() => {
     ) {
       baseGroups = groups.value;
     } else {
-      baseGroups = filterGroupsByOwner(groups.value, props.currentUserNo);
+      baseGroups = filterGroupsByOwner(groups.value, [props.currentUserNo, 0]);
     }
   }
 
@@ -1275,7 +1277,7 @@ watch(
           :group-search-input="groupSearchInput"
           :searched-groups="searchedGroups"
           :model-value="props.selectedGroupId"
-          :current-user-no="props.currentUserNo"
+          :current-user-no="[props.currentUserNo ?? null, 0]"
           :selection-context="props.selectionContext"
           :show-actions="false"
           :show-count="true"
@@ -1823,8 +1825,9 @@ watch(
 
 .group-overlay {
   position: relative;
-  width: 240px;
-  flex: 0 0 240px;
+  max-width:230px;
+  width: 230px;
+  flex: 0 0 230px;
   background: rgba(15, 23, 42, 0.8);
   backdrop-filter: blur(12px);
   border: 1px solid rgba(255, 255, 255, 0.1);

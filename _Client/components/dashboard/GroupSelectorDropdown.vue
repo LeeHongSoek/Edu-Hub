@@ -16,6 +16,7 @@ const props = withDefaults(
     showCount?: boolean;
     initialDepth?: number;
     hideTopLevel?: boolean;
+    renderFromDepth?: number;
   }>(),
   {
     modelValue: null,
@@ -28,6 +29,7 @@ const props = withDefaults(
     showCount: true,
     initialDepth: 0,
     hideTopLevel: false,
+    renderFromDepth: 2,
   },
 );
 
@@ -61,13 +63,15 @@ const effectiveUserNo = computed(
 
 const filterGroupsByOwner = (
   list: Group[],
-  ownerNo: string | number | null,
+  ownerNo: string | number | null | (string | number | null)[],
 ): Group[] => {
-  if (ownerNo === null || ownerNo === undefined) return list;
+  const owners = Array.isArray(ownerNo) ? ownerNo : [ownerNo];
+  const validOwners = owners.filter(o => o !== null && o !== undefined).map(String);
+  if (validOwners.length === 0) return list;
 
   const matchesOwner = (group: Group) => {
     const creatorNo = (group as any).creator_no ?? (group as any).creator_id;
-    return String(creatorNo) === String(ownerNo) || String(creatorNo) === "0";
+    return validOwners.includes(String(creatorNo));
   };
 
   const owned: Group[] = [];
@@ -92,7 +96,7 @@ const filterGroupsByOwner = (
 };
 
 const filteredGroups = computed(() =>
-  filterGroupsByOwner(props.groups, effectiveUserNo.value),
+  filterGroupsByOwner(props.groups, [effectiveUserNo.value, 0]),
 );
 
 const findGroupPath = (
@@ -216,12 +220,13 @@ const clearGroup = () => {
         :group-search-input="groupSearchInput"
         :searched-groups="searchedGroups"
         :model-value="modelValue"
-        :current-user-no="currentUserNo"
+        :current-user-no="[currentUserNo ?? null, 0]"
         :selection-context="selectionContext"
         :show-actions="true"
         :show-count="showCount"
         :initial-depth="initialDepth"
         :hide-top-level="hideTopLevel"
+        :render-from-depth="renderFromDepth"
         @update:group-search-input="groupSearchInput = $event"
         @select-group="selectGroup"
         @open-manage="emit('open-manage')"
@@ -251,6 +256,7 @@ const clearGroup = () => {
   position: relative;
   z-index: 2;
   pointer-events: auto;
+  max-width: 400px;
   width: 100%;
   height: 42px;
   box-sizing: border-box;
@@ -300,6 +306,7 @@ const clearGroup = () => {
   right: 0;
   z-index: 100;
   max-height: min(68vh, 560px);
+  max-width: 400px;
 }
 
 .group-select-dropdown[open] .group-panel-anchor {
