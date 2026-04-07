@@ -1590,10 +1590,7 @@ watch(
                     @click="handleCopyQuestion(q)">
                     복사 후 가져오기
                   </button>
-                  <button
-                    v-else-if="canEditQuestion(q)"
-                    class="btn-modify"
-                    @click="openEditor(q)">
+                  <button v-else-if="canEditQuestion(q)" class="btn-modify" @click="openEditor(q)">
                     수정
                   </button>
                   <button class="btn-solve" @click="handleSolve(q)">
@@ -1627,7 +1624,14 @@ watch(
       v-if="selectedQuestionForSolve && selectedQuestionForSolve.question_id"
       :key="selectedQuestionForSolve.question_id"
       :question="selectedQuestionForSolve"
+      :has-prev="getPrevQuestion() !== null"
+      :has-next="getNextQuestion() !== null"
+      :current-index="currentQuestionIndex"
+      :total-questions="props.questions.length"
       @close="selectedQuestionForSolve = null"
+      @prev="handlePrev"
+      @next="handleNext"
+      @go-to-index="handleGoToQuestionIndex"
     />
 
     <DailyQuestionsModal
