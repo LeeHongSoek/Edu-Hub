@@ -2,6 +2,7 @@
 import { ref, onMounted, onUnmounted, computed, reactive } from "vue";
 import type { Question, QuestionReview } from "~/types";
 import LatexRenderer from "~/components/LatexRenderer.vue";
+import MdViewer from "~/components/dashboard/MdViewer.vue";
 import IconClock from "~/assets/icons/IconClock.svg?component";
 import IconMessage from "~/assets/icons/IconMessage.svg?component";
 import IconCheck from "~/assets/icons/IconCheck.svg?component";
@@ -560,6 +561,7 @@ const formatGroupPath = (group: any) => {
   return parts.join(" / ");
 };
 
+
 const openReviewModal = async () => {
   showReviewModal.value = true;
   await fetchReviews();
@@ -680,7 +682,10 @@ const togglePanelFullscreen = () => {
 
         <div v-if="question.passage" class="question-passage">
           <client-only>
-            <v-md-preview :text="question.passage.content_md"></v-md-preview>
+            <MdViewer
+              :content="question.passage.content_md || ''"
+              background="#1a232e"
+            />
           </client-only>
         </div>
 
@@ -701,7 +706,10 @@ const togglePanelFullscreen = () => {
             </div>
             <div v-if="child.passage" class="child-question-passage">
               <client-only>
-                <v-md-preview :text="child.passage.content_md"></v-md-preview>
+                <MdViewer
+                  :content="child.passage.content_md || ''"
+                  background="#1a232e"
+                />
               </client-only>
             </div>
             <div
@@ -1427,18 +1435,27 @@ const togglePanelFullscreen = () => {
 }
 
 .question-passage {
-  background: #fff;
-  color: #333;
-  border-radius: 5px;
-  padding: 1.5rem;
+  background: rgba(15, 23, 42, 0.72);
+  color: #e2e8f0;
+  border-radius: 0;
+  padding: 0;
   margin-bottom: 1.5rem;
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  border: none;
+  box-shadow: none;
 }
 /* v-md-editor 기본 스타일 보완 */
 .question-passage :deep(.v-md-plugin-markdown-it) {
   font-family: "Noto Sans KR", sans-serif;
   font-size: 1.05rem;
   line-height: 1.6;
+}
+
+.child-question-passage {
+  margin-bottom: 0.6rem;
+  background: rgba(15, 23, 42, 0.72);
+  border: none;
+  border-radius: 0;
+  padding: 0;
 }
 
 .no-options {

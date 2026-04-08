@@ -22,6 +22,7 @@ import IconArrowRight from "~/assets/icons/IconArrowRight.svg?component";
 import IconClose from "~/assets/icons/IconClose.svg?component";
 import IconInfo from "~/assets/icons/IconInfo.svg?component";
 import IconManual from "~/assets/icons/IconManual.svg?component";
+import IconGitMascotHero from "~/assets/icons/IconGitMascotHero.svg?component";
 import NumberAnimation from "vue-number-animation";
 import { useAuthSession } from "~/composables/useAuthSession";
 
@@ -998,12 +999,8 @@ onMounted(() => {
 
             <div v-if="manualActiveTab === 'github'" class="github-container">
               <div class="github-placeholder">
-                <IconSparkle
-                  width="48"
-                  height="48"
-                  class="github-placeholder-icon"
-                />
-                <h3>Github 저장소 안내</h3>
+                <IconGitMascotHero/>
+                <h3>Github 저장소로 안내할게요</h3>
                 <p>
                   보안 정책(X-Frame-Options)으로 인해 Github 페이지를 모달 내에
                   직접 표시할 수 없습니다.
@@ -1013,7 +1010,7 @@ onMounted(() => {
                   target="_blank"
                   rel="noopener noreferrer"
                   class="btn-github-link">
-                  새 창에서 Github 열기
+                  저장소 바로 열기
                 </a>
               </div>
             </div>
@@ -1235,7 +1232,7 @@ onMounted(() => {
       rgba(5, 3, 1, 0.5) 55%,
       rgba(5, 3, 1, 0.2) 100%
     ),
-    linear-gradient(to top, rgba(5, 3, 1, 0.75) 0%, transparent 50%);
+    linear-gradient(to top, rgba(5, 3, 1, 0.75) 0%, rgba(5, 3, 1, 0) 50%);
 }
 
 /* ─────────────────────────────────────
@@ -1299,7 +1296,7 @@ onMounted(() => {
   background: linear-gradient(135deg, #818cf8, #c084fc);
   -webkit-background-clip: text;
   background-clip: text;
-  -webkit-text-fill-color: transparent;
+  -webkit-text-fill-color: rgba(0, 0, 0, 0);
 }
 .nav-links {
   display: flex;
@@ -1397,7 +1394,7 @@ onMounted(() => {
   background: linear-gradient(135deg, #e0e7ff 0%, #a5b4fc 50%, #c084fc 100%);
   -webkit-background-clip: text;
   background-clip: text;
-  -webkit-text-fill-color: transparent;
+  -webkit-text-fill-color: rgba(0, 0, 0, 0);
 }
 
 /* 구분 기호 (- :) */
@@ -1657,7 +1654,7 @@ onMounted(() => {
   background: linear-gradient(135deg, #e0e7ff, #a5b4fc);
   -webkit-background-clip: text;
   background-clip: text;
-  -webkit-text-fill-color: transparent;
+  -webkit-text-fill-color: rgba(0, 0, 0, 0);
 }
 .stat b sup {
   font-size: 0.65em;
@@ -2156,7 +2153,11 @@ input[type="password"] {
 .scroll-arrow {
   width: 1px;
   height: 28px;
-  background: linear-gradient(to bottom, rgba(255, 255, 255, 0.4), transparent);
+  background: linear-gradient(
+    to bottom,
+    rgba(255, 255, 255, 0.4),
+    rgba(255, 255, 255, 0)
+  );
   animation: scrollDown 1.5s ease-in-out infinite;
 }
 @keyframes scrollDown {
@@ -2374,7 +2375,7 @@ input[type="password"] {
   font-weight: 800;
   line-height: 1.3;
   color: #f8fafc;
-  background: transparent;
+  background: #030621;
   border: none;
   border-radius: 0;
   letter-spacing: 0.7em;
@@ -2396,10 +2397,10 @@ input[type="password"] {
   flex: 1;
   overflow-y: auto;
   overflow-x: hidden;
-  background: transparent;
+  background: #2b2d31;
   border: none;
   border-radius: 0;
-  padding: 1.5rem;
+  padding: 0;
   scrollbar-width: auto;
   scrollbar-color: rgba(165, 180, 252, 0.9) rgba(255, 255, 255, 0.08);
 }
@@ -2436,20 +2437,27 @@ input[type="password"] {
   width: 100%;
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: stretch;
 }
 
 .manual-pdf :deep(.vue-pdf-embed__page) {
   width: 100%;
-  display: flex;
-  justify-content: center;
+  display: block;
+  margin: 0 !important;
+  padding: 0 !important;
+  box-shadow: none !important;
+  border: none !important;
+  background: #2b2d31 !important;
+  overflow: hidden;
 }
 
 .manual-pdf :deep(canvas) {
   display: block;
-  margin: 0 auto;
-  max-width: 100%;
+  margin: -10% 0 -9% -10%;
+  width: 122% !important;
+  max-width: none;
   height: auto !important;
+  filter: invert(0.83) hue-rotate(180deg) saturate(0.82) contrast(0.95);
 }
 
 .manual-loading {
@@ -2621,7 +2629,7 @@ input[type="password"] {
 .manual-tabs {
   display: flex;
   gap: 4px;
-  background-color: transparent;
+  background-color: #030621;
   padding: 0;
   border-radius: 0;
   border: none;
@@ -2684,11 +2692,9 @@ input[type="password"] {
   min-height: 0;
   position: relative;
   overflow: hidden;
-  background-color: #2b2d31; /* Match the active tab */
-  border-radius: 0 0 12px 12px;
-  border-left: 1px solid rgba(255, 255, 255, 0.1);
-  border-right: 1px solid rgba(255, 255, 255, 0.1);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  background-color: #2b2d31;
+  border-radius: 0;
+  border: none;
   margin-top: 0 !important;
 }
 .erd-container {
@@ -2698,7 +2704,7 @@ input[type="password"] {
   align-items: center;
   justify-content: center;
   overflow: hidden;
-  background-color: transparent;
+  background-color: #2b2d31;
   cursor: grab;
   position: relative;
   user-select: none;
@@ -2745,50 +2751,67 @@ input[type="password"] {
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: transparent;
+  background-color: #2b2d31;
 }
 .github-placeholder {
   text-align: center;
-  padding: 40px;
-  background: rgba(255, 255, 255, 0.05);
+  padding: 32px 40px 34px;
+  background: radial-gradient(
+    120% 140% at 50% 0%,
+    rgba(124, 58, 237, 0.22) 0%,
+    rgba(39, 45, 74, 0.96) 48%,
+    rgba(33, 37, 58, 0.98) 100%
+  );
   border-radius: 10px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(165, 180, 252, 0.38);
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 16px;
-  max-width: 400px;
-}
-.github-placeholder-icon {
-  opacity: 0.7;
-  margin-bottom: 8px;
+  gap: 14px;
+  width: min(92%, 720px);
+  box-shadow: 0 18px 48px rgba(8, 10, 30, 0.42);
 }
 .github-placeholder h3 {
-  font-size: 1.25rem;
-  color: #fff;
+  font-size: clamp(1.2rem, 2.2vw, 1.6rem);
+  color: #e8edff;
   margin: 0;
+  letter-spacing: 0.01em;
+  font-weight: 800;
 }
 .github-placeholder p {
-  color: rgba(255, 255, 255, 0.6);
-  font-size: 0.95rem;
-  line-height: 1.5;
+  color: rgba(233, 238, 255, 0.82);
+  font-size: 1rem;
+  line-height: 1.65;
   margin: 0;
+  max-width: 48ch;
 }
 .btn-github-link {
-  margin-top: 12px;
+  margin-top: 8px;
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  padding: 10px 20px;
-  background-color: var(--color-primary);
+  padding: 12px 22px;
+  background: linear-gradient(135deg, #6d7bff 0%, #7a42f4 100%);
   color: #fff;
   text-decoration: none;
-  font-weight: 500;
-  border-radius: 8px;
+  font-weight: 700;
+  border-radius: 10px;
   transition: all 0.2s;
+  border: 1px solid rgba(214, 220, 255, 0.58);
+  box-shadow: 0 8px 20px rgba(80, 90, 230, 0.35);
 }
 .btn-github-link:hover {
-  filter: brightness(1.1);
-  transform: translateY(-2px);
+  filter: brightness(1.06);
+  transform: translateY(-2px) scale(1.01);
+}
+
+@keyframes mascotBob {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
 }
 </style>

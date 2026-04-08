@@ -1,0 +1,110 @@
+<svg width="420" height="300" viewBox="0 0 420 300" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <style>
+    /* 🚀 로봇 비행: 좌우로 부드럽게 움직이며 위아래로 살짝 흔들림 */
+    @keyframes fly {
+      0%, 100% { transform: translate(0, 0) rotate(-20deg); }
+      50% { transform: translate(20px, -10px) rotate(-15deg); }
+    }
+    #robot { animation: fly 3s ease-in-out infinite; transform-origin: center; }
+
+    /* 🐱 고양이 꼬리(귀/머리) 흔들기: 회전 애니메이션 */
+    @keyframes wag {
+      0%, 100% { transform: rotate(14deg); }
+      50% { transform: rotate(20deg); }
+    }
+    #cat { animation: wag 1.5s ease-in-out infinite; transform-origin: 301px 118px; }
+
+    /* 🦆 오리 입 꽥꽥: 부리 부분을 열고 닫음 */
+    @keyframes quack {
+      0%, 100% { transform: scaleY(1); }
+      50% { transform: scaleY(1.5); }
+    }
+    #beak { animation: quack 0.4s ease-in-out infinite; transform-origin: 239px 207px; }
+
+    /* 🌟 별 반짝이기: 투명도 조절 */
+    @keyframes twinkle {
+      0%, 100% { opacity: 0.3; }
+      50% { opacity: 1; scale: 1.2; }
+    }
+    .star { animation: twinkle var(--duration) ease-in-out infinite; transform-origin: center; }
+  </style>
+
+  <defs>
+    <radialGradient id="spaceGlow" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(210 196) rotate(90) scale(168 258)">
+      <stop offset="0" stop-color="#C5AEFF"/>
+      <stop offset="0.54" stop-color="#7F63EE"/>
+      <stop offset="1" stop-color="#312B97"/>
+    </radialGradient>
+    <linearGradient id="botBody" x1="103" y1="140" x2="178" y2="209" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#F9A2FF"/>
+      <stop offset="1" stop-color="#9B66FF"/>
+    </linearGradient>
+    <linearGradient id="botFace" x1="114" y1="146" x2="157" y2="184" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#10162A"/>
+      <stop offset="1" stop-color="#18274B"/>
+    </linearGradient>
+    <linearGradient id="catHead" x1="264" y1="94" x2="330" y2="151" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFABFF"/>
+      <stop offset="1" stop-color="#B56CFF"/>
+    </linearGradient>
+    <linearGradient id="duckBody" x1="201" y1="175" x2="249" y2="226" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFE982"/>
+      <stop offset="1" stop-color="#FFBC36"/>
+    </linearGradient>
+    <filter id="soft" x="0" y="0" width="420" height="300" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feGaussianBlur stdDeviation="0.6"/>
+    </filter>
+    <filter id="drop" x="72" y="56" width="282" height="193" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feFlood flood-opacity="0" result="BackgroundImageFix"/>
+      <feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/>
+      <feOffset dy="8"/>
+      <feGaussianBlur stdDeviation="8"/>
+      <feComposite in2="hardAlpha" operator="out"/>
+      <feColorMatrix type="matrix" values="0 0 0 0 0.1 0 0 0 0 0.06 0 0 0 0 0.29 0 0 0 0.42 0"/>
+      <feBlend mode="normal" in2="BackgroundImageFix" result="effect1_dropShadow_1_3"/>
+      <feBlend mode="normal" in="SourceGraphic" in2="effect1_dropShadow_1_3" result="shape"/>
+    </filter>
+  </defs>
+
+  <rect width="420" height="300" rx="22" fill="url(#spaceGlow)"/>
+
+  <ellipse cx="210" cy="214" rx="130" ry="56" fill="#CAB8FF" fill-opacity="0.42"/>
+  
+  <g filter="url(#soft)">
+    <circle class="star" style="--duration: 2s" cx="73" cy="46" r="1.8" fill="#FFFFFF"/>
+    <circle class="star" style="--duration: 1.5s" cx="101" cy="171" r="2.2" fill="#FFFFFF"/>
+    <circle class="star" style="--duration: 3s" cx="156" cy="70" r="1.8" fill="#FFFFFF"/>
+    <circle class="star" style="--duration: 2.5s" cx="244" cy="84" r="1.4" fill="#FFFFFF"/>
+    <circle class="star" style="--duration: 1.8s" cx="298" cy="58" r="1.8" fill="#FFFFFF"/>
+    <circle class="star" style="--duration: 2.2s" cx="334" cy="174" r="2.2" fill="#FFFFFF"/>
+    <circle class="star" style="--duration: 2.8s" cx="368" cy="124" r="1.7" fill="#FFFFFF"/>
+  </g>
+
+  <g filter="url(#drop)">
+    <g id="robot" transform="rotate(-20 138 174)">
+      <rect x="96" y="134" width="84" height="82" rx="30" fill="url(#botBody)"/>
+      <rect x="112" y="146" width="48" height="40" rx="14" fill="url(#botFace)"/>
+      <circle cx="123.5" cy="164" r="3.5" fill="#54DEFF"/>
+      <circle cx="138" cy="164" r="3.5" fill="#54DEFF"/>
+      <rect x="153" y="155.5" width="3" height="17" rx="1.5" fill="#7FB7FF"/>
+      <circle cx="96" cy="173" r="9" fill="#E18DFF"/>
+      <circle cx="180" cy="176" r="9" fill="#B07BFF"/>
+    </g>
+
+    <g id="cat" transform="rotate(14 294 122)">
+      <path d="M261 118C261 93 279 78 301 78C323 78 339 94 339 118C339 141 324 157 301 157C279 157 261 141 261 118Z" fill="url(#catHead)"/>
+      <path d="M276 93L284 75L296 90L276 93Z" fill="#F38BFF"/>
+      <path d="M307 90L320 77L322 96L307 90Z" fill="#CE79FF"/>
+      <ellipse cx="290" cy="118" rx="6.6" ry="7.4" fill="#FFFFFF"/>
+      <ellipse cx="291.2" cy="119.2" rx="3.2" ry="3.7" fill="#1F214F"/>
+      <ellipse cx="301.5" cy="122.4" rx="8.5" ry="6" fill="#F9D6FF"/>
+    </g>
+
+    <g transform="rotate(-8 223 204)">
+      <circle cx="220" cy="203" r="27" fill="url(#duckBody)"/>
+      <ellipse id="beak" cx="239" cy="207" rx="12" ry="8.5" fill="#FF9132"/>
+      <circle cx="215" cy="194" r="3.3" fill="#442D27"/>
+      <path d="M205 217C210 223 218 226 226 226" stroke="#E7882D" stroke-width="4" stroke-linecap="round"/>
+    </g>
+  </g>
+</svg>
