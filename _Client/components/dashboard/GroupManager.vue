@@ -29,7 +29,9 @@ const fetchGroups = async () => {
       userNo: props.currentUserNo,
     };
     const queryStr = new URLSearchParams(params).toString();
-    const data = await $fetch<any>(`/api/groups?${queryStr}`);
+    const data = await $fetch<any>(`/api/groups?${queryStr}`, {
+      headers: getAuthHeader(),
+    });
     groups.value = data?.groups || [];
   } catch (error) {
     console.error("서버 통신 오류(fetch) groups:", error);
@@ -74,6 +76,7 @@ const handleAddGroup = async () => {
 
     await $fetch(`${apiBase.value}/groups`, {
       method: "POST",
+      headers: getAuthHeader(),
       body: {
         name: newGroupName.value,
         parent_group_id: selectedParentId.value ?? ROOT_GROUP_ID,
@@ -99,6 +102,7 @@ const handleRename = async (group: Group) => {
   try {
     await $fetch(`${apiBase.value}/groups/${group.group_id}`, {
       method: "PATCH",
+      headers: getAuthHeader(),
       body: { name: newName },
     });
     await fetchGroups();
@@ -119,6 +123,7 @@ const handleDelete = async (group: Group) => {
   try {
     await $fetch(`${apiBase.value}/groups/${group.group_id}`, {
       method: "DELETE",
+      headers: getAuthHeader(),
     });
     await fetchGroups();
     emit("updated");

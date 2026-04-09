@@ -14,7 +14,7 @@ const emit = defineEmits<{
 }>();
 
 // API 설정 통합
-const { apiBase } = useApi();
+const { apiBase, getAuthHeader } = useApi();
 const userCookie = useCookie("user_info");
 const currentUserNo = computed(() => {
   if (!userCookie.value) return null;
@@ -54,7 +54,9 @@ const fetchGroups = async () => {
   try {
     const data = await $fetch<
       Group[] | { groups?: Group[]; unassigned_count?: number }
-    >(`${apiBase.value}/groups`);
+    >(`${apiBase.value}/groups`, {
+      headers: getAuthHeader(),
+    });
     groups.value = Array.isArray(data) ? data : (data.groups ?? []);
   } catch (error) {
     console.error("서버 통신 오류(fetch) groups:", error);
@@ -92,6 +94,7 @@ const handleSave = async () => {
 
     await $fetch(url, {
       method: isCreate ? "POST" : "PATCH",
+      headers: getAuthHeader(),
       body: {
         ...editData.value,
         creator_no: currentUserNo.value,

@@ -1,19 +1,23 @@
-import { Controller, Get, Post, Patch, Delete, Body, Param, Query } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Delete, Body, Param, Query, Request, UnauthorizedException, UseGuards } from '@nestjs/common';
 import { GroupsService } from './groups.service';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
 @Controller('groups')
+@UseGuards(JwtAuthGuard)
 export class GroupsController {
   constructor(private readonly groupsService: GroupsService) {}
 
   @Get()
   findAll(
+    @Request() req: any,
     @Query('scope') scope?: string,
-    @Query('userNo') userNo?: string | number,
-    @Query('viewerNo') viewerNo?: string | number,
     @Query('bookId') bookId?: string | number,
     @Query('examId') examId?: string | number,
   ) {
-    return this.groupsService.getHierarchy(scope, userNo, viewerNo, bookId, examId);
+    const userNoVal = req.user?.user_no || req.user?.userNo;
+    if (!userNoVal) throw new UnauthorizedException();
+
+    return this.groupsService.getHierarchy(scope, userNoVal, userNoVal, bookId, examId);
   }
 
   @Post()

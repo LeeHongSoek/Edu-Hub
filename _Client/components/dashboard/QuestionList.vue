@@ -723,6 +723,7 @@ const fetchGroups = async () => {
     const data = await $fetch<{ groups: Group[]; unassigned_count: number }>(
       `${apiBase.value}/groups`,
       {
+        headers: getAuthHeader(),
         query: {
           scope: isContextA
             ? props.viewMode

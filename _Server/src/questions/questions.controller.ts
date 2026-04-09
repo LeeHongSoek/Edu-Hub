@@ -1,5 +1,6 @@
-import { BadRequestException, Controller, Get, Post, Patch, Delete, Body, Param } from '@nestjs/common';
+import { BadRequestException, Controller, Get, Post, Patch, Delete, Body, Param, Request, UnauthorizedException, UseGuards } from '@nestjs/common';
 import { QuestionsService } from './questions.service';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
 @Controller('questions')
 export class QuestionsController {
@@ -7,7 +8,9 @@ export class QuestionsController {
 
   // 모든 문제 목록 조회 API
   @Post()
+  @UseGuards(JwtAuthGuard)
   findAll(
+    @Request() req: any,
     @Body('creator_no') creatorNo?: string,
     @Body('group_id') groupId?: string,
     @Body('search_field') searchField?: string,
@@ -21,15 +24,21 @@ export class QuestionsController {
     @Body('public_only') publicOnly?: boolean | string,
     @Body('viewer_no') viewerNo?: string,
   ) {
+    const userNoVal = req.user?.user_no || req.user?.userNo;
+    if (!userNoVal) throw new UnauthorizedException();
+
+    const effectiveCreatorNo = (creatorNo && creatorNo !== 'undefined') ? creatorNo : String(userNoVal);
+    const effectiveViewerNo = (viewerNo && viewerNo !== 'undefined') ? viewerNo : String(userNoVal);
+
     return this.questionsService.findAll({
-      creatorNo: (creatorNo && creatorNo !== 'undefined') ? BigInt(creatorNo) : undefined,
+      creatorNo: effectiveCreatorNo ? BigInt(effectiveCreatorNo) : undefined,
       groupId: (groupId && groupId !== 'undefined') ? BigInt(groupId) : undefined,
       bookId: (bookId && bookId !== 'undefined') ? BigInt(bookId) : undefined,
       examId: (examId && examId !== 'undefined') ? BigInt(examId) : undefined,
       excludeBookId: (excludeBookId && excludeBookId !== 'undefined') ? BigInt(excludeBookId) : undefined,
       excludeExamId: (excludeExamId && excludeExamId !== 'undefined') ? BigInt(excludeExamId) : undefined,
       publicOnly: publicOnly === true || publicOnly === 'true',
-      viewerNo: (viewerNo && viewerNo !== 'undefined') ? BigInt(viewerNo) : undefined,
+      viewerNo: effectiveViewerNo ? BigInt(effectiveViewerNo) : undefined,
       searchField: (searchField === 'content' || searchField === 'id') ? searchField : 'title',
       searchKeyword: searchKeyword?.trim() || undefined,
       page: page ? Number(page) : 1,
@@ -38,9 +47,16 @@ export class QuestionsController {
   }
 
   // 문제 생성
+  @UseGuards(JwtAuthGuard)
   @Post('create')
-  create(@Body() createQuestionDto: any) {
-    return this.questionsService.create(createQuestionDto);
+  create(@Request() req: any, @Body() createQuestionDto: any) {
+    const userNoVal = req.user?.user_no || req.user?.userNo;
+    if (!userNoVal) throw new UnauthorizedException();
+
+    return this.questionsService.create({
+      ...createQuestionDto,
+      creator_no: userNoVal,
+    });
   }
 
   // 문제 수정

@@ -110,7 +110,11 @@ const logDashboardAction = async (
 
 const SYS_LOG_LIMIT = 1;
 
-type SysLogEntry = { content?: string; created_at?: string | null };
+type SysLogEntry = {
+  content?: string;
+  created_at?: string | null;
+  cache_id?: number | null;
+};
 const sysLogItems = ref<SysLogEntry[]>([]);
 const sysLogSearchInput = ref("");
 const sysLogSearchQuery = ref("");
@@ -118,17 +122,26 @@ const sysLogPage = ref(1);
 const sysLogTotal = ref(0);
 const sysLogLoading = ref(false);
 const sysLogSlider = ref(1);
+const sysLogSliderRef = ref<{ focus?: () => void } | null>(null);
 
-const fetchSysLogs = async () => {
+const fetchSysLogs = async (options?: {
+  limit?: number;
+  truncateCache?: boolean;
+}) => {
   sysLogLoading.value = true;
   try {
+    const limit = options?.limit ?? SYS_LOG_LIMIT;
+    const queryParams: Record<string, string | number> = {
+      q: sysLogSearchQuery.value,
+      page: sysLogPage.value,
+      limit,
+    };
+    if (options?.truncateCache) {
+      queryParams.truncateCache = "1";
+    }
     const data = await $fetch<any>(`${apiBase.value}/sys-logs`, {
       headers: getAuthHeader(),
-      query: {
-        q: sysLogSearchQuery.value,
-        page: sysLogPage.value,
-        limit: SYS_LOG_LIMIT,
-      },
+      query: queryParams,
     });
     sysLogItems.value = data.items ?? [];
     sysLogTotal.value = Number(data.total ?? 0) || 0;
@@ -182,15 +195,28 @@ const latestSysLogTimeParts = computed(() => {
     second:match[6],   // 13
   };
 });
+const latestSysLogIsUncached = computed(
+  () => !!latestSysLog.value && latestSysLog.value.cache_id == null,
+);
 
-const refreshSysLogs = () => {
-  fetchSysLogs();
+const clearSysLogCache = async () => {
+  try {
+    await $fetch(`${apiBase.value}/sys-logs/cache`, {
+      method: "DELETE",
+      headers: getAuthHeader(),
+    });
+  } catch (error) {
+    console.error("시스템 로그 캐시 클리어 실패:", error);
+  }
 };
 
 const handleRefreshClick = () => {
   sysLogPage.value = 1;
   sysLogSlider.value = 1;
-  fetchSysLogs();
+  fetchSysLogs({ limit: 100 });
+  nextTick(() => {
+    sysLogSliderRef.value?.focus?.();
+  });
 };
 
 const handleSysLogHotkey = (event: KeyboardEvent) => {
@@ -228,11 +254,20 @@ const updateSysLogPage = (page: number) => {
   }
 };
 
-watch([() => activeTab.value, () => sysLogPage.value], () => {
-  if (activeTab.value === "sys-logs") {
+watch([() => activeTab.value, () => sysLogPage.value], ([tab]) => {
+  if (tab === "sys-logs") {
     fetchSysLogs();
   }
 });
+
+watch(
+  () => activeTab.value,
+  (tab, prev) => {
+    if (prev === "sys-logs" && tab !== "sys-logs") {
+      void clearSysLogCache();
+    }
+  },
+);
 
 const setActiveTab = (tab: string) => {
   if (activeTab.value === tab) return;
@@ -531,6 +566,9 @@ onUnmounted(() => {
   isTypingActive.value = false;
   if (cursorInterval) clearInterval(cursorInterval);
   window.removeEventListener("keydown", handleSysLogHotkey);
+  if (activeTab.value === "sys-logs") {
+    void clearSysLogCache();
+  }
 });
 </script>
 
@@ -738,6 +776,7 @@ onUnmounted(() => {
             </div>
             <div class="sys-log-pagination">
               <PageSlider
+                ref="sysLogSliderRef"
                 v-model="sysLogSlider"
                 :max="sysLogTotalPages"
                 :disabled="sysLogTotalPages <= 1"
@@ -749,6 +788,7 @@ onUnmounted(() => {
               <textarea
                 readonly
                 :value="formattedSysLogContent"
+                :class="{ 'sys-log-textarea__uncached': latestSysLogIsUncached }"
               ></textarea>
             </div>
             
@@ -1102,6 +1142,29 @@ onUnmounted(() => {
   resize: none;
   white-space: pre;
   overflow: auto;
+}
+.sys-log-textarea textarea.sys-log-textarea__uncached {
+  color: #94a3b8;
+}
+.sys-log-textarea textarea::-webkit-scrollbar {
+  width: 12px;
+  height: 12px;
+}
+.sys-log-textarea textarea::-webkit-scrollbar-track {
+  background: rgba(15, 23, 42, 0.6);
+  border-radius: 6px;
+}
+.sys-log-textarea textarea::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, rgba(248, 250, 252, 0.65), rgba(165, 180, 252, 0.8));
+  border-radius: 6px;
+  border: 2px solid rgba(15, 23, 42, 0.85);
+}
+.sys-log-textarea textarea::-webkit-scrollbar-thumb:hover {
+  background: rgba(248, 250, 252, 0.9);
+}
+.sys-log-textarea textarea {
+  scrollbar-color: rgba(248, 250, 252, 0.65) rgba(15, 23, 42, 0.6);
+  scrollbar-width: thin;
 }
 
 .btn-refresh,

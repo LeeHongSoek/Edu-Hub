@@ -25,6 +25,7 @@ const emit = defineEmits<{
 
 const localValue = ref(props.modelValue);
 const isDragging = ref(false);
+const sliderElement = ref<HTMLInputElement | null>(null);
 
 watch(
   () => props.modelValue,
@@ -85,6 +86,10 @@ const handleKeyDown = (event: KeyboardEvent) => {
     emit("commit", nextValue);
   }
 };
+
+defineExpose({
+  focus: () => sliderElement.value?.focus(),
+});
 </script>
 
 <template>
@@ -92,6 +97,7 @@ const handleKeyDown = (event: KeyboardEvent) => {
     <span v-if="showLimits" class="slider-limit">{{ min }}</span>
     <div class="slider-track-container">
       <input
+        ref="sliderElement"
         type="range"
         :min="min"
         :max="safeMax"

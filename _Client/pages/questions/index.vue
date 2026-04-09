@@ -167,6 +167,7 @@ const {
   refresh,
 } = await useFetch<QuestionListResponse>(() => `${apiBase.value}/questions`, {
   method: "POST",
+  headers: getAuthHeader(),
   body: requestBody,
 });
 
