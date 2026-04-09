@@ -21,7 +21,6 @@ export class QuestionsController {
     @Body('exam_id') examId?: string,
     @Body('exclude_book_id') excludeBookId?: string,
     @Body('exclude_exam_id') excludeExamId?: string,
-    @Body('public_only') publicOnly?: boolean | string,
     @Body('viewer_no') viewerNo?: string,
   ) {
     const userNoVal = req.user?.user_no || req.user?.userNo;
@@ -37,7 +36,6 @@ export class QuestionsController {
       examId: (examId && examId !== 'undefined') ? BigInt(examId) : undefined,
       excludeBookId: (excludeBookId && excludeBookId !== 'undefined') ? BigInt(excludeBookId) : undefined,
       excludeExamId: (excludeExamId && excludeExamId !== 'undefined') ? BigInt(excludeExamId) : undefined,
-      publicOnly: publicOnly === true || publicOnly === 'true',
       viewerNo: effectiveViewerNo ? BigInt(effectiveViewerNo) : undefined,
       searchField: (searchField === 'content' || searchField === 'id') ? searchField : 'title',
       searchKeyword: searchKeyword?.trim() || undefined,

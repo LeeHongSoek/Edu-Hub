@@ -64,6 +64,27 @@ function toPrismaModelName(delegateName: string): string {
   return delegateName.charAt(0).toUpperCase() + delegateName.slice(1);
 }
 
+function truncateUtf8ByBytes(text: string, maxBytes: number): string {
+  if (Buffer.byteLength(text, 'utf8') <= maxBytes) {
+    return text;
+  }
+
+  let totalBytes = 0;
+  let cutIndex = 0;
+
+  for (const char of text) {
+    const charBytes = Buffer.byteLength(char, 'utf8');
+    if (totalBytes + charBytes > maxBytes) {
+      break;
+    }
+
+    totalBytes += charBytes;
+    cutIndex += char.length;
+  }
+
+  return text.slice(0, cutIndex) + '... 이하 생략 ';
+}
+
 async function bootstrap() {
   const frontendOrigin = process.env.FRONTEND_ORIGIN || 'http://127.0.0.1:0'; // 실제론 0 이 되어선 안됀다.
 
@@ -369,12 +390,10 @@ async function bootstrap() {
 
           // 요청 데이터가 있을 때만 요청 로그 생성, 없으면 빈 문자열
           const logReqData = hasRequest ? `[API통신_데이터_요청]\n${JSON.stringify(logEntry.payload.request, null, tabSize)}\n` : '';
-
           const logResData = `[API통신_데이터_응답]\n${JSON.stringify(logEntry.payload.response, null, tabSize)}\n`;
-
           const logContent = logHeader + logReqData + logResData;
+          const dbLogContent = truncateUtf8ByBytes(logContent, 65000); // insert시 text형으로 들어가도록 65000바이트로 자름
 
-          appendFileSync(logPath, logContent);
           if (
             !logHeader.includes('/api/sys-logs') &&
             !logHeader.includes('/api/user-logs')
@@ -387,14 +406,19 @@ async function bootstrap() {
               .replace('T', ' ');
             void prisma
               .$executeRaw(
-                Prisma.sql`INSERT INTO sys_logs (content, created_at) VALUES (${logContent}, ${createdAt})`,
+                Prisma.sql`INSERT INTO sys_logs (content, created_at) VALUES (${dbLogContent}, ${createdAt})`,
               )
               .catch(() => { });
           }
-        } catch { }
 
-        // // 콘솔 출력
-        console.log(`\n[API통신_헤더<back>] [user_no: ${loginUserNo}] <${logEntry.method}> ${url} (${logEntry.statusCode}) - ${logEntry.duration} [${new Date().toLocaleString()}]`);
+          appendFileSync(logPath, logContent); // 로그파일에 기록
+
+        } catch {
+          appendFileSync(logPath, `[API통신_헤더 console] [user_no: ${loginUserNo}] <${logEntry.method}> ${url} (${logEntry.statusCode}) - ${logEntry.duration} [${new Date().toLocaleString()}]`);
+        }
+
+        // // 콘솔 출력 
+        console.log(`\n[API통신_헤더 console] [user_no: ${loginUserNo}] <${logEntry.method}> ${url} (${logEntry.statusCode}) - ${logEntry.duration} [${new Date().toLocaleString()}]`);
 
         // if (logEntry.payload.request.length > 0) {
         //   console.table(logEntry.payload.request);

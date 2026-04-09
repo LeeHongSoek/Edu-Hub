@@ -249,7 +249,7 @@ const animatedStats = computed(() => {
 });
 
 const fetchStats = async () => {
-  const url = `${apiBase.value}/stats`;
+  const url = `${apiBase.value}/stats_sample`;
   console.log("[fetchStats] Fetching from:", url);
   try {
     const data = await $fetch(url);
@@ -273,7 +273,7 @@ const fetchTickerData = async () => {
   console.log("[ticker] Starting fetch...");
   try {
     const data = await $fetch<QuestionListResponse>(
-      `${apiBase.value}/questions`,
+      `${apiBase.value}/questions_sample`,
       {
         method: "POST",
         body: {
@@ -305,7 +305,7 @@ const showDailyModal = ref(false);
 const checkDailyRefresh = async () => {
   try {
     const data = await $fetch<any>(
-      `${apiBase.value}/question-books/daily/refresh`,
+      `${apiBase.value}/question-books_sample/daily/refresh`,
     );
     if (data && data.items) {
       dailyQuestions.value = data.items.map((it: any) => it.question);
