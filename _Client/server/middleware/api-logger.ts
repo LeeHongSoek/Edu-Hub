@@ -87,7 +87,7 @@ export default defineEventHandler(async (event) => {
           ? JSON.stringify(responseBody, null, tabSize)
           : JSON.stringify(responseBody, null, tabSize);
       const hasRequestBody = requestBodyPretty !== '(empty)' && requestBodyPretty !== '(unavailable)';
-      const logHeader = `[API통신_헤더<front>] <${event.method}> ${event.path} (${event.node.res.statusCode}) - ${duration}ms [${new Date().toLocaleString()}]\n`;
+      const logHeader = `[API통신_헤더<front>] <${event.method}> ${event.path} (${event.node.res.statusCode}) - ${duration} [${new Date().toLocaleString()}]\n`;
       const logReqData = hasRequestBody
         ? `[API통신_데이터_요청<front>]\n${requestBodyPretty}\n`
         : '';

@@ -159,7 +159,7 @@ const testApis = async () => {
       });
 
       console.log(
-        `[API통신_헤더<front>] <${test.method.toUpperCase()}> ${test.url} (200) - ${duration}ms [${new Date().toLocaleString()}]`,
+        `[API통신_헤더<front>] <${test.method.toUpperCase()}> ${test.url} (200) - ${duration} [${new Date().toLocaleString()}]`,
       );
       if (requestBody) {
         printBodyTable("[API통신_데이터_요청<front>]", requestBody);
