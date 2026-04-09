@@ -162,9 +162,9 @@ const testApis = async () => {
         `[API통신_헤더<front>] <${test.method.toUpperCase()}> ${test.url} (200) - ${duration} [${new Date().toLocaleString()}]`,
       );
       if (requestBody) {
-        printBodyTable("[API통신_데이터_요청<front>]", requestBody);
+        printBodyTable("[API통신_데이터_요청 front ]", requestBody);
       }
-      printBodyTable("[API통신_데이터_응답<front>]", res);
+      printBodyTable("[API통신_데이터_응답]", res);
     }
 
     printTable();

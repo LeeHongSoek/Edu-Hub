@@ -702,16 +702,8 @@ onUnmounted(() => {
           <section class="sys-log-panel">
             <div class="sys-log-controls">
               <div class="sys-log-search">
-                <span class="meta-item time-chips" v-if="latestSysLogTimeParts">
-                  {{ latestSysLogTimeParts.hour }}
-                  <strong>:</strong>
-                  {{ latestSysLogTimeParts.minute }}
-                  <strong>:</strong>
-                  {{ latestSysLogTimeParts.second }}
-                </span>
-                <button class="btn-refresh" @click="handleRefreshClick">
-                  새로고침(cmd/ctrl+r)
-                </button>
+               
+                
                 <input
                   v-model="sysLogSearchInput"
                   type="text"
@@ -728,8 +720,20 @@ onUnmounted(() => {
                   검색
                 </button>
               </div>
+              
               <div class="sys-log-meta">
-                <span class="meta-item">{{ sysLogPage }} / {{ sysLogTotalPages }}</span>                
+               
+                <span class="meta-item">{{ sysLogPage }} / {{ sysLogTotalPages }}</span>   
+               <span class="meta-item time-chips" v-if="latestSysLogTimeParts">
+                  {{ latestSysLogTimeParts.hour }}
+                  <strong>:</strong>
+                  {{ latestSysLogTimeParts.minute }}
+                  <strong>:</strong>
+                  {{ latestSysLogTimeParts.second }}
+                </span>
+                 <button class="btn-refresh" @click="handleRefreshClick">
+                  새로고침(cmd/ctrl+r)
+                </button>             
               </div>
             </div>
             <div class="sys-log-pagination">

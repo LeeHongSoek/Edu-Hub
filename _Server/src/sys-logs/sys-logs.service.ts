@@ -4,7 +4,7 @@ import { Prisma } from '@prisma/client';
 
 @Injectable()
 export class SysLogsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private prisma: PrismaService) { }
 
   async findAll(options: {
     search?: string;
@@ -16,13 +16,13 @@ export class SysLogsService {
     const limit = Math.min(requestedLimit, 20);
     const where: Prisma.SysLogWhereInput = options.search
       ? {
-          content: {
-            contains: options.search,
-          },
-        }
+        content: {
+          contains: options.search,
+        },
+      }
       : {};
 
-      const [items, total] = await Promise.all([
+    const [items, total] = await Promise.all([
       this.prisma.sysLog.findMany({
         where,
         orderBy: { created_at: 'desc' },
@@ -32,6 +32,6 @@ export class SysLogsService {
       this.prisma.sysLog.count({ where }),
     ]);
 
-    return { items, total: Math.min(total, 20) };
+    return { items, total: Math.min(total, 100) }; // 100개 이상은 안보여줌
   }
 }

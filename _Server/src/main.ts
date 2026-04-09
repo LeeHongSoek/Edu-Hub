@@ -364,9 +364,9 @@ async function bootstrap() {
           const logHeader = `[API통신_헤더<back>] <${logEntry.method}> ${url} (${logEntry.statusCode}) - ${logEntry.duration} [${new Date().toLocaleString()}]\n`;
 
           // 요청 데이터가 있을 때만 요청 로그 생성, 없으면 빈 문자열
-          const logReqData = hasRequest ? `[API통신_데이터_요청<back>]\n${JSON.stringify(logEntry.payload.request, null, tabSize)}\n` : '';
+          const logReqData = hasRequest ? `[API통신_데이터_요청 back ]\n${JSON.stringify(logEntry.payload.request, null, tabSize)}\n` : '';
 
-          const logResData = `[API통신_데이터_응답<back>]\n${JSON.stringify(logEntry.payload.response, null, tabSize)}\n`;
+          const logResData = `[API통신_데이터_응답]\n${JSON.stringify(logEntry.payload.response, null, tabSize)}\n`;
 
           const logContent = logHeader + logReqData + logResData;
 
