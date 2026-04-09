@@ -63,12 +63,12 @@ export default defineEventHandler(async (event) => {
 
     const responseBody = responseText
       ? (() => {
-          try {
-            return JSON.parse(responseText);
-          } catch {
-            return responseText;
-          }
-        })()
+        try {
+          return JSON.parse(responseText);
+        } catch {
+          return responseText;
+        }
+      })()
       : null;
 
     try {
@@ -87,11 +87,11 @@ export default defineEventHandler(async (event) => {
           ? JSON.stringify(responseBody, null, tabSize)
           : JSON.stringify(responseBody, null, tabSize);
       const hasRequestBody = requestBodyPretty !== '(empty)' && requestBodyPretty !== '(unavailable)';
-      const logHeader = `[API통신_헤더] <${event.method}> ${event.path} (${event.node.res.statusCode}) - ${duration}ms\n`;
+      const logHeader = `[API통신_헤더<front>] <${event.method}> ${event.path} (${event.node.res.statusCode}) - ${duration}ms [${new Date().toLocaleString()}]\n`;
       const logReqData = hasRequestBody
-        ? `[API통신_데이터_요청]\n${requestBodyPretty}\n`
+        ? `[API통신_데이터_요청<front>]\n${requestBodyPretty}\n`
         : '';
-      const logResData = `[API통신_데이터_응답]\n${responseBodyPretty}\n`;
+      const logResData = `[API통신_데이터_응답<front>]\n${responseBodyPretty}\n`;
 
       await appendFile(logPath, logHeader + logReqData + logResData);
     } catch (err) {
