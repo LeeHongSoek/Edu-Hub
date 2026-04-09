@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, computed } from "vue";
+import { ref, onMounted, computed, watch } from "vue";
 import type { Question, QuestionOption, Group } from "~/types";
 import IconClose from "~/assets/icons/IconClose.svg?component";
 import GroupSelectorDropdown from "~/components/dashboard/GroupSelectorDropdown.vue";
@@ -14,7 +14,7 @@ const emit = defineEmits<{
 }>();
 
 // API 설정 통합
-const { apiBase, getAuthHeader } = useApi();
+const { apiBase, token, getAuthHeader } = useApi();
 const userCookie = useCookie("user_info");
 const currentUserNo = computed(() => {
   if (!userCookie.value) return null;
@@ -28,6 +28,31 @@ const currentUserNo = computed(() => {
     return null;
   }
 });
+const fallbackSystemGroups: Group[] = [
+  {
+    group_id: "-1",
+    creator_no: "0",
+    name: "전체",
+    description: null,
+    parent_group_id: null,
+    depth: 1,
+    question_count: 0,
+    question_total: 0,
+    child_groups: [
+      {
+        group_id: "0",
+        creator_no: "0",
+        name: "문제분류 없음",
+        description: null,
+        parent_group_id: "-1",
+        depth: 1,
+        question_count: 0,
+        question_total: 0,
+        child_groups: [],
+      },
+    ],
+  },
+];
 
 const editData = ref({
   title: props.question.title,
@@ -51,6 +76,11 @@ const groups = ref<Group[]>([]);
 const isSaving = ref(false);
 
 const fetchGroups = async () => {
+  if (!token.value) {
+    groups.value = fallbackSystemGroups;
+    return;
+  }
+
   try {
     const data = await $fetch<
       Group[] | { groups?: Group[]; unassigned_count?: number }
@@ -66,6 +96,14 @@ const fetchGroups = async () => {
 onMounted(() => {
   fetchGroups();
 });
+
+watch(
+  () => token.value,
+  (nextToken, prevToken) => {
+    if (nextToken === prevToken) return;
+    void fetchGroups();
+  },
+);
 
 const addOption = () => {
   const nextNum = editData.value.options.length + 1;

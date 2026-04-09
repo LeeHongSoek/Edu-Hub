@@ -43,7 +43,7 @@ const props = defineProps<{
 }>();
 
 // API 설정 통합
-const { apiBase, getAuthHeader } = useApi();
+const { apiBase, token, getAuthHeader } = useApi();
 const userCookie = useCookie("user_info");
 const userInfo = computed(() => {
   if (!userCookie.value) return null;
@@ -55,6 +55,31 @@ const userInfo = computed(() => {
     return null;
   }
 });
+const fallbackSystemGroups: Group[] = [
+  {
+    group_id: "-1",
+    creator_no: "0",
+    name: "전체",
+    description: null,
+    parent_group_id: null,
+    depth: 1,
+    question_count: 0,
+    question_total: 0,
+    child_groups: [
+      {
+        group_id: "0",
+        creator_no: "0",
+        name: "문제분류 없음",
+        description: null,
+        parent_group_id: "-1",
+        depth: 1,
+        question_count: 0,
+        question_total: 0,
+        child_groups: [],
+      },
+    ],
+  },
+];
 
 const groups = ref<Group[]>([]);
 const selectedQuestionForSolve = ref<Question | null>(null);
@@ -718,6 +743,11 @@ const searchedGroups = computed(() => {
 });
 
 const fetchGroups = async () => {
+  if (!token.value) {
+    groups.value = fallbackSystemGroups;
+    return;
+  }
+
   try {
     const isContextA = (props.selectionContext || "A") === "A";
     const data = await $fetch<{ groups: Group[]; unassigned_count: number }>(
@@ -1197,6 +1227,14 @@ watch(
   () => props.viewMode,
   async () => {
     if ((props.selectionContext || "A") !== "A") return;
+    await fetchGroups();
+  },
+);
+
+watch(
+  () => token.value,
+  async (nextToken, prevToken) => {
+    if (nextToken === prevToken) return;
     await fetchGroups();
   },
 );

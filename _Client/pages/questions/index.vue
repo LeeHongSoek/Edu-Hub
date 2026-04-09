@@ -14,6 +14,7 @@ const userInfo = computed(() => {
     ? JSON.parse(userCookie.value)
     : userCookie.value;
 });
+const authReady = computed(() => Boolean(token.value && userInfo.value));
 
 const selectedGroupId = ref<string | number | null>(null);
 const appliedSearchField = ref<"content" | "title" | "id">("content");
@@ -169,11 +170,14 @@ const {
   method: "POST",
   headers: getAuthHeader(),
   body: requestBody,
+  immediate: false,
+  server: false,
 });
 
 watch(
-  requestBody,
-  () => {
+  [authReady, requestBody],
+  ([ready]) => {
+    if (!ready) return;
     refresh();
   },
   { deep: true },
@@ -195,6 +199,19 @@ watch(
     } else {
       activeBookDetail.value = null;
     }
+  },
+  { immediate: true },
+);
+
+watch(
+  authReady,
+  (ready) => {
+    if (!ready) return;
+    refresh();
+    if (activeExamId.value === undefined) {
+      void loadActiveBookDetail(activeBookId.value);
+    }
+    void loadActiveExamDetail(activeExamId.value);
   },
   { immediate: true },
 );

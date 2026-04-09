@@ -365,7 +365,8 @@ const handleLogin = async () => {
 
       console.log("[사용자 정보] user.value = ", user.value);
 
-      navigateTo("/dashboard");
+      await nextTick();
+      await navigateTo("/dashboard");
     }
   } catch (err) {
     authError.value = "서버 연결에 실패했습니다.";

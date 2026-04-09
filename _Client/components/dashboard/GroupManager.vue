@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted } from "vue";
+import { ref, onMounted, watch } from "vue";
 import type { Group } from "~/types";
 import IconClose from "~/assets/icons/IconClose.svg?component";
 import IconPencil from "~/assets/icons/IconPencil.svg?component";
@@ -17,12 +17,42 @@ const emit = defineEmits<{
 }>();
 
 const ROOT_GROUP_ID = "-1";
+const fallbackSystemGroups: Group[] = [
+  {
+    group_id: "-1",
+    creator_no: "0",
+    name: "전체",
+    description: null,
+    parent_group_id: null,
+    depth: 1,
+    question_count: 0,
+    question_total: 0,
+    child_groups: [
+      {
+        group_id: "0",
+        creator_no: "0",
+        name: "문제분류 없음",
+        description: null,
+        parent_group_id: "-1",
+        depth: 1,
+        question_count: 0,
+        question_total: 0,
+        child_groups: [],
+      },
+    ],
+  },
+];
 const groups = ref<Group[]>([]);
 const isSaving = ref(false);
 const newGroupName = ref("");
 const selectedParentId = ref<string | number | null>(ROOT_GROUP_ID);
 
 const fetchGroups = async () => {
+  if (!token.value) {
+    groups.value = fallbackSystemGroups;
+    return;
+  }
+
   try {
     const params: any = {
       scope: "mine",
@@ -39,6 +69,14 @@ const fetchGroups = async () => {
 };
 
 onMounted(fetchGroups);
+
+watch(
+  () => token.value,
+  (nextToken, prevToken) => {
+    if (nextToken === prevToken) return;
+    void fetchGroups();
+  },
+);
 
 const findGroup = (list: Group[], id: string | number): Group | null => {
   for (const group of list) {
