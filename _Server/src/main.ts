@@ -412,13 +412,10 @@ async function bootstrap() {
           }
 
           appendFileSync(logPath, logContent); // 로그파일에 기록
-
-        } catch {
-          appendFileSync(logPath, `[API통신_헤더 console] [user_no: ${loginUserNo}] <${logEntry.method}> ${url} (${logEntry.statusCode}) - ${logEntry.duration} [${new Date().toLocaleString()}]`);
-        }
+        } catch { }
 
         // // 콘솔 출력 
-        console.log(`\n[API통신_헤더 console] [user_no: ${loginUserNo}] <${logEntry.method}> ${url} (${logEntry.statusCode}) - ${logEntry.duration} [${new Date().toLocaleString()}]`);
+        console.log(`[API통신_헤더 console] [user_no: ${loginUserNo}] <${logEntry.method}> ${url} (${logEntry.statusCode}) - ${logEntry.duration} [${new Date().toLocaleString()}]`);
 
         // if (logEntry.payload.request.length > 0) {
         //   console.table(logEntry.payload.request);
