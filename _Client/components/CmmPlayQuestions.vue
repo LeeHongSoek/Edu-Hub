@@ -1,3 +1,9 @@
+<!--
+파일 개요:
+- 역할: 오늘의 공개문제 또는 문제 재생 흐름을 담당하는 공통 모달 컴포넌트입니다.
+- 책임: 이 파일은 화면 렌더링과 사용자 상호작용을 담당하며, 상위 페이지 또는 부모 컴포넌트와의 데이터 연동을 수행합니다.
+- 유지보수: props, emits, import 경로, 템플릿 구조를 변경할 때는 이 파일을 사용하는 모든 화면을 함께 확인해야 합니다.
+-->
 <script setup lang="ts">
 import { ref, computed, watch, nextTick, onUnmounted } from "vue";
 import type { Question } from "~/types";

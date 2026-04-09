@@ -1,3 +1,9 @@
+<!--
+파일 개요:
+- 역할: 엔티티 간 관계를 분석하고 관리하는 관계 편집 화면입니다.
+- 책임: 이 파일은 화면 렌더링과 사용자 상호작용을 담당하며, 상위 페이지 또는 부모 컴포넌트와의 데이터 연동을 수행합니다.
+- 유지보수: props, emits, import 경로, 템플릿 구조를 변경할 때는 이 파일을 사용하는 모든 화면을 함께 확인해야 합니다.
+-->
 <script setup lang="ts">
 import {
   computed,
@@ -11,7 +17,7 @@ import IconUsers from "~/assets/icons/IconUsers.svg?component";
 import IconGraphForce from "~/assets/icons/IconGraphForce.svg?component";
 import IconSearch from "~/assets/icons/IconSearch.svg?component";
 import IconClose from "~/assets/icons/IconClose.svg?component";
-import PageSlider from "~/components/PageSlider.vue";
+import CmmPageSlider from "~/components/CmmPageSlider.vue";
 
 type RelationRoleId = "S" | "T" | "P";
 type TargetKey = "parents" | "teachers" | "students" | "friends";
@@ -1049,7 +1055,7 @@ watch(
         <div class="slider-row">
           <span class="summary-text">총 {{ mainDisplayTotal }}건</span>
           <div class="page-slider-section">
-            <PageSlider
+            <CmmPageSlider
               :model-value="mainDisplaySliderValue"
               :max="mainDisplayTotalPages"
               :disabled="mainDisplaySliderDisabled"
@@ -1212,7 +1218,7 @@ watch(
                     <span class="summary-text"
                       >총 {{ activePanel.total }}명</span>
                     <div class="page-slider-section">
-                      <PageSlider
+                      <CmmPageSlider
                         :model-value="activePanel.sliderValue"
                         :max="totalPages"
                         :disabled="isSliderDisabled"

@@ -1,8 +1,14 @@
+<!--
+파일 개요:
+- 역할: Edu-Hub 랜딩 페이지입니다. 소개, 로그인, 회원가입, 매뉴얼 모달, 공개 문제 진입을 담당합니다.
+- 책임: 이 파일은 화면 렌더링과 사용자 상호작용을 담당하며, 상위 페이지 또는 부모 컴포넌트와의 데이터 연동을 수행합니다.
+- 유지보수: props, emits, import 경로, 템플릿 구조를 변경할 때는 이 파일을 사용하는 모든 화면을 함께 확인해야 합니다.
+-->
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, computed, nextTick, watch } from "vue";
 import type { QuestionListResponse } from "~/types";
 import LatexRenderer from "~/components/LatexRenderer.vue";
-import DailyQuestionsModal from "~/components/DailyQuestionsModal.vue";
+import CmmPlayQuestions from "~/components/CmmPlayQuestions.vue";
 import VuePdfEmbed from "vue-pdf-embed";
 import manualPdfUrl from "~/assets/Edu-Hub_Project_Manual.pdf?url";
 import erdImgUrl from "~/assets/Edu-Hub_ERD.png?url";
@@ -1167,7 +1173,7 @@ onMounted(() => {
     </Transition>
 
     <!-- 오늘의 공개문제 전용 모달 -->
-    <DailyQuestionsModal
+    <CmmPlayQuestions
       v-if="showDailyModal"
       :questions="dailyQuestions"
       @close="showDailyModal = false"

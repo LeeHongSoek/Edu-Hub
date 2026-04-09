@@ -1,15 +1,21 @@
+<!--
+파일 개요:
+- 역할: 문제 목록 조회, 필터링, 선택, 편집 진입을 담당하는 핵심 화면입니다.
+- 책임: 이 파일은 화면 렌더링과 사용자 상호작용을 담당하며, 상위 페이지 또는 부모 컴포넌트와의 데이터 연동을 수행합니다.
+- 유지보수: props, emits, import 경로, 템플릿 구조를 변경할 때는 이 파일을 사용하는 모든 화면을 함께 확인해야 합니다.
+-->
 <script setup lang="ts">
 import { ref, onMounted, computed, watch } from "vue";
 import { useRoute } from "vue-router";
-import ManagerNav from "~/components/dashboard/ManagerNav.vue";
-import GroupSelectorPanel from "~/components/dashboard/GroupSelectorPanel.vue";
+import CmmManagerNav from "~/components/CmmManagerNav.vue";
+import CmmGroupSelector from "~/components/CmmGroupSelector.vue";
 import GroupManager from "~/components/dashboard/GroupManager.vue";
 import QuestionEditor from "~/components/dashboard/QuestionEditor.vue";
 import QuestionSolver from "~/components/dashboard/QuestionSolver.vue";
-import DailyQuestionsModal from "~/components/DailyQuestionsModal.vue";
+import CmmPlayQuestions from "~/components/CmmPlayQuestions.vue";
 import QuestionBookUpsertModal from "~/components/dashboard/QuestionBookUpsertModal.vue";
 import QuestionExamCreateModal from "~/components/dashboard/QuestionExamCreateModal.vue";
-import PageSlider from "~/components/PageSlider.vue";
+import CmmPageSlider from "~/components/CmmPageSlider.vue";
 import IconFileText from "~/assets/icons/IconFileText.svg?component";
 import IconCreateAction from "~/assets/icons/IconCreateAction.svg?component";
 import IconDeleteAction from "~/assets/icons/IconDeleteAction.svg?component";
@@ -1308,7 +1314,7 @@ watch(
 <template>
   <div class="question-list-container">
     <div class="question-list-row">
-      <GroupSelectorPanel
+      <CmmGroupSelector
           class="group-overlay group-overlay--wide"
           title="문제분류 그룹"
           :show-manage-button="(props.selectionContext || 'A') === 'A'"
@@ -1387,7 +1393,7 @@ watch(
               </div>
             </div>
 
-            <ManagerNav
+            <CmmManagerNav
               :active-page="selectionContext === 'A' ? 'questions' : null"
               :back-link="
                 selectionContext !== 'A'
@@ -1528,7 +1534,7 @@ watch(
                   </span>
                 </span>
                 <div class="page-slider-section">
-                  <PageSlider
+                  <CmmPageSlider
                     v-model="sliderValue"
                     :max="props.totalPages"
                     :disabled="isSliderDisabled"
@@ -1673,7 +1679,7 @@ watch(
       @go-to-index="handleGoToQuestionIndex"
     />
 
-    <DailyQuestionsModal
+    <CmmPlayQuestions
       v-if="showBulkSolveModal"
       :questions="bulkSolveQuestions"
       title="선택 문제 모아 풀기"

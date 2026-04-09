@@ -1,3 +1,9 @@
+<!--
+파일 개요:
+- 역할: 사용자 활동 로그를 확인하고 탐색하는 뷰어 컴포넌트입니다.
+- 책임: 이 파일은 화면 렌더링과 사용자 상호작용을 담당하며, 상위 페이지 또는 부모 컴포넌트와의 데이터 연동을 수행합니다.
+- 유지보수: props, emits, import 경로, 템플릿 구조를 변경할 때는 이 파일을 사용하는 모든 화면을 함께 확인해야 합니다.
+-->
 <script setup lang="ts">
 import { ref, onMounted, computed, watch } from "vue";
 import IconCalendar from "~/assets/icons/IconCalendar.svg?component";
@@ -9,7 +15,7 @@ import IconUsers from "~/assets/icons/IconUsers.svg?component";
 import IconClassRoom from "~/assets/icons/IconClassRoom.svg?component";
 import IconHome from "~/assets/icons/IconHome.svg?component";
 import IconCursor from "~/assets/icons/IconCreateAction.svg?component";
-import PageSlider from "~/components/PageSlider.vue";
+import CmmPageSlider from "~/components/CmmPageSlider.vue";
 
 const logs = ref<any[]>([]);
 const totalLogs = ref(0);
@@ -230,7 +236,7 @@ const isRecentTime = (dateStr: string) => {
     <div v-else class="log-content-area">
       <!-- Pagination Slider -->
       <div class="pagination-area">
-        <PageSlider
+        <CmmPageSlider
           v-model="sliderValue"
           :max="totalPages"
           :disabled="isSliderDisabled"

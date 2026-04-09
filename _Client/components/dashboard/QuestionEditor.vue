@@ -1,3 +1,9 @@
+<!--
+파일 개요:
+- 역할: 문제의 본문, 보기를 편집하는 문제 작성/수정 에디터입니다.
+- 책임: 이 파일은 화면 렌더링과 사용자 상호작용을 담당하며, 상위 페이지 또는 부모 컴포넌트와의 데이터 연동을 수행합니다.
+- 유지보수: props, emits, import 경로, 템플릿 구조를 변경할 때는 이 파일을 사용하는 모든 화면을 함께 확인해야 합니다.
+-->
 <script setup lang="ts">
 import { ref, onMounted, computed, watch } from "vue";
 import type { Question, QuestionOption, Group } from "~/types";
@@ -177,7 +183,7 @@ const handleSave = async () => {
             <div class="form-group flex-small">
               <label>난이도 (1-5)</label>
               <div class="slider-field">
-                <PageSlider
+                <CmmPageSlider
                   v-model="editData.difficulty"
                   :min="1"
                   :max="5"
@@ -190,7 +196,7 @@ const handleSave = async () => {
             <div class="form-group flex-small">
               <label>평점 (1-5)</label>
               <div class="slider-field">
-                <PageSlider
+                <CmmPageSlider
                   v-model="editData.rating"
                   :max="5"
                   postfix="점"

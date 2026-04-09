@@ -1,3 +1,9 @@
+<!--
+파일 개요:
+- 역할: 대시보드 메인 페이지입니다. 역할별 관리 패널과 공통 네비게이션을 조립합니다.
+- 책임: 이 파일은 화면 렌더링과 사용자 상호작용을 담당하며, 상위 페이지 또는 부모 컴포넌트와의 데이터 연동을 수행합니다.
+- 유지보수: props, emits, import 경로, 템플릿 구조를 변경할 때는 이 파일을 사용하는 모든 화면을 함께 확인해야 합니다.
+-->
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, computed, nextTick, watch } from "vue";
 import StudentDashboard from "~/components/dashboard/StudentDashboard.vue";
@@ -10,7 +16,7 @@ import QuestionBookManager from "~/components/dashboard/QuestionBookManager.vue"
 import ExamListManager from "~/components/dashboard/ExamListManager.vue";
 import ClassMemberManagerModal from "~/components/dashboard/ClassMemberManagerModal.vue";
 import ClassExamManagerModal from "~/components/dashboard/ClassExamManagerModal.vue";
-import ManagerNav from "~/components/dashboard/ManagerNav.vue";
+import CmmManagerNav from "~/components/CmmManagerNav.vue";
 import IconGraduationCap from "~/assets/icons/IconGraduationCap.svg?component";
 import IconBoard from "~/assets/icons/IconBoard.svg?component";
 import IconHome from "~/assets/icons/IconHome.svg?component";
@@ -19,7 +25,7 @@ import IconUsers from "~/assets/icons/IconUsers.svg?component";
 import IconMessage from "~/assets/icons/IconMessage.svg?component";
 import IconCalendar from "~/assets/icons/IconCalendar.svg?component";
 import IconClassRoom from "~/assets/icons/IconClassRoom.svg?component";
-import PageSlider from "~/components/PageSlider.vue";
+import CmmPageSlider from "~/components/CmmPageSlider.vue";
 import { useUserLog } from "~/composables/useUserLog";
 
 type UserCookiePayload = {
@@ -602,7 +608,7 @@ onUnmounted(() => {
               >님!
             </span>
           </h1>
-          <ManagerNav v-if="userInfo.role_id !== 'P'" :is-dashboard="true" />
+          <CmmManagerNav v-if="userInfo.role_id !== 'P'" :is-dashboard="true" />
         </div>
         <p class="typed-wrap">
           <span class="typed-text">{{ typedText }}</span>
@@ -775,7 +781,7 @@ onUnmounted(() => {
               </div>
             </div>
             <div class="sys-log-pagination">
-              <PageSlider
+              <CmmPageSlider
                 ref="sysLogSliderRef"
                 v-model="sysLogSlider"
                 :max="sysLogTotalPages"

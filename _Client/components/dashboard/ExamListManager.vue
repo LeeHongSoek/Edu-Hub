@@ -1,13 +1,19 @@
+<!--
+파일 개요:
+- 역할: 고사 목록 조회와 생성/수정/연결 작업을 담당하는 관리 화면입니다.
+- 책임: 이 파일은 화면 렌더링과 사용자 상호작용을 담당하며, 상위 페이지 또는 부모 컴포넌트와의 데이터 연동을 수행합니다.
+- 유지보수: props, emits, import 경로, 템플릿 구조를 변경할 때는 이 파일을 사용하는 모든 화면을 함께 확인해야 합니다.
+-->
 <script setup lang="ts">
 import { ref, computed, watch, onMounted } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import IconCalendar from "~/assets/icons/IconCalendar.svg?component";
-import ManagerNav from "~/components/dashboard/ManagerNav.vue";
+import CmmManagerNav from "~/components/CmmManagerNav.vue";
 import IconCreateAction from "~/assets/icons/IconCreateAction.svg?component";
 import IconDeleteAction from "~/assets/icons/IconDeleteAction.svg?component";
 import ExamUpsertModal from "~/components/dashboard/ExamUpsertModal.vue";
-import PageSlider from "~/components/PageSlider.vue";
-import DailyQuestionsModal from "~/components/DailyQuestionsModal.vue";
+import CmmPageSlider from "~/components/CmmPageSlider.vue";
+import CmmPlayQuestions from "~/components/CmmPlayQuestions.vue";
 import type { Question } from "~/types";
 import { useUserLog } from "~/composables/useUserLog";
 
@@ -701,7 +707,7 @@ onMounted(() => {
         </div>
       </div>
 
-      <ManagerNav active-page="exams" />
+      <CmmManagerNav active-page="exams" />
     </div>
 
     <div v-if="loading" class="loading">불러오는 중...</div>
@@ -763,7 +769,7 @@ onMounted(() => {
             <span class="summary-text"
               >총 {{ filteredExams.length }}개의 고사집</span>
             <div class="page-slider-section">
-              <PageSlider
+              <CmmPageSlider
                 v-model="sliderValue"
                 :max="totalPages"
                 :disabled="isSliderDisabled"
@@ -864,7 +870,7 @@ onMounted(() => {
     @submit="submitExamForm"
   />
 
-  <DailyQuestionsModal
+  <CmmPlayQuestions
     v-if="showDailyQuizModal"
     :questions="dailyQuizQuestions"
     :title="dailyQuizTitle"
