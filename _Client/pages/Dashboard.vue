@@ -275,6 +275,15 @@ watch(
   },
 );
 
+watch(
+  () => activeTab.value,
+  async (tab) => {
+    if (tab !== "sys-logs") return;
+    await nextTick();
+    sysLogSliderRef.value?.focus?.();
+  },
+);
+
 const setActiveTab = (tab: string) => {
   if (activeTab.value === tab) return;
   activeTab.value = tab;
