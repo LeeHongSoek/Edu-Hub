@@ -44,7 +44,7 @@ const props = defineProps<{
   totalItems: number;
   pageSize: number;
   viewMode: "mine" | "all";
-  selectionContext?: "A" | "B" | "C";
+  selectionContext?: "A" | "B" | "C"; // A: 문제전체, B: 문제집, C: 고사
   contextId?: string | number | null;
 }>();
 
