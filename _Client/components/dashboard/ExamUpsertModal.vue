@@ -170,7 +170,8 @@ const submit = () => {
               <button
                 type="submit"
                 class="btn-submit"
-                :disabled="loading">
+                :disabled="loading"
+                @click="submit">
                 <span v-if="loading" class="loading-spinner"></span>
                 {{ submitLabel }}
               </button>
@@ -186,7 +187,7 @@ const submit = () => {
               <div class="exam-lists">
                 <section class="exam-list-panel">
                   <div class="exam-list-header">
-                    <strong>이 고사에 연결된 클래스</strong>
+                    <strong>이 고사에 연결된 나의 클래스</strong>
                     <span>{{ assignedClassCount }}개</span>
                   </div>
                   <div
@@ -215,7 +216,7 @@ const submit = () => {
 
                 <section class="exam-list-panel">
                   <div class="exam-list-header">
-                    <strong>연결 가능한 다른 클래스</strong>
+                    <strong>연결 가능한 다른 나의 클래스</strong>
                     <span>{{ availableClasses.length }}개</span>
                   </div>
                   <div

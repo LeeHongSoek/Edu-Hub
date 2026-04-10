@@ -286,7 +286,6 @@ onMounted(fetchMyReports);
           </div>
 
           <div v-else key="report-form" class="form-section">
-            <h3>{{ editingReport ? "제보 수정" : "새 제보 등록" }}</h3>
             <div class="form-group">
               <label>분류</label>
               <select v-model="form.category">

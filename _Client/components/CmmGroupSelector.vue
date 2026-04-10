@@ -53,7 +53,7 @@ const emit = defineEmits<{
   <div class="group-panel" role="dialog" aria-modal="false">
     <div class="group-overlay-header">
       <div class="group-title-row">
-        <span v-if="groupSearchInput" class="group-title">{{ title }}</span>
+        <span class="group-title">{{ title }}</span>
         <div v-if="showManageButton" class="header-actions">
           <button
             class="btn-manage-groups"
@@ -64,7 +64,7 @@ const emit = defineEmits<{
           </button>
         </div>
       </div>
-      <div v-if="groupSearchInput" 
+      <div 
         class="group-breadcrumb"
         v-html="selectedGroupBreadcrumb || '&nbsp;'"
       ></div>

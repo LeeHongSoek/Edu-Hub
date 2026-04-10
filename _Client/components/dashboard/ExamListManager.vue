@@ -52,7 +52,7 @@ const userInfo = computed(() => {
 });
 
 const listTitle = computed(() =>
-  effectiveListScope.value === "all" ? "전체 고사집 목록" : "나의 고사집 목록",
+  effectiveListScope.value === "all" ? "전체 고사 목록" : "나의 고사 목록",
 );
 const fetchError = ref("");
 const selectedClassId = computed(() => {
@@ -69,13 +69,13 @@ const selectedClassName = computed(() => {
   return selectedClassId.value ? `클래스 #${selectedClassId.value}` : "";
 });
 const emptyText = computed(() => {
-  if (examSearchQuery.value) return "검색 조건에 맞는 고사집이 없습니다.";
+  if (examSearchQuery.value) return "검색 조건에 맞는 고사가 없습니다.";
   if (selectedClassId.value) {
-    return `${selectedClassName.value}에 연결된 고사집이 없습니다.`;
+    return `${selectedClassName.value}에 연결된 고사가   없습니다.`;
   }
   return effectiveListScope.value === "all"
-    ? "등록된 고사집이 없습니다."
-    : "생성된 고사집이 없습니다.";
+    ? "등록된 고사가 없습니다."
+    : "생성된 고사가 없습니다.";
 });
 
 const isCurrentUserOwner = (
@@ -346,7 +346,7 @@ const createForm = ref({
 
 const isEditingExam = computed(() => editingExamId.value !== "");
 const modalTitle = computed(() =>
-  isEditingExam.value ? "고사집 수정" : "새 고사집 만들기",
+  isEditingExam.value ? "고사 수정" : "새 고사 만들기",
 );
 const submitButtonLabel = computed(() => {
   if (createLoading.value) {

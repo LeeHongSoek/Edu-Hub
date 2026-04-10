@@ -54,7 +54,7 @@ const logManagerNav = async (label: string) => {
         :class="{ active: activePage === 'exams' }"
         @click="logManagerNav('고사집 목록')">
         <IconPencil class="nav-icon" />
-        고사집 목록
+        고사 목록
       </NuxtLink>
     </template>
 
