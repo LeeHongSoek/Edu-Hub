@@ -12,9 +12,19 @@
       <rect x="0" y="0" width="460" height="240" rx="36" ry="36"></rect>
     </clipPath>
   </defs>
+<g>
+  <!-- 둥둥 떠다니는 애니메이션 -->
+  <animateTransform
+    attributeName="transform"
+    type="translate"
+    values="0 0; 0 -12; 0 0"
+    dur="3.2s"
+    repeatCount="indefinite"
+  />
 
-  <!-- 전체를 중앙 기준 -15도 회전, 여백 최소화 -->
-  <g transform="translate(260, 185) rotate(-15) translate(-230, -120)">
+  <!-- 전체를 중앙 기준 15도 회전, 여백 최소화 -->
+  <g transform="translate(260, 185) rotate(15) translate(-230, -120)">
+
 
     <!-- 그림자 레이어 -->
     <rect x="12" y="16" width="460" height="240" rx="36" ry="36" fill="#1A237E" opacity="0.22"></rect>
@@ -118,4 +128,5 @@
     <rect x="128" y="214" width="204" height="9" rx="4.5" fill="#5C6BC0" opacity="0.85"></rect>
 
   </g>
+</g>  
 </svg>

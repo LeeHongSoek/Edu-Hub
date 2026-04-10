@@ -29,6 +29,7 @@ import IconClose from "~/assets/icons/IconClose.svg?component";
 import IconInfo from "~/assets/icons/IconInfo.svg?component";
 import IconManual from "~/assets/icons/IconManual.svg?component";
 import IconGitMascotHero from "~/assets/icons/IconGitMascotHero.svg?component";
+import IconAlllsSlousionn from "~/assets/icons/AlllsSlousion.svg?component";
 import NumberAnimation from "vue-number-animation";
 import { useAuthSession } from "~/composables/useAuthSession";
 
@@ -597,6 +598,9 @@ onMounted(() => {
 
       <!-- ─── 중앙 히어로 + 우측 로그인 ─── -->
       <div class="main-row">
+        <!-- 배경 장식: 모두의 문풀 말풍선 -->
+        <IconAlllsSlousionn class="allls-slousionn-icon" />
+
         <!-- 왼쪽: 히어로 카피 -->
         <section class="hero">
           <p class="eyebrow">✦ &nbsp;AI 시대의 지식 혁명 플랫폼</p>
@@ -1341,6 +1345,7 @@ onMounted(() => {
 
 /* ─── 메인 행 ─── */
 .main-row {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1350,6 +1355,32 @@ onMounted(() => {
   max-width: 1400px;
   margin: 0 auto;
   min-height: 0;
+}
+
+/* 모두의 문풀 말풍선 아이콘 */
+.allls-slousionn-icon {
+  position: absolute;
+  z-index: 5;
+  top: -90px;
+  left: 42%;
+  transform: translateX(-50%);
+  width: 250px;
+  height: auto;
+  pointer-events: none;
+  opacity: 0.9;
+  filter: drop-shadow(0 20px 40px rgba(0, 0, 0, 0.4));
+  animation: 
+    floatingBubble 4s ease-in-out infinite,
+    fadeUp 1s ease 2s both;
+}
+
+@keyframes floatingBubble {
+  0%, 100% {
+    transform: translate(-50%, 0) rotate(0deg);
+  }
+  50% {
+    transform: translate(-50%, -15px) rotate(2deg);
+  }
 }
 
 /* ─── 히어로 ─── */
@@ -2197,6 +2228,14 @@ input[type="password"] {
     flex-direction: column;
     padding: 2rem 3rem 4rem;
     gap: 3rem;
+  }
+  .allls-slousionn-icon {
+    position: relative;
+    top: 0;
+    left: 0;
+    transform: none;
+    margin: 0 auto -2rem;
+    width: 200px;
   }
   .hero {
     max-width: 100%;
