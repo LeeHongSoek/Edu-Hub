@@ -722,9 +722,11 @@ onUnmounted(() => {
                 :key="item.classId"
                 class="class-card">
                 <div class="class-card-top">
-                  <button class="class-link">
-                    {{ item.className }}
-                  </button>
+                  <div class="class-card-title">
+                    <button class="class-link">
+                      #{{ item.classId }} {{ item.className }}
+                    </button>
+                  </div>
                 </div>
                 <p v-if="userInfo.role_id === 'S'" class="class-card-meta">
                   담당 선생님:

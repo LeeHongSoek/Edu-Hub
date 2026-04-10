@@ -213,8 +213,8 @@ const handleSave = async () => {
                 v-model="editData.group_id"
                 :groups="groups"
                 :current-user-no="currentUserNo"
-                title="문제분류 그룹"
-                placeholder="소속 그룹을 선택하세요"
+                title="문제분류"
+                placeholder="분류를 선택하세요"
                 :show-count="false"
               />
             </div>

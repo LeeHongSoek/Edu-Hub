@@ -26,8 +26,8 @@ const props = withDefaults(
   }>(),
   {
     modelValue: null,
-    title: "문제분류 그룹",
-    placeholder: "그룹 선택",
+    title: "문제분류",
+    placeholder: "분류 선택",
     disabled: false,
     currentUserNo: null,
     selectionContext: "A",

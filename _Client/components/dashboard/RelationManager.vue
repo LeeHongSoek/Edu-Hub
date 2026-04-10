@@ -1097,6 +1097,9 @@ watch(
               type="button"
               class="user-name-button"
               @click="emit('open-message-thread', getRelationTargetUser(rel))">
+              <span class="user-id">#{{
+                getRelationTargetUser(rel)?.user_no
+              }}</span>&nbsp;
               <span class="user-name">{{
                 getRelationTargetUser(rel)?.username
               }}</span>

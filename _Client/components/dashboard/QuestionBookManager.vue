@@ -502,7 +502,7 @@ onMounted(() => {
         <div v-for="book in pagedBooks" :key="book.book_id" class="book-card">
           <div class="book-card-head">
             <div class="book-headline-left">
-              <span class="book-id">{{ book.book_id }}</span>
+              <span class="book-id">#{{ book.book_id }}</span>
               <p class="book-description">
                 {{ book.description || "설명 없음" }}
               </p>

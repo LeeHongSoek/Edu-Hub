@@ -475,6 +475,9 @@ onMounted(() => {
             {{ messageDirectionLabel(message) }}
           </span>
           <div class="message-line">
+            <span class="message-id">#{{
+              message.counterpart?.user_no || message.sender?.user_no
+            }}</span>
             <span class="message-name">{{
               message.counterpart?.username ||
               message.sender?.username ||

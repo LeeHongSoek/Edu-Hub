@@ -57,10 +57,10 @@ const emit = defineEmits<{
         <div v-if="showManageButton" class="header-actions">
           <button
             class="btn-manage-groups"
-            title="그룹 관리"
+            title="분류 관리"
             @click="emit('open-manage')">
             <IconSettings class="settings-icon" />
-            <span class="btn-manage-label">그룹 관리</span>
+            <span class="btn-manage-label">분류 관리</span>
           </button>
         </div>
       </div>
@@ -73,7 +73,7 @@ const emit = defineEmits<{
           :value="groupSearchInput"
           type="text"
           class="group-search-input"
-          placeholder="그룹명 검색"
+          placeholder="분류명 검색"
           @input="
             emit(
               'update:groupSearchInput',

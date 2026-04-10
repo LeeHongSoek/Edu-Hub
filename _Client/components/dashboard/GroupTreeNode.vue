@@ -122,6 +122,7 @@ const toggleExpand = (event: Event) => {
       </span>
       <span v-else class="bullet">•</span>
       <span class="name-text">
+        <!-- <span class="name-label">#{{ group.group_id }} {{ displayedGroupName }}</span> -->
         <span class="name-label">{{ displayedGroupName }}</span>
         <span v-if="showCount" class="count-pill"
           >({{ totalQuestionCount(group) }}개)</span

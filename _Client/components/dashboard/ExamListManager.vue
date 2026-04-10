@@ -787,7 +787,7 @@ onMounted(() => {
           <div class="exam-info">
             <div class="exam-headline">
               <div class="headline-left">
-                <span class="exam-id">{{ exam.exam_id }}</span>
+                <span class="exam-id">#{{ exam.exam_id }}</span>
 
                 <span class="exam-class-badge"
                   >지정 클래스 {{ getExamClassNames(exam).length ?? 0 }}개</span>

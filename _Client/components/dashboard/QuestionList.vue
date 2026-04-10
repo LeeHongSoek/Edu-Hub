@@ -1316,7 +1316,7 @@ watch(
     <div class="question-list-row">
       <CmmGroupSelector
           class="group-overlay group-overlay--wide"
-          title="문제분류 그룹"
+          title="문제분류"
           :show-manage-button="(props.selectionContext || 'A') === 'A'"
           :selected-group-breadcrumb="selectedGroupBreadcrumb"
           :group-search-input="groupSearchInput"
@@ -1562,7 +1562,7 @@ watch(
               class="question-item">
               <div class="question-header">
                 <div class="question-title-row">
-                  <h3 class="question-id">{{ q.question_id }}</h3>
+                  <h3 class="question-id">#{{ q.question_id }}</h3>
                   <span class="badge badge-type question-type-badge">{{
                     getQuestionTypeBadgeLabel(q)
                   }}</span>

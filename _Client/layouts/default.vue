@@ -196,7 +196,7 @@ onUnmounted(() => {
             class="user-greeting"
             @click.prevent="showUserModal = true">
             <IconUser class="icon-user" />
-            {{ userInfo.username }} <{{ userInfo.user_no }}>님
+            #{{ userInfo.user_no }} {{ userInfo.username }}님
           </a>
           <NuxtLink
             to="/dashboard?tab=messages&view=received"
