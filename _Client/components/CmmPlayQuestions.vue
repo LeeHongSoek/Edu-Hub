@@ -59,6 +59,11 @@ const goNext = () => {
 };
 
 const handleSliderKeyDown = (event: KeyboardEvent) => {
+  if (event.key === "ArrowUp" || event.key === "ArrowDown") {
+    event.preventDefault();
+    return;
+  }
+
   if (event.key === "ArrowLeft") {
     event.preventDefault();
     goPrev();

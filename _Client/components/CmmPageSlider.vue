@@ -76,7 +76,12 @@ const handlePointerUp = () => {
 const handleKeyDown = (event: KeyboardEvent) => {
   if (props.disabled) return;
 
-  if (event.key === "ArrowLeft" || event.key === "ArrowDown") {
+  if (event.key === "ArrowUp" || event.key === "ArrowDown") {
+    event.preventDefault();
+    return;
+  }
+
+  if (event.key === "ArrowLeft") {
     event.preventDefault();
     const nextValue = Math.max(props.min, Math.round(localValue.value) - 1);
     localValue.value = nextValue;
@@ -84,7 +89,7 @@ const handleKeyDown = (event: KeyboardEvent) => {
     emit("commit", nextValue);
   }
 
-  if (event.key === "ArrowRight" || event.key === "ArrowUp") {
+  if (event.key === "ArrowRight") {
     event.preventDefault();
     const nextValue = Math.min(safeMax.value, Math.round(localValue.value) + 1);
     localValue.value = nextValue;

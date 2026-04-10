@@ -223,17 +223,17 @@ const isRecentTime = (dateStr: string) => {
       </div>
     </div>
 
-    <div v-if="loading" class="loading-container">
+    <div v-if="loading && logs.length === 0" class="loading-container">
       <div class="loader"></div>
       <span>로그를 불러오는 중...</span>
     </div>
 
-    <div v-else-if="logs.length === 0" class="empty-state">
+    <div v-else-if="!loading && logs.length === 0" class="empty-state">
       <IconCalendar class="empty-icon" />
       <p>기록된 활동 로그가 없습니다.</p>
     </div>
 
-    <div v-else class="log-content-area">
+    <div v-else class="log-content-area" :class="{ 'is-reloading': loading && logs.length > 0 }">
       <!-- Pagination Slider -->
       <div class="pagination-area">
         <CmmPageSlider
@@ -475,6 +475,12 @@ const isRecentTime = (dateStr: string) => {
   .log-list {
     grid-template-columns: 1fr;
   }
+}
+
+.log-content-area.is-reloading .log-list {
+  opacity: 0.5;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
 }
 
 .log-card {

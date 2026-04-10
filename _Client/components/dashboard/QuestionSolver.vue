@@ -541,6 +541,11 @@ const handleQuestionSliderKeyDown = (e: KeyboardEvent) => {
     return;
   }
 
+  if (e.key === "ArrowUp" || e.key === "ArrowDown") {
+    e.preventDefault();
+    return;
+  }
+
   if (e.key === "ArrowLeft") {
     e.preventDefault();
     emit("go-to-index", Math.max(0, currentIndex.value - 1));
