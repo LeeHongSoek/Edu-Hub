@@ -1359,10 +1359,11 @@ onMounted(() => {
 
 /* 모두의 문풀 말풍선 아이콘 */
 .allls-slousionn-icon {
+  --icon-left: 50%;
   position: absolute;
   z-index: 5;
   top: -90px;
-  left: 42%;
+  left: var(--icon-left);
   transform: translateX(-50%);
   width: 250px;
   height: auto;
@@ -1371,7 +1372,39 @@ onMounted(() => {
   filter: drop-shadow(0 20px 40px rgba(0, 0, 0, 0.4));
   animation: 
     floatingBubble 4s ease-in-out infinite,
-    fadeUp 1s ease 2s both;
+    slideInLeftBubble 1.8s linear 2.5s both;
+}
+
+@keyframes slideInLeftBubble {
+  0% {
+    opacity: 0;
+    left: calc(var(--icon-left) - 60vw);
+    animation-timing-function: ease-out; /* 고속 구간 시작 */
+  }
+  20% {
+    opacity: 0.6;
+    left: calc(var(--icon-left) - 67vw);
+    animation-timing-function: ease-out; /* 2구간 */
+  }
+  40% {
+    opacity: 0.8;
+    left: calc(var(--icon-left) - 63vw);
+    animation-timing-function: ease-out; /* 중속 구간 시작 */
+  }
+  60% {
+    opacity: 0.85;
+    left: calc(var(--icon-left) - 58vw);
+    animation-timing-function: ease-out; /* 4구간 */
+  }
+  80% {
+    opacity: 0.9;
+    left: calc(var(--icon-left) - 50vw);
+    animation-timing-function: ease-out; /* 저속 구간 시작 */
+  }
+  100% {
+    opacity: 0.9;
+    left: var(--icon-left); /* 정지 (초저속) */
+  }
 }
 
 @keyframes floatingBubble {
@@ -2230,9 +2263,10 @@ input[type="password"] {
     gap: 3rem;
   }
   .allls-slousionn-icon {
+    --icon-left: 0;
     position: relative;
     top: 0;
-    left: 0;
+    left: var(--icon-left);
     transform: none;
     margin: 0 auto -2rem;
     width: 200px;
