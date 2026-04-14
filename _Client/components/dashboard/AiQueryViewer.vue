@@ -152,27 +152,36 @@ const submitQuery = async () => {
   <section class="ai-query-panel">
     <div class="panel-header">
       <h3><IconMessage class="header-icon" /> AI 어시스턴트</h3>
-      <div class="model-selector-wrap">
-        <span class="description">제공자:</span>
-        <select id="ai-provider-select" v-model="selectedProviderId" @change="handleProviderChange" class="model-select">
-          <option v-for="provider in aiProviders" :key="provider.id" :value="provider.id">
-            {{ provider.name }}
-          </option>
-        </select>
+      <div class="panel-header-controls">
+        <div class="controls-left">
+          <div class="model-selector-wrap">
+            <span class="description">제공자:</span>
+            <select id="ai-provider-select" v-model="selectedProviderId" @change="handleProviderChange" class="model-select">
+              <option v-for="provider in aiProviders" :key="provider.id" :value="provider.id">
+                {{ provider.name }}
+              </option>
+            </select>
 
-        <span class="description ml-2">모델:</span>
-        <select id="ai-model-select" v-model="selectedModelId" class="model-select">
-          <option v-for="model in currentModels" :key="model.id" :value="model.id">
-            {{ model.name }}
-          </option>
-        </select>
-        
-        <span class="description ml-2">API Key:</span>
-        <input type="password" v-model="apiKey" placeholder="API 키 입력" class="api-key-input" />
+            <span class="description ml-2">모델:</span>
+            <select id="ai-model-select" v-model="selectedModelId" class="model-select">
+              <option v-for="model in currentModels" :key="model.id" :value="model.id">
+                {{ model.name }}
+              </option>
+            </select>
+            
+            <span class="description ml-2">API Key:</span>
+            <input type="password" v-model="apiKey" placeholder="API 키 입력" class="api-key-input" />
+          </div>
+          <p class="model-features">
+            <span class="badge">특징</span> {{ currentModelInfo.description }}
+          </p>
+        </div>
+        <div class="actions">
+          <button class="btn-ask" :disabled="isLoading || !promptText.trim()" @click="submitQuery">
+            {{ isLoading ? "생성 중..." : "질문 보내기" }}
+          </button>
+        </div>
       </div>
-      <p class="model-features">
-        <span class="badge">특징</span> {{ currentModelInfo.description }}
-      </p>
     </div>
 
     <div class="ai-query-input-area">
@@ -181,11 +190,7 @@ const submitQuery = async () => {
         placeholder="질문을 입력하세요... (Ctrl+Enter로 전송)"
         @keydown.ctrl.enter="submitQuery"
       ></textarea>
-      <div class="actions">
-        <button class="btn-ask" :disabled="isLoading || !promptText.trim()" @click="submitQuery">
-          {{ isLoading ? "생성 중..." : "질문 보내기" }}
-        </button>
-      </div>
+      
     </div>
     
     <div v-if="responseText || isLoading" class="ai-query-response-area">
@@ -227,6 +232,17 @@ const submitQuery = async () => {
   margin: 0 0 4px 0;
   font-size: 1.25rem;
   color: #f8fafc;
+}
+
+.panel-header-controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.controls-left {
+  display: flex;
+  flex-direction: column;
 }
 
 .header-icon {
