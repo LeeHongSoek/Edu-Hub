@@ -3,7 +3,9 @@
 - 역할: AI server.py와 통신하여 AI 질의를 처리합니다.
 - 책임: 이 파일은 화면 렌더링과 사용자 상호작용을 담당합니다.
 - 유지보수: props, emits, import 경로, 템플릿 구조를 변경할 때는 이 파일을 사용하는 모든 화면을 함께 확인해야 합니다.
-- 사용법:  # source venv/bin/activate && python3 server.py 
+- 사용법:  #  uvicorn server:app --reload --port 3500
+
+up_OdsaftbcovAx2UQgJWls5dtp79ISS
 -->
 <script setup lang="ts">
 import { ref, computed } from "vue";
