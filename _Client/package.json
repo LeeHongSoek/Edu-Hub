@@ -1,0 +1,32 @@
+{
+  "name": "nuxt-app",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "nuxt build",
+    "dev": "nuxt dev",
+    "dev:app": "bash ../scripts/start-dev-app.sh",
+    "dev:tunnel": "bash ../scripts/start-dev-tunnel.sh",
+    "generate": "nuxt generate",
+    "preview": "nuxt preview",
+    "postinstall": "nuxt prepare"
+  },
+  "dependencies": {
+    "@kangc/v-md-editor": "^2.3.18",
+    "chart.js": "^4.5.1",
+    "katex": "^0.16.40",
+    "markdown-it": "^14.1.1",
+    "nuxt": "^3.21.2",
+    "prismjs": "^1.30.0",
+    "vue": "^3.5.30",
+    "vue-chartjs": "^5.3.3",
+    "vue-number-animation": "^2.0.2",
+    "vue-pdf-embed": "^2.1.4",
+    "vue-router": "^5.0.3"
+  },
+  "devDependencies": {
+    "@types/katex": "^0.16.8",
+    "@types/markdown-it": "^14.1.2",
+    "vite-svg-loader": "^5.1.1"
+  }
+}

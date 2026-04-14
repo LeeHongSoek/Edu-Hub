@@ -1,0 +1,482 @@
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["driverAdapters"]
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model EnmRole {
+  role_id     String @id @db.Char(1)
+  role_name   String @db.VarChar(20)
+  description String @db.VarChar(50)
+  users       User[]
+
+  @@map("enm_roles")
+}
+
+model EnmQuestionType {
+  type_id     String     @id @db.Char(1)
+  type_name   String     @db.VarChar(20)
+  description String     @db.VarChar(50)
+  questions   Question[]
+
+  @@map("enm_question_types")
+}
+
+model EnmMediaType {
+  type_id     String            @id @db.Char(1)
+  type_name   String            @db.VarChar(20)
+  description String            @db.VarChar(50)
+  attachments MediaAttachment[]
+
+  @@map("enm_media_types")
+}
+
+model EnmRelationType {
+  relation_type_id String         @id @db.VarChar(20)
+  description      String         @db.VarChar(50)
+  relations        UserRelation[]
+
+  @@map("enm_relation_types")
+}
+
+model User {
+  user_no           BigInt             @id @default(autoincrement())
+  user_id           String             @unique(map: "user_id") @db.VarChar(10)
+  user_pw           String             @db.VarChar(255)
+  username          String             @db.VarChar(50)
+  email             String             @unique(map: "email") @db.VarChar(255)
+  role_id           String             @db.Char(1)
+  is_withdrawn      IsWithdrawn?       @default(N)
+  created_at        DateTime?          @default(now()) @db.DateTime(0)
+  last_loged_at     DateTime?          @default(now()) @db.DateTime(0)
+  student_classes   ClassStudent[]
+  taught_classes    Class[]            @relation("TeacherClasses")
+  exam_results      ExamResult[]
+  created_exams     Exam[]
+  created_groups    Group[]
+  received_cmts     UserComment[]      @relation("ReceivedComments")
+  reviews           QuestionReview[]
+  created_sqs       Question[]
+  solve_results     SolveResult[]
+  user_logs         UserLog[]
+  authored_cmts     UserComment[]      @relation("AuthoredComments")
+  question_books    QuestionBook[]
+  sent_messages     UserMessage[]      @relation("SentMessages")
+  received_messages UserMessage[]      @relation("ReceivedMessages")
+  relations_as_1    UserRelation[]     @relation("User1Relations")
+  relations_as_2    UserRelation[]     @relation("User2Relations")
+  ombudsman_reports OmbudsmanReport[]
+  role              EnmRole            @relation(fields: [role_id], references: [role_id], onUpdate: Restrict, map: "fk_user_role")
+
+  @@index([role_id], map: "fk_user_role")
+  @@map("users")
+}
+
+model Class {
+  class_id         BigInt         @id @default(autoincrement())
+  teacher_no       BigInt
+  class_name       String         @db.VarChar(100)
+  created_at       DateTime?      @default(now()) @db.DateTime(0)
+  students         ClassStudent[]
+  class_exam_links ClassExam[]
+  teacher          User           @relation("TeacherClasses", fields: [teacher_no], references: [user_no], onDelete: Cascade, onUpdate: Restrict, map: "fk_class_teacher")
+
+  @@index([teacher_no], map: "fk_class_teacher")
+  @@map("classes")
+}
+
+model ClassStudent {
+  class_id   BigInt
+  student_no BigInt
+  class      Class  @relation(fields: [class_id], references: [class_id], onDelete: Cascade, onUpdate: Restrict, map: "fk_cs_class")
+  student    User   @relation(fields: [student_no], references: [user_no], onDelete: Cascade, onUpdate: Restrict, map: "fk_cs_student")
+
+  @@id([class_id, student_no])
+  @@index([student_no], map: "fk_cs_student")
+  @@map("brg_class_student")
+}
+
+model ClassExam {
+  class_id BigInt
+  exam_id  BigInt
+  class    Class @relation(fields: [class_id], references: [class_id], onDelete: Cascade, onUpdate: Restrict, map: "fk_ce_class")
+  exam     Exam  @relation(fields: [exam_id], references: [exam_id], onDelete: Cascade, onUpdate: Restrict, map: "fk_ce_exam")
+
+  @@id([class_id, exam_id])
+  @@index([exam_id], map: "fk_ce_exam")
+  @@map("brg_class_exam")
+}
+
+enum ApprovalStatus {
+  Y
+  N
+}
+
+model UserRelation {
+  user_no_1        BigInt
+  user_no_2        BigInt
+  relation_type_id String          @db.VarChar(20)
+  approval         ApprovalStatus?
+  created_at       DateTime?       @default(now()) @db.DateTime(0)
+  relation_type    EnmRelationType @relation(fields: [relation_type_id], references: [relation_type_id], onUpdate: Restrict, map: "fk_rel_type")
+  user1            User            @relation("User1Relations", fields: [user_no_1], references: [user_no], onDelete: Cascade, onUpdate: Restrict, map: "fk_rel_user1")
+  user2            User            @relation("User2Relations", fields: [user_no_2], references: [user_no], onDelete: Cascade, onUpdate: Restrict, map: "fk_rel_user2")
+
+  @@id([user_no_1, user_no_2])
+  @@index([relation_type_id], map: "fk_rel_type")
+  @@index([user_no_1], map: "fk_rel_user1")
+  @@index([user_no_2], map: "fk_rel_user2")
+  @@map("brg_user_relations")
+}
+
+model UserMessage {
+  message_id  BigInt               @id @default(autoincrement())
+  sender_no   BigInt
+  receiver_no BigInt
+  content     String               @db.Text
+  is_read     UserMessage_is_read? @default(N)
+  created_at  DateTime?            @default(now()) @db.DateTime(0)
+  sender      User                 @relation("SentMessages", fields: [sender_no], references: [user_no], onDelete: Cascade, onUpdate: Restrict, map: "fk_msg_sender")
+  receiver    User                 @relation("ReceivedMessages", fields: [receiver_no], references: [user_no], onDelete: Cascade, onUpdate: Restrict, map: "fk_msg_receiver")
+
+  @@index([sender_no], map: "fk_msg_sender")
+  @@index([receiver_no], map: "fk_msg_receiver")
+  @@map("user_messages")
+}
+
+enum UserMessage_is_read {
+  Y
+  N
+}
+
+model Group {
+  group_id        BigInt     @id @default(autoincrement())
+  creator_no      BigInt
+  parent_group_id BigInt?
+  depth           Int?       @default(1) @db.TinyInt
+  name            String     @db.VarChar(100)
+  description     String?    @db.Text
+  created_at      DateTime?  @default(now()) @db.DateTime(0)
+  creator         User       @relation(fields: [creator_no], references: [user_no], onDelete: Cascade, onUpdate: Restrict, map: "fk_group_creator")
+  parent_group    Group?     @relation("GroupHierarchy", fields: [parent_group_id], references: [group_id], onDelete: Cascade, onUpdate: Restrict, map: "fk_group_parent")
+  child_groups    Group[]    @relation("GroupHierarchy")
+  questions       Question[]
+
+  @@index([creator_no], map: "fk_group_creator")
+  @@index([parent_group_id], map: "fk_group_parent")
+  @@map("groups")
+}
+
+model Question {
+  question_id      BigInt                 @id @default(autoincrement())
+  p_question_id    BigInt?
+  creator_no       BigInt
+  group_id         BigInt?
+  question_type_id String                 @default("M") @db.Char(1)
+  title            String                 @db.VarChar(255)
+  question         String                 @db.Text
+  content          String?                @db.Text
+  answer           String                 @db.Text
+  explanation      String?                @db.Text
+  hint             String?                @db.Text
+  difficulty       Int?                   @default(1) @db.TinyInt
+  // SQL 기본값은 TRUE 입니다. (서버 DDL: `is_public` BOOLEAN DEFAULT TRUE)
+  is_public        Boolean?               @default(true)
+  is_deleted       IsDeleted?             @default(N)
+  time_limit       Int?                   @default(0)
+  rating           Int?                   @default(0) @db.TinyInt
+  created_at       DateTime?              @default(now()) @db.DateTime(0)
+  exams            ExamQuestion[]
+  attachments      MediaAttachment[]
+  options          QuestionOption[]
+  reviews          QuestionReview[]
+  tags             QuestionTag[]
+  parent           Question?              @relation("QuestionParent", fields: [p_question_id], references: [question_id], onUpdate: Restrict, map: "fk_question_p_question")
+  children         Question[]             @relation("QuestionParent")
+  creator          User                   @relation(fields: [creator_no], references: [user_no], onDelete: Cascade, onUpdate: Restrict, map: "fk_question_creator")
+  group            Group?                 @relation(fields: [group_id], references: [group_id], onUpdate: Restrict, map: "fk_question_group")
+  type             EnmQuestionType        @relation(fields: [question_type_id], references: [type_id], onUpdate: Restrict, map: "fk_question_type")
+  solve_results    SolveResult[]
+  // user_logs       UserLog[] // Removed strict relation to keep obj_id polymorphic
+  book_items       QuestionBookItem[]
+  comments         UserComment[]
+  passage          QuestionPassage?
+
+  @@index([creator_no], map: "fk_question_creator")
+  @@index([group_id], map: "fk_question_group")
+  @@index([question_type_id], map: "fk_question_type")
+  @@index([p_question_id], map: "fk_question_p_question")
+  @@map("questions")
+}
+
+model QuestionOption {
+  option_id     BigInt   @id @default(autoincrement())
+  question_id   BigInt
+  option_number Int      @db.TinyInt
+  content       String   @db.Text
+  is_answer     Boolean? @default(false)
+  question      Question @relation(fields: [question_id], references: [question_id], onDelete: Cascade, onUpdate: Restrict, map: "fk_option_q")
+
+  @@index([question_id], map: "fk_option_q")
+  @@map("question_options")
+}
+
+model MediaAttachment {
+  media_id      BigInt       @id @default(autoincrement())
+  question_id   BigInt
+  media_type_id String       @db.Char(1)
+  media_url     String       @db.Text
+  sort_order    Int?         @default(0)
+  question      Question     @relation(fields: [question_id], references: [question_id], onDelete: Cascade, onUpdate: Restrict, map: "fk_media_q")
+  type          EnmMediaType @relation(fields: [media_type_id], references: [type_id], onUpdate: Restrict, map: "fk_media_type")
+
+  @@index([question_id], map: "fk_media_q")
+  @@index([media_type_id], map: "fk_media_type")
+  @@map("media_attachments")
+}
+
+model Tag {
+  tag_id     BigInt        @id @default(autoincrement())
+  tag_name   String        @unique(map: "tag_name") @db.VarChar(50)
+  created_at DateTime?     @default(now()) @db.DateTime(0)
+  questions  QuestionTag[]
+
+  @@map("tags")
+}
+
+model QuestionTag {
+  question_id BigInt
+  tag_id      BigInt
+  question    Question @relation(fields: [question_id], references: [question_id], onDelete: Cascade, onUpdate: Restrict, map: "fk_qt_q")
+  tag         Tag      @relation(fields: [tag_id], references: [tag_id], onDelete: Cascade, onUpdate: Restrict, map: "fk_qt_t")
+
+  @@id([question_id, tag_id])
+  @@index([tag_id], map: "fk_qt_t")
+  @@map("question_tags")
+}
+
+model Exam {
+  exam_id          BigInt         @id @default(autoincrement())
+  creator_no       BigInt
+  exam_name        String         @db.VarChar(255)
+  start_time       DateTime       @db.DateTime(0)
+  end_time         DateTime       @db.DateTime(0)
+  location         String?        @db.VarChar(100)
+  is_auto_score    Boolean?       @default(true)
+  description      String?        @db.Text
+  is_deleted       IsDeleted      @default(N)
+  created_at       DateTime?      @default(now()) @db.DateTime(0)
+  questions        ExamQuestion[]
+  results          ExamResult[]
+  class_exam_links ClassExam[]
+  creator          User           @relation(fields: [creator_no], references: [user_no], onDelete: Cascade, onUpdate: Restrict, map: "fk_exam_creator")
+  solves           SolveResult[]
+
+  @@index([creator_no], map: "fk_exam_creator")
+  @@map("exams")
+}
+
+model ExamQuestion {
+  exam_id        BigInt
+  question_id    BigInt
+  question_order Int
+  score          Int?     @default(10)
+  exam           Exam     @relation(fields: [exam_id], references: [exam_id], onDelete: Cascade, onUpdate: Restrict, map: "fk_eq_exam")
+  question       Question @relation(fields: [question_id], references: [question_id], onDelete: Cascade, onUpdate: Restrict, map: "fk_eq_question")
+
+  @@id([exam_id, question_id])
+  @@index([question_id], map: "fk_eq_question")
+  @@map("exam_questions")
+}
+
+model ExamResult {
+  result_id       BigInt              @id @default(autoincrement())
+  exam_id         BigInt
+  student_no      BigInt
+  total_score     Int?                @default(0)
+  student_rank    Int?
+  total_examinees Int?
+  grade           exam_results_grade?
+  ai_comment      String?             @db.Text
+  teacher_comment String?             @db.Text
+  submitted_at    DateTime?           @default(now()) @db.DateTime(0)
+  exam            Exam                @relation(fields: [exam_id], references: [exam_id], onDelete: Cascade, onUpdate: Restrict, map: "fk_er_exam")
+  student         User                @relation(fields: [student_no], references: [user_no], onDelete: Cascade, onUpdate: Restrict, map: "fk_er_student")
+
+  @@index([exam_id], map: "fk_er_exam")
+  @@index([student_no], map: "fk_er_student")
+  @@map("exam_results")
+}
+
+model UserComment {
+  comment_id     BigInt    @id @default(autoincrement())
+  author_no      BigInt
+  target_user_no BigInt?
+  question_id    BigInt
+  content        String    @db.Text
+  created_at     DateTime? @default(now()) @db.DateTime(0)
+  author         User      @relation("AuthoredComments", fields: [author_no], references: [user_no], onDelete: Cascade, onUpdate: Restrict, map: "fk_comment_author")
+  question       Question  @relation(fields: [question_id], references: [question_id], onDelete: Cascade, onUpdate: Restrict, map: "fk_comment_q")
+  target_user    User?     @relation("ReceivedComments", fields: [target_user_no], references: [user_no], onUpdate: Restrict, map: "fk_comment_target")
+
+  @@index([author_no], map: "fk_comment_author")
+  @@index([question_id], map: "fk_comment_q")
+  @@index([target_user_no], map: "fk_comment_target")
+  @@map("user_comments")
+}
+
+model EnmLogType {
+  logtype_id  String    @id @db.Char(1)
+  description String    @db.VarChar(50)
+  logs        UserLog[]
+
+  @@map("enm_logtype")
+}
+
+model UserLog {
+  log_id         BigInt    @id @default(autoincrement())
+  user_no        BigInt
+  logtype        String    @map("logtype_id") @db.Char(1)
+  obj_id         BigInt
+  user_content   String?   @db.Text
+  score          Int?      @default(0)
+  total_score    Int?      @default(0)
+  score100       Int?      @default(0)
+  time_taken     Int?      @default(0)
+  created_at     DateTime? @default(now()) @db.DateTime(0)
+
+  user User       @relation(fields: [user_no], references: [user_no], onDelete: Cascade, onUpdate: Restrict, map: "fk_logs_user")
+  type EnmLogType @relation(fields: [logtype], references: [logtype_id], onUpdate: Restrict, map: "fk_logs_type")
+
+  @@index([user_no], map: "idx_log_user")
+  @@index([obj_id], map: "idx_log_obj")
+  @@map("users_logs")
+}
+
+model SysLog {
+  log_id    BigInt    @id @default(autoincrement())
+  content   String?   @db.Text
+  created_at DateTime? @default(now()) @db.DateTime(0)
+
+  @@map("sys_logs")
+}
+
+model SolveResult {
+  result_id        BigInt    @id @default(autoincrement())
+  user_no          BigInt
+  question_id      BigInt
+  exam_id          BigInt?
+  correct_answer   String    @db.Text
+  submitted_answer String?   @db.Text
+  // MySQL 저장값 의미: 1(정답) / 0(오답) / -1(시간초과)
+  is_correct       Int       @db.TinyInt
+  time_taken       Int       @default(0)
+  solved_at        DateTime? @default(now()) @db.DateTime(0)
+  exam             Exam?     @relation(fields: [exam_id], references: [exam_id], onDelete: Cascade, onUpdate: Restrict, map: "fk_result_exam")
+  question         Question  @relation(fields: [question_id], references: [question_id], onDelete: Cascade, onUpdate: Restrict, map: "fk_result_q")
+  user             User      @relation(fields: [user_no], references: [user_no], onDelete: Cascade, onUpdate: Restrict, map: "fk_result_user")
+
+  @@index([exam_id], map: "fk_solve_exam")
+  @@index([question_id], map: "fk_solve_q")
+  @@index([user_no], map: "fk_solve_user")
+  @@map("solve_results")
+}
+
+model QuestionReview {
+  review_id   BigInt    @id @default(autoincrement())
+  question_id BigInt
+  user_no     BigInt
+  content     String    @db.Text
+  rating      Int       @db.TinyInt
+  created_at  DateTime? @default(now()) @db.DateTime(0)
+  question    Question  @relation(fields: [question_id], references: [question_id], onDelete: Cascade, onUpdate: Restrict, map: "fk_review_q")
+  user        User      @relation(fields: [user_no], references: [user_no], onDelete: Cascade, onUpdate: Restrict, map: "fk_review_u")
+
+  @@index([question_id], map: "fk_review_q")
+  @@index([user_no], map: "fk_review_u")
+  @@map("question_reviews")
+}
+
+model QuestionPassage {
+  passage_id  BigInt   @id @default(autoincrement())
+  question_id BigInt   @unique
+  content_md  String   @db.Text
+  question    Question @relation(fields: [question_id], references: [question_id], onDelete: Cascade, onUpdate: Restrict, map: "fk_passage_q")
+
+  @@index([question_id], map: "fk_passage_q")
+  @@map("question_passages")
+}
+
+enum IsWithdrawn {
+  Y
+  N
+}
+
+enum IsDeleted {
+  Y
+  N
+  T
+}
+
+enum exam_results_grade {
+  S @map("수")
+  A @map("우")
+  B @map("미")
+  C @map("양")
+  D @map("가")
+}
+
+model OmbudsmanReport {
+  report_id  BigInt             @id @default(autoincrement())
+  user_no    BigInt
+  category   Ombudsman_category @default(OPINION)
+  title      String             @db.VarChar(255)
+  content    String             @db.Text
+  status     Ombudsman_status?  @default(PENDING)
+  created_at DateTime?          @default(now()) @db.DateTime(0)
+  updated_at DateTime?          @default(now()) @updatedAt @db.DateTime(0)
+  user       User               @relation(fields: [user_no], references: [user_no], onDelete: Cascade, onUpdate: Restrict, map: "fk_ombudsman_user")
+
+  @@index([user_no], map: "fk_ombudsman_user")
+  @@map("ombudsman_reports")
+}
+
+enum Ombudsman_category {
+  OPINION
+  IMPROVEMENT
+  COMPLAINT
+}
+
+enum Ombudsman_status {
+  PENDING
+  PROCESSED
+}
+
+model QuestionBook {
+  book_id     BigInt                 @id @default(autoincrement())
+  user_no     BigInt
+  book_name   String                 @db.VarChar(255)
+  description String?                @db.Text
+  is_deleted  IsDeleted              @default(N)
+  created_at  DateTime?              @default(now()) @db.DateTime(0)
+  items       QuestionBookItem[]
+  user        User                   @relation(fields: [user_no], references: [user_no], onDelete: Cascade, onUpdate: Restrict, map: "fk_uqb_user")
+
+  @@index([user_no], map: "fk_uqb_user")
+  @@map("questionbooks")
+}
+
+model QuestionBookItem {
+  book_id     BigInt
+  question_id BigInt
+  book        QuestionBook     @relation(fields: [book_id], references: [book_id], onDelete: Cascade, onUpdate: Restrict, map: "fk_uqbi_book")
+  question    Question         @relation(fields: [question_id], references: [question_id], onDelete: Cascade, onUpdate: Restrict, map: "fk_uqbi_q")
+
+  @@id([book_id, question_id])
+  @@index([question_id], map: "fk_uqbi_q")
+  @@map("brg_questionbook_question")
+}

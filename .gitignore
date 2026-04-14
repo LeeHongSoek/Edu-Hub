@@ -1,0 +1,13 @@
+# "로그파일이 버전 관리 시스템(Git 등)에 포함되지 않도록 유지하십시오."
+logs
+ex_url.info
+_Client/logs
+_Server/dist
+
+# .gitignore 파일 내용
+venv/
+.venv/
+node_modules/
+__pycache__/
+*.pyc
+.DS_Store

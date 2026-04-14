@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="filter: drop-shadow(1.5px 1.5px 2px rgba(0,0,0,0.4));">
+  <path d="M20 12a8 8 0 0 0-13.66-5.66L4 8"></path>
+  <path d="M4 4v4h4"></path>
+  <path d="M4 12a8 8 0 0 0 13.66 5.66L20 16"></path>
+  <path d="M20 20v-4h-4"></path>
+</svg>

@@ -1,0 +1,5 @@
+node_modules
+# "환경 변수가 버전 관리 시스템(Git 등)에 포함되지 않도록 유지하십시오."
+.env
+
+/generated/prisma

@@ -1,0 +1,26 @@
+{
+    "antigravity.commitMessage.language": "ko",
+    "antigravity.language": "ko",
+    "antigravity.prompt.commitMessage": "커밋 메시지를 항상 한국어로 작성해줘. 형식은 <type>: <description> 으로 해줘!",
+    "prisma.pinToPrisma6": true,
+    "typescript.tsdk": "_Server/node_modules/typescript/lib",
+    "typescript.enablePromptUseWorkspaceTsdk": true,
+
+    "sqltools.connections": [
+        {
+            "mysqlOptions": {
+                "authProtocol": "default",
+                "enableSsl": "Disabled"
+            },
+            "ssh": "Disabled",
+            "previewLimit": 50,
+            "server": "localhost",
+            "port": 3306,
+            "driver": "MariaDB",
+            "name": "localhost_lee__1_81!",
+            "database": "Edu-Hub",
+            "username": "root",
+            "password": "leehs1181!"
+        }
+    ]
+}
