@@ -1,8 +1,8 @@
-from fastapi import FastAPI 
-from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
-import google.generativeai as genai
-from openai import OpenAI
+from fastapi import FastAPI # pip install fastapi
+from fastapi.middleware.cors import CORSMiddleware # pip install fastapi[all] 
+from pydantic import BaseModel # pip install pydantic
+import google.generativeai as genai # pip install google-generativeai
+from openai import OpenAI # pip install openai
 
 app = FastAPI()
 
