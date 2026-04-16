@@ -34,14 +34,13 @@ assert_port_available() {
 }
 
 cleanup() {
-  # 스크립트가 끝나거나 Ctrl+C 를 누르면 자식 프로세스를 모두 정리한다.
-  if [[ -n "${NEST_PID:-}" ]] && kill -0 "${NEST_PID}" >/dev/null 2>&1; then
-    kill "${NEST_PID}" >/dev/null 2>&1 || true
-  fi
-
-  if [[ -n "${NUXT_PID:-}" ]] && kill -0 "${NUXT_PID}" >/dev/null 2>&1; then
-    kill "${NUXT_PID}" >/dev/null 2>&1 || true
-  fi
+  echo "서버를 종료합니다..."
+  # Nest 정리
+  [[ -n "${NEST_PID:-}" ]] && kill "${NEST_PID}" 2>/dev/null || true
+  # Nuxt 정리
+  [[ -n "${NUXT_PID:-}" ]] && kill "${NUXT_PID}" 2>/dev/null || true
+  # 파이썬 정리 (추가됨)
+  [[ -n "${PYTHON_PID:-}" ]] && kill "${PYTHON_PID}" 2>/dev/null || true
 }
 
 trap cleanup EXIT INT TERM
@@ -75,6 +74,14 @@ echo "[Nuxt] port=${NUXT_PORT} backend=${BACKEND_ORIGIN}"
 ) > >(tee -a "${NUXT_LOG_FILE}") 2> >(tee -a "${NUXT_LOG_FILE}" >&2) &
 NUXT_PID=$!
 
+# 3. 파이썬 서버 실행 (수정됨)
+echo "[Python] port=3500 (Uvicorn)"
+(
+  cd "${PROJECT_ROOT}" # server.py가 있는 위치로 이동 확인 필요
+  uvicorn server:app --reload --port 3500
+) > >(tee -a "${PROJECT_ROOT}/logs/python-dev.log") 2>&1 &
+PYTHON_PID=$! # PID 저장
+
 if command -v open >/dev/null 2>&1; then
   (
     sleep 5
@@ -83,5 +90,8 @@ if command -v open >/dev/null 2>&1; then
   echo "5초 후 기본 브라우저에서 ${NUXT_TARGET_URL} 을 엽니다."
 fi
 
-# 둘 중 하나가 종료되면 wait 가 풀리고, trap 이 남은 프로세스를 함께 정리한다.
-wait "${NEST_PID}" "${NUXT_PID}"
+# 세 프로세스 모두 기다림
+wait "${NEST_PID}" "${NUXT_PID}" "${PYTHON_PID}"  
+
+# ngrok tunneling ....
+# ngrok http 3000 

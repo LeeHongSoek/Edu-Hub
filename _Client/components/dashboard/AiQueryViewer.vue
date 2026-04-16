@@ -17,6 +17,7 @@ const isLoading = ref(false);
 const apiKey = ref("");
 
 const aiProviders = [
+  { id: "upstage", name: "Upstage (Solar)" },
   { id: "openai", name: "OpenAI (ChatGPT)" },
   { id: "anthropic", name: "Anthropic (Claude)" },
   { id: "google", name: "Google (Gemini)" },
@@ -24,11 +25,14 @@ const aiProviders = [
   { id: "groq", name: "Groq (초고속 추론)" },
   { id: "xai", name: "xAI (Grok)" },
   { id: "together", name: "Together AI (오픈소스)" },
-  { id: "upstage", name: "Upstage (Solar)" }
 ];
-const selectedProviderId = ref("openai");
+const selectedProviderId = ref("upstage");
 
 const allModels = {
+  upstage: [
+    { id: "solar-1-mini-chat", name: "Solar 1 Mini", description: "빠르고 가성비가 좋은 한국어 특화 모델" },
+    { id: "solar-pro", name: "Solar Pro", description: "고도화된 추론을 위한 Upstage의 상위 모델" }
+  ],
   openai: [
     { id: "gpt-4o-mini", name: "GPT-4o mini", description: "매우 빠르고 가성비가 좋은 소형 모델" },
     { id: "gpt-4o", name: "GPT-4o", description: "현존 최상위 성능의 다재다능 모델" },
@@ -60,17 +64,13 @@ const allModels = {
     { id: "meta-llama/Llama-3.3-70B-Instruct-Turbo", name: "Llama 3.3 70B", description: "초거대 오픈소스 최고 성능 모델" },
     { id: "Qwen/Qwen2.5-72B-Instruct", name: "Qwen 2.5 72B", description: "매우 뛰어난 한국어 및 종합 성능" }
   ],
-  upstage: [
-    { id: "solar-1-mini-chat", name: "Solar 1 Mini", description: "빠르고 가성비가 좋은 한국어 특화 모델" },
-    { id: "solar-pro", name: "Solar Pro", description: "고도화된 추론을 위한 Upstage의 상위 모델" }
-  ]
 };
 
 const currentModels = computed(() => {
   return allModels[selectedProviderId.value as keyof typeof allModels] || [];
 });
 
-const selectedModelId = ref("grok-2-latest");
+const selectedModelId = ref("solar-1-mini-chat");
 
 const handleProviderChange = () => {
   if (currentModels.value.length > 0) {

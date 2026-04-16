@@ -1,8 +1,10 @@
-from fastapi import FastAPI # pip install fastapi
-from fastapi.middleware.cors import CORSMiddleware # pip install fastapi[all] 
-from pydantic import BaseModel # pip install pydantic
-import google.generativeai as genai # pip install google-generativeai
-from openai import OpenAI # pip install openai
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
+# 변경된 라이브러리 임포트
+from google import genai 
+from openai import OpenAI
+from anthropic import Anthropic  # 상단으로 이동
 
 app = FastAPI()
 
@@ -24,20 +26,24 @@ class Query(BaseModel):
 
 @app.post("/py/ask")
 async def ask(query: Query):
-    if not query.api_key.strip():
+    api_key = query.api_key.strip()
+    if not api_key:
         return {"answer": "화면 우측 상단에서 API 키를 입력해 주세요."}
         
     try:
+        # 1. Google Gemini (신규 SDK 적용)
         if query.provider == "google":
-            import google.generativeai as genai
-            genai.configure(api_key=query.api_key.strip())
-            model = genai.GenerativeModel(query.model)
-            response = model.generate_content(query.prompt)
+            client = genai.Client(api_key=api_key)
+            # 신규 SDK는 모델명과 내용을 인자로 명확히 전달합니다.
+            response = client.models.generate_content(
+                model=query.model,
+                contents=query.prompt
+            )
             return {"answer": response.text}
             
+        # 2. Anthropic
         elif query.provider == "anthropic":
-            from anthropic import Anthropic
-            client = Anthropic(api_key=query.api_key.strip())
+            client = Anthropic(api_key=api_key)
             response = client.messages.create(
                 model=query.model,
                 max_tokens=1000,
@@ -45,9 +51,8 @@ async def ask(query: Query):
             )
             return {"answer": response.content[0].text}
             
+        # 3. OpenAI 및 호환 API들
         else:
-            # 나머지 최신 AI 기업들은 대부분 OpenAI 규격을 똑같이 지원합니다!
-            from openai import OpenAI
             base_urls = {
                 "openai": None,
                 "xai": "https://api.x.ai/v1",
@@ -60,7 +65,7 @@ async def ask(query: Query):
             if query.provider not in base_urls:
                 return {"answer": "지원하지 않는 제공자(Provider)입니다."}
                 
-            client_args = {"api_key": query.api_key.strip()}
+            client_args = {"api_key": api_key}
             if base_urls[query.provider]:
                 client_args["base_url"] = base_urls[query.provider]
                 
@@ -75,8 +80,9 @@ async def ask(query: Query):
             return {"answer": response.choices[0].message.content}
             
     except Exception as e:
+        # 에러 메시지를 좀 더 명확하게 찍어주면 디버깅이 편합니다.
+        print(f"Error details: {e}")
         return {"answer": f"API 호출 중 오류가 발생했습니다: {str(e)}"}
-
 
 if __name__ == "__main__":
     import uvicorn
